@@ -148,11 +148,11 @@ class TestApplicationStartupPerformance:
 
         # Test with minimal configuration
         with metrics.measure("minimal_config"):
-            app1 = create_app(skip_lifespan=True, skip_sentry=True, testing_mode=True)
+            create_app(skip_lifespan=True, skip_sentry=True, testing_mode=True)
 
         # Test with full configuration
         with metrics.measure("full_config"):
-            app2 = create_app(testing_mode=False)
+            create_app(testing_mode=False)
 
         summary = metrics.get_summary()
 
@@ -171,7 +171,6 @@ class TestEndpointPerformance:
 
     def test_health_endpoint_performance(self):
         """Test health endpoint response time"""
-        times = []
 
         for i in range(10):
             with self.metrics.measure(f"health_request_{i}"):
@@ -188,7 +187,6 @@ class TestEndpointPerformance:
 
     def test_info_endpoint_performance(self):
         """Test info endpoint response time"""
-        times = []
 
         for i in range(10):
             with self.metrics.measure(f"info_request_{i}"):
@@ -478,11 +476,11 @@ class TestFactoryPatternPerformance:
 
         # Test minimal configuration
         with metrics.measure("minimal_config"):
-            app = create_app(skip_lifespan=True, skip_sentry=True, testing_mode=True)
+            create_app(skip_lifespan=True, skip_sentry=True, testing_mode=True)
 
         # Test with components enabled
         with metrics.measure("full_config"):
-            app = create_app(skip_lifespan=False, skip_sentry=False, testing_mode=False)
+            create_app(skip_lifespan=False, skip_sentry=False, testing_mode=False)
 
         summary = metrics.get_summary()
 

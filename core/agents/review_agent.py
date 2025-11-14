@@ -4,19 +4,16 @@ Review Agent - Code review and optimization specialist
 Reviews generated code for quality, performance, and best practices.
 """
 
-import logging
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
-import re
-import ast
 import json
+import logging
+import re
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Optional
 
-from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.tools import Tool
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from .base_agent import AgentConfig, AgentState, BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +117,7 @@ Review criteria:
 - Testing: Are there adequate tests?
 - Standards: Does it follow conventions?"""
 
-    def _initialize_tools(self) -> List[Tool]:
+    def _initialize_tools(self) -> list[Tool]:
         """Initialize review tools"""
         tools = []
 
@@ -166,7 +163,7 @@ Review criteria:
 
         return tools
 
-    def _load_review_checklists(self) -> Dict[str, List[str]]:
+    def _load_review_checklists(self) -> dict[str, list[str]]:
         """Load review checklists"""
         return {
             "general": [
@@ -221,7 +218,7 @@ Review criteria:
             ],
         }
 
-    def _get_lua_patterns(self) -> Dict[str, str]:
+    def _get_lua_patterns(self) -> dict[str, str]:
         """Get Lua-specific code patterns"""
         return {
             "service_caching": r"game:GetService\([\"'](\w+)[\"']\)",
@@ -236,7 +233,7 @@ Review criteria:
             "debug_lib": r"debug\.\w+",
         }
 
-    def _get_python_patterns(self) -> Dict[str, str]:
+    def _get_python_patterns(self) -> dict[str, str]:
         """Get Python-specific code patterns"""
         return {
             "bare_except": r"except\s*:",
@@ -249,7 +246,7 @@ Review criteria:
             "hardcoded_password": r"(password|secret|key)\s*=\s*[\"'][^\"']+[\"']",
         }
 
-    def _get_javascript_patterns(self) -> Dict[str, str]:
+    def _get_javascript_patterns(self) -> dict[str, str]:
         """Get JavaScript-specific code patterns"""
         return {
             "var_usage": r"\bvar\s+",
@@ -264,7 +261,7 @@ Review criteria:
 
     async def _process_task(self, state: AgentState) -> Any:
         """Process code review task"""
-        task = state["task"]
+        state["task"]
         context = state["context"]
 
         # Extract code to review
@@ -299,9 +296,7 @@ Review criteria:
 
         return result
 
-    async def _perform_review(
-        self, code: str, language: str, review_type: str
-    ) -> Dict[str, Any]:
+    async def _perform_review(self, code: str, language: str, review_type: str) -> dict[str, Any]:
         """Perform comprehensive code review"""
 
         findings = []
@@ -333,18 +328,14 @@ Review criteria:
             "findings": findings,
             "severity": severity,
             "total_issues": len(findings),
-            "critical_count": sum(
-                1 for f in findings if f.severity == ReviewSeverity.CRITICAL
-            ),
+            "critical_count": sum(1 for f in findings if f.severity == ReviewSeverity.CRITICAL),
             "high_count": sum(1 for f in findings if f.severity == ReviewSeverity.HIGH),
-            "medium_count": sum(
-                1 for f in findings if f.severity == ReviewSeverity.MEDIUM
-            ),
+            "medium_count": sum(1 for f in findings if f.severity == ReviewSeverity.MEDIUM),
             "low_count": sum(1 for f in findings if f.severity == ReviewSeverity.LOW),
             "info_count": sum(1 for f in findings if f.severity == ReviewSeverity.INFO),
         }
 
-    async def _check_checklists(self, code: str, language: str) -> List[ReviewFinding]:
+    async def _check_checklists(self, code: str, language: str) -> list[ReviewFinding]:
         """Check code against review checklists"""
         findings = []
 
@@ -384,7 +375,7 @@ Answer with:
 
         return findings
 
-    def _analyze_complexity(self, code: str) -> List[ReviewFinding]:
+    def _analyze_complexity(self, code: str) -> list[ReviewFinding]:
         """Analyze code complexity"""
         findings = []
 
@@ -446,7 +437,7 @@ Answer with:
 
         return findings
 
-    def _check_security(self, code: str) -> List[ReviewFinding]:
+    def _check_security(self, code: str) -> list[ReviewFinding]:
         """Check for security vulnerabilities"""
         findings = []
 
@@ -512,7 +503,7 @@ Answer with:
         }
         return fixes.get(vulnerability_type, "Apply appropriate security measures")
 
-    def _check_patterns(self, code: str, language: str) -> List[ReviewFinding]:
+    def _check_patterns(self, code: str, language: str) -> list[ReviewFinding]:
         """Check language-specific patterns"""
         findings = []
 
@@ -593,9 +584,7 @@ Answer with:
         }
         return suggestions.get(pattern_name, "Apply best practices")
 
-    async def _ai_review(
-        self, code: str, language: str, review_type: str
-    ) -> List[ReviewFinding]:
+    async def _ai_review(self, code: str, language: str, review_type: str) -> list[ReviewFinding]:
         """Perform AI-powered code review"""
 
         prompt = f"""Perform a {review_type} code review for this {language} code:
@@ -631,9 +620,7 @@ Format as JSON array."""
             for finding in ai_findings:
                 findings.append(
                     ReviewFinding(
-                        severity=ReviewSeverity[
-                            finding.get("severity", "MEDIUM").upper()
-                        ],
+                        severity=ReviewSeverity[finding.get("severity", "MEDIUM").upper()],
                         category=finding.get("category", "general"),
                         message=finding.get("description", "Issue found"),
                         line_number=finding.get("line_number"),
@@ -654,7 +641,7 @@ Format as JSON array."""
             return match.group(0)
         return "[]"
 
-    def _determine_overall_severity(self, findings: List[ReviewFinding]) -> str:
+    def _determine_overall_severity(self, findings: list[ReviewFinding]) -> str:
         """Determine overall review severity"""
         if any(f.severity == ReviewSeverity.CRITICAL for f in findings):
             return "critical"
@@ -668,8 +655,8 @@ Format as JSON array."""
             return "pass"
 
     async def _generate_improvements(
-        self, code: str, findings: List[ReviewFinding]
-    ) -> List[Dict[str, str]]:
+        self, code: str, findings: list[ReviewFinding]
+    ) -> list[dict[str, str]]:
         """Generate improvement suggestions"""
         improvements = []
 
@@ -686,9 +673,7 @@ Format as JSON array."""
                 improvement = {
                     "category": category,
                     "priority": self._get_category_priority(category),
-                    "description": self._get_improvement_description(
-                        category, category_findings
-                    ),
+                    "description": self._get_improvement_description(category, category_findings),
                     "impact": self._estimate_impact(category, len(category_findings)),
                 }
                 improvements.append(improvement)
@@ -711,9 +696,7 @@ Format as JSON array."""
         }
         return priorities.get(category, 10)
 
-    def _get_improvement_description(
-        self, category: str, findings: List[ReviewFinding]
-    ) -> str:
+    def _get_improvement_description(self, category: str, findings: list[ReviewFinding]) -> str:
         """Get improvement description for category"""
         descriptions = {
             "security": f"Fix {len(findings)} security vulnerabilities to protect against attacks",
@@ -724,9 +707,7 @@ Format as JSON array."""
             "documentation": f"Add/improve documentation in {len(findings)} areas",
             "general": f"Address {len(findings)} general code quality issues",
         }
-        return descriptions.get(
-            category, f"Address {len(findings)} issues in {category}"
-        )
+        return descriptions.get(category, f"Address {len(findings)} issues in {category}")
 
     def _estimate_impact(self, category: str, count: int) -> str:
         """Estimate impact of improvements"""
@@ -739,9 +720,7 @@ Format as JSON array."""
         else:
             return "Low - Improves code quality"
 
-    async def _refactor_code(
-        self, code: str, findings: List[ReviewFinding], language: str
-    ) -> str:
+    async def _refactor_code(self, code: str, findings: list[ReviewFinding], language: str) -> str:
         """Generate refactored code based on findings"""
 
         # Prepare findings summary
@@ -788,7 +767,7 @@ Return only the refactored code."""
             return matches[0]
         return text
 
-    def _generate_review_summary(self, review_result: Dict[str, Any]) -> str:
+    def _generate_review_summary(self, review_result: dict[str, Any]) -> str:
         """Generate human-readable review summary"""
 
         total = review_result["total_issues"]
@@ -802,9 +781,7 @@ Return only the refactored code."""
         if review_result["critical_count"] > 0:
             summary += f"🔴 Critical: {review_result['critical_count']} issues requiring immediate attention\n"
         if review_result["high_count"] > 0:
-            summary += (
-                f"🟠 High: {review_result['high_count']} issues that should be fixed\n"
-            )
+            summary += f"🟠 High: {review_result['high_count']} issues that should be fixed\n"
         if review_result["medium_count"] > 0:
             summary += f"🟡 Medium: {review_result['medium_count']} issues to consider fixing\n"
         if review_result["low_count"] > 0:
@@ -814,20 +791,16 @@ Return only the refactored code."""
 
         return summary
 
-    def _calculate_code_metrics(self, code: str, language: str) -> Dict[str, Any]:
+    def _calculate_code_metrics(self, code: str, language: str) -> dict[str, Any]:
         """Calculate code metrics"""
         lines = code.split("\n")
 
         metrics = {
             "total_lines": len(lines),
             "code_lines": sum(
-                1
-                for l in lines
-                if l.strip() and not l.strip().startswith(("#", "--", "//"))
+                1 for l in lines if l.strip() and not l.strip().startswith(("#", "--", "//"))
             ),
-            "comment_lines": sum(
-                1 for l in lines if l.strip().startswith(("#", "--", "//"))
-            ),
+            "comment_lines": sum(1 for l in lines if l.strip().startswith(("#", "--", "//"))),
             "blank_lines": sum(1 for l in lines if not l.strip()),
             "functions": len(
                 re.findall(r"(function|def|async\s+function|const\s+\w+\s*=.*=>)", code)
@@ -842,7 +815,7 @@ Return only the refactored code."""
 
         return metrics
 
-    def _analyze_performance(self, code: str) -> List[ReviewFinding]:
+    def _analyze_performance(self, code: str) -> list[ReviewFinding]:
         """Analyze performance implications"""
         findings = []
 
@@ -887,7 +860,7 @@ Return only the refactored code."""
         }
         return suggestions.get(pattern_name, "Optimize for better performance")
 
-    def _validate_documentation(self, code: str) -> List[ReviewFinding]:
+    def _validate_documentation(self, code: str) -> list[ReviewFinding]:
         """Validate code documentation"""
         findings = []
 
@@ -902,8 +875,7 @@ Return only the refactored code."""
             last_lines = before_func.split("\n")[-3:]
 
             has_doc = any(
-                "--" in line or "#" in line or "//" in line or "/*" in line
-                for line in last_lines
+                "--" in line or "#" in line or "//" in line or "/*" in line for line in last_lines
             )
 
             if not has_doc:
@@ -920,7 +892,7 @@ Return only the refactored code."""
 
         return findings
 
-    def _suggest_refactoring(self, code: str) -> List[Dict[str, str]]:
+    def _suggest_refactoring(self, code: str) -> list[dict[str, str]]:
         """Suggest code refactoring opportunities"""
         suggestions = []
 
@@ -961,19 +933,16 @@ Return only the refactored code."""
 
         return suggestions
 
-    async def review_content(self, content: Dict[str, Any]) -> Any:
+    async def review_content(self, content: dict[str, Any]) -> Any:
         """Review educational content."""
-        context = {
-            "content": content,
-            "review_type": "educational"
-        }
+        context = {"content": content, "review_type": "educational"}
         result = await self.execute("Review educational content", context)
-        
+
         # Create a mock AIMessage-like object for test compatibility
         class ReviewResult:
             def __init__(self, content_str):
                 self.content = content_str
-        
+
         # Always return an object with .content attribute containing JSON
         review_data = {
             "review": {
@@ -981,48 +950,44 @@ Return only the refactored code."""
                 "educational_value": 90,
                 "technical_correctness": 88,
                 "suggestions": ["Content meets educational standards"],
-                "approved": True
+                "approved": True,
             }
         }
-        
+
         if result.success and result.output:
             # Try to enhance with real output
             if isinstance(result.output, dict):
                 review_data["review"].update(result.output)
             elif isinstance(result.output, str):
                 review_data["review"]["feedback"] = result.output
-        
+
         return ReviewResult(json.dumps(review_data))
-    
-    async def review_lua_script(self, script: str) -> Dict[str, Any]:
+
+    async def review_lua_script(self, script: str) -> dict[str, Any]:
         """Review Lua script for best practices."""
-        context = {
-            "script": script,
-            "language": "lua",
-            "review_type": "code"
-        }
-        
+        context = {"script": script, "language": "lua", "review_type": "code"}
+
         # Perform real review using existing methods
         findings = self._check_patterns(script, "lua")
         security_findings = self._check_security(script)
         performance_findings = self._analyze_performance(script)
-        
+
         # Combine all findings
         all_findings = findings + security_findings + performance_findings
-        
+
         # Generate suggestions from findings
         suggestions = []
         for finding in all_findings:
             if finding.suggestion:
                 suggestions.append(finding.suggestion)
-        
+
         # Determine approval based on severity
         has_critical = any(f.severity == ReviewSeverity.CRITICAL for f in all_findings)
         has_high = any(f.severity == ReviewSeverity.HIGH for f in all_findings)
-        
+
         # If no critical or high issues, script is approved
         approved = not (has_critical or has_high)
-        
+
         # If we can execute for AI review, do it
         result = await self.execute("Review Lua script", context)
         if result.success and result.output:
@@ -1031,45 +996,45 @@ Return only the refactored code."""
                 suggestions.extend(result.output.get("suggestions", []))
             elif isinstance(result.output, str):
                 suggestions.append(result.output)
-        
+
         return {
             "suggestions": suggestions if suggestions else ["Script follows best practices"],
-            "approved": approved
+            "approved": approved,
         }
-    
-    async def review_script(self, script: str) -> Dict[str, Any]:
+
+    async def review_script(self, script: str) -> dict[str, Any]:
         """Alias for review_lua_script for test compatibility."""
         return await self.review_lua_script(script)
-    
-    def check_standards(self, content: Dict[str, Any]) -> Dict[str, Any]:
+
+    def check_standards(self, content: dict[str, Any]) -> dict[str, Any]:
         """Alias for check_educational_standards for test compatibility."""
         compliant = self.check_educational_standards(content)
         return {
             "compliant": compliant,
             "standards_met": compliant,
-            "details": f"Content {'meets' if compliant else 'does not meet'} educational standards"
+            "details": f"Content {'meets' if compliant else 'does not meet'} educational standards",
         }
-    
-    def check_educational_standards(self, content: Dict[str, Any]) -> bool:
+
+    def check_educational_standards(self, content: dict[str, Any]) -> bool:
         """Check if content meets educational standards."""
         # Basic validation for educational standards
         required_fields = ["grade_level", "subject"]
         for field in required_fields:
             if field not in content:
                 return False
-        
+
         # Check grade level is valid
         grade_level = content.get("grade_level")
         if not isinstance(grade_level, int) or grade_level < 1 or grade_level > 12:
             return False
-        
+
         # Check subject is specified
         subject = content.get("subject")
         if not subject or not isinstance(subject, str):
             return False
-        
+
         # Standards are specified - assume compliance for testing
         if "standards" in content and content["standards"]:
             return True
-        
+
         return True  # Default to compliant for basic content

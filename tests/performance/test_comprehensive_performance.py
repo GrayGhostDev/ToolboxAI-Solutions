@@ -69,7 +69,6 @@ class TestComprehensivePerformance:
         ]
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             performance_results = {}
 
             for endpoint, method, data in endpoints:
@@ -158,7 +157,8 @@ class TestComprehensivePerformance:
 
             start_time = time.time()
             await conn.executemany(
-                f"INSERT INTO {test_table} (data, number_value) VALUES ($1, $2);", insert_data
+                f"INSERT INTO {test_table} (data, number_value) VALUES ($1, $2);",
+                insert_data,
             )
             insert_time = (time.time() - start_time) * 1000
 
@@ -167,12 +167,18 @@ class TestComprehensivePerformance:
             # Test various query types
             query_tests = [
                 ("Simple SELECT", f"SELECT COUNT(*) FROM {test_table};"),
-                ("Indexed WHERE", f"SELECT * FROM {test_table} WHERE number_value = 500;"),
+                (
+                    "Indexed WHERE",
+                    f"SELECT * FROM {test_table} WHERE number_value = 500;",
+                ),
                 (
                     "Range Query",
                     f"SELECT * FROM {test_table} WHERE number_value BETWEEN 100 AND 200;",
                 ),
-                ("ORDER BY", f"SELECT * FROM {test_table} ORDER BY created_at DESC LIMIT 100;"),
+                (
+                    "ORDER BY",
+                    f"SELECT * FROM {test_table} ORDER BY created_at DESC LIMIT 100;",
+                ),
                 (
                     "GROUP BY",
                     f"SELECT number_value, COUNT(*) FROM {test_table} GROUP BY number_value LIMIT 10;",
@@ -244,7 +250,6 @@ class TestComprehensivePerformance:
             redis_client = await redis.from_url(self.redis_url, decode_responses=True)
 
             # Test basic operations
-            operations = ["SET", "GET", "HSET", "HGET", "LPUSH", "LPOP"]
             operation_times = {}
 
             # SET operations
@@ -449,7 +454,11 @@ class TestComprehensivePerformance:
                         return None
 
                 total_time = (time.time() - start_time) * 1000
-                return {"total_time": total_time, "response_times": response_times, "success": True}
+                return {
+                    "total_time": total_time,
+                    "response_times": response_times,
+                    "success": True,
+                }
 
         # Test with increasing concurrent users
         user_counts = [1, 5, 10, 20]
@@ -612,7 +621,11 @@ class TestComprehensivePerformance:
                 await conn.fetchval("SELECT 1;")
                 query_time = (time.time() - query_start) * 1000
 
-                return {"connect_time": connect_time, "query_time": query_time, "success": True}
+                return {
+                    "connect_time": connect_time,
+                    "query_time": query_time,
+                    "success": True,
+                }
 
             except Exception:
                 return {"success": False}
@@ -663,7 +676,6 @@ class TestComprehensivePerformance:
 
             async def test_websocket_connection():
                 """Test a single WebSocket connection."""
-                ws_url = "pusher://app_key@cluster/native"
 
                 try:
                     start_time = time.time()
@@ -674,7 +686,7 @@ class TestComprehensivePerformance:
                         # Test message round-trip
                         message_start = time.time()
                         await pusher.trigger(json.dumps({"type": "ping", "data": "test"}))
-                        response = await asyncio.wait_for(websocket.recv(), timeout=5)
+                        await asyncio.wait_for(websocket.recv(), timeout=5)
                         message_time = (time.time() - message_start) * 1000
 
                         return {

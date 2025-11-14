@@ -166,7 +166,12 @@ class TestDockerPhase3Comprehensive:
             security_results[service_name] = results
 
         # Analyze results
-        critical_services = ["backend", "mcp-server", "agent-coordinator", "celery-worker"]
+        critical_services = [
+            "backend",
+            "mcp-server",
+            "agent-coordinator",
+            "celery-worker",
+        ]
         failures = []
 
         for service_name in critical_services:
@@ -972,7 +977,7 @@ class TestDockerPhase3Comprehensive:
             compose_config = yaml.safe_load(f)
 
         volumes = compose_config.get("volumes", {})
-        services = compose_config.get("services", {})
+        compose_config.get("services", {})
 
         backup_results = {
             "persistent_volumes": [],

@@ -117,13 +117,13 @@ class IntegrationTester:
 
             # Test basic query
             cursor.execute("SELECT version();")
-            version = cursor.fetchone()[0]
+            cursor.fetchone()[0]
 
             # Test tables exist
             cursor.execute(
                 """
-                SELECT table_name FROM information_schema.tables 
-                WHERE table_schema = 'public' 
+                SELECT table_name FROM information_schema.tables
+                WHERE table_schema = 'public'
                 ORDER BY table_name;
             """
             )
@@ -221,7 +221,10 @@ class IntegrationTester:
             # Test login
             response = requests.post(
                 f"{FASTAPI_URL}/auth/login",
-                json={"username": TEST_USER["username"], "password": TEST_USER["password"]},
+                json={
+                    "username": TEST_USER["username"],
+                    "password": TEST_USER["password"],
+                },
                 timeout=5,
             )
 
@@ -298,7 +301,10 @@ class IntegrationTester:
             }
 
             response = requests.post(
-                f"{FASTAPI_URL}/generate_content", json=payload, headers=headers, timeout=30
+                f"{FASTAPI_URL}/generate_content",
+                json=payload,
+                headers=headers,
+                timeout=30,
             )
 
             success = response.status_code == 200
@@ -373,7 +379,7 @@ class IntegrationTester:
 
             # Try to receive response (may timeout if no response)
             try:
-                response = ws.recv_frame()
+                ws.recv_frame()
                 self.print_test("WebSocket Native", True)
             except:
                 self.print_test("WebSocket Native", True, "Connected but no response")
@@ -391,13 +397,14 @@ class IntegrationTester:
 
             # Send hello message
             hello_msg = json.dumps(
-                {"type": "hello", "client": "integration_test"}, default=make_json_serializable
+                {"type": "hello", "client": "integration_test"},
+                default=make_json_serializable,
             )
             pusher.trigger(hello_msg)
 
             # Try to receive response
             try:
-                response = ws.recv()
+                ws.recv()
                 self.print_test("MCP WebSocket", True)
             except:
                 self.print_test("MCP WebSocket", True, "Connected but no response")
@@ -423,7 +430,11 @@ class IntegrationTester:
             self.print_test("Roblox Plugin Registration", response.status_code in [200, 201])
 
             # Test plugin message
-            message_data = {"type": "request_content", "subject": "Math", "grade_level": 5}
+            message_data = {
+                "type": "request_content",
+                "subject": "Math",
+                "grade_level": 5,
+            }
 
             response = requests.post(f"{FLASK_URL}/plugin/message", json=message_data, timeout=5)
 
@@ -447,7 +458,8 @@ class IntegrationTester:
                 # Check individual agents
                 agents = health.get("agents", {})
                 self.print_test(
-                    "Supervisor Agent", agents.get("supervisor", {}).get("healthy", False)
+                    "Supervisor Agent",
+                    agents.get("supervisor", {}).get("healthy", False),
                 )
                 self.print_test("Content Agent", agents.get("content", {}).get("healthy", False))
                 self.print_test("Quiz Agent", agents.get("quiz", {}).get("healthy", False))
@@ -476,7 +488,10 @@ class IntegrationTester:
             test_data = {
                 "title": f"Integration Test {int(time.time())}",
                 "description": "Test data for integration testing",
-                "metadata": {"test": True, "timestamp": datetime.now(timezone.utc).isoformat()},
+                "metadata": {
+                    "test": True,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
             }
 
             # Store via API
@@ -504,7 +519,8 @@ class IntegrationTester:
                 conn = psycopg2.connect(**DB_CONFIG)
                 cursor = conn.cursor()
                 cursor.execute(
-                    "SELECT COUNT(*) FROM lessons WHERE title LIKE %s", (f"Integration Test%",)
+                    "SELECT COUNT(*) FROM lessons WHERE title LIKE %s",
+                    (f"Integration Test%",),
                 )
                 count = cursor.fetchone()[0]
                 cursor.close()
@@ -539,7 +555,9 @@ class IntegrationTester:
 
             success_rate = sum(results) / len(results)
             self.print_test(
-                "Concurrent Requests", success_rate > 0.9, f"Success rate: {success_rate:.0%}"
+                "Concurrent Requests",
+                success_rate > 0.9,
+                f"Success rate: {success_rate:.0%}",
             )
 
             return success_rate > 0.9

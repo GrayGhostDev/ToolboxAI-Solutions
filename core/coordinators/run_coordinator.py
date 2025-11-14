@@ -1,41 +1,43 @@
 #!/usr/bin/env python3
 """Simple Agent Coordinator runner for development."""
 
-import asyncio
 import logging
-import sys
 import os
-from typing import Dict, List, Any
+import sys
 from datetime import datetime
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import uvicorn
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
-import uvicorn
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Agent Coordinator", version="1.0.0")
 
 # Agent registry
-agents: Dict[str, Dict[str, Any]] = {}
-active_tasks: List[Dict[str, Any]] = []
+agents: dict[str, dict[str, Any]] = {}
+active_tasks: list[dict[str, Any]] = []
+
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return JSONResponse({
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "agents_registered": len(agents),
-        "active_tasks": len(active_tasks)
-    })
+    return JSONResponse(
+        {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "agents_registered": len(agents),
+            "active_tasks": len(active_tasks),
+        }
+    )
+
 
 @app.post("/agents/register")
 async def register_agent(agent_data: dict):
@@ -47,10 +49,11 @@ async def register_agent(agent_data: dict):
     agents[agent_id] = {
         **agent_data,
         "registered_at": datetime.now().isoformat(),
-        "status": "active"
+        "status": "active",
     }
     logger.info(f"Agent registered: {agent_id}")
     return JSONResponse({"status": "registered", "agent_id": agent_id})
+
 
 @app.post("/agents/{agent_id}/task")
 async def assign_task(agent_id: str, task_data: dict):
@@ -63,21 +66,24 @@ async def assign_task(agent_id: str, task_data: dict):
         "agent_id": agent_id,
         "data": task_data,
         "created_at": datetime.now().isoformat(),
-        "status": "assigned"
+        "status": "assigned",
     }
     active_tasks.append(task)
     logger.info(f"Task assigned to agent {agent_id}: {task['task_id']}")
     return JSONResponse(task)
+
 
 @app.get("/agents")
 async def list_agents():
     """List all registered agents."""
     return JSONResponse({"agents": list(agents.values())})
 
+
 @app.get("/tasks")
 async def list_tasks():
     """List all active tasks."""
     return JSONResponse({"tasks": active_tasks})
+
 
 @app.websocket("/ws/agent/{agent_id}")
 async def agent_websocket(websocket: WebSocket, agent_id: str):
@@ -91,15 +97,18 @@ async def agent_websocket(websocket: WebSocket, agent_id: str):
             logger.info(f"Received from {agent_id}: {data}")
 
             # Echo back for now
-            await websocket.send_json({
-                "type": "ack",
-                "agent_id": agent_id,
-                "timestamp": datetime.now().isoformat()
-            })
+            await websocket.send_json(
+                {
+                    "type": "ack",
+                    "agent_id": agent_id,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
     except Exception as e:
         logger.error(f"WebSocket error for {agent_id}: {e}")
     finally:
         logger.info(f"WebSocket disconnected: {agent_id}")
+
 
 if __name__ == "__main__":
     port = int(os.getenv("COORDINATOR_PORT", "8888"))

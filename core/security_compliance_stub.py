@@ -26,7 +26,6 @@ from __future__ import annotations
 import datetime as _dt
 import logging
 from dataclasses import dataclass
-from typing import Dict, List
 
 logger = logging.getLogger("security_stub")
 
@@ -36,10 +35,10 @@ class _StubReport:
     """Basic container returned by the stub scanners."""
 
     security_score: float = 99.0
-    vulnerabilities: List[Dict] = None
-    recommendations: List[Dict] = None
+    vulnerabilities: list[dict] = None
+    recommendations: list[dict] = None
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         return {
             "timestamp": _dt.datetime.utcnow().isoformat(),
             "security_score": self.security_score,
@@ -76,11 +75,11 @@ class VulnerabilityScanner:
     def stop_monitoring(self) -> None:  # pragma: no cover - stub
         logger.info("[security] VulnerabilityScanner stub monitoring stopped")
 
-    async def run_comprehensive_scan(self) -> Dict:
+    async def run_comprehensive_scan(self) -> dict:
         logger.info("[security] VulnerabilityScanner stub scan executed")
         return _StubReport().as_dict()
 
-    async def get_security_report(self) -> Dict:
+    async def get_security_report(self) -> dict:
         return _StubReport().as_dict()
 
 
@@ -97,7 +96,7 @@ class ComplianceChecker:
     def stop_monitoring(self) -> None:  # pragma: no cover - stub
         logger.info("[security] ComplianceChecker stub monitoring stopped")
 
-    async def run_comprehensive_compliance_check(self) -> Dict:
+    async def run_comprehensive_compliance_check(self) -> dict:
         logger.info("[security] ComplianceChecker stub check executed")
         return {
             "overall_score": 100.0,
@@ -116,7 +115,7 @@ class ComplianceChecker:
             "generated_at": _dt.datetime.utcnow().isoformat(),
         }
 
-    async def get_compliance_report(self) -> Dict:
+    async def get_compliance_report(self) -> dict:
         return await self.run_comprehensive_compliance_check()
 
 
@@ -132,7 +131,7 @@ class SecretRotator:
     def stop_monitoring(self) -> None:  # pragma: no cover - stub
         logger.info("[security] SecretRotator stub monitoring stopped")
 
-    async def get_rotation_report(self) -> Dict:
+    async def get_rotation_report(self) -> dict:
         logger.info("[security] SecretRotator stub report generated")
         return {
             "health_summary": {
@@ -142,7 +141,7 @@ class SecretRotator:
             "recommendations": [],
         }
 
-    async def emergency_rotation(self) -> List[str]:
+    async def emergency_rotation(self) -> list[str]:
         logger.info("[security] SecretRotator stub emergency rotation invoked")
         return []
 
@@ -159,21 +158,25 @@ class SecurityCoordinator:
 
     async def get_comprehensive_security_status(self):
         report = _StubReport().as_dict()
-        return type("Status", (), {
-            "timestamp": _dt.datetime.utcnow(),
-            "overall_score": report["security_score"],
-            "security_grade": "A+",
-            "vulnerability_score": report["security_score"],
-            "compliance_score": 100.0,
-            "secret_rotation_score": 100.0,
-            "critical_issues": 0,
-            "high_issues": 0,
-            "medium_issues": 0,
-            "low_issues": 0,
-            "compliance_status": {"owasp_2025": True},
-            "recommendations": [],
-            "next_actions": ["Maintain security posture"],
-        })()
+        return type(
+            "Status",
+            (),
+            {
+                "timestamp": _dt.datetime.utcnow(),
+                "overall_score": report["security_score"],
+                "security_grade": "A+",
+                "vulnerability_score": report["security_score"],
+                "compliance_score": 100.0,
+                "secret_rotation_score": 100.0,
+                "critical_issues": 0,
+                "high_issues": 0,
+                "medium_issues": 0,
+                "low_issues": 0,
+                "compliance_status": {"owasp_2025": True},
+                "recommendations": [],
+                "next_actions": ["Maintain security posture"],
+            },
+        )()
 
     async def save_security_status(self, status) -> None:  # pragma: no cover - stub
         logger.info("[security] SecurityCoordinator stub saved security status")

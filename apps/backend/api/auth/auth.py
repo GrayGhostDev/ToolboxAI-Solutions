@@ -13,7 +13,7 @@ import secrets
 import time
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, cast
 
 import jwt
 import redis
@@ -91,7 +91,7 @@ except (
     redis_client = None
 
 # In-memory fallback storage
-memory_store: Dict[str, Any] = {}
+memory_store: dict[str, Any] = {}
 
 
 def _safe_redis_int(value: Any, default: int = 1) -> int:
@@ -139,7 +139,7 @@ class JWTManager:
     """JWT token management"""
 
     @staticmethod
-    def create_access_token(data: Dict[str, Any], expires_delta: timedelta | None = None) -> str:
+    def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
 
@@ -165,7 +165,9 @@ class JWTManager:
 
     @staticmethod
     def create_refresh_token(
-        user_id: str, token_family: str | None = None, expires_delta: timedelta | None = None
+        user_id: str,
+        token_family: str | None = None,
+        expires_delta: timedelta | None = None,
     ) -> tuple[str, str]:
         """Create JWT refresh token with family tracking for rotation
 
@@ -287,6 +289,11 @@ class JWTManager:
             return None, False
 
 
+def create_access_token(data: dict[str, Any], expires_delta: timedelta | None = None) -> str:
+    """Backward-compatible helper wrapping JWTManager.create_access_token."""
+    return JWTManager.create_access_token(data, expires_delta)
+
+
 class SessionManager:
     """User session management"""
 
@@ -351,7 +358,7 @@ class SessionManager:
                 if isinstance(session_data, (str, bytes, bytearray)):
                     data = json.loads(session_data)
                 else:
-                    data = cast(Dict[str, Any], session_data)
+                    data = cast(dict[str, Any], session_data)
                 return Session(**data)
         else:
             session_data = memory_store.get(session_key)
@@ -359,7 +366,7 @@ class SessionManager:
                 if isinstance(session_data, (str, bytes, bytearray)):
                     data = json.loads(session_data)
                 else:
-                    data = cast(Dict[str, Any], session_data)
+                    data = cast(dict[str, Any], session_data)
                 return Session(**data)
 
         return None
@@ -463,7 +470,7 @@ class LMSAuthenticator:
         )
 
     @staticmethod
-    def get_canvas_headers(user_token: str = None) -> Dict[str, str]:
+    def get_canvas_headers(user_token: str = None) -> dict[str, str]:
         """Get Canvas API headers"""
         token = user_token or settings.CANVAS_TOKEN
         if not token:
@@ -472,7 +479,7 @@ class LMSAuthenticator:
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
     @staticmethod
-    def verify_lms_credentials(platform: str, credentials: Dict[str, str]) -> bool:
+    def verify_lms_credentials(platform: str, credentials: dict[str, str]) -> bool:
         """Verify LMS credentials"""
         try:
             if platform == "schoology":
@@ -613,7 +620,7 @@ def require_role(required_role: str):
     return role_checker
 
 
-def require_any_role(allowed_roles: List[str]):
+def require_any_role(allowed_roles: list[str]):
     """Dependency to require any of the specified roles"""
 
     async def role_checker(current_user: User = Depends(get_current_user)) -> User:
@@ -708,9 +715,10 @@ async def authenticate_user(username: str, password: str) -> User | None:
             and settings.DEBUG
             and settings.ENVIRONMENT == "development"
         ):
-
             # Use secure test data generator instead of hardcoded credentials
-            from apps.backend.core.security.test_data_generator import get_development_credentials
+            from apps.backend.core.security.test_data_generator import (
+                get_development_credentials,
+            )
 
             dev_credentials = get_development_credentials()
 
@@ -746,7 +754,9 @@ async def authenticate_user(username: str, password: str) -> User | None:
     # SECURE: Generate test users dynamically instead of hardcoded credentials
     # This prevents password leaks and makes credentials unpredictable
     try:
-        from apps.backend.core.security.test_data_generator import get_testing_credentials
+        from apps.backend.core.security.test_data_generator import (
+            get_testing_credentials,
+        )
 
         # Only allow fallback test users in testing environment or if explicitly enabled
         testing_allowed = (

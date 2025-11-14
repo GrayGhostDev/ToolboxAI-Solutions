@@ -9,16 +9,17 @@ Extends the BaseAgent with integration-specific capabilities including:
 """
 
 import asyncio
+import json
 import logging
-from typing import Dict, Any, Optional, List, Callable
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import json
-from abc import abstractmethod
+from typing import Any, Callable, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
 from pydantic import BaseModel, Field
+
+from core.agents.base_agent import AgentConfig, AgentState, BaseAgent, TaskResult
 
 # Try to import SPARC if available
 try:
@@ -28,11 +29,13 @@ except ImportError:
     class SPARCContext:
         pass
 
+
 logger = logging.getLogger(__name__)
 
 
 class IntegrationPlatform(Enum):
     """Supported integration platforms"""
+
     BACKEND = "backend"
     FRONTEND = "frontend"
     ROBLOX = "roblox"
@@ -43,11 +46,12 @@ class IntegrationPlatform(Enum):
 
 class IntegrationEvent(BaseModel):
     """Event model for integration agents"""
+
     event_id: str
     event_type: str
     source_platform: IntegrationPlatform
     target_platform: Optional[IntegrationPlatform] = None
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     correlation_id: Optional[str] = None
     retry_count: int = 0
@@ -56,14 +60,16 @@ class IntegrationEvent(BaseModel):
 
 class CircuitBreakerState(Enum):
     """Circuit breaker states for fault tolerance"""
+
     CLOSED = "closed"  # Normal operation
-    OPEN = "open"      # Failing, reject requests
+    OPEN = "open"  # Failing, reject requests
     HALF_OPEN = "half_open"  # Testing recovery
 
 
 @dataclass
 class CircuitBreaker:
     """Circuit breaker implementation for fault tolerance"""
+
     failure_threshold: int = 5
     recovery_timeout: timedelta = field(default_factory=lambda: timedelta(seconds=60))
     half_open_requests: int = 3
@@ -119,6 +125,7 @@ class CircuitBreaker:
 @dataclass
 class IntegrationMetrics:
     """Metrics tracking for integration operations"""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -161,13 +168,13 @@ class BaseIntegrationAgent(BaseAgent):
         super().__init__(config)
 
         # Integration-specific components
-        self.circuit_breakers: Dict[str, CircuitBreaker] = {}
+        self.circuit_breakers: dict[str, CircuitBreaker] = {}
         self.metrics = IntegrationMetrics()
-        self.event_handlers: Dict[str, List[Callable]] = {}
+        self.event_handlers: dict[str, list[Callable]] = {}
         self.retry_delays = [1, 2, 4, 8, 16]  # Exponential backoff delays in seconds
 
         # Platform connections
-        self.platform_clients: Dict[IntegrationPlatform, Any] = {}
+        self.platform_clients: dict[IntegrationPlatform, Any] = {}
 
         # Event queue for async processing
         self.event_queue: asyncio.Queue = asyncio.Queue()
@@ -182,7 +189,7 @@ class BaseIntegrationAgent(BaseAgent):
             "plan": "Create a detailed integration plan with steps and dependencies",
             "execute": "Execute the integration with proper error handling",
             "validate": "Validate the integration results and ensure data consistency",
-            "optimize": "Optimize the integration for performance and reliability"
+            "optimize": "Optimize the integration for performance and reliability",
         }
 
     async def connect_platform(self, platform: IntegrationPlatform, client: Any):
@@ -238,7 +245,7 @@ class BaseIntegrationAgent(BaseAgent):
         """
         # Convert state to task if needed
         task_name = state.task if isinstance(state.task, str) else "process"
-        context = state.context if hasattr(state, 'context') else {}
+        context = state.context if hasattr(state, "context") else {}
 
         # Execute the task using the integration agent's execute_task method
         result = await self.execute_task(task_name, context)
@@ -251,7 +258,7 @@ class BaseIntegrationAgent(BaseAgent):
         *args,
         max_retries: int = 3,
         circuit_breaker_key: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Any:
         """Execute a function with retry logic and circuit breaker"""
 
@@ -297,7 +304,7 @@ class BaseIntegrationAgent(BaseAgent):
 
         raise last_exception
 
-    async def validate_schema(self, data: Dict[str, Any], schema: Dict[str, Any]) -> bool:
+    async def validate_schema(self, data: dict[str, Any], schema: dict[str, Any]) -> bool:
         """Validate data against a schema"""
         # Basic schema validation - can be enhanced with jsonschema
         for field, field_type in schema.items():
@@ -307,17 +314,19 @@ class BaseIntegrationAgent(BaseAgent):
 
             # Type checking can be enhanced
             if not isinstance(data[field], field_type):
-                logger.error(f"Invalid type for field {field}: expected {field_type}, got {type(data[field])}")
+                logger.error(
+                    f"Invalid type for field {field}: expected {field_type}, got {type(data[field])}"
+                )
                 return False
 
         return True
 
     async def transform_data(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         source_platform: IntegrationPlatform,
-        target_platform: IntegrationPlatform
-    ) -> Dict[str, Any]:
+        target_platform: IntegrationPlatform,
+    ) -> dict[str, Any]:
         """Transform data between platforms"""
         # Default implementation - override in subclasses for specific transformations
         transformed = data.copy()
@@ -331,7 +340,7 @@ class BaseIntegrationAgent(BaseAgent):
         self,
         source_platform: IntegrationPlatform,
         target_platform: IntegrationPlatform,
-        data: Dict[str, Any]
+        data: dict[str, Any],
     ) -> TaskResult:
         """Synchronize data between platforms"""
         try:
@@ -343,7 +352,7 @@ class BaseIntegrationAgent(BaseAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error=f"Not connected to platform: {target_platform.value}"
+                    error=f"Not connected to platform: {target_platform.value}",
                 )
 
             target_client = self.platform_clients[target_platform]
@@ -358,24 +367,20 @@ class BaseIntegrationAgent(BaseAgent):
                 metadata={
                     "source_platform": source_platform.value,
                     "target_platform": target_platform.value,
-                    "data_size": len(json.dumps(data))
-                }
+                    "data_size": len(json.dumps(data)),
+                },
             )
 
         except Exception as e:
             logger.error(f"Error syncing data: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def _platform_specific_sync(self, client: Any, data: Dict[str, Any]) -> Any:
+    async def _platform_specific_sync(self, client: Any, data: dict[str, Any]) -> Any:
         """Platform-specific sync implementation - override in subclasses"""
         # Default implementation - just return the data
         return data
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on integration agent"""
         health_status = {
             "agent": self.config.name,
@@ -384,10 +389,10 @@ class BaseIntegrationAgent(BaseAgent):
                 "total_requests": self.metrics.total_requests,
                 "success_rate": self.metrics.success_rate,
                 "average_latency_ms": self.metrics.average_latency_ms,
-                "events_processed": self.metrics.events_processed
+                "events_processed": self.metrics.events_processed,
             },
             "platforms": {},
-            "circuit_breakers": {}
+            "circuit_breakers": {},
         }
 
         # Check platform connections
@@ -398,11 +403,13 @@ class BaseIntegrationAgent(BaseAgent):
         for key, breaker in self.circuit_breakers.items():
             health_status["circuit_breakers"][key] = {
                 "state": breaker.state.value,
-                "failure_count": breaker.failure_count
+                "failure_count": breaker.failure_count,
             }
 
         # Overall status
-        if any(breaker.state == CircuitBreakerState.OPEN for breaker in self.circuit_breakers.values()):
+        if any(
+            breaker.state == CircuitBreakerState.OPEN for breaker in self.circuit_breakers.values()
+        ):
             health_status["status"] = "degraded"
 
         return health_status

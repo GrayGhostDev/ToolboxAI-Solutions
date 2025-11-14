@@ -684,7 +684,7 @@ class TestHealthMonitoring:
             )
 
             # Start monitoring task
-            task = asyncio.create_task(main_coordinator._health_monitor())
+            asyncio.create_task(main_coordinator._health_monitor())
 
             # Let it run a few iterations
             await asyncio.sleep(0.3)
@@ -878,7 +878,7 @@ class TestMetricsAndQuality:
         main_coordinator.mcp_client = AsyncMock()
 
         # Start metrics collector
-        task = asyncio.create_task(main_coordinator._metrics_collector())
+        asyncio.create_task(main_coordinator._metrics_collector())
 
         # Let it run one iteration
         await asyncio.sleep(0.1)

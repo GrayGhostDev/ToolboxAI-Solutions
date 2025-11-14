@@ -484,12 +484,7 @@ class TestConcurrentAccess:
             timer = PerformanceTimer()
             with timer:
                 # Simulate typical user query
-                agents = (
-                    db_session.query(AgentInstance)
-                    .filter_by(organization_id=org_id)
-                    .limit(20)
-                    .all()
-                )
+                (db_session.query(AgentInstance).filter_by(organization_id=org_id).limit(20).all())
             return timer.duration_ms
 
         # Execute concurrent queries

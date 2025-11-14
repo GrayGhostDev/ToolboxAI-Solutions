@@ -5,13 +5,12 @@ Provides event-driven messaging infrastructure for agent communication.
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Callable
-from dataclasses import dataclass, field
-from datetime import datetime
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
 
-from .event_types import EventType, EventPriority
 from .agent_message import AgentMessage, MessageStatus
+from .event_types import EventType
 
 
 @dataclass
@@ -37,20 +36,16 @@ class MessageBus:
         self.logger = logging.getLogger(__name__)
 
         # Message queues by topic
-        self.queues: Dict[str, asyncio.Queue] = {}
+        self.queues: dict[str, asyncio.Queue] = {}
 
         # Subscribers by event type
-        self.subscribers: Dict[EventType, List[Callable]] = defaultdict(list)
+        self.subscribers: dict[EventType, list[Callable]] = defaultdict(list)
 
         # Message history
-        self.message_history: List[AgentMessage] = []
+        self.message_history: list[AgentMessage] = []
 
         # Statistics
-        self.stats = {
-            "messages_sent": 0,
-            "messages_received": 0,
-            "messages_failed": 0
-        }
+        self.stats = {"messages_sent": 0, "messages_received": 0, "messages_failed": 0}
 
     async def publish(self, message: AgentMessage) -> bool:
         """
@@ -130,13 +125,13 @@ class MessageBus:
             self.logger.error(f"Failed to unsubscribe: {e}")
             return False
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get message bus statistics."""
         return {
             **self.stats,
             "active_subscriptions": sum(len(handlers) for handlers in self.subscribers.values()),
             "queued_messages": sum(q.qsize() for q in self.queues.values()),
-            "history_size": len(self.message_history)
+            "history_size": len(self.message_history),
         }
 
     def clear_history(self):

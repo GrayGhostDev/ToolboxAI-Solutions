@@ -311,7 +311,10 @@ class SecurityManager:
             return result
 
     async def encrypt_sensitive_file(
-        self, file_data: bytes, organization_id: str, additional_context: str | None = None
+        self,
+        file_data: bytes,
+        organization_id: str,
+        additional_context: str | None = None,
     ) -> tuple[bytes, dict[str, Any]]:
         """
         Encrypt sensitive file data.
@@ -322,7 +325,7 @@ class SecurityManager:
             additional_context: Additional encryption context
 
         Returns:
-            Tuple[bytes, Dict[str, Any]]: Encrypted data and metadata
+            Tuple[bytes, dict[str, Any]]: Encrypted data and metadata
         """
         try:
             if not CRYPTO_AVAILABLE or not self.fernet:
@@ -409,7 +412,7 @@ class SecurityManager:
             context: Additional context
 
         Returns:
-            Tuple[bool, List[str]]: Access allowed and reasons/violations
+            Tuple[bool, list[str]]: Access allowed and reasons/violations
         """
         try:
             violations = []
@@ -588,7 +591,12 @@ class SecurityManager:
     async def _calculate_pii_risk_level(self, pii_result: PIIDetectionResult) -> SecurityRisk:
         """Calculate overall risk level based on PII types found"""
         high_risk_types = {PIIType.SSN, PIIType.CREDIT_CARD, PIIType.MEDICAL}
-        medium_risk_types = {PIIType.DOB, PIIType.PHONE, PIIType.ADDRESS, PIIType.STUDENT_ID}
+        medium_risk_types = {
+            PIIType.DOB,
+            PIIType.PHONE,
+            PIIType.ADDRESS,
+            PIIType.STUDENT_ID,
+        }
 
         if any(pii_type in high_risk_types for pii_type in pii_result.pii_types):
             return SecurityRisk.HIGH
@@ -620,7 +628,10 @@ class SecurityManager:
         return recommendations
 
     async def _check_coppa_compliance(
-        self, compliance: ComplianceCheck, options: UploadOptions, context: dict[str, Any] | None
+        self,
+        compliance: ComplianceCheck,
+        options: UploadOptions,
+        context: dict[str, Any] | None,
     ) -> None:
         """Check COPPA compliance requirements"""
         if compliance.required_level == ComplianceLevel.COPPA:
@@ -635,7 +646,10 @@ class SecurityManager:
                 compliance.encryption_required = True
 
     async def _check_ferpa_compliance(
-        self, compliance: ComplianceCheck, options: UploadOptions, context: dict[str, Any] | None
+        self,
+        compliance: ComplianceCheck,
+        options: UploadOptions,
+        context: dict[str, Any] | None,
     ) -> None:
         """Check FERPA compliance requirements"""
         if compliance.required_level == ComplianceLevel.FERPA:

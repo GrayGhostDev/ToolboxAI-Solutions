@@ -12,20 +12,24 @@ This module provides:
 - Deployment preparation
 """
 
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
-
-# Import base orchestration components
-from ...agents.master_orchestrator import MasterOrchestrator, AgentSystemType, TaskPriority
+from typing import Any, Dict, List, Optional
 
 # Import GitHub orchestrator components
 from ...agents.github_agents.orchestrator import (
     GitHubAgentOrchestrator,
+    GitHubAgentState,
     OperationType,
-    GitHubAgentState
+)
+
+# Import base orchestration components
+from ...agents.master_orchestrator import (
+    AgentSystemType,
+    MasterOrchestrator,
+    TaskPriority,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class GitHubWorkflowType(Enum):
     """GitHub workflow types."""
+
     PRE_COMMIT = "pre_commit"
     PRE_PUSH = "pre_push"
     HEALTH_CHECK = "health_check"
@@ -61,7 +66,7 @@ class GitHubOrchestrationModule:
             "successful_workflows": 0,
             "failed_workflows": 0,
             "files_processed": 0,
-            "lfs_migrations": 0
+            "lfs_migrations": 0,
         }
 
         logger.info("GitHub Orchestration Module initialized")
@@ -99,14 +104,14 @@ class GitHubOrchestrationModule:
             "workflow_type": workflow_type.value,
             "files_to_process": files_to_process,
             "auto_fix": auto_fix,
-            "module": "github"
+            "module": "github",
         }
 
         # Submit to master orchestrator
         task_id = await self.master.submit_task(
             agent_type=AgentSystemType.GITHUB,
             task_data=task_data,
-            priority=TaskPriority.MEDIUM
+            priority=TaskPriority.MEDIUM,
         )
 
         self.metrics["workflows_executed"] += 1
@@ -115,9 +120,9 @@ class GitHubOrchestrationModule:
     async def execute_workflow(
         self,
         operation_type: OperationType,
-        files_to_process: List[str] = None,
-        auto_fix: bool = False
-    ) -> Dict[str, Any]:
+        files_to_process: list[str] = None,
+        auto_fix: bool = False,
+    ) -> dict[str, Any]:
         """
         Execute a GitHub workflow directly.
 
@@ -146,7 +151,7 @@ class GitHubOrchestrationModule:
                 recommendations=[],
                 current_agent="",
                 timestamp=datetime.now().isoformat(),
-                auto_fix=auto_fix
+                auto_fix=auto_fix,
             )
 
             # Execute workflow
@@ -168,7 +173,7 @@ class GitHubOrchestrationModule:
             self.metrics["failed_workflows"] += 1
             raise
 
-    async def pre_commit_check(self, files: List[str] = None) -> Dict[str, Any]:
+    async def pre_commit_check(self, files: list[str] = None) -> dict[str, Any]:
         """
         Perform pre-commit checks on specified files.
 
@@ -181,10 +186,10 @@ class GitHubOrchestrationModule:
         return await self.execute_workflow(
             operation_type=OperationType.PRE_COMMIT,
             files_to_process=files or [],
-            auto_fix=True
+            auto_fix=True,
         )
 
-    async def pre_push_check(self, files: List[str] = None) -> Dict[str, Any]:
+    async def pre_push_check(self, files: list[str] = None) -> dict[str, Any]:
         """
         Perform pre-push checks on specified files.
 
@@ -197,10 +202,10 @@ class GitHubOrchestrationModule:
         return await self.execute_workflow(
             operation_type=OperationType.PRE_PUSH,
             files_to_process=files or [],
-            auto_fix=True
+            auto_fix=True,
         )
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform repository health check.
 
@@ -208,47 +213,37 @@ class GitHubOrchestrationModule:
             Repository health status
         """
         return await self.execute_workflow(
-            operation_type=OperationType.HEALTH_CHECK,
-            auto_fix=False
+            operation_type=OperationType.HEALTH_CHECK, auto_fix=False
         )
 
-    async def optimize_repository(self) -> Dict[str, Any]:
+    async def optimize_repository(self) -> dict[str, Any]:
         """
         Optimize repository performance and structure.
 
         Returns:
             Optimization results
         """
-        return await self.execute_workflow(
-            operation_type=OperationType.OPTIMIZATION,
-            auto_fix=True
-        )
+        return await self.execute_workflow(operation_type=OperationType.OPTIMIZATION, auto_fix=True)
 
-    async def prepare_deployment(self) -> Dict[str, Any]:
+    async def prepare_deployment(self) -> dict[str, Any]:
         """
         Prepare repository for deployment.
 
         Returns:
             Deployment preparation results
         """
-        return await self.execute_workflow(
-            operation_type=OperationType.DEPLOYMENT,
-            auto_fix=True
-        )
+        return await self.execute_workflow(operation_type=OperationType.DEPLOYMENT, auto_fix=True)
 
-    async def full_scan(self) -> Dict[str, Any]:
+    async def full_scan(self) -> dict[str, Any]:
         """
         Perform full repository scan.
 
         Returns:
             Full scan results
         """
-        return await self.execute_workflow(
-            operation_type=OperationType.FULL_SCAN,
-            auto_fix=False
-        )
+        return await self.execute_workflow(operation_type=OperationType.FULL_SCAN, auto_fix=False)
 
-    async def manage_worktrees(self, **kwargs) -> Dict[str, Any]:
+    async def manage_worktrees(self, **kwargs) -> dict[str, Any]:
         """
         Manage Git worktrees.
 
@@ -263,10 +258,10 @@ class GitHubOrchestrationModule:
         return {
             "success": True,
             "message": "Worktree management not yet implemented",
-            "data": kwargs
+            "data": kwargs,
         }
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get the status of the GitHub orchestration module."""
         github_status = None
         if self.github_orchestrator:
@@ -276,7 +271,7 @@ class GitHubOrchestrationModule:
                 github_status = {
                     "initialized": True,
                     "workflow_engine": "langgraph",
-                    "available_operations": [op.value for op in OperationType]
+                    "available_operations": [op.value for op in OperationType],
                 }
             except Exception as e:
                 github_status = {"error": str(e)}
@@ -285,7 +280,7 @@ class GitHubOrchestrationModule:
             "module": "github",
             "initialized": self.github_orchestrator is not None,
             "github_orchestrator": github_status,
-            "metrics": self.metrics
+            "metrics": self.metrics,
         }
 
     async def cleanup(self):
@@ -308,10 +303,13 @@ __all__ = [
     "GitHubWorkflowType",
     "GitHubAgentOrchestrator",
     "OperationType",
-    "GitHubAgentState"
+    "GitHubAgentState",
 ]
 
+
 # Convenience factory function
-def create_github_orchestrator(master_orchestrator: MasterOrchestrator) -> GitHubOrchestrationModule:
+def create_github_orchestrator(
+    master_orchestrator: MasterOrchestrator,
+) -> GitHubOrchestrationModule:
     """Create and initialize a GitHub orchestration module."""
     return GitHubOrchestrationModule(master_orchestrator)

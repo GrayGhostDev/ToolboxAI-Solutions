@@ -352,7 +352,7 @@ class TenantStorageManager:
             organization_id: Organization identifier
 
         Returns:
-            List[QuotaAlert]: List of triggered alerts
+            list[QuotaAlert]: List of triggered alerts
         """
         alerts = []
 
@@ -405,7 +405,10 @@ class TenantStorageManager:
             return []
 
     async def cleanup_old_files(
-        self, organization_id: str, max_age_days: int = 365, categories: list[str] | None = None
+        self,
+        organization_id: str,
+        max_age_days: int = 365,
+        categories: list[str] | None = None,
     ) -> int:
         """
         Clean up old files based on retention policies.
@@ -464,7 +467,7 @@ class TenantStorageManager:
             days: Number of days to analyze
 
         Returns:
-            Dict[str, Any]: Analytics data
+            dict[str, Any]: Analytics data
         """
         try:
             end_date = datetime.utcnow()
@@ -500,7 +503,7 @@ class TenantStorageManager:
         """Create a new organization bucket with proper policies"""
         try:
             # Create bucket
-            bucket_response = self.supabase.storage.create_bucket(
+            self.supabase.storage.create_bucket(
                 bucket_name,
                 {
                     "public": False,

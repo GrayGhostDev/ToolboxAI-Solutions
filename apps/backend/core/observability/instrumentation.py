@@ -11,8 +11,6 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from apps.backend.core.websocket_cluster import WebSocketCluster, get_websocket_cluster
-from database.replica_router import get_replica_router
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.base import BaseHTTPMiddleware
 from opentelemetry import baggage, context, trace
@@ -25,6 +23,8 @@ from apps.backend.core.observability.telemetry import (
     LoadBalancerInstrumentor,
     TelemetryManager,
 )
+from apps.backend.core.websocket_cluster import WebSocketCluster, get_websocket_cluster
+from database.replica_router import get_replica_router
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +172,8 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
                 )
 
                 self.request_duration.record(
-                    duration, attributes={"method": request.method, "path": request.url.path}
+                    duration,
+                    attributes={"method": request.method, "path": request.url.path},
                 )
 
                 if "response" in locals() and hasattr(response, "headers"):
@@ -180,7 +181,10 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
                     if content_length:
                         self.response_size.record(
                             int(content_length),
-                            attributes={"method": request.method, "path": request.url.path},
+                            attributes={
+                                "method": request.method,
+                                "path": request.url.path,
+                            },
                         )
 
     def _add_request_attributes(self, span: Span, request: Request):
@@ -333,7 +337,8 @@ class ComponentInstrumentor:
         @wraps(original_join_room)
         async def traced_join_room(connection_id: str, room: str):
             async with self.telemetry.trace_async_operation(
-                "websocket.join_room", attributes={"connection_id": connection_id, "room": room}
+                "websocket.join_room",
+                attributes={"connection_id": connection_id, "room": room},
             ):
                 await original_join_room(connection_id, room)
 

@@ -212,7 +212,9 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
-                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+                health_checker,
+                "_check_task_queue",
+                new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
                 health_checker,
@@ -220,7 +222,6 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
         ):
-
             result = await health_checker.detailed_health()
 
             assert result["status"] == "healthy"
@@ -258,7 +259,9 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
-                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+                health_checker,
+                "_check_task_queue",
+                new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
                 health_checker,
@@ -266,7 +269,6 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
         ):
-
             result = await health_checker.detailed_health()
 
             assert result["status"] == "unhealthy"
@@ -302,7 +304,9 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
-                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+                health_checker,
+                "_check_task_queue",
+                new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
                 health_checker,
@@ -310,7 +314,6 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
         ):
-
             result = await health_checker.detailed_health()
 
             assert "check_duration_ms" in result
@@ -347,7 +350,9 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
-                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+                health_checker,
+                "_check_task_queue",
+                new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
                 health_checker,
@@ -355,7 +360,6 @@ class TestDetailedHealthCheck:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
         ):
-
             result = await health_checker.detailed_health()
 
             assert "uptime_seconds" in result
@@ -636,7 +640,10 @@ class TestSPARCFrameworkCheck:
     async def test_check_sparc_active_workflows(self, health_checker):
         """Test SPARC check with active workflows"""
         with patch.dict("sys.modules", {"core.sparc.state_manager": Mock()}):
-            health_checker.coordinator.sparc_manager.active_workflows = ["workflow_1", "workflow_2"]
+            health_checker.coordinator.sparc_manager.active_workflows = [
+                "workflow_1",
+                "workflow_2",
+            ]
 
             result = await health_checker._check_sparc_framework()
 
@@ -744,7 +751,6 @@ class TestSystemResourcesCheck:
             patch("psutil.virtual_memory") as mock_memory,
             patch("psutil.disk_usage") as mock_disk,
         ):
-
             # Mock process metrics
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
@@ -777,7 +783,6 @@ class TestSystemResourcesCheck:
             patch("psutil.virtual_memory") as mock_memory,
             patch("psutil.disk_usage") as mock_disk,
         ):
-
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 85.0  # High CPU
             mock_memory_info = Mock()
@@ -804,7 +809,6 @@ class TestSystemResourcesCheck:
             patch("psutil.virtual_memory") as mock_memory,
             patch("psutil.disk_usage") as mock_disk,
         ):
-
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
             mock_memory_info = Mock()
@@ -831,7 +835,6 @@ class TestSystemResourcesCheck:
             patch("psutil.virtual_memory") as mock_memory,
             patch("psutil.disk_usage") as mock_disk,
         ):
-
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
             mock_memory_info = Mock()
@@ -859,7 +862,6 @@ class TestSystemResourcesCheck:
             patch("psutil.disk_usage") as mock_disk,
             patch("os.getloadavg", return_value=(1.0, 1.5, 2.0)),
         ):
-
             mock_proc_instance = Mock()
             mock_proc_instance.cpu_percent.return_value = 30.0
             mock_memory_info = Mock()
@@ -1102,7 +1104,11 @@ class TestPrometheusMetricsHandler:
                     "uptime_seconds": 123.45,
                     "checks": {
                         "active_agents": {
-                            "details": {"total_agents": 5, "healthy_agents": 4, "error_agents": 1}
+                            "details": {
+                                "total_agents": 5,
+                                "healthy_agents": 4,
+                                "error_agents": 1,
+                            }
                         },
                         "task_queue": {
                             "details": {
@@ -1112,7 +1118,10 @@ class TestPrometheusMetricsHandler:
                             }
                         },
                         "system_resources": {
-                            "details": {"process_cpu_percent": 30.0, "process_memory_percent": 40.0}
+                            "details": {
+                                "process_cpu_percent": 30.0,
+                                "process_memory_percent": 40.0,
+                            }
                         },
                     },
                 }
@@ -1181,7 +1190,6 @@ class TestHealthServerLifecycle:
             patch("aiohttp.web.AppRunner") as mock_runner,
             patch("aiohttp.web.TCPSite") as mock_site,
         ):
-
             mock_runner_instance = Mock()
             mock_runner_instance.setup = AsyncMock()
             mock_runner.return_value = mock_runner_instance
@@ -1190,7 +1198,7 @@ class TestHealthServerLifecycle:
             mock_site_instance.start = AsyncMock()
             mock_site.return_value = mock_site_instance
 
-            runner = await health_server.start_server()
+            await health_server.start_server()
 
             assert health_server.app is not None
             mock_runner_instance.setup.assert_called_once()
@@ -1322,7 +1330,9 @@ class TestDataClasses:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
-                health_checker, "_check_task_queue", new=AsyncMock(return_value={"healthy": True})
+                health_checker,
+                "_check_task_queue",
+                new=AsyncMock(return_value={"healthy": True}),
             ),
             patch.object(
                 health_checker,
@@ -1330,7 +1340,6 @@ class TestDataClasses:
                 new=AsyncMock(return_value={"healthy": True}),
             ),
         ):
-
             detailed = await health_checker.detailed_health()
 
         # Both should have parseable timestamps

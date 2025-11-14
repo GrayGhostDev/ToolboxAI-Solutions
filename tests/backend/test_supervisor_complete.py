@@ -1,7 +1,7 @@
-
 """
 Test CompleteSupervisorAgent with real OpenAI API
 """
+
 import asyncio
 import os
 
@@ -15,9 +15,8 @@ import sys
 
 sys.path.insert(0, "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions")
 
-from core.agents.supervisor_complete import CompleteSupervisorAgent
-
 from core.agents.base_agent import AgentConfig
+from core.agents.supervisor_complete import CompleteSupervisorAgent
 
 
 @pytest.mark.asyncio

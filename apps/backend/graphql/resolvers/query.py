@@ -44,7 +44,7 @@ async def resolve_me(obj, info) -> User | None:
 async def resolve_user(obj, info, id: str) -> User | None:
     """Get user by ID"""
 
-    db = info.context["db"]
+    info.context["db"]
     loader = info.context["loaders"]["user"]
 
     # Use DataLoader for efficient loading

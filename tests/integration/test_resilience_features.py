@@ -11,11 +11,6 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 import redis.asyncio as aioredis
-from database.pool_config_production import (
-    ProductionPoolConfig,
-    ProductionPoolManager,
-    get_production_pool_config,
-)
 from fastapi import FastAPI, HTTPException
 
 from apps.backend.api.middleware.resilience import (
@@ -34,6 +29,11 @@ from apps.backend.core.rate_limiter import (
     RateLimitConfig,
     RateLimiter,
     RateLimitStrategy,
+)
+from database.pool_config_production import (
+    ProductionPoolConfig,
+    ProductionPoolManager,
+    get_production_pool_config,
 )
 
 
@@ -150,7 +150,8 @@ class TestRateLimiter:
     async def redis_client(self):
         """Create Redis client for testing"""
         client = await aioredis.create_redis_pool(
-            "redis://localhost:6379/15", encoding="utf-8"  # Use test database 15
+            "redis://localhost:6379/15",
+            encoding="utf-8",  # Use test database 15
         )
         yield client
         await client.flushdb()

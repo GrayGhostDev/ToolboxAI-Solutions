@@ -10,21 +10,25 @@ Version: 2.0.0
 """
 
 import asyncio
-import logging
 import json
-from typing import Dict, Any, List, Optional, Literal, Union, Tuple
+import logging
+import traceback
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass, field
-import traceback
+from typing import Any, Literal, Optional
 
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import BaseMessage
+from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
-from langchain_core.tools import Tool
-from langchain_core.prompts import ChatPromptTemplate
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentPriority, AgentCapability
+from .base_agent import (
+    AgentConfig,
+    AgentPriority,
+    AgentState,
+    BaseAgent,
+    TaskResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +77,9 @@ class DelegationTask:
     task_id: str
     agent_type: str
     task_description: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     priority: AgentPriority = AgentPriority.MEDIUM
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     retry_count: int = 0
     max_retries: int = 3
     timeout: int = 300  # seconds
@@ -89,13 +93,13 @@ class DelegationTask:
 @dataclass
 class WorkflowState:
     """Enhanced state for workflow execution"""
-    messages: List[BaseMessage]
+    messages: list[BaseMessage]
     task: str
-    context: Dict[str, Any]
-    metadata: Dict[str, Any]
-    delegations: List[DelegationTask]
-    results: List[Dict[str, Any]]
-    errors: List[str]
+    context: dict[str, Any]
+    metadata: dict[str, Any]
+    delegations: list[DelegationTask]
+    results: list[dict[str, Any]]
+    errors: list[str]
     current_phase: str
     decision: Optional[SupervisorDecision]
     final_result: Optional[Any]
@@ -133,21 +137,21 @@ class CompleteSupervisorAgent(BaseAgent):
         super().__init__(config)
 
         # Initialize managed agents dictionary
-        self.managed_agents: Dict[str, BaseAgent] = {}
+        self.managed_agents: dict[str, BaseAgent] = {}
 
         # Load balancing - Initialize BEFORE calling _initialize_all_agents()
-        self.agent_load: Dict[str, int] = {}
+        self.agent_load: dict[str, int] = {}
 
         # Performance tracking
-        self.agent_performance: Dict[str, Dict[str, Any]] = {}
-        self.task_history: List[DelegationTask] = []
+        self.agent_performance: dict[str, dict[str, Any]] = {}
+        self.task_history: list[DelegationTask] = []
 
         # Initialize all agents at startup
         self._initialize_all_agents()
 
         # Workflow components
         self.workflow_graph: Optional[CompiledGraph] = None
-        self.active_workflows: Dict[str, WorkflowState] = {}
+        self.active_workflows: dict[str, WorkflowState] = {}
 
         # Build the workflow graph
         self._build_complete_workflow_graph()
@@ -224,21 +228,23 @@ Always provide structured, actionable decisions with clear rationale."""
         try:
             # Import all agent classes
             from .content_agent import ContentAgent
-            from .quiz_agent import QuizAgent
-            from .terrain_agent import TerrainAgent
-            from .script_agent import ScriptAgent
-            from .review_agent import ReviewAgent
-            from .testing_agent import TestingAgent
-
-            # Import educational agents
-            from .educational.curriculum_alignment_agent import CurriculumAlignmentAgent
-            from .educational.assessment_design_agent import AssessmentDesignAgent
-            from .educational.adaptive_learning_agent import AdaptiveLearningAgent
-            from .educational.learning_analytics_agent import LearningAnalyticsAgent
-            from .educational.educational_validation_agent import EducationalValidationAgent
 
             # Import database agents
             from .database.supervisor_agent import DatabaseSupervisorAgent
+            from .educational.adaptive_learning_agent import AdaptiveLearningAgent
+            from .educational.assessment_design_agent import AssessmentDesignAgent
+
+            # Import educational agents
+            from .educational.curriculum_alignment_agent import CurriculumAlignmentAgent
+            from .educational.educational_validation_agent import (
+                EducationalValidationAgent,
+            )
+            from .educational.learning_analytics_agent import LearningAnalyticsAgent
+            from .quiz_agent import QuizAgent
+            from .review_agent import ReviewAgent
+            from .script_agent import ScriptAgent
+            from .terrain_agent import TerrainAgent
+            from .testing_agent import TestingAgent
 
             # Create agent instances with proper configuration
             # Note: Some educational agents don't accept config parameters
@@ -317,7 +323,7 @@ Always provide structured, actionable decisions with clear rationale."""
         """Build the complete workflow graph with all nodes and edges"""
         try:
             # Create state graph
-            workflow = StateGraph(Dict[str, Any])
+            workflow = StateGraph(dict[str, Any])
 
             # Add all workflow nodes
             workflow.add_node("analyze", self._analyze_task_node)
@@ -389,7 +395,7 @@ Always provide structured, actionable decisions with clear rationale."""
             logger.error(f"Failed to build workflow graph: {e}")
             traceback.print_exc()
 
-    async def _analyze_task_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_task_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Analyze the incoming task and extract requirements"""
         try:
             task = state.get("task", "")
@@ -460,7 +466,7 @@ Provide your analysis in JSON format."""
             state["phase"] = "error"
             return state
 
-    async def _plan_execution_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _plan_execution_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Create execution plan based on analysis"""
         try:
             analysis = state.get("analysis", {})
@@ -558,10 +564,10 @@ Provide the plan in JSON format with a 'delegations' array."""
             state["phase"] = "error"
             return state
 
-    async def _validate_plan_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_plan_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Validate the execution plan before proceeding"""
         try:
-            plan = state.get("plan", {})
+            state.get("plan", {})
             delegations = state.get("delegations", [])
 
             validation_issues = []
@@ -600,7 +606,7 @@ Provide the plan in JSON format with a 'delegations' array."""
             state["phase"] = "error"
             return state
 
-    async def _delegate_tasks_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _delegate_tasks_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Delegate tasks to appropriate agents"""
         try:
             delegations = state.get("delegations", [])
@@ -642,7 +648,7 @@ Provide the plan in JSON format with a 'delegations' array."""
             state["phase"] = "error"
             return state
 
-    async def _execute_parallel_delegations(self, delegations: List[DelegationTask]) -> List[Dict[str, Any]]:
+    async def _execute_parallel_delegations(self, delegations: list[DelegationTask]) -> list[dict[str, Any]]:
         """Execute delegations in parallel"""
         tasks = []
         for delegation in delegations:
@@ -682,7 +688,7 @@ Provide the plan in JSON format with a 'delegations' array."""
 
         return processed_results
 
-    async def _execute_sequential_delegations(self, delegations: List[DelegationTask]) -> List[Dict[str, Any]]:
+    async def _execute_sequential_delegations(self, delegations: list[DelegationTask]) -> list[dict[str, Any]]:
         """Execute delegations in sequence"""
         results = []
         completed_tasks = set()
@@ -706,7 +712,7 @@ Provide the plan in JSON format with a 'delegations' array."""
 
         return results
 
-    async def _execute_hierarchical_delegations(self, delegations: List[DelegationTask]) -> List[Dict[str, Any]]:
+    async def _execute_hierarchical_delegations(self, delegations: list[DelegationTask]) -> list[dict[str, Any]]:
         """Execute delegations with hierarchical structure"""
         # Group by priority levels
         priority_groups = {}
@@ -726,7 +732,7 @@ Provide the plan in JSON format with a 'delegations' array."""
 
         return results
 
-    async def _execute_single_delegation(self, delegation: DelegationTask) -> Dict[str, Any]:
+    async def _execute_single_delegation(self, delegation: DelegationTask) -> dict[str, Any]:
         """Execute a single delegation to an agent"""
         try:
             # Get the agent
@@ -787,7 +793,7 @@ Provide the plan in JSON format with a 'delegations' array."""
                 "error": str(e)
             }
 
-    async def _monitor_execution_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _monitor_execution_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Monitor ongoing task execution"""
         try:
             results = state.get("delegation_results", [])
@@ -827,7 +833,7 @@ Provide the plan in JSON format with a 'delegations' array."""
             state["phase"] = "error"
             return state
 
-    async def _aggregate_results_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _aggregate_results_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Aggregate results from all delegations"""
         try:
             results = state.get("delegation_results", [])
@@ -909,7 +915,7 @@ Format the response as a comprehensive JSON structure."""
             state["phase"] = "error"
             return state
 
-    async def _quality_check_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _quality_check_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Perform quality checks on aggregated results"""
         try:
             aggregated = state.get("aggregated_result", {})
@@ -967,7 +973,7 @@ Provide assessment as JSON with:
             state["phase"] = "error"
             return state
 
-    async def _finalize_results_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _finalize_results_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Finalize and format the results"""
         try:
             aggregated = state.get("aggregated_result", {})
@@ -1008,7 +1014,7 @@ Provide assessment as JSON with:
             state["phase"] = "error"
             return state
 
-    async def _handle_errors_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_errors_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Handle errors in the workflow"""
         try:
             error = state.get("error", "Unknown error")
@@ -1045,7 +1051,7 @@ Provide assessment as JSON with:
             state["final_result"] = {"success": False, "error": str(e)}
             return state
 
-    async def _retry_failed_tasks_node(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _retry_failed_tasks_node(self, state: dict[str, Any]) -> dict[str, Any]:
         """Retry failed tasks with adjusted parameters"""
         try:
             results = state.get("delegation_results", [])
@@ -1109,7 +1115,7 @@ Provide assessment as JSON with:
             state["error"] = str(e)
             return state
 
-    def _validation_router(self, state: Dict[str, Any]) -> Literal["proceed", "replan", "error"]:
+    def _validation_router(self, state: dict[str, Any]) -> Literal["proceed", "replan", "error"]:
         """Route based on validation results"""
         if state.get("phase") == "error":
             return "error"
@@ -1118,7 +1124,7 @@ Provide assessment as JSON with:
         else:
             return "proceed"
 
-    def _monitor_router(self, state: Dict[str, Any]) -> Literal["complete", "continue", "retry", "error"]:
+    def _monitor_router(self, state: dict[str, Any]) -> Literal["complete", "continue", "retry", "error"]:
         """Route based on monitoring results"""
         phase = state.get("phase", "")
         stats = state.get("execution_stats", {})
@@ -1134,7 +1140,7 @@ Provide assessment as JSON with:
         else:
             return "complete"
 
-    def _quality_router(self, state: Dict[str, Any]) -> Literal["pass", "fail", "error"]:
+    def _quality_router(self, state: dict[str, Any]) -> Literal["pass", "fail", "error"]:
         """Route based on quality check results"""
         if state.get("phase") == "error":
             return "error"
@@ -1200,7 +1206,7 @@ Provide assessment as JSON with:
         else:
             return TaskType.COMPLEX_WORKFLOW.value
 
-    def _infer_required_agents(self, task: str) -> List[str]:
+    def _infer_required_agents(self, task: str) -> list[str]:
         """Infer required agents from task description"""
         required = []
         task_lower = task.lower()
@@ -1224,7 +1230,7 @@ Provide assessment as JSON with:
 
         return required
 
-    def _create_default_plan(self, analysis: Dict[str, Any], task: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_default_plan(self, analysis: dict[str, Any], task: str, context: dict[str, Any]) -> dict[str, Any]:
         """Create a default execution plan"""
         agents_needed = analysis.get("agents_needed", ["content"])
 
@@ -1254,7 +1260,7 @@ Provide assessment as JSON with:
         }
         return priority_map.get(priority_str.lower(), AgentPriority.MEDIUM)
 
-    def _has_circular_dependencies(self, delegations: List[DelegationTask]) -> bool:
+    def _has_circular_dependencies(self, delegations: list[DelegationTask]) -> bool:
         """Check for circular dependencies in delegations"""
         # Build dependency graph
         graph = {d.task_id: d.dependencies for d in delegations}
@@ -1284,7 +1290,7 @@ Provide assessment as JSON with:
 
         return False
 
-    def _topological_sort(self, delegations: List[DelegationTask]) -> List[DelegationTask]:
+    def _topological_sort(self, delegations: list[DelegationTask]) -> list[DelegationTask]:
         """Sort delegations based on dependencies"""
         # Build dependency graph
         graph = {d.task_id: d for d in delegations}
@@ -1345,7 +1351,7 @@ Provide assessment as JSON with:
 
         metrics["last_used"] = datetime.now().isoformat()
 
-    async def get_agent_status_report(self) -> Dict[str, Any]:
+    async def get_agent_status_report(self) -> dict[str, Any]:
         """Get comprehensive status report for all agents"""
         report = {
             "supervisor_status": self.get_status(),

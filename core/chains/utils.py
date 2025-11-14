@@ -6,15 +6,14 @@ Helper functions and utilities for LCEL chains.
 
 import asyncio
 import logging
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional
-from functools import wraps
 import time
+from functools import wraps
+from typing import Any, Callable, Optional
 
 from core.langchain_compat import (
     LANGCHAIN_AVAILABLE,
     RunnableLambda,
     RunnableSequence,
-    StreamingStdOutCallbackHandler
 )
 
 logger = logging.getLogger(__name__)
@@ -54,7 +53,7 @@ class StreamingHandler:
 
 
 def create_streaming_handler(
-    callback: Optional[Callable[[str], None]] = None
+    callback: Optional[Callable[[str], None]] = None,
 ) -> StreamingHandler:
     """
     Create a streaming handler for chain responses.
@@ -73,12 +72,7 @@ class BatchProcessor:
     Processor for batch chain execution.
     """
 
-    def __init__(
-        self,
-        chain: RunnableSequence,
-        max_concurrency: int = 5,
-        batch_size: int = 10
-    ):
+    def __init__(self, chain: RunnableSequence, max_concurrency: int = 5, batch_size: int = 10):
         """
         Initialize batch processor.
 
@@ -95,9 +89,9 @@ class BatchProcessor:
 
     async def process(
         self,
-        inputs: List[Dict[str, Any]],
-        progress_callback: Optional[Callable[[int, int], None]] = None
-    ) -> Dict[str, Any]:
+        inputs: list[dict[str, Any]],
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> dict[str, Any]:
         """
         Process inputs in batches.
 
@@ -114,7 +108,7 @@ class BatchProcessor:
         # Create semaphore for concurrency control
         semaphore = asyncio.Semaphore(self.max_concurrency)
 
-        async def process_item(item: Dict[str, Any], index: int):
+        async def process_item(item: dict[str, Any], index: int):
             async with semaphore:
                 try:
                     result = await self.chain.ainvoke(item)
@@ -126,10 +120,7 @@ class BatchProcessor:
                         progress_callback(index + 1, len(inputs))
 
         # Process all inputs
-        tasks = [
-            process_item(item, i)
-            for i, item in enumerate(inputs)
-        ]
+        tasks = [process_item(item, i) for i, item in enumerate(inputs)]
 
         await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -137,14 +128,12 @@ class BatchProcessor:
             "successful": len(self.results),
             "failed": len(self.errors),
             "results": self.results,
-            "errors": self.errors
+            "errors": self.errors,
         }
 
 
 def create_batch_processor(
-    chain: RunnableSequence,
-    max_concurrency: int = 5,
-    batch_size: int = 10
+    chain: RunnableSequence, max_concurrency: int = 5, batch_size: int = 10
 ) -> BatchProcessor:
     """
     Create a batch processor for chain execution.
@@ -164,7 +153,7 @@ def chain_with_retry(
     chain: RunnableSequence,
     max_retries: int = 3,
     backoff_factor: float = 2.0,
-    retry_exceptions: tuple = (Exception,)
+    retry_exceptions: tuple = (Exception,),
 ) -> RunnableSequence:
     """
     Wrap a chain with retry logic.
@@ -181,7 +170,7 @@ def chain_with_retry(
     if not LANGCHAIN_AVAILABLE:
         raise ImportError("LangChain not available")
 
-    async def retry_wrapper(input_data: Dict[str, Any]) -> Any:
+    async def retry_wrapper(input_data: dict[str, Any]) -> Any:
         """Execute chain with retries"""
         last_exception = None
 
@@ -191,7 +180,7 @@ def chain_with_retry(
             except retry_exceptions as e:
                 last_exception = e
                 if attempt < max_retries - 1:
-                    wait_time = backoff_factor ** attempt
+                    wait_time = backoff_factor**attempt
                     logger.warning(
                         f"Chain execution failed (attempt {attempt + 1}/{max_retries}), "
                         f"retrying in {wait_time}s: {e}"
@@ -208,7 +197,7 @@ def chain_with_retry(
 def chain_with_fallback(
     primary_chain: RunnableSequence,
     fallback_chain: RunnableSequence,
-    fallback_on: tuple = (Exception,)
+    fallback_on: tuple = (Exception,),
 ) -> RunnableSequence:
     """
     Create a chain with fallback logic.
@@ -224,7 +213,7 @@ def chain_with_fallback(
     if not LANGCHAIN_AVAILABLE:
         raise ImportError("LangChain not available")
 
-    async def fallback_wrapper(input_data: Dict[str, Any]) -> Any:
+    async def fallback_wrapper(input_data: dict[str, Any]) -> Any:
         """Execute primary chain with fallback"""
         try:
             return await primary_chain.ainvoke(input_data)
@@ -235,10 +224,7 @@ def chain_with_fallback(
     return RunnableLambda(fallback_wrapper)
 
 
-def chain_with_timeout(
-    chain: RunnableSequence,
-    timeout: int = 60
-) -> RunnableSequence:
+def chain_with_timeout(chain: RunnableSequence, timeout: int = 60) -> RunnableSequence:
     """
     Wrap a chain with timeout.
 
@@ -252,7 +238,7 @@ def chain_with_timeout(
     if not LANGCHAIN_AVAILABLE:
         raise ImportError("LangChain not available")
 
-    async def timeout_wrapper(input_data: Dict[str, Any]) -> Any:
+    async def timeout_wrapper(input_data: dict[str, Any]) -> Any:
         """Execute chain with timeout"""
         try:
             async with asyncio.timeout(timeout):
@@ -263,10 +249,7 @@ def chain_with_timeout(
     return RunnableLambda(timeout_wrapper)
 
 
-def chain_with_cache(
-    chain: RunnableSequence,
-    cache_ttl: int = 3600
-) -> RunnableSequence:
+def chain_with_cache(chain: RunnableSequence, cache_ttl: int = 3600) -> RunnableSequence:
     """
     Wrap a chain with caching.
 
@@ -283,7 +266,7 @@ def chain_with_cache(
     cache = {}
     cache_times = {}
 
-    async def cache_wrapper(input_data: Dict[str, Any]) -> Any:
+    async def cache_wrapper(input_data: dict[str, Any]) -> Any:
         """Execute chain with caching"""
         # Create cache key from input
         cache_key = str(sorted(input_data.items()))
@@ -307,7 +290,7 @@ def chain_with_cache(
 
 def chain_with_metrics(
     chain: RunnableSequence,
-    metrics_callback: Optional[Callable[[Dict[str, Any]], None]] = None
+    metrics_callback: Optional[Callable[[dict[str, Any]], None]] = None,
 ) -> RunnableSequence:
     """
     Wrap a chain with metrics collection.
@@ -322,7 +305,7 @@ def chain_with_metrics(
     if not LANGCHAIN_AVAILABLE:
         raise ImportError("LangChain not available")
 
-    async def metrics_wrapper(input_data: Dict[str, Any]) -> Any:
+    async def metrics_wrapper(input_data: dict[str, Any]) -> Any:
         """Execute chain with metrics"""
         start_time = time.time()
         error = None
@@ -341,7 +324,7 @@ def chain_with_metrics(
                 "success": error is None,
                 "error": str(error) if error else None,
                 "input_size": len(str(input_data)),
-                "output_size": len(str(result)) if result else 0
+                "output_size": len(str(result)) if result else 0,
             }
 
             if metrics_callback:
@@ -355,32 +338,41 @@ def chain_with_metrics(
 # Decorator versions for convenience
 def with_retry(max_retries: int = 3, backoff_factor: float = 2.0):
     """Decorator to add retry logic to a chain function"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             chain = func(*args, **kwargs)
             return chain_with_retry(chain, max_retries, backoff_factor)
+
         return wrapper
+
     return decorator
 
 
 def with_timeout(timeout: int = 60):
     """Decorator to add timeout to a chain function"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             chain = func(*args, **kwargs)
             return chain_with_timeout(chain, timeout)
+
         return wrapper
+
     return decorator
 
 
 def with_cache(cache_ttl: int = 3600):
     """Decorator to add caching to a chain function"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             chain = func(*args, **kwargs)
             return chain_with_cache(chain, cache_ttl)
+
         return wrapper
+
     return decorator

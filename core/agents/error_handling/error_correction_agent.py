@@ -11,7 +11,7 @@ import ast
 import logging
 import re
 import difflib
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Any, Optional
 from pathlib import Path
 from datetime import datetime
 import json
@@ -48,7 +48,7 @@ class CodeFix(BaseModel):
 class FixStrategy(BaseModel):
     """Model for fix strategies"""
     strategy_name: str = Field(description="Name of the fix strategy")
-    applicable_errors: List[ErrorType] = Field(description="Error types this strategy can fix")
+    applicable_errors: list[ErrorType] = Field(description="Error types this strategy can fix")
     confidence_threshold: float = Field(default=0.7, description="Minimum confidence to apply")
     requires_validation: bool = Field(default=True, description="Whether validation is required")
     can_rollback: bool = Field(default=True, description="Whether strategy supports rollback")
@@ -85,7 +85,7 @@ class ErrorCorrectionAgent(BaseErrorAgent):
         self.fix_strategies = self._initialize_fix_strategies()
 
         # Track applied fixes for rollback
-        self.applied_fixes: List[CodeFix] = []
+        self.applied_fixes: list[CodeFix] = []
 
         # Initialize code analysis tools
         self.tools.extend(self._create_correction_tools())
@@ -113,7 +113,7 @@ Fix principles:
 
 Always validate fixes before applying them and maintain rollback capability."""
 
-    def _initialize_fix_strategies(self) -> List[FixStrategy]:
+    def _initialize_fix_strategies(self) -> list[FixStrategy]:
         """Initialize available fix strategies"""
         return [
             FixStrategy(
@@ -160,7 +160,7 @@ Always validate fixes before applying them and maintain rollback capability."""
             )
         ]
 
-    def _create_correction_tools(self) -> List[Tool]:
+    def _create_correction_tools(self) -> list[Tool]:
         """Create specialized tools for code correction"""
         tools = []
 
@@ -263,7 +263,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         # Return strategy with highest confidence threshold (most reliable)
         return max(applicable_strategies, key=lambda s: s.confidence_threshold)
 
-    async def _analyze_error_context(self, error_state: ErrorState) -> Dict[str, Any]:
+    async def _analyze_error_context(self, error_state: ErrorState) -> dict[str, Any]:
         """Analyze the context around the error"""
         analysis = {
             "error_location": None,
@@ -314,7 +314,7 @@ Always validate fixes before applying them and maintain rollback capability."""
     async def _generate_fix(
         self,
         error_state: ErrorState,
-        analysis: Dict[str, Any],
+        analysis: dict[str, Any],
         strategy: FixStrategy
     ) -> CodeFix:
         """Generate a fix for the error based on analysis and strategy"""
@@ -353,7 +353,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         self,
         fix: CodeFix,
         error_state: ErrorState,
-        analysis: Dict[str, Any]
+        analysis: dict[str, Any]
     ) -> CodeFix:
         """Generate fix for syntax errors"""
         error_msg = error_state["description"].lower()
@@ -403,7 +403,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         self,
         fix: CodeFix,
         error_state: ErrorState,
-        analysis: Dict[str, Any]
+        analysis: dict[str, Any]
     ) -> CodeFix:
         """Generate fix for import errors"""
         error_msg = error_state["description"]
@@ -441,7 +441,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         self,
         fix: CodeFix,
         error_state: ErrorState,
-        analysis: Dict[str, Any]
+        analysis: dict[str, Any]
     ) -> CodeFix:
         """Generate fix for type errors"""
         error_msg = error_state["description"]
@@ -473,7 +473,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         self,
         fix: CodeFix,
         error_state: ErrorState,
-        analysis: Dict[str, Any]
+        analysis: dict[str, Any]
     ) -> CodeFix:
         """Generate fix for null/None errors"""
         original = fix.original_code
@@ -499,7 +499,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         self,
         fix: CodeFix,
         error_state: ErrorState,
-        analysis: Dict[str, Any]
+        analysis: dict[str, Any]
     ) -> CodeFix:
         """Generate fix by adding exception handling"""
         original = fix.original_code
@@ -531,7 +531,7 @@ Always validate fixes before applying them and maintain rollback capability."""
         self,
         fix: CodeFix,
         error_state: ErrorState,
-        analysis: Dict[str, Any],
+        analysis: dict[str, Any],
         strategy: FixStrategy
     ) -> CodeFix:
         """Use LLM to generate complex fixes"""
@@ -720,7 +720,7 @@ Return only the fixed code, no explanations."""
         return f"No backup found for {file_path}"
 
     # Helper methods for AST analysis
-    def _extract_imports(self, tree: ast.AST) -> List[str]:
+    def _extract_imports(self, tree: ast.AST) -> list[str]:
         """Extract import statements from AST"""
         imports = []
         for node in ast.walk(tree):
@@ -733,7 +733,7 @@ Return only the fixed code, no explanations."""
                     imports.append(f"{module}.{alias.name}")
         return imports
 
-    def _extract_variables(self, tree: ast.AST) -> List[str]:
+    def _extract_variables(self, tree: ast.AST) -> list[str]:
         """Extract variable names from AST"""
         variables = []
         for node in ast.walk(tree):
@@ -741,7 +741,7 @@ Return only the fixed code, no explanations."""
                 variables.append(node.id)
         return list(set(variables))
 
-    def _extract_functions(self, tree: ast.AST) -> List[str]:
+    def _extract_functions(self, tree: ast.AST) -> list[str]:
         """Extract function names from AST"""
         functions = []
         for node in ast.walk(tree):
@@ -749,7 +749,7 @@ Return only the fixed code, no explanations."""
                 functions.append(node.name)
         return functions
 
-    def _extract_classes(self, tree: ast.AST) -> List[str]:
+    def _extract_classes(self, tree: ast.AST) -> list[str]:
         """Extract class names from AST"""
         classes = []
         for node in ast.walk(tree):
@@ -757,7 +757,7 @@ Return only the fixed code, no explanations."""
                 classes.append(node.name)
         return classes
 
-    async def get_correction_metrics(self) -> Dict[str, Any]:
+    async def get_correction_metrics(self) -> dict[str, Any]:
         """Get metrics specific to error correction"""
         base_metrics = await self.get_error_metrics()
 

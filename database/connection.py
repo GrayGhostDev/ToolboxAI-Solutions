@@ -7,9 +7,10 @@ with connection pooling, retry logic, and health checks.
 
 import asyncio
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, Optional
 
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -144,7 +145,10 @@ class DatabaseManager:
                 await session.close()
 
     async def execute_with_retry(
-        self, query: Any, params: Optional[Dict] = None, max_retries: Optional[int] = None
+        self,
+        query: Any,
+        params: Optional[dict] = None,
+        max_retries: Optional[int] = None,
     ) -> Any:
         """
         Execute a query with automatic retry logic
@@ -183,7 +187,7 @@ class DatabaseManager:
         if last_error:
             raise last_error
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform database health check
 
@@ -215,7 +219,7 @@ class DatabaseManager:
                 # Get database statistics
                 stats_query = text(
                     """
-                    SELECT 
+                    SELECT
                         (SELECT COUNT(*) FROM users) as user_count,
                         (SELECT COUNT(*) FROM courses) as course_count,
                         (SELECT COUNT(*) FROM lessons) as lesson_count,
@@ -312,19 +316,29 @@ class DatabaseManager:
             logger.error(f"Database backup error: {e}")
             return False
 
-    async def optimize_database(self) -> Dict[str, Any]:
+    async def optimize_database(self) -> dict[str, Any]:
         """
         Run database optimization tasks
 
         Returns:
             Optimization results
         """
-        results = {"timestamp": datetime.now(timezone.utc).isoformat(), "optimizations": []}
+        results = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "optimizations": [],
+        }
 
         try:
             async with self.get_session() as session:
                 # Analyze tables for query optimization
-                tables = ["users", "courses", "lessons", "quizzes", "user_progress", "analytics"]
+                tables = [
+                    "users",
+                    "courses",
+                    "lessons",
+                    "quizzes",
+                    "user_progress",
+                    "analytics",
+                ]
 
                 for table in tables:
                     await session.execute(text(f"ANALYZE {table}"))
@@ -367,7 +381,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-async def get_async_session(database: str = "education") -> AsyncGenerator[AsyncSession, None]:
+async def get_async_session(
+    database: str = "education",
+) -> AsyncGenerator[AsyncSession, None]:
     """
     Get async database session
 
@@ -383,7 +399,7 @@ async def get_async_session(database: str = "education") -> AsyncGenerator[Async
 
 # Utility functions for common database operations
 async def create_or_update(
-    session: AsyncSession, model: Any, defaults: Dict[str, Any], **kwargs
+    session: AsyncSession, model: Any, defaults: dict[str, Any], **kwargs
 ) -> tuple[Any, bool]:
     """
     Create or update a database record
@@ -419,7 +435,10 @@ async def create_or_update(
 
 
 async def bulk_insert(
-    session: AsyncSession, model: Any, data: list[Dict[str, Any]], batch_size: int = 1000
+    session: AsyncSession,
+    model: Any,
+    data: list[dict[str, Any]],
+    batch_size: int = 1000,
 ) -> int:
     """
     Bulk insert records efficiently
@@ -451,7 +470,7 @@ async def bulk_insert(
 
 async def paginate_query(
     session: AsyncSession, query: Any, page: int = 1, per_page: int = 20
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Paginate a query result
 

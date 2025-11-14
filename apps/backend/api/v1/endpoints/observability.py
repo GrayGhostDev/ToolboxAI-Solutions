@@ -7,20 +7,20 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
-from apps.backend.api.deps import get_current_user
-from apps.backend.core.websocket_cluster import websocket_cluster
-from database.replica_router import replica_router
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from prometheus_client import REGISTRY, generate_latest
 
+from apps.backend.api.deps import get_current_user
 from apps.backend.core.circuit_breaker import circuit_breaker_manager
 from apps.backend.core.edge_cache import edge_cache_manager
 from apps.backend.core.observability.anomaly_detection import AnomalyDetector
 from apps.backend.core.observability.correlation import TraceCorrelator
 from apps.backend.core.observability.telemetry import metrics_collector
 from apps.backend.core.rate_limiter import rate_limiter
+from apps.backend.core.websocket_cluster import websocket_cluster
 from apps.backend.services.pusher import trigger_event
+from database.replica_router import replica_router
 
 logger = structlog.get_logger(__name__)
 
@@ -117,14 +117,19 @@ async def get_anomalies(
     try:
         anomalies = await anomaly_detector.get_recent_anomalies(limit=limit, severity=severity)
 
-        return {"status": "success", "data": {"anomalies": anomalies, "total": len(anomalies)}}
+        return {
+            "status": "success",
+            "data": {"anomalies": anomalies, "total": len(anomalies)},
+        }
     except Exception as e:
         logger.error("Failed to get anomalies", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/health/components")
-async def get_component_health(current_user: dict = Depends(get_current_user)) -> dict[str, Any]:
+async def get_component_health(
+    current_user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get health status of all load balancing components.
     """
@@ -178,7 +183,9 @@ async def start_metrics_stream(
 
 
 @router.post("/stop-metrics-stream")
-async def stop_metrics_stream(current_user: dict = Depends(get_current_user)) -> dict[str, Any]:
+async def stop_metrics_stream(
+    current_user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Stop real-time metrics streaming.
     """
@@ -375,7 +382,9 @@ async def stream_metrics_to_pusher():
 
             # Trigger Pusher event
             trigger_event(
-                channel="observability-metrics", event="metrics.updated", data=stream_data
+                channel="observability-metrics",
+                event="metrics.updated",
+                data=stream_data,
             )
 
             # Wait before next update (every 2 seconds to avoid overwhelming)

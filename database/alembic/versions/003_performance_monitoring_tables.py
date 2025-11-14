@@ -6,8 +6,9 @@ Create Date: 2025-09-20 22:06:30.000000
 
 """
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Union
+from typing import Union
 
 import sqlalchemy as sa
 from alembic import op
@@ -25,7 +26,12 @@ def upgrade() -> None:
 
     # Create ENUM types for monitoring
     performance_status_enum = ENUM(
-        "healthy", "warning", "critical", "degraded", "unknown", name="performance_status_type"
+        "healthy",
+        "warning",
+        "critical",
+        "degraded",
+        "unknown",
+        name="performance_status_type",
     )
     performance_status_enum.create(op.get_bind())
 
@@ -38,7 +44,10 @@ def upgrade() -> None:
     op.create_table(
         "system_performance_metrics",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("metric_name", sa.String(100), nullable=False),
         sa.Column("service_name", sa.String(100), nullable=False),
@@ -66,14 +75,19 @@ def upgrade() -> None:
     )
     op.create_index("idx_performance_metrics_status", "system_performance_metrics", ["status"])
     op.create_index(
-        "idx_performance_metrics_environment", "system_performance_metrics", ["environment"]
+        "idx_performance_metrics_environment",
+        "system_performance_metrics",
+        ["environment"],
     )
 
     # Create database performance baselines table
     op.create_table(
         "database_performance_baselines",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("baseline_name", sa.String(100), nullable=False, unique=True),
         sa.Column("database_version", sa.String(20), nullable=False),  # PostgreSQL 15, 16, etc.
@@ -96,7 +110,9 @@ def upgrade() -> None:
     # Create index for database baselines
     op.create_index("idx_db_baselines_name", "database_performance_baselines", ["baseline_name"])
     op.create_index(
-        "idx_db_baselines_version", "database_performance_baselines", ["database_version"]
+        "idx_db_baselines_version",
+        "database_performance_baselines",
+        ["database_version"],
     )
     op.create_index("idx_db_baselines_date", "database_performance_baselines", ["measurement_date"])
 
@@ -104,7 +120,10 @@ def upgrade() -> None:
     op.create_table(
         "test_execution_metrics",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("test_run_id", sa.String(100), nullable=False),
         sa.Column("test_suite", sa.String(100), nullable=False),
@@ -131,14 +150,19 @@ def upgrade() -> None:
     op.create_index("idx_test_metrics_status", "test_execution_metrics", ["status"])
     op.create_index("idx_test_metrics_started_at", "test_execution_metrics", ["started_at"])
     op.create_index(
-        "idx_test_metrics_execution_time", "test_execution_metrics", ["execution_time_ms"]
+        "idx_test_metrics_execution_time",
+        "test_execution_metrics",
+        ["execution_time_ms"],
     )
 
     # Create Redis performance tracking table
     op.create_table(
         "redis_performance_metrics",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("redis_version", sa.String(20), nullable=False),
         sa.Column("instance_name", sa.String(100), nullable=False),
@@ -161,7 +185,9 @@ def upgrade() -> None:
     # Create indexes for Redis metrics
     op.create_index("idx_redis_metrics_instance", "redis_performance_metrics", ["instance_name"])
     op.create_index(
-        "idx_redis_metrics_timestamp", "redis_performance_metrics", ["measurement_timestamp"]
+        "idx_redis_metrics_timestamp",
+        "redis_performance_metrics",
+        ["measurement_timestamp"],
     )
     op.create_index("idx_redis_metrics_version", "redis_performance_metrics", ["redis_version"])
 

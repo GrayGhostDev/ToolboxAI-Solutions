@@ -142,7 +142,11 @@ class TestAgentConnectivityComplete:
         task_result = await agent_service.execute_task(
             agent_type=idle_agent["agent_type"],
             task_type="generate_content",  # Use a generic task
-            task_data={"subject": "Test", "grade_level": 1, "objectives": ["Test objective"]},
+            task_data={
+                "subject": "Test",
+                "grade_level": 1,
+                "objectives": ["Test objective"],
+            },
             user_id="test_user",
         )
 
@@ -410,7 +414,7 @@ class TestAgentConnectivityComplete:
         )
 
         assert content_result["success"] is True
-        content_data = content_result.get("result", {})
+        content_result.get("result", {})
 
         # Step 2: Generate quiz based on content
         quiz_result = await agent_service.execute_task(
@@ -425,7 +429,7 @@ class TestAgentConnectivityComplete:
         )
 
         assert quiz_result["success"] is True
-        quiz_data = quiz_result.get("result", {})
+        quiz_result.get("result", {})
 
         # Step 3: Generate terrain for physics simulation
         terrain_result = await agent_service.execute_task(
@@ -440,7 +444,7 @@ class TestAgentConnectivityComplete:
         )
 
         assert terrain_result["success"] is True
-        terrain_data = terrain_result.get("result", {})
+        terrain_result.get("result", {})
 
         # Step 4: Generate script for physics simulation
         script_result = await agent_service.execute_task(
@@ -473,7 +477,7 @@ class TestAgentConnectivityComplete:
             )
 
             assert review_result["success"] is True
-            review_data = review_result.get("result", {})
+            review_result.get("result", {})
 
         # Verify workflow completion
         workflow_results = [content_result, quiz_result, terrain_result, script_result]

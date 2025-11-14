@@ -4,10 +4,10 @@ Simple TypeScript Error Fixes - Phase 3
 Focused on reducing errors from 2,316 to <50
 """
 
-import os
 import re
 import sys
 from pathlib import Path
+
 
 def fix_mui_imports_batch():
     """Fix all Material-UI imports in one pass"""
@@ -98,7 +98,7 @@ export { useTheme, alpha, styled, ThemeProvider, createTheme } from '@mui/materi
     # Now update all files to use the new import
     for tsx_file in dashboard_dir.rglob('*.tsx'):
         try:
-            with open(tsx_file, 'r') as f:
+            with open(tsx_file) as f:
                 content = f.read()
 
             if '@mui/material' in content:
@@ -283,7 +283,7 @@ def fix_component_props():
 
     for tsx_file in dashboard_dir.rglob('*.tsx'):
         try:
-            with open(tsx_file, 'r') as f:
+            with open(tsx_file) as f:
                 content = f.read()
 
             original = content
@@ -314,7 +314,7 @@ def fix_component_props():
                     f.write(content)
                 files_fixed += 1
 
-        except Exception as e:
+        except Exception:
             pass  # Skip files with errors
 
     return files_fixed

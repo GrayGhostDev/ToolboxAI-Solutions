@@ -9,22 +9,21 @@ Created: 2025-09-21
 Version: 1.0.0
 """
 
-import asyncio
-import json
 import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from core.agents.base_agent import AgentConfig, BaseAgent, TaskResult
+from core.agents.base_agent import AgentConfig, BaseAgent
 
 logger = logging.getLogger(__name__)
 
 
 class AnalyticsType(Enum):
     """Types of analytics that can be performed"""
+
     BEHAVIOR = "behavior"
     LEARNING = "learning"
     ENGAGEMENT = "engagement"
@@ -35,6 +34,7 @@ class AnalyticsType(Enum):
 
 class PlayerSegment(Enum):
     """Player behavior segments"""
+
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -45,15 +45,16 @@ class PlayerSegment(Enum):
 @dataclass
 class PlayerSession:
     """Individual player session data"""
+
     session_id: str
     player_id: str
     start_time: datetime
     end_time: Optional[datetime] = None
     duration_minutes: float = 0.0
     activities_completed: int = 0
-    quiz_scores: List[float] = None
-    engagement_events: List[Dict[str, Any]] = None
-    learning_objectives_met: List[str] = None
+    quiz_scores: list[float] = None
+    engagement_events: list[dict[str, Any]] = None
+    learning_objectives_met: list[str] = None
     errors_encountered: int = 0
     help_requests: int = 0
 
@@ -69,6 +70,7 @@ class PlayerSession:
 @dataclass
 class LearningOutcome:
     """Learning outcome measurement"""
+
     objective_id: str
     objective_description: str
     mastery_level: float  # 0.0 to 1.0
@@ -100,7 +102,7 @@ class RobloxAnalyticsAgent(BaseAgent):
                 name="roblox_analytics_agent",
                 model="gpt-4-turbo-preview",
                 temperature=0.1,
-                max_tokens=4096
+                max_tokens=4096,
             )
         super().__init__(config)
 
@@ -114,13 +116,9 @@ class RobloxAnalyticsAgent(BaseAgent):
                 "social_learner",
                 "independent_learner",
                 "help_seeking",
-                "trial_and_error"
+                "trial_and_error",
             ],
-            "engagement_thresholds": {
-                "high": 0.8,
-                "medium": 0.5,
-                "low": 0.3
-            }
+            "engagement_thresholds": {"high": 0.8, "medium": 0.5, "low": 0.3},
         }
 
         # Learning tracker configuration
@@ -130,7 +128,7 @@ class RobloxAnalyticsAgent(BaseAgent):
             "confidence_threshold": 0.7,
             "retention_tracking_days": 7,
             "adaptive_difficulty": True,
-            "learning_style_detection": True
+            "learning_style_detection": True,
         }
 
         # Engagement metrics configuration
@@ -142,20 +140,17 @@ class RobloxAnalyticsAgent(BaseAgent):
                 "quiz_participation",
                 "help_usage",
                 "social_interactions",
-                "return_frequency"
+                "return_frequency",
             ],
             "real_time_tracking": True,
-            "alert_thresholds": {
-                "low_engagement": 0.3,
-                "session_abandonment": 0.2
-            }
+            "alert_thresholds": {"low_engagement": 0.3, "session_abandonment": 0.2},
         }
 
         # Data storage
-        self.player_sessions: Dict[str, List[PlayerSession]] = {}
-        self.learning_outcomes: Dict[str, List[LearningOutcome]] = {}
-        self.behavior_profiles: Dict[str, Dict[str, Any]] = {}
-        self.engagement_history: Dict[str, List[Dict[str, Any]]] = {}
+        self.player_sessions: dict[str, list[PlayerSession]] = {}
+        self.learning_outcomes: dict[str, list[LearningOutcome]] = {}
+        self.behavior_profiles: dict[str, dict[str, Any]] = {}
+        self.engagement_history: dict[str, list[dict[str, Any]]] = {}
 
         logger.info("RobloxAnalyticsAgent initialized")
 
@@ -180,7 +175,7 @@ class RobloxAnalyticsAgent(BaseAgent):
         else:
             raise ValueError(f"Unknown analysis type: {analysis_type}")
 
-    async def _analyze_player_behavior(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_player_behavior(self, context: dict[str, Any]) -> dict[str, Any]:
         """Analyze player behavior patterns and preferences"""
         player_id = context.get("player_id")
         time_window_days = context.get("time_window_days", 30)
@@ -192,7 +187,9 @@ class RobloxAnalyticsAgent(BaseAgent):
             # Analyze all players
             return await self._analyze_aggregate_behavior(time_window_days)
 
-    async def _analyze_individual_behavior(self, player_id: str, time_window_days: int) -> Dict[str, Any]:
+    async def _analyze_individual_behavior(
+        self, player_id: str, time_window_days: int
+    ) -> dict[str, Any]:
         """Analyze behavior for a specific player"""
         sessions = self.player_sessions.get(player_id, [])
 
@@ -212,16 +209,20 @@ class RobloxAnalyticsAgent(BaseAgent):
             "learning_style": await self._detect_learning_style(recent_sessions),
             "engagement_profile": await self._create_engagement_profile(recent_sessions),
             "performance_trends": await self._analyze_performance_trends(recent_sessions),
-            "recommendations": await self._generate_behavior_recommendations(recent_sessions)
+            "recommendations": await self._generate_behavior_recommendations(recent_sessions),
         }
 
         # Update behavior profile
         self.behavior_profiles[player_id] = behavior_analysis
 
-        logger.info("Analyzed behavior for player %s over %d sessions", player_id, len(recent_sessions))
+        logger.info(
+            "Analyzed behavior for player %s over %d sessions",
+            player_id,
+            len(recent_sessions),
+        )
         return behavior_analysis
 
-    async def _analyze_aggregate_behavior(self, time_window_days: int) -> Dict[str, Any]:
+    async def _analyze_aggregate_behavior(self, time_window_days: int) -> dict[str, Any]:
         """Analyze behavior patterns across all players"""
         all_sessions = []
         for player_sessions in self.player_sessions.values():
@@ -241,14 +242,17 @@ class RobloxAnalyticsAgent(BaseAgent):
             "common_patterns": await self._identify_common_patterns(all_sessions),
             "engagement_distribution": await self._analyze_engagement_distribution(all_sessions),
             "learning_effectiveness": await self._measure_learning_effectiveness(all_sessions),
-            "platform_insights": await self._generate_platform_insights(all_sessions)
+            "platform_insights": await self._generate_platform_insights(all_sessions),
         }
 
-        logger.info("Analyzed aggregate behavior for %d sessions from %d players",
-                   len(all_sessions), aggregate_analysis["unique_players"])
+        logger.info(
+            "Analyzed aggregate behavior for %d sessions from %d players",
+            len(all_sessions),
+            aggregate_analysis["unique_players"],
+        )
         return aggregate_analysis
 
-    async def _track_learning_outcomes(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _track_learning_outcomes(self, context: dict[str, Any]) -> dict[str, Any]:
         """Track and analyze learning outcomes"""
         player_id = context.get("player_id")
         learning_objectives = context.get("learning_objectives", [])
@@ -262,7 +266,7 @@ class RobloxAnalyticsAgent(BaseAgent):
             "mastery_summary": {},
             "learning_velocity": 0.0,
             "retention_metrics": {},
-            "adaptive_recommendations": []
+            "adaptive_recommendations": [],
         }
 
         for objective in learning_objectives:
@@ -270,16 +274,24 @@ class RobloxAnalyticsAgent(BaseAgent):
             learning_analysis["learning_outcomes"].append(outcome)
 
         # Calculate mastery summary
-        learning_analysis["mastery_summary"] = self._calculate_mastery_summary(learning_analysis["learning_outcomes"])
+        learning_analysis["mastery_summary"] = self._calculate_mastery_summary(
+            learning_analysis["learning_outcomes"]
+        )
 
         # Calculate learning velocity
-        learning_analysis["learning_velocity"] = await self._calculate_learning_velocity(player_id, learning_objectives)
+        learning_analysis["learning_velocity"] = await self._calculate_learning_velocity(
+            player_id, learning_objectives
+        )
 
         # Measure retention
-        learning_analysis["retention_metrics"] = await self._measure_retention(player_id, learning_objectives)
+        learning_analysis["retention_metrics"] = await self._measure_retention(
+            player_id, learning_objectives
+        )
 
         # Generate adaptive recommendations
-        learning_analysis["adaptive_recommendations"] = await self._generate_adaptive_recommendations(learning_analysis)
+        learning_analysis["adaptive_recommendations"] = (
+            await self._generate_adaptive_recommendations(learning_analysis)
+        )
 
         # Update learning outcomes storage
         if player_id not in self.learning_outcomes:
@@ -289,11 +301,14 @@ class RobloxAnalyticsAgent(BaseAgent):
             outcome = LearningOutcome(**outcome_data)
             self.learning_outcomes[player_id].append(outcome)
 
-        logger.info("Tracked learning outcomes for player %s: %d objectives",
-                   player_id, len(learning_objectives))
+        logger.info(
+            "Tracked learning outcomes for player %s: %d objectives",
+            player_id,
+            len(learning_objectives),
+        )
         return learning_analysis
 
-    async def _measure_engagement(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _measure_engagement(self, context: dict[str, Any]) -> dict[str, Any]:
         """Measure and analyze player engagement"""
         player_id = context.get("player_id")
         session_data = context.get("session_data", {})
@@ -308,45 +323,66 @@ class RobloxAnalyticsAgent(BaseAgent):
             "interaction_patterns": {},
             "attention_metrics": {},
             "social_engagement": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Calculate engagement score
-        engagement_analysis["engagement_score"] = await self._calculate_engagement_score(player_id, session_data)
+        engagement_analysis["engagement_score"] = await self._calculate_engagement_score(
+            player_id, session_data
+        )
 
         # Analyze engagement factors
-        engagement_analysis["engagement_factors"] = await self._analyze_engagement_factors(player_id, session_data)
+        engagement_analysis["engagement_factors"] = await self._analyze_engagement_factors(
+            player_id, session_data
+        )
 
         # Track engagement trends
-        engagement_analysis["engagement_trends"] = await self._track_engagement_trends(player_id, time_window_days)
+        engagement_analysis["engagement_trends"] = await self._track_engagement_trends(
+            player_id, time_window_days
+        )
 
         # Analyze interaction patterns
-        engagement_analysis["interaction_patterns"] = await self._analyze_interaction_patterns(player_id, session_data)
+        engagement_analysis["interaction_patterns"] = await self._analyze_interaction_patterns(
+            player_id, session_data
+        )
 
         # Measure attention metrics
-        engagement_analysis["attention_metrics"] = await self._measure_attention_metrics(player_id, session_data)
+        engagement_analysis["attention_metrics"] = await self._measure_attention_metrics(
+            player_id, session_data
+        )
 
         # Analyze social engagement
-        engagement_analysis["social_engagement"] = await self._analyze_social_engagement(player_id, session_data)
+        engagement_analysis["social_engagement"] = await self._analyze_social_engagement(
+            player_id, session_data
+        )
 
         # Generate engagement recommendations
-        engagement_analysis["recommendations"] = await self._generate_engagement_recommendations(engagement_analysis)
+        engagement_analysis["recommendations"] = await self._generate_engagement_recommendations(
+            engagement_analysis
+        )
 
         # Store engagement history
         if player_id not in self.engagement_history:
             self.engagement_history[player_id] = []
 
-        self.engagement_history[player_id].append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "engagement_score": engagement_analysis["engagement_score"],
-            "session_data": session_data
-        })
+        self.engagement_history[player_id].append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "engagement_score": engagement_analysis["engagement_score"],
+                "session_data": session_data,
+            }
+        )
 
-        logger.info("Measured engagement for player %s: score %.2f",
-                   player_id, engagement_analysis["engagement_score"])
+        logger.info(
+            "Measured engagement for player %s: score %.2f",
+            player_id,
+            engagement_analysis["engagement_score"],
+        )
         return engagement_analysis
 
-    async def _calculate_engagement_score(self, player_id: str, session_data: Dict[str, Any]) -> float:
+    async def _calculate_engagement_score(
+        self, player_id: str, session_data: dict[str, Any]
+    ) -> float:
         """Calculate overall engagement score"""
         factors = {
             "session_duration": 0.0,
@@ -354,7 +390,7 @@ class RobloxAnalyticsAgent(BaseAgent):
             "interaction_frequency": 0.0,
             "quiz_participation": 0.0,
             "help_seeking": 0.0,
-            "exploration": 0.0
+            "exploration": 0.0,
         }
 
         # Session duration factor (normalized to 0-1)
@@ -365,22 +401,30 @@ class RobloxAnalyticsAgent(BaseAgent):
         # Activity completion factor
         activities_completed = session_data.get("activities_completed", 0)
         activities_available = session_data.get("activities_available", 10)
-        factors["activity_completion"] = activities_completed / activities_available if activities_available > 0 else 0
+        factors["activity_completion"] = (
+            activities_completed / activities_available if activities_available > 0 else 0
+        )
 
         # Interaction frequency factor
         interactions = session_data.get("interactions", 0)
         expected_interactions = duration_minutes * 2  # 2 interactions per minute expected
-        factors["interaction_frequency"] = min(interactions / expected_interactions, 1.0) if expected_interactions > 0 else 0
+        factors["interaction_frequency"] = (
+            min(interactions / expected_interactions, 1.0) if expected_interactions > 0 else 0
+        )
 
         # Quiz participation factor
         quizzes_taken = session_data.get("quizzes_taken", 0)
         quizzes_available = session_data.get("quizzes_available", 5)
-        factors["quiz_participation"] = quizzes_taken / quizzes_available if quizzes_available > 0 else 0
+        factors["quiz_participation"] = (
+            quizzes_taken / quizzes_available if quizzes_available > 0 else 0
+        )
 
         # Help seeking factor (moderate help seeking is good)
         help_requests = session_data.get("help_requests", 0)
         optimal_help = max(1, duration_minutes / 10)  # 1 help request per 10 minutes is optimal
-        factors["help_seeking"] = 1.0 - abs(help_requests - optimal_help) / optimal_help if optimal_help > 0 else 0
+        factors["help_seeking"] = (
+            1.0 - abs(help_requests - optimal_help) / optimal_help if optimal_help > 0 else 0
+        )
         factors["help_seeking"] = max(0, factors["help_seeking"])
 
         # Exploration factor
@@ -395,43 +439,47 @@ class RobloxAnalyticsAgent(BaseAgent):
             "interaction_frequency": 0.20,
             "quiz_participation": 0.20,
             "help_seeking": 0.10,
-            "exploration": 0.10
+            "exploration": 0.10,
         }
 
         engagement_score = sum(factors[factor] * weights[factor] for factor in factors)
 
         return min(max(engagement_score, 0.0), 1.0)
 
-    async def _analyze_engagement_factors(self, player_id: str, session_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_engagement_factors(
+        self, player_id: str, session_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze specific engagement factors"""
         return {
             "time_on_task": {
                 "total_minutes": session_data.get("duration_minutes", 0),
                 "focused_minutes": session_data.get("focused_time", 0),
                 "distraction_events": session_data.get("distraction_events", 0),
-                "focus_ratio": session_data.get("focused_time", 0) / max(session_data.get("duration_minutes", 1), 1)
+                "focus_ratio": session_data.get("focused_time", 0)
+                / max(session_data.get("duration_minutes", 1), 1),
             },
             "interaction_quality": {
                 "meaningful_interactions": session_data.get("meaningful_interactions", 0),
                 "total_interactions": session_data.get("interactions", 0),
                 "interaction_depth": session_data.get("interaction_depth", 0.5),
-                "quality_ratio": session_data.get("meaningful_interactions", 0) / max(session_data.get("interactions", 1), 1)
+                "quality_ratio": session_data.get("meaningful_interactions", 0)
+                / max(session_data.get("interactions", 1), 1),
             },
             "learning_engagement": {
                 "concept_exploration": session_data.get("concept_exploration", 0),
                 "question_asking": session_data.get("questions_asked", 0),
                 "hypothesis_testing": session_data.get("hypothesis_tests", 0),
-                "curiosity_indicators": session_data.get("curiosity_score", 0.5)
+                "curiosity_indicators": session_data.get("curiosity_score", 0.5),
             },
             "social_factors": {
                 "peer_interactions": session_data.get("peer_interactions", 0),
                 "collaboration_time": session_data.get("collaboration_minutes", 0),
                 "help_given": session_data.get("help_given_to_peers", 0),
-                "help_received": session_data.get("help_received_from_peers", 0)
-            }
+                "help_received": session_data.get("help_received_from_peers", 0),
+            },
         }
 
-    async def _identify_behavior_patterns(self, sessions: List[PlayerSession]) -> Dict[str, Any]:
+    async def _identify_behavior_patterns(self, sessions: list[PlayerSession]) -> dict[str, Any]:
         """Identify behavior patterns from session data"""
         if not sessions:
             return {"error": "No sessions to analyze"}
@@ -442,7 +490,7 @@ class RobloxAnalyticsAgent(BaseAgent):
             "social_learner": 0.0,
             "independent_learner": 0.0,
             "help_seeking": 0.0,
-            "trial_and_error": 0.0
+            "trial_and_error": 0.0,
         }
 
         total_sessions = len(sessions)
@@ -485,16 +533,16 @@ class RobloxAnalyticsAgent(BaseAgent):
             "dominant_pattern": dominant_pattern,
             "pattern_confidence": patterns[dominant_pattern],
             "behavior_consistency": self._calculate_behavior_consistency(patterns),
-            "pattern_evolution": await self._track_pattern_evolution(sessions)
+            "pattern_evolution": await self._track_pattern_evolution(sessions),
         }
 
-    async def _detect_learning_style(self, sessions: List[PlayerSession]) -> Dict[str, Any]:
+    async def _detect_learning_style(self, sessions: list[PlayerSession]) -> dict[str, Any]:
         """Detect player's learning style preferences"""
         learning_styles = {
             "visual": 0.0,
             "auditory": 0.0,
             "kinesthetic": 0.0,
-            "reading_writing": 0.0
+            "reading_writing": 0.0,
         }
 
         for session in sessions:
@@ -506,7 +554,11 @@ class RobloxAnalyticsAgent(BaseAgent):
                     learning_styles["visual"] += 1
 
                 # Auditory learning indicators
-                elif event_type in ["audio_play", "narration_listen", "sound_interaction"]:
+                elif event_type in [
+                    "audio_play",
+                    "narration_listen",
+                    "sound_interaction",
+                ]:
                     learning_styles["auditory"] += 1
 
                 # Kinesthetic learning indicators
@@ -529,10 +581,10 @@ class RobloxAnalyticsAgent(BaseAgent):
             "learning_styles": learning_styles,
             "dominant_style": dominant_style,
             "style_confidence": learning_styles[dominant_style],
-            "multi_modal_learner": max(learning_styles.values()) < 0.6  # No single dominant style
+            "multi_modal_learner": max(learning_styles.values()) < 0.6,  # No single dominant style
         }
 
-    async def _create_engagement_profile(self, sessions: List[PlayerSession]) -> Dict[str, Any]:
+    async def _create_engagement_profile(self, sessions: list[PlayerSession]) -> dict[str, Any]:
         """Create detailed engagement profile"""
         if not sessions:
             return {"error": "No sessions to analyze"}
@@ -540,7 +592,9 @@ class RobloxAnalyticsAgent(BaseAgent):
         # Calculate engagement metrics
         avg_duration = sum(s.duration_minutes for s in sessions) / len(sessions)
         avg_completion = sum(s.activities_completed for s in sessions) / len(sessions)
-        avg_quiz_score = sum(sum(s.quiz_scores) / len(s.quiz_scores) if s.quiz_scores else 0 for s in sessions) / len(sessions)
+        avg_quiz_score = sum(
+            sum(s.quiz_scores) / len(s.quiz_scores) if s.quiz_scores else 0 for s in sessions
+        ) / len(sessions)
 
         # Engagement consistency
         duration_variance = self._calculate_variance([s.duration_minutes for s in sessions])
@@ -556,14 +610,16 @@ class RobloxAnalyticsAgent(BaseAgent):
             "engagement_consistency": {
                 "duration_variance": duration_variance,
                 "completion_variance": completion_variance,
-                "consistency_score": 1.0 / (1.0 + duration_variance + completion_variance)
+                "consistency_score": 1.0 / (1.0 + duration_variance + completion_variance),
             },
             "peak_engagement_times": peak_times,
             "engagement_triggers": await self._identify_engagement_triggers(sessions),
-            "disengagement_patterns": await self._identify_disengagement_patterns(sessions)
+            "disengagement_patterns": await self._identify_disengagement_patterns(sessions),
         }
 
-    async def _analyze_learning_objective(self, player_id: str, objective: Dict[str, Any], assessment_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_learning_objective(
+        self, player_id: str, objective: dict[str, Any], assessment_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze learning outcome for a specific objective"""
         objective_id = objective.get("id", str(uuid.uuid4()))
         objective_description = objective.get("description", "")
@@ -579,7 +635,7 @@ class RobloxAnalyticsAgent(BaseAgent):
                 "attempts_required": 0,
                 "time_to_mastery": 0.0,
                 "confidence_score": 0.0,
-                "status": "not_attempted"
+                "status": "not_attempted",
             }
 
         # Calculate mastery metrics
@@ -596,13 +652,22 @@ class RobloxAnalyticsAgent(BaseAgent):
 
         # Calculate time to mastery
         if mastery_level >= 0.8:  # Mastery threshold
-            mastery_attempts = next((i for i, score in enumerate(scores) if score >= 0.8), len(scores))
-            time_to_mastery = sum(assessment.get("time_minutes", 5) for assessment in objective_assessments[:mastery_attempts + 1])
+            mastery_attempts = next(
+                (i for i, score in enumerate(scores) if score >= 0.8), len(scores)
+            )
+            time_to_mastery = sum(
+                assessment.get("time_minutes", 5)
+                for assessment in objective_assessments[: mastery_attempts + 1]
+            )
         else:
-            time_to_mastery = sum(assessment.get("time_minutes", 5) for assessment in objective_assessments)
+            time_to_mastery = sum(
+                assessment.get("time_minutes", 5) for assessment in objective_assessments
+            )
 
         # Calculate confidence score (consistency of performance)
-        confidence_score = 1.0 - self._calculate_variance(scores) if len(scores) > 1 else latest_score
+        confidence_score = (
+            1.0 - self._calculate_variance(scores) if len(scores) > 1 else latest_score
+        )
 
         return {
             "objective_id": objective_id,
@@ -614,10 +679,12 @@ class RobloxAnalyticsAgent(BaseAgent):
             "latest_score": latest_score,
             "average_score": avg_score,
             "improvement_trend": self._calculate_improvement_trend(scores),
-            "status": "mastered" if mastery_level >= 0.8 and confidence_score >= 0.7 else "in_progress"
+            "status": (
+                "mastered" if mastery_level >= 0.8 and confidence_score >= 0.7 else "in_progress"
+            ),
         }
 
-    def _calculate_variance(self, values: List[float]) -> float:
+    def _calculate_variance(self, values: list[float]) -> float:
         """Calculate variance of a list of values"""
         if len(values) <= 1:
             return 0.0
@@ -626,7 +693,7 @@ class RobloxAnalyticsAgent(BaseAgent):
         variance = sum((x - mean) ** 2 for x in values) / len(values)
         return variance
 
-    def _calculate_improvement_trend(self, scores: List[float]) -> str:
+    def _calculate_improvement_trend(self, scores: list[float]) -> str:
         """Calculate improvement trend from scores"""
         if len(scores) < 2:
             return "insufficient_data"
@@ -645,7 +712,9 @@ class RobloxAnalyticsAgent(BaseAgent):
         else:
             return "stable"
 
-    async def _calculate_learning_velocity(self, player_id: str, objectives: List[Dict[str, Any]]) -> float:
+    async def _calculate_learning_velocity(
+        self, player_id: str, objectives: list[dict[str, Any]]
+    ) -> float:
         """Calculate how quickly player masters new concepts"""
         player_outcomes = self.learning_outcomes.get(player_id, [])
 
@@ -658,14 +727,16 @@ class RobloxAnalyticsAgent(BaseAgent):
         if not mastered_outcomes:
             return 0.0
 
-        avg_time_to_mastery = sum(o.time_to_mastery for o in mastered_outcomes) / len(mastered_outcomes)
+        avg_time_to_mastery = sum(o.time_to_mastery for o in mastered_outcomes) / len(
+            mastered_outcomes
+        )
 
         # Convert to velocity (objectives per hour)
         velocity = 60 / avg_time_to_mastery if avg_time_to_mastery > 0 else 0
 
         return velocity
 
-    async def _segment_players_by_behavior(self, sessions: List[PlayerSession]) -> Dict[str, Any]:
+    async def _segment_players_by_behavior(self, sessions: list[PlayerSession]) -> dict[str, Any]:
         """Segment players based on behavior patterns"""
         player_segments = {}
 
@@ -690,18 +761,22 @@ class RobloxAnalyticsAgent(BaseAgent):
             "player_segments": player_segments,
             "segment_distribution": segment_counts,
             "total_players": len(player_segments),
-            "segment_characteristics": await self._describe_segment_characteristics(player_segments, players_sessions)
+            "segment_characteristics": await self._describe_segment_characteristics(
+                player_segments, players_sessions
+            ),
         }
 
-    async def _classify_player_segment(self, sessions: List[PlayerSession]) -> str:
+    async def _classify_player_segment(self, sessions: list[PlayerSession]) -> str:
         """Classify player into behavior segment"""
         if not sessions:
             return PlayerSegment.BEGINNER.value
 
         # Calculate key metrics
         avg_completion = sum(s.activities_completed for s in sessions) / len(sessions)
-        avg_quiz_score = sum(sum(s.quiz_scores) / len(s.quiz_scores) if s.quiz_scores else 0 for s in sessions) / len(sessions)
-        avg_duration = sum(s.duration_minutes for s in sessions) / len(sessions)
+        avg_quiz_score = sum(
+            sum(s.quiz_scores) / len(s.quiz_scores) if s.quiz_scores else 0 for s in sessions
+        ) / len(sessions)
+        sum(s.duration_minutes for s in sessions) / len(sessions)
         help_frequency = sum(s.help_requests for s in sessions) / len(sessions)
 
         # Classification logic
@@ -716,7 +791,9 @@ class RobloxAnalyticsAgent(BaseAgent):
         else:
             return PlayerSegment.BEGINNER.value
 
-    async def _generate_adaptive_recommendations(self, learning_analysis: Dict[str, Any]) -> List[str]:
+    async def _generate_adaptive_recommendations(
+        self, learning_analysis: dict[str, Any]
+    ) -> list[str]:
         """Generate adaptive learning recommendations"""
         recommendations = []
 
@@ -729,7 +806,9 @@ class RobloxAnalyticsAgent(BaseAgent):
         if mastery_rate < 0.5:
             recommendations.append("Consider reducing difficulty or providing additional support")
         elif mastery_rate > 0.9:
-            recommendations.append("Consider increasing difficulty or introducing advanced concepts")
+            recommendations.append(
+                "Consider increasing difficulty or introducing advanced concepts"
+            )
 
         # Analyze learning velocity
         velocity = learning_analysis.get("learning_velocity", 0)
@@ -746,17 +825,25 @@ class RobloxAnalyticsAgent(BaseAgent):
 
         return recommendations
 
-    def _calculate_mastery_summary(self, learning_outcomes: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_mastery_summary(self, learning_outcomes: list[dict[str, Any]]) -> dict[str, Any]:
         """Calculate summary of learning mastery"""
         if not learning_outcomes:
-            return {"mastered_objectives": 0, "total_objectives": 0, "mastery_rate": 0.0}
+            return {
+                "mastered_objectives": 0,
+                "total_objectives": 0,
+                "mastery_rate": 0.0,
+            }
 
         mastered = sum(1 for outcome in learning_outcomes if outcome.get("mastery_level", 0) >= 0.8)
         total = len(learning_outcomes)
 
         avg_mastery = sum(outcome.get("mastery_level", 0) for outcome in learning_outcomes) / total
-        avg_confidence = sum(outcome.get("confidence_score", 0) for outcome in learning_outcomes) / total
-        avg_time_to_mastery = sum(outcome.get("time_to_mastery", 0) for outcome in learning_outcomes) / total
+        avg_confidence = (
+            sum(outcome.get("confidence_score", 0) for outcome in learning_outcomes) / total
+        )
+        avg_time_to_mastery = (
+            sum(outcome.get("time_to_mastery", 0) for outcome in learning_outcomes) / total
+        )
 
         return {
             "mastered_objectives": mastered,
@@ -765,31 +852,34 @@ class RobloxAnalyticsAgent(BaseAgent):
             "average_mastery_level": avg_mastery,
             "average_confidence": avg_confidence,
             "average_time_to_mastery": avg_time_to_mastery,
-            "learning_efficiency": mastered / avg_time_to_mastery if avg_time_to_mastery > 0 else 0
+            "learning_efficiency": mastered / avg_time_to_mastery if avg_time_to_mastery > 0 else 0,
         }
 
-    async def _comprehensive_analysis(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _comprehensive_analysis(self, context: dict[str, Any]) -> dict[str, Any]:
         """Perform comprehensive analytics across all dimensions"""
         player_id = context.get("player_id")
         time_window_days = context.get("time_window_days", 30)
 
         # Run all analysis types
-        behavior_analysis = await self._analyze_player_behavior({
-            "player_id": player_id,
-            "time_window_days": time_window_days
-        })
+        behavior_analysis = await self._analyze_player_behavior(
+            {"player_id": player_id, "time_window_days": time_window_days}
+        )
 
-        learning_analysis = await self._track_learning_outcomes({
-            "player_id": player_id,
-            "learning_objectives": context.get("learning_objectives", []),
-            "assessment_data": context.get("assessment_data", {})
-        })
+        learning_analysis = await self._track_learning_outcomes(
+            {
+                "player_id": player_id,
+                "learning_objectives": context.get("learning_objectives", []),
+                "assessment_data": context.get("assessment_data", {}),
+            }
+        )
 
-        engagement_analysis = await self._measure_engagement({
-            "player_id": player_id,
-            "session_data": context.get("session_data", {}),
-            "time_window_days": time_window_days
-        })
+        engagement_analysis = await self._measure_engagement(
+            {
+                "player_id": player_id,
+                "session_data": context.get("session_data", {}),
+                "time_window_days": time_window_days,
+            }
+        )
 
         # Synthesize comprehensive insights
         comprehensive_insights = {
@@ -807,21 +897,28 @@ class RobloxAnalyticsAgent(BaseAgent):
             ),
             "intervention_recommendations": await self._generate_intervention_recommendations(
                 behavior_analysis, learning_analysis, engagement_analysis
-            )
+            ),
         }
 
         logger.info("Completed comprehensive analysis for player %s", player_id)
         return comprehensive_insights
 
-    async def _calculate_overall_performance(self, behavior: Dict[str, Any], learning: Dict[str, Any], engagement: Dict[str, Any]) -> Dict[str, Any]:
+    async def _calculate_overall_performance(
+        self,
+        behavior: dict[str, Any],
+        learning: dict[str, Any],
+        engagement: dict[str, Any],
+    ) -> dict[str, Any]:
         """Calculate overall player performance metrics"""
         # Extract key metrics
-        behavior_score = behavior.get("behavior_patterns", {}).get(behavior.get("dominant_pattern", ""), 0)
+        behavior_score = behavior.get("behavior_patterns", {}).get(
+            behavior.get("dominant_pattern", ""), 0
+        )
         learning_score = learning.get("mastery_summary", {}).get("mastery_rate", 0)
         engagement_score = engagement.get("engagement_score", 0)
 
         # Weighted overall score
-        overall_score = (behavior_score * 0.2 + learning_score * 0.5 + engagement_score * 0.3)
+        overall_score = behavior_score * 0.2 + learning_score * 0.5 + engagement_score * 0.3
 
         # Performance classification
         if overall_score >= 0.85:
@@ -839,13 +936,20 @@ class RobloxAnalyticsAgent(BaseAgent):
             "component_scores": {
                 "behavior": behavior_score,
                 "learning": learning_score,
-                "engagement": engagement_score
+                "engagement": engagement_score,
             },
             "strengths": self._identify_strengths(behavior, learning, engagement),
-            "areas_for_improvement": self._identify_improvement_areas(behavior, learning, engagement)
+            "areas_for_improvement": self._identify_improvement_areas(
+                behavior, learning, engagement
+            ),
         }
 
-    def _identify_strengths(self, behavior: Dict[str, Any], learning: Dict[str, Any], engagement: Dict[str, Any]) -> List[str]:
+    def _identify_strengths(
+        self,
+        behavior: dict[str, Any],
+        learning: dict[str, Any],
+        engagement: dict[str, Any],
+    ) -> list[str]:
         """Identify player strengths"""
         strengths = []
 
@@ -874,7 +978,12 @@ class RobloxAnalyticsAgent(BaseAgent):
 
         return strengths
 
-    def _identify_improvement_areas(self, behavior: Dict[str, Any], learning: Dict[str, Any], engagement: Dict[str, Any]) -> List[str]:
+    def _identify_improvement_areas(
+        self,
+        behavior: dict[str, Any],
+        learning: dict[str, Any],
+        engagement: dict[str, Any],
+    ) -> list[str]:
         """Identify areas for improvement"""
         improvements = []
 
@@ -897,7 +1006,7 @@ class RobloxAnalyticsAgent(BaseAgent):
 
         return improvements
 
-    def get_analytics_metrics(self) -> Dict[str, Any]:
+    def get_analytics_metrics(self) -> dict[str, Any]:
         """Get comprehensive analytics metrics"""
         total_players = len(self.player_sessions)
         total_sessions = sum(len(sessions) for sessions in self.player_sessions.values())
@@ -908,17 +1017,21 @@ class RobloxAnalyticsAgent(BaseAgent):
             "sessions_analyzed": total_sessions,
             "learning_outcomes_tracked": total_outcomes,
             "behavior_profiles_created": len(self.behavior_profiles),
-            "engagement_history_entries": sum(len(history) for history in self.engagement_history.values()),
+            "engagement_history_entries": sum(
+                len(history) for history in self.engagement_history.values()
+            ),
             "analytics_capabilities": {
                 "behavior_analysis": self.behavior_analyzer["enabled"],
                 "learning_tracking": self.learning_tracker["enabled"],
-                "engagement_metrics": self.engagement_metrics["enabled"]
+                "engagement_metrics": self.engagement_metrics["enabled"],
             },
             "data_quality": {
-                "average_sessions_per_player": total_sessions / total_players if total_players > 0 else 0,
+                "average_sessions_per_player": (
+                    total_sessions / total_players if total_players > 0 else 0
+                ),
                 "data_completeness": self._assess_data_completeness(),
-                "analysis_accuracy": 0.92  # Estimated based on validation
-            }
+                "analysis_accuracy": 0.92,  # Estimated based on validation
+            },
         }
 
     def _assess_data_completeness(self) -> float:
@@ -929,7 +1042,8 @@ class RobloxAnalyticsAgent(BaseAgent):
         # Session data completeness
         if self.player_sessions:
             session_completeness = sum(
-                1 for sessions in self.player_sessions.values()
+                1
+                for sessions in self.player_sessions.values()
                 for session in sessions
                 if session.end_time is not None
             ) / sum(len(sessions) for sessions in self.player_sessions.values())
@@ -938,7 +1052,8 @@ class RobloxAnalyticsAgent(BaseAgent):
         # Learning outcomes completeness
         if self.learning_outcomes:
             outcome_completeness = sum(
-                1 for outcomes in self.learning_outcomes.values()
+                1
+                for outcomes in self.learning_outcomes.values()
                 for outcome in outcomes
                 if outcome.confidence_score > 0
             ) / sum(len(outcomes) for outcomes in self.learning_outcomes.values())
@@ -946,7 +1061,13 @@ class RobloxAnalyticsAgent(BaseAgent):
 
         # Behavior profiles completeness
         if self.behavior_profiles:
-            profile_completeness = len(self.behavior_profiles) / len(self.player_sessions) if self.player_sessions else 0
+            profile_completeness = (
+                len(self.behavior_profiles) / len(self.player_sessions)
+                if self.player_sessions
+                else 0
+            )
             completeness_factors.append(profile_completeness)
 
-        return sum(completeness_factors) / len(completeness_factors) if completeness_factors else 0.0
+        return (
+            sum(completeness_factors) / len(completeness_factors) if completeness_factors else 0.0
+        )

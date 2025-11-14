@@ -8,8 +8,9 @@ Reference: https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html
 """
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import event, exc

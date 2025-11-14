@@ -8,15 +8,13 @@ GPT-4.1 migration monitoring system in your application.
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
+from typing import Any
 
+from .alert_manager import AlertManager
+from .cost_tracker import CostCategory, CostTracker
 from .gpt4_migration_monitor import GPT4MigrationMonitor, MigrationPhase
-from .cost_tracker import CostTracker, CostCategory
-from .performance_analyzer import PerformanceAnalyzer, PerformanceMetric
-from .alert_manager import AlertManager, AlertSeverity, AlertCategory
 from .migration_dashboard import MigrationDashboard
-
-from core.agents.base_agent import AgentConfig
+from .performance_analyzer import PerformanceAnalyzer, PerformanceMetric
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +37,7 @@ class GPT4MigrationSystem:
             self.migration_monitor,
             self.cost_tracker,
             self.performance_analyzer,
-            self.alert_manager
+            self.alert_manager,
         )
 
         # System state
@@ -48,12 +46,14 @@ class GPT4MigrationSystem:
 
         logger.info("GPT4MigrationSystem initialized")
 
-    async def initialize(self, migration_phase: MigrationPhase = MigrationPhase.PREPARATION) -> Dict[str, Any]:
+    async def initialize(
+        self, migration_phase: MigrationPhase = MigrationPhase.PREPARATION
+    ) -> dict[str, Any]:
         """Initialize the migration monitoring system"""
 
         try:
             # Start migration monitoring
-            result = await self.migration_monitor.start_monitoring(migration_phase)
+            await self.migration_monitor.start_monitoring(migration_phase)
 
             # Establish performance baselines for key models
             models = ["gpt-4", "gpt-4o", "gpt-4o-mini"]
@@ -62,9 +62,9 @@ class GPT4MigrationSystem:
                 logger.info(f"Established baseline for {model}: {baseline}")
 
             # Configure cost tracking budgets
-            self.cost_tracker.set_budget_limit("daily", 100.0)    # $100/day
-            self.cost_tracker.set_budget_limit("weekly", 600.0)   # $600/week
-            self.cost_tracker.set_budget_limit("monthly", 2500.0) # $2500/month
+            self.cost_tracker.set_budget_limit("daily", 100.0)  # $100/day
+            self.cost_tracker.set_budget_limit("weekly", 600.0)  # $600/week
+            self.cost_tracker.set_budget_limit("monthly", 2500.0)  # $2500/month
 
             # Test alert system
             await self._test_alert_system()
@@ -80,7 +80,7 @@ class GPT4MigrationSystem:
                 "baselines_established": len(models),
                 "budgets_configured": True,
                 "alerts_tested": True,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         except Exception as e:
@@ -88,7 +88,7 @@ class GPT4MigrationSystem:
             return {
                 "status": "error",
                 "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     async def _test_alert_system(self) -> None:
@@ -98,7 +98,7 @@ class GPT4MigrationSystem:
             rule_id="system_test",
             message="Migration monitoring system initialized successfully",
             value=1.0,
-            metadata={"test": True}
+            metadata={"test": True},
         )
 
     async def track_api_request(
@@ -109,8 +109,8 @@ class GPT4MigrationSystem:
         latency: float,
         success: bool,
         category: CostCategory = CostCategory.OTHER,
-        endpoint: str = ""
-    ) -> Dict[str, Any]:
+        endpoint: str = "",
+    ) -> dict[str, Any]:
         """
         Track a single API request across all monitoring systems.
 
@@ -129,31 +129,22 @@ class GPT4MigrationSystem:
                 output_tokens=output_tokens,
                 category=category,
                 success=success,
-                metadata={"endpoint": endpoint}
+                metadata={"endpoint": endpoint},
             )
 
             # Track performance metrics
             self.performance_analyzer.record_performance_data(
-                PerformanceMetric.LATENCY,
-                latency,
-                model,
-                endpoint
+                PerformanceMetric.LATENCY, latency, model, endpoint
             )
 
             success_rate = 1.0 if success else 0.0
             self.performance_analyzer.record_performance_data(
-                PerformanceMetric.SUCCESS_RATE,
-                success_rate,
-                model,
-                endpoint
+                PerformanceMetric.SUCCESS_RATE, success_rate, model, endpoint
             )
 
             error_rate = 0.0 if success else 1.0
             self.performance_analyzer.record_performance_data(
-                PerformanceMetric.ERROR_RATE,
-                error_rate,
-                model,
-                endpoint
+                PerformanceMetric.ERROR_RATE, error_rate, model, endpoint
             )
 
             # Calculate token efficiency (tokens per second)
@@ -163,17 +154,14 @@ class GPT4MigrationSystem:
                     PerformanceMetric.TOKEN_EFFICIENCY,
                     token_efficiency,
                     model,
-                    endpoint
+                    endpoint,
                 )
 
             # Calculate cost efficiency (tokens per dollar)
             if cost > 0:
                 cost_efficiency = (input_tokens + output_tokens) / cost
                 self.performance_analyzer.record_performance_data(
-                    PerformanceMetric.COST_EFFICIENCY,
-                    cost_efficiency,
-                    model,
-                    endpoint
+                    PerformanceMetric.COST_EFFICIENCY, cost_efficiency, model, endpoint
                 )
 
             # Check for immediate issues and trigger alerts if needed
@@ -186,7 +174,7 @@ class GPT4MigrationSystem:
                 "tokens": input_tokens + output_tokens,
                 "latency": latency,
                 "success": success,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         except Exception as e:
@@ -194,10 +182,12 @@ class GPT4MigrationSystem:
             return {
                 "status": "error",
                 "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-    async def _check_immediate_alerts(self, model: str, latency: float, success: bool, cost: float) -> None:
+    async def _check_immediate_alerts(
+        self, model: str, latency: float, success: bool, cost: float
+    ) -> None:
         """Check for immediate alert conditions after API request"""
 
         # Check for high latency
@@ -206,14 +196,14 @@ class GPT4MigrationSystem:
                 "latency_critical",
                 f"Critical latency detected for {model}",
                 latency,
-                {"model": model, "cost": cost}
+                {"model": model, "cost": cost},
             )
         elif latency > 5.0:  # 5 seconds
             await self.alert_manager.trigger_alert(
                 "latency_high",
                 f"High latency detected for {model}",
                 latency,
-                {"model": model, "cost": cost}
+                {"model": model, "cost": cost},
             )
 
         # Check for API errors
@@ -222,10 +212,10 @@ class GPT4MigrationSystem:
                 "api_error",
                 f"API request failed for {model}",
                 1.0,
-                {"model": model, "latency": latency, "cost": cost}
+                {"model": model, "latency": latency, "cost": cost},
             )
 
-    async def run_monitoring_cycle(self) -> Dict[str, Any]:
+    async def run_monitoring_cycle(self) -> dict[str, Any]:
         """Run a complete monitoring cycle - call this periodically (e.g., every 5 minutes)"""
 
         if not self.monitoring_active:
@@ -249,8 +239,8 @@ class GPT4MigrationSystem:
                         {
                             "model": model,
                             "expected_value": anomaly.expected_value,
-                            "deviation": anomaly.deviation_percentage
-                        }
+                            "deviation": anomaly.deviation_percentage,
+                        },
                     )
                     anomalies_detected += 1
 
@@ -258,10 +248,7 @@ class GPT4MigrationSystem:
             budget_alerts = self.cost_tracker._check_budget_alerts()
             for alert in budget_alerts:
                 await self.alert_manager.trigger_alert(
-                    "budget_alert",
-                    alert["message"],
-                    alert["percentage"],
-                    alert
+                    "budget_alert", alert["message"], alert["percentage"], alert
                 )
 
             return {
@@ -269,7 +256,7 @@ class GPT4MigrationSystem:
                 "monitoring_result": monitoring_result,
                 "anomalies_detected": anomalies_detected,
                 "budget_alerts": len(budget_alerts),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         except Exception as e:
@@ -277,10 +264,10 @@ class GPT4MigrationSystem:
             return {
                 "status": "error",
                 "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-    async def get_migration_status(self) -> Dict[str, Any]:
+    async def get_migration_status(self) -> dict[str, Any]:
         """Get comprehensive migration status"""
 
         try:
@@ -299,7 +286,7 @@ class GPT4MigrationSystem:
                         "overall_score": summary.overall_score,
                         "metrics": summary.metrics,
                         "anomaly_count": len(summary.anomalies),
-                        "recommendations": summary.recommendations[:3]  # Top 3
+                        "recommendations": summary.recommendations[:3],  # Top 3
                     }
                 except Exception as e:
                     logger.warning(f"Failed to get performance summary for {model}: {e}")
@@ -316,7 +303,7 @@ class GPT4MigrationSystem:
                     "total_cost": cost_analysis.total_cost,
                     "avg_cost_per_request": cost_analysis.avg_cost_per_request,
                     "efficiency_score": cost_analysis.efficiency_score,
-                    "breakdown_by_model": cost_analysis.breakdown_by_model
+                    "breakdown_by_model": cost_analysis.breakdown_by_model,
                 },
                 "performance_summaries": performance_summaries,
                 "alert_statistics": alert_stats,
@@ -324,8 +311,8 @@ class GPT4MigrationSystem:
                 "system_status": {
                     "initialized": self.initialized,
                     "monitoring_active": self.monitoring_active,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
             }
 
         except Exception as e:
@@ -333,10 +320,10 @@ class GPT4MigrationSystem:
             return {
                 "status": "error",
                 "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-    async def advance_migration_phase(self, new_phase: MigrationPhase) -> Dict[str, Any]:
+    async def advance_migration_phase(self, new_phase: MigrationPhase) -> dict[str, Any]:
         """Advance to the next migration phase"""
 
         try:
@@ -349,7 +336,7 @@ class GPT4MigrationSystem:
             return {
                 "status": "error",
                 "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     async def acknowledge_alert(self, alert_id: str, user: str) -> bool:
@@ -360,16 +347,16 @@ class GPT4MigrationSystem:
         """Resolve an alert"""
         return await self.alert_manager.resolve_alert(alert_id, user)
 
-    def get_optimization_recommendations(self) -> Dict[str, List[Dict[str, Any]]]:
+    def get_optimization_recommendations(self) -> dict[str, list[dict[str, Any]]]:
         """Get optimization recommendations from all systems"""
 
         return {
             "cost_optimization": self.cost_tracker.get_optimization_recommendations(),
             "migration_recommendations": [],  # Would come from migration monitor
-            "performance_recommendations": []  # Would come from performance analyzer
+            "performance_recommendations": [],  # Would come from performance analyzer
         }
 
-    async def export_monitoring_data(self) -> Dict[str, str]:
+    async def export_monitoring_data(self) -> dict[str, str]:
         """Export all monitoring data for analysis"""
 
         try:
@@ -381,14 +368,14 @@ class GPT4MigrationSystem:
                 "cost_data": cost_data,
                 "performance_data": performance_data,
                 "dashboard_data": dashboard_data,
-                "export_timestamp": datetime.now(timezone.utc).isoformat()
+                "export_timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Failed to export monitoring data: {e}")
             return {
                 "error": str(e),
-                "export_timestamp": datetime.now(timezone.utc).isoformat()
+                "export_timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
     def stop_monitoring(self) -> None:
@@ -406,6 +393,7 @@ class GPT4MigrationSystem:
 
 
 # Example usage and integration patterns
+
 
 async def example_usage():
     """Example of how to use the GPT-4.1 migration monitoring system"""
@@ -431,7 +419,7 @@ async def example_usage():
             latency=2.0 + (i * 0.1),
             success=True,
             category=CostCategory.CONTENT_GENERATION,
-            endpoint="/v1/chat/completions"
+            endpoint="/v1/chat/completions",
         )
 
         print(f"Tracked request {i+1}: {track_result}")
@@ -454,7 +442,9 @@ async def example_usage():
 
     # Get optimization recommendations
     recommendations = migration_system.get_optimization_recommendations()
-    print(f"Optimization recommendations: {len(recommendations['cost_optimization'])} cost optimizations")
+    print(
+        f"Optimization recommendations: {len(recommendations['cost_optimization'])} cost optimizations"
+    )
 
 
 # Integration with existing OpenAI service
@@ -467,17 +457,13 @@ class OpenAIServiceWithMonitoring:
         self.migration_system = migration_system
         # Your existing OpenAI client initialization here
 
-    async def chat_completion(
-        self,
-        model: str,
-        messages: list,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def chat_completion(self, model: str, messages: list, **kwargs) -> dict[str, Any]:
         """
         Chat completion with integrated monitoring.
         """
 
         import time
+
         start_time = time.time()
 
         try:
@@ -490,8 +476,8 @@ class OpenAIServiceWithMonitoring:
                 "usage": {
                     "prompt_tokens": 100,
                     "completion_tokens": 50,
-                    "total_tokens": 150
-                }
+                    "total_tokens": 150,
+                },
             }
 
             # Calculate latency
@@ -505,7 +491,7 @@ class OpenAIServiceWithMonitoring:
                 latency=latency,
                 success=True,
                 category=CostCategory.EDUCATIONAL_SUPPORT,
-                endpoint="/v1/chat/completions"
+                endpoint="/v1/chat/completions",
             )
 
             return response
@@ -520,7 +506,7 @@ class OpenAIServiceWithMonitoring:
                 latency=latency,
                 success=False,
                 category=CostCategory.EDUCATIONAL_SUPPORT,
-                endpoint="/v1/chat/completions"
+                endpoint="/v1/chat/completions",
             )
 
             raise e

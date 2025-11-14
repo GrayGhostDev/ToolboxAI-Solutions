@@ -187,7 +187,6 @@ class GPT41PromptOptimizer:
 
     def _apply_literal_optimizations(self, prompt: str) -> tuple[str, int]:
         """Apply optimizations for GPT-4.1's literal instruction following"""
-        original = prompt
         count = 0
 
         # Remove polite/indirect language
@@ -248,7 +247,14 @@ class GPT41PromptOptimizer:
         prompt = re.sub(r"^#+\s*", "", prompt, flags=re.MULTILINE)  # Remove markdown headers
 
         # Add clear section breaks
-        sections = ["Task:", "Context:", "Format:", "Output:", "Examples:", "Constraints:"]
+        sections = [
+            "Task:",
+            "Context:",
+            "Format:",
+            "Output:",
+            "Examples:",
+            "Constraints:",
+        ]
         for section in sections:
             prompt = re.sub(f"(?i){section}", section, prompt)
 
@@ -277,7 +283,14 @@ class GPT41PromptOptimizer:
             complexity += 0.7
 
         # Instruction complexity
-        instruction_keywords = ["analyze", "compare", "evaluate", "synthesize", "create", "design"]
+        instruction_keywords = [
+            "analyze",
+            "compare",
+            "evaluate",
+            "synthesize",
+            "create",
+            "design",
+        ]
         for keyword in instruction_keywords:
             if keyword in prompt.lower():
                 complexity += 0.05

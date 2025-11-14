@@ -3,16 +3,17 @@ MCP Server for Roblox Integration
 Provides Roblox Studio and game development capabilities via MCP protocol
 """
 
-import sys
-import json
 import asyncio
+import json
 import logging
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 
 # Add parent directory to path for imports
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
+import sys
+from datetime import datetime
+from typing import Any
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +37,7 @@ class RobloxMCPServer:
         }
         self.roblox_api_key = os.getenv("ROBLOX_API_KEY")
 
-    async def handle_generate_terrain(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_terrain(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate Roblox terrain code"""
         try:
             terrain_type = params.get("terrain_type", "forest")
@@ -57,21 +58,15 @@ class RobloxMCPServer:
                 "features": features,
                 "lua_code": lua_code,
                 "instructions": "Paste this code in Roblox Studio ServerScriptService",
-                "estimated_parts": self._estimate_parts(size, features)
+                "estimated_parts": self._estimate_parts(size, features),
             }
 
-            return {
-                "status": "success",
-                "terrain": result
-            }
+            return {"status": "success", "terrain": result}
         except Exception as e:
             logger.error(f"Error generating terrain: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_generate_script(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_script(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate Roblox Lua script"""
         try:
             script_type = params.get("script_type", "game_mechanic")
@@ -91,21 +86,15 @@ class RobloxMCPServer:
                 "lua_code": script,
                 "location": self._get_script_location(script_type),
                 "dependencies": self._get_script_dependencies(script_type),
-                "security_validated": True
+                "security_validated": True,
             }
 
-            return {
-                "status": "success",
-                "script": result
-            }
+            return {"status": "success", "script": result}
         except Exception as e:
             logger.error(f"Error generating script: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_validate_script(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_validate_script(self, params: dict[str, Any]) -> dict[str, Any]:
         """Validate a Roblox Lua script for security and best practices"""
         try:
             script_code = params.get("code", "")
@@ -134,25 +123,19 @@ class RobloxMCPServer:
                 "issues": issues,
                 "warnings": warnings,
                 "suggestions": suggestions,
-                "score": self._calculate_script_score(issues, warnings, suggestions)
+                "score": self._calculate_script_score(issues, warnings, suggestions),
             }
 
-            return {
-                "status": "success",
-                "validation": result
-            }
+            return {"status": "success", "validation": result}
         except Exception as e:
             logger.error(f"Error validating script: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_deploy_asset(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_deploy_asset(self, params: dict[str, Any]) -> dict[str, Any]:
         """Deploy asset to Roblox"""
         try:
             asset_type = params.get("asset_type", "model")
-            asset_data = params.get("asset_data")
+            params.get("asset_data")
             place_id = params.get("place_id")
             deploy_mode = params.get("deploy_mode", "test")
 
@@ -165,25 +148,19 @@ class RobloxMCPServer:
                 "place_id": place_id,
                 "status": "queued" if deploy_mode == "production" else "deployed",
                 "url": f"https://www.roblox.com/games/{place_id}/",
-                "estimated_time": "2-3 minutes" if deploy_mode == "production" else "immediate"
+                "estimated_time": "2-3 minutes" if deploy_mode == "production" else "immediate",
             }
 
-            return {
-                "status": "success",
-                "deployment": result
-            }
+            return {"status": "success", "deployment": result}
         except Exception as e:
             logger.error(f"Error deploying asset: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_game_analytics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_game_analytics(self, params: dict[str, Any]) -> dict[str, Any]:
         """Get Roblox game analytics"""
         try:
             game_id = params.get("game_id")
-            metric_type = params.get("metric_type", "overview")
+            params.get("metric_type", "overview")
             time_range = params.get("time_range", "7d")
 
             analytics = {
@@ -193,38 +170,32 @@ class RobloxMCPServer:
                     "total": 12456,
                     "concurrent": 234,
                     "peak": 567,
-                    "average_session": "18 minutes"
+                    "average_session": "18 minutes",
                 },
                 "engagement": {
                     "play_time": "234,567 hours",
                     "sessions": 45678,
                     "retention_day1": 45.6,
-                    "retention_day7": 23.4
+                    "retention_day7": 23.4,
                 },
                 "monetization": {
                     "revenue": "$1,234.56",
                     "paying_users": 123,
-                    "average_revenue_per_user": "$10.04"
+                    "average_revenue_per_user": "$10.04",
                 },
                 "performance": {
                     "average_fps": 58.2,
                     "crash_rate": 0.02,
-                    "load_time": "3.2 seconds"
-                }
+                    "load_time": "3.2 seconds",
+                },
             }
 
-            return {
-                "status": "success",
-                "analytics": analytics
-            }
+            return {"status": "success", "analytics": analytics}
         except Exception as e:
             logger.error(f"Error getting game analytics: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_manage_place(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_manage_place(self, params: dict[str, Any]) -> dict[str, Any]:
         """Manage Roblox place/game settings"""
         try:
             place_id = params.get("place_id")
@@ -239,32 +210,26 @@ class RobloxMCPServer:
                     "max_players": 20,
                     "genre": "Educational",
                     "created": "2024-01-15",
-                    "last_updated": datetime.now().isoformat()
+                    "last_updated": datetime.now().isoformat(),
                 }
             elif action == "update_settings":
                 result = {
                     "place_id": place_id,
                     "settings_updated": True,
-                    "changes": settings
+                    "changes": settings,
                 }
             else:
                 result = {"error": f"Unknown action: {action}"}
 
-            return {
-                "status": "success",
-                "place": result
-            }
+            return {"status": "success", "place": result}
         except Exception as e:
             logger.error(f"Error managing place: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_sync_studio(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_sync_studio(self, params: dict[str, Any]) -> dict[str, Any]:
         """Sync with Roblox Studio"""
         try:
-            project_path = params.get("project_path")
+            params.get("project_path")
             sync_direction = params.get("direction", "push")  # push, pull, sync
 
             result = {
@@ -273,30 +238,24 @@ class RobloxMCPServer:
                 "status": "completed",
                 "files_synced": 23,
                 "conflicts": 0,
-                "duration": "2.3 seconds"
+                "duration": "2.3 seconds",
             }
 
-            return {
-                "status": "success",
-                "sync": result
-            }
+            return {"status": "success", "sync": result}
         except Exception as e:
             logger.error(f"Error syncing with Studio: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_health(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_health(self, params: dict[str, Any]) -> dict[str, Any]:
         """Health check endpoint"""
         return {
             "status": "healthy",
             "service": "roblox",
             "api_connected": self.roblox_api_key is not None,
-            "studio_sync": "available"
+            "studio_sync": "available",
         }
 
-    async def handle_capabilities(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_capabilities(self, params: dict[str, Any]) -> dict[str, Any]:
         """Return server capabilities"""
         return {
             "capabilities": [
@@ -306,21 +265,34 @@ class RobloxMCPServer:
                 "deploy_asset",
                 "get_game_analytics",
                 "manage_place",
-                "sync_studio"
+                "sync_studio",
             ],
-            "terrain_types": ["forest", "desert", "ocean", "mountain", "city", "classroom"],
-            "script_types": ["game_mechanic", "ui", "datastore", "remote_event", "module"],
+            "terrain_types": [
+                "forest",
+                "desert",
+                "ocean",
+                "mountain",
+                "city",
+                "classroom",
+            ],
+            "script_types": [
+                "game_mechanic",
+                "ui",
+                "datastore",
+                "remote_event",
+                "module",
+            ],
             "asset_types": ["model", "script", "decal", "sound", "animation"],
             "supported_features": [
                 "terrain_generation",
                 "script_validation",
                 "security_scanning",
                 "performance_optimization",
-                "educational_content"
-            ]
+                "educational_content",
+            ],
         }
 
-    def _generate_terrain_lua(self, terrain_type: str, size: str, features: List[str]) -> str:
+    def _generate_terrain_lua(self, terrain_type: str, size: str, features: list[str]) -> str:
         """Generate Lua code for terrain creation"""
         size_map = {"small": 256, "medium": 512, "large": 1024}
         world_size = size_map.get(size, 512)
@@ -405,7 +377,7 @@ frame.Parent = screenGui
             script = script.replace(pattern, f"--[[REMOVED: {pattern}]]")
         return script
 
-    def _check_security_issues(self, code: str) -> List[str]:
+    def _check_security_issues(self, code: str) -> list[str]:
         """Check for security issues in code"""
         issues = []
         if "loadstring" in code:
@@ -414,7 +386,7 @@ frame.Parent = screenGui
             issues.append("Global table access can lead to exploits")
         return issues
 
-    def _check_performance_issues(self, code: str) -> List[str]:
+    def _check_performance_issues(self, code: str) -> list[str]:
         """Check for performance issues"""
         warnings = []
         if "while true do" in code and "wait()" not in code:
@@ -423,7 +395,7 @@ frame.Parent = screenGui
             warnings.append("Creating many instances at once may cause lag")
         return warnings
 
-    def _check_best_practices(self, code: str) -> List[str]:
+    def _check_best_practices(self, code: str) -> list[str]:
         """Check for best practices"""
         suggestions = []
         if "game.Workspace" in code:
@@ -432,7 +404,7 @@ frame.Parent = screenGui
             suggestions.append("Use local variables for better performance")
         return suggestions
 
-    def _estimate_parts(self, size: str, features: List[str]) -> int:
+    def _estimate_parts(self, size: str, features: list[str]) -> int:
         """Estimate number of parts based on terrain size and features"""
         base_parts = {"small": 100, "medium": 500, "large": 1000}
         parts = base_parts.get(size, 500)
@@ -446,20 +418,20 @@ frame.Parent = screenGui
             "ui": "StarterPlayer.StarterPlayerScripts",
             "datastore": "ServerScriptService",
             "remote_event": "ReplicatedStorage",
-            "module": "ReplicatedStorage.Modules"
+            "module": "ReplicatedStorage.Modules",
         }
         return locations.get(script_type, "ServerScriptService")
 
-    def _get_script_dependencies(self, script_type: str) -> List[str]:
+    def _get_script_dependencies(self, script_type: str) -> list[str]:
         """Get script dependencies"""
         deps = {
             "datastore": ["DataStoreService"],
             "remote_event": ["ReplicatedStorage", "RemoteEvent"],
-            "ui": ["PlayerGui", "ScreenGui"]
+            "ui": ["PlayerGui", "ScreenGui"],
         }
         return deps.get(script_type, [])
 
-    def _calculate_script_score(self, issues: List, warnings: List, suggestions: List) -> float:
+    def _calculate_script_score(self, issues: list, warnings: list, suggestions: list) -> float:
         """Calculate script quality score"""
         score = 100.0
         score -= len(issues) * 20
@@ -467,7 +439,7 @@ frame.Parent = screenGui
         score -= len(suggestions) * 5
         return max(0, min(100, score))
 
-    async def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """Process incoming MCP request"""
         method = request.get("method")
         params = request.get("params", {})
@@ -476,29 +448,19 @@ frame.Parent = screenGui
         if method in self.methods:
             try:
                 result = await self.methods[method](params)
-                return {
-                    "jsonrpc": "2.0",
-                    "result": result,
-                    "id": request_id
-                }
+                return {"jsonrpc": "2.0", "result": result, "id": request_id}
             except Exception as e:
                 logger.error(f"Error processing request: {e}")
                 return {
                     "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32603,
-                        "message": str(e)
-                    },
-                    "id": request_id
+                    "error": {"code": -32603, "message": str(e)},
+                    "id": request_id,
                 }
         else:
             return {
                 "jsonrpc": "2.0",
-                "error": {
-                    "code": -32601,
-                    "message": f"Method not found: {method}"
-                },
-                "id": request_id
+                "error": {"code": -32601, "message": f"Method not found: {method}"},
+                "id": request_id,
             }
 
     async def run_stdio(self):
@@ -526,11 +488,8 @@ frame.Parent = screenGui
                 logger.error(f"Invalid JSON: {e}")
                 error_response = {
                     "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32700,
-                        "message": "Parse error"
-                    },
-                    "id": None
+                    "error": {"code": -32700, "message": "Parse error"},
+                    "id": None,
                 }
                 sys.stdout.write(json.dumps(error_response) + "\n")
                 sys.stdout.flush()

@@ -13,14 +13,13 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional
 from uuid import uuid4
 
-from core.agents.agent_registry import AgentRegistry, AgentFactory, AgentCategory
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
+from core.agents.agent_registry import AgentFactory, AgentRegistry
+from core.agents.base_agent import BaseAgent
 from core.agents.worktree_coordinator import WorktreeAgentCoordinator
 from core.swarm.message_bus import MessageBus, MessageBusConfig
 
@@ -29,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class AgentSystemType(Enum):
     """Types of agent systems available."""
+
     EDUCATIONAL = "educational"
     CONTENT = "content"
     DATABASE = "database"
@@ -43,6 +43,7 @@ class AgentSystemType(Enum):
 
 class TaskStatus(Enum):
     """Status of a task in the system."""
+
     PENDING = "pending"
     QUEUED = "queued"
     ASSIGNED = "assigned"
@@ -56,6 +57,7 @@ class TaskStatus(Enum):
 
 class TaskPriority(Enum):
     """Priority levels for task execution."""
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -66,6 +68,7 @@ class TaskPriority(Enum):
 @dataclass
 class OrchestratorConfig:
     """Configuration for the Master Orchestrator."""
+
     max_agents_per_type: int = 5
     task_queue_size: int = 1000
     enable_health_checks: bool = True
@@ -80,16 +83,17 @@ class OrchestratorConfig:
 @dataclass
 class TaskInfo:
     """Information about a task in the system."""
+
     task_id: str
     agent_type: AgentSystemType
     priority: TaskPriority
-    data: Dict[str, Any]
+    data: dict[str, Any]
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = field(default_factory=datetime.now)
     assigned_to: Optional[str] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    result: Optional[Dict[str, Any]] = None
+    result: Optional[dict[str, Any]] = None
     error: Optional[str] = None
     retries: int = 0
 
@@ -117,12 +121,12 @@ class MasterOrchestrator:
 
         # Task management
         self.task_queue: asyncio.Queue = asyncio.Queue(maxsize=self.config.task_queue_size)
-        self.active_tasks: Dict[str, TaskInfo] = {}
-        self.completed_tasks: Dict[str, TaskInfo] = {}
-        self.task_history: List[TaskInfo] = []
+        self.active_tasks: dict[str, TaskInfo] = {}
+        self.completed_tasks: dict[str, TaskInfo] = {}
+        self.task_history: list[TaskInfo] = []
 
         # Agent pools by type
-        self.agent_pools: Dict[AgentSystemType, List[BaseAgent]] = {
+        self.agent_pools: dict[AgentSystemType, list[BaseAgent]] = {
             agent_type: [] for agent_type in AgentSystemType
         }
 
@@ -133,11 +137,11 @@ class MasterOrchestrator:
             "failed_tasks": 0,
             "average_processing_time": 0.0,
             "agent_utilization": {},
-            "system_health": "healthy"
+            "system_health": "healthy",
         }
 
         # Background tasks
-        self.background_tasks: List[asyncio.Task] = []
+        self.background_tasks: list[asyncio.Task] = []
         self.is_running = False
 
         logger.info("Master Orchestrator initialized")
@@ -170,7 +174,7 @@ class MasterOrchestrator:
                 max_queue_size=1000,
                 processing_timeout=60,
                 retry_attempts=3,
-                enable_logging=True
+                enable_logging=True,
             )
             self.message_bus = MessageBus(bus_config)
             logger.info("Message bus initialized successfully")
@@ -196,12 +200,13 @@ class MasterOrchestrator:
             else:
                 # Find agents matching this type
                 matching_agents = [
-                    name for name, metadata in self.registry.registered_agents.items()
+                    name
+                    for name, metadata in self.registry.registered_agents.items()
                     if metadata.category.value == agent_type.value
                 ]
 
                 # Create initial pool
-                for agent_name in matching_agents[:self.config.max_agents_per_type]:
+                for agent_name in matching_agents[: self.config.max_agents_per_type]:
                     try:
                         agent = self.factory.create_agent(agent_name)
                         if agent:
@@ -210,13 +215,15 @@ class MasterOrchestrator:
                     except Exception as e:
                         logger.error(f"Failed to create agent {agent_name}: {e}")
 
-            logger.info(f"Initialized {len(self.agent_pools[agent_type])} agents for {agent_type.value}")
+            logger.info(
+                f"Initialized {len(self.agent_pools[agent_type])} agents for {agent_type.value}"
+            )
 
     async def submit_task(
         self,
         agent_type: AgentSystemType,
-        task_data: Dict[str, Any],
-        priority: TaskPriority = TaskPriority.MEDIUM
+        task_data: dict[str, Any],
+        priority: TaskPriority = TaskPriority.MEDIUM,
     ) -> str:
         """
         Submit a task to the orchestrator for processing.
@@ -232,10 +239,7 @@ class MasterOrchestrator:
         task_id = str(uuid4())
 
         task_info = TaskInfo(
-            task_id=task_id,
-            agent_type=agent_type,
-            priority=priority,
-            data=task_data
+            task_id=task_id, agent_type=agent_type, priority=priority, data=task_data
         )
 
         # Add to queue based on priority
@@ -246,7 +250,7 @@ class MasterOrchestrator:
 
         return task_id
 
-    async def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    async def get_task_status(self, task_id: str) -> dict[str, Any]:
         """Get the status of a submitted task."""
         if task_id in self.active_tasks:
             task = self.active_tasks[task_id]
@@ -262,10 +266,10 @@ class MasterOrchestrator:
             "started_at": task.started_at.isoformat() if task.started_at else None,
             "completed_at": task.completed_at.isoformat() if task.completed_at else None,
             "result": task.result,
-            "error": task.error
+            "error": task.error,
         }
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get orchestrator statistics."""
         active_count = len(self.active_tasks)
         completed_count = len(self.completed_tasks)
@@ -275,7 +279,9 @@ class MasterOrchestrator:
         agent_utilization = {}
         for agent_type, agents in self.agent_pools.items():
             if agents:
-                busy_count = sum(1 for agent in agents if hasattr(agent, 'is_busy') and agent.is_busy)
+                busy_count = sum(
+                    1 for agent in agents if hasattr(agent, "is_busy") and agent.is_busy
+                )
                 agent_utilization[agent_type.value] = busy_count / len(agents)
 
         return {
@@ -288,7 +294,11 @@ class MasterOrchestrator:
             "average_processing_time": self.metrics["average_processing_time"],
             "agent_utilization": agent_utilization,
             "system_health": self.metrics["system_health"],
-            "uptime": (datetime.now() - self.start_time).total_seconds() if hasattr(self, 'start_time') else 0
+            "uptime": (
+                (datetime.now() - self.start_time).total_seconds()
+                if hasattr(self, "start_time")
+                else 0
+            ),
         }
 
     async def _assign_task_to_agent(self, task: TaskInfo) -> Optional[BaseAgent]:
@@ -308,7 +318,7 @@ class MasterOrchestrator:
 
         # Find an available agent (simple round-robin for now)
         for agent in agent_pool:
-            if not hasattr(agent, 'is_busy') or not agent.is_busy:
+            if not hasattr(agent, "is_busy") or not agent.is_busy:
                 return agent
 
         # All agents busy - wait or scale
@@ -324,7 +334,8 @@ class MasterOrchestrator:
     async def _create_agent_for_type(self, agent_type: AgentSystemType) -> Optional[BaseAgent]:
         """Create a new agent for the specified type."""
         matching_agents = [
-            name for name, metadata in self.registry.registered_agents.items()
+            name
+            for name, metadata in self.registry.registered_agents.items()
             if metadata.category.value == agent_type.value
         ]
 
@@ -351,18 +362,12 @@ class MasterOrchestrator:
 
         # Start background tasks
         if self.config.enable_health_checks:
-            self.background_tasks.append(
-                asyncio.create_task(self._health_check_loop())
-            )
+            self.background_tasks.append(asyncio.create_task(self._health_check_loop()))
 
-        self.background_tasks.append(
-            asyncio.create_task(self._task_processor_loop())
-        )
+        self.background_tasks.append(asyncio.create_task(self._task_processor_loop()))
 
         if self.config.enable_metrics:
-            self.background_tasks.append(
-                asyncio.create_task(self._metrics_collector_loop())
-            )
+            self.background_tasks.append(asyncio.create_task(self._metrics_collector_loop()))
 
         # Message bus doesn't need explicit starting
 
@@ -388,7 +393,7 @@ class MasterOrchestrator:
         for agent_type in self.agent_pools:
             for agent in self.agent_pools[agent_type]:
                 try:
-                    if hasattr(agent, 'cleanup'):
+                    if hasattr(agent, "cleanup"):
                         await agent.cleanup()
                 except Exception as e:
                     logger.error(f"Error cleaning up agent: {e}")
@@ -400,10 +405,7 @@ class MasterOrchestrator:
         while self.is_running:
             try:
                 # Get task from queue (with timeout to allow checking is_running)
-                priority, task = await asyncio.wait_for(
-                    self.task_queue.get(),
-                    timeout=1.0
-                )
+                priority, task = await asyncio.wait_for(self.task_queue.get(), timeout=1.0)
 
                 # Update task status
                 task.status = TaskStatus.ASSIGNED
@@ -418,19 +420,22 @@ class MasterOrchestrator:
                     del self.active_tasks[task.task_id]
                     continue
 
-                task.assigned_to = agent.config.name if hasattr(agent, 'config') else str(agent)
+                task.assigned_to = agent.config.name if hasattr(agent, "config") else str(agent)
                 task.status = TaskStatus.IN_PROGRESS
 
                 # Execute task
                 try:
                     # Convert task data to proper format for agent execution
                     # The agent expects a task string and optional context dictionary
-                    task_description = task.data.get("description",
-                                                    task.data.get("type",
-                                                    f"Process {task.agent_type.value} task"))
+                    task_description = task.data.get(
+                        "description",
+                        task.data.get("type", f"Process {task.agent_type.value} task"),
+                    )
 
                     # Pass the rest of task.data as context
-                    context = {k: v for k, v in task.data.items() if k not in ["description", "type"]}
+                    context = {
+                        k: v for k, v in task.data.items() if k not in ["description", "type"]
+                    }
                     context["agent_type"] = task.agent_type.value
                     context["task_id"] = task.task_id
                     context["priority"] = task.priority.value
@@ -483,8 +488,8 @@ class MasterOrchestrator:
         else:
             # Calculate new average
             self.metrics["average_processing_time"] = (
-                (current_avg * (total_tasks - 1) + new_time) / total_tasks
-            )
+                current_avg * (total_tasks - 1) + new_time
+            ) / total_tasks
 
     async def _health_check_loop(self):
         """Background loop for health checking."""

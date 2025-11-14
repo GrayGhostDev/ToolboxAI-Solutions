@@ -156,7 +156,6 @@ class TestPropertyBasedBusinessLogic:
             not (isinstance(passing_threshold, float) and passing_threshold != passing_threshold)
         )
 
-        is_passing = score >= passing_threshold
         grade = self._calculate_grade(score)
 
         assert grade in ["A", "B", "C", "D", "F"]
@@ -252,7 +251,12 @@ class TestPropertyBasedAPIResponses:
     )
     def test_api_response_format(self, status, message, data, metadata):
         """Test API response formatting"""
-        response = {"status": status, "message": message, "data": data, "metadata": metadata}
+        response = {
+            "status": status,
+            "message": message,
+            "data": data,
+            "metadata": metadata,
+        }
 
         assert response["status"] in ["success", "error", "warning"]
         assert isinstance(response["message"], str)

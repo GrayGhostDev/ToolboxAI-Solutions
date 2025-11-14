@@ -11,15 +11,12 @@ This agent scans Python requirements.txt and Node.js package.json files for:
 import asyncio
 import json
 import logging
-import os
 import re
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
-
-import yaml
+from typing import Any, Optional
 
 from .base_github_agent import BaseGitHubAgent
 
@@ -67,15 +64,15 @@ class SecurityReport:
 
     timestamp: datetime
     repository_path: str
-    vulnerabilities: List[Vulnerability]
-    outdated_packages: List[OutdatedPackage]
-    license_issues: List[LicenseIssue]
-    python_analysis: Dict[str, Any]
-    nodejs_analysis: Dict[str, Any]
-    recommendations: List[str]
+    vulnerabilities: list[Vulnerability]
+    outdated_packages: list[OutdatedPackage]
+    license_issues: list[LicenseIssue]
+    python_analysis: dict[str, Any]
+    nodejs_analysis: dict[str, Any]
+    recommendations: list[str]
     risk_score: int  # 0-100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert report to dictionary format."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -89,7 +86,7 @@ class SecurityReport:
                     "cve_id": v.cve_id,
                     "description": v.description,
                     "fixed_version": v.fixed_version,
-                    "advisory_url": v.advisory_url
+                    "advisory_url": v.advisory_url,
                 }
                 for v in self.vulnerabilities
             ],
@@ -99,7 +96,7 @@ class SecurityReport:
                     "current_version": o.current_version,
                     "latest_version": o.latest_version,
                     "update_type": o.update_type,
-                    "changelog_url": o.changelog_url
+                    "changelog_url": o.changelog_url,
                 }
                 for o in self.outdated_packages
             ],
@@ -108,14 +105,14 @@ class SecurityReport:
                     "package": l.package,
                     "license": l.license,
                     "issue_type": l.issue_type,
-                    "description": l.description
+                    "description": l.description,
                 }
                 for l in self.license_issues
             ],
             "python_analysis": self.python_analysis,
             "nodejs_analysis": self.nodejs_analysis,
             "recommendations": self.recommendations,
-            "risk_score": self.risk_score
+            "risk_score": self.risk_score,
         }
 
 
@@ -124,17 +121,18 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
     # Restrictive licenses that may cause compliance issues
     RESTRICTIVE_LICENSES = {
-        "GPL-2.0", "GPL-3.0", "AGPL-3.0", "LGPL-2.1", "LGPL-3.0",
-        "SSPL-1.0", "BUSL-1.1", "CC-BY-SA-4.0"
+        "GPL-2.0",
+        "GPL-3.0",
+        "AGPL-3.0",
+        "LGPL-2.1",
+        "LGPL-3.0",
+        "SSPL-1.0",
+        "BUSL-1.1",
+        "CC-BY-SA-4.0",
     }
 
     # Severity mapping for risk scoring
-    SEVERITY_SCORES = {
-        "critical": 25,
-        "high": 15,
-        "medium": 8,
-        "low": 3
-    }
+    SEVERITY_SCORES = {"critical": 25, "high": 15, "medium": 8, "low": 3}
 
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the dependency security agent.
@@ -146,17 +144,14 @@ class DependencySecurityAgent(BaseGitHubAgent):
         self.python_tools = self._check_python_tools()
         self.nodejs_tools = self._check_nodejs_tools()
 
-    def _check_python_tools(self) -> Dict[str, bool]:
+    def _check_python_tools(self) -> dict[str, bool]:
         """Check availability of Python security tools."""
         tools = {}
 
         # Check for safety
         try:
             result = subprocess.run(
-                ["safety", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["safety", "--version"], capture_output=True, text=True, timeout=10
             )
             tools["safety"] = result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -165,10 +160,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
         # Check for pip-audit
         try:
             result = subprocess.run(
-                ["pip-audit", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["pip-audit", "--version"], capture_output=True, text=True, timeout=10
             )
             tools["pip_audit"] = result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -176,17 +168,14 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return tools
 
-    def _check_nodejs_tools(self) -> Dict[str, bool]:
+    def _check_nodejs_tools(self) -> dict[str, bool]:
         """Check availability of Node.js security tools."""
         tools = {}
 
         # Check for npm
         try:
             result = subprocess.run(
-                ["npm", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["npm", "--version"], capture_output=True, text=True, timeout=10
             )
             tools["npm"] = result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -195,10 +184,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
         # Check for yarn
         try:
             result = subprocess.run(
-                ["yarn", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["yarn", "--version"], capture_output=True, text=True, timeout=10
             )
             tools["yarn"] = result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -206,7 +192,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return tools
 
-    async def analyze(self, **kwargs) -> Dict[str, Any]:
+    async def analyze(self, **kwargs) -> dict[str, Any]:
         """Main analysis entry point.
 
         Args:
@@ -225,7 +211,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
             if not repo_path:
                 return {
                     "success": False,
-                    "error": "Could not determine repository path"
+                    "error": "Could not determine repository path",
                 }
 
             repo_path = Path(repo_path)
@@ -236,7 +222,6 @@ class DependencySecurityAgent(BaseGitHubAgent):
             license_issues = []
             python_analysis = {}
             nodejs_analysis = {}
-            recommendations = []
 
             # Scan Python dependencies
             if kwargs.get("scan_python", True):
@@ -261,24 +246,36 @@ class DependencySecurityAgent(BaseGitHubAgent):
                 outdated_packages=outdated_packages,
                 license_issues=license_issues,
                 python_analysis=python_analysis,
-                nodejs_analysis=nodejs_analysis
+                nodejs_analysis=nodejs_analysis,
             )
 
             # Log the analysis
-            await self.log_operation("dependency_security_analysis", {
-                "repository": str(repo_path),
-                "vulnerabilities_found": len(vulnerabilities),
-                "outdated_packages": len(outdated_packages),
-                "license_issues": len(license_issues),
-                "risk_score": report.risk_score
-            })
+            await self.log_operation(
+                "dependency_security_analysis",
+                {
+                    "repository": str(repo_path),
+                    "vulnerabilities_found": len(vulnerabilities),
+                    "outdated_packages": len(outdated_packages),
+                    "license_issues": len(license_issues),
+                    "risk_score": report.risk_score,
+                },
+            )
 
             self.update_metrics(
                 operations_performed=1,
-                files_processed=len([
-                    f for f in repo_path.rglob("*")
-                    if f.name in ["requirements.txt", "package.json", "poetry.lock", "package-lock.json"]
-                ])
+                files_processed=len(
+                    [
+                        f
+                        for f in repo_path.rglob("*")
+                        if f.name
+                        in [
+                            "requirements.txt",
+                            "package.json",
+                            "poetry.lock",
+                            "package-lock.json",
+                        ]
+                    ]
+                ),
             )
 
             return {
@@ -286,23 +283,24 @@ class DependencySecurityAgent(BaseGitHubAgent):
                 "report": report.to_dict(),
                 "summary": {
                     "total_vulnerabilities": len(vulnerabilities),
-                    "critical_vulnerabilities": len([v for v in vulnerabilities if v.severity == "critical"]),
-                    "high_vulnerabilities": len([v for v in vulnerabilities if v.severity == "high"]),
+                    "critical_vulnerabilities": len(
+                        [v for v in vulnerabilities if v.severity == "critical"]
+                    ),
+                    "high_vulnerabilities": len(
+                        [v for v in vulnerabilities if v.severity == "high"]
+                    ),
                     "outdated_packages": len(outdated_packages),
                     "license_issues": len(license_issues),
-                    "risk_score": report.risk_score
-                }
+                    "risk_score": report.risk_score,
+                },
             }
 
         except Exception as e:
             logger.error(f"Error during dependency security analysis: {e}")
             self.update_metrics(errors_encountered=1)
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def scan_python_dependencies(self, repo_path: Path) -> Dict[str, Any]:
+    async def scan_python_dependencies(self, repo_path: Path) -> dict[str, Any]:
         """Scan Python dependencies for vulnerabilities and outdated packages.
 
         Args:
@@ -315,12 +313,17 @@ class DependencySecurityAgent(BaseGitHubAgent):
             "vulnerabilities": [],
             "outdated": [],
             "files_scanned": [],
-            "tools_used": []
+            "tools_used": [],
         }
 
         # Find Python dependency files
         dependency_files = []
-        for pattern in ["requirements*.txt", "pyproject.toml", "poetry.lock", "Pipfile"]:
+        for pattern in [
+            "requirements*.txt",
+            "pyproject.toml",
+            "poetry.lock",
+            "Pipfile",
+        ]:
             dependency_files.extend(repo_path.rglob(pattern))
 
         analysis["files_scanned"] = [str(f) for f in dependency_files]
@@ -347,7 +350,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return analysis
 
-    async def scan_node_dependencies(self, repo_path: Path) -> Dict[str, Any]:
+    async def scan_node_dependencies(self, repo_path: Path) -> dict[str, Any]:
         """Scan Node.js dependencies for vulnerabilities and outdated packages.
 
         Args:
@@ -360,7 +363,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
             "vulnerabilities": [],
             "outdated": [],
             "files_scanned": [],
-            "tools_used": []
+            "tools_used": [],
         }
 
         # Find Node.js dependency files
@@ -386,7 +389,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return analysis
 
-    async def check_licenses(self, repo_path: Path) -> List[LicenseIssue]:
+    async def check_licenses(self, repo_path: Path) -> list[LicenseIssue]:
         """Check license compliance for all dependencies.
 
         Args:
@@ -410,11 +413,11 @@ class DependencySecurityAgent(BaseGitHubAgent):
     async def generate_security_report(
         self,
         repo_path: str,
-        vulnerabilities: List[Vulnerability],
-        outdated_packages: List[OutdatedPackage],
-        license_issues: List[LicenseIssue],
-        python_analysis: Dict[str, Any],
-        nodejs_analysis: Dict[str, Any]
+        vulnerabilities: list[Vulnerability],
+        outdated_packages: list[OutdatedPackage],
+        license_issues: list[LicenseIssue],
+        python_analysis: dict[str, Any],
+        nodejs_analysis: dict[str, Any],
     ) -> SecurityReport:
         """Generate comprehensive security report.
 
@@ -458,10 +461,10 @@ class DependencySecurityAgent(BaseGitHubAgent):
             python_analysis=python_analysis,
             nodejs_analysis=nodejs_analysis,
             recommendations=recommendations,
-            risk_score=risk_score
+            risk_score=risk_score,
         )
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute a specific remediation action.
 
         Args:
@@ -483,21 +486,15 @@ class DependencySecurityAgent(BaseGitHubAgent):
             elif action == "generate_lockfile":
                 return await self._generate_lockfile(**kwargs)
             else:
-                return {
-                    "success": False,
-                    "error": f"Unknown action: {action}"
-                }
+                return {"success": False, "error": f"Unknown action: {action}"}
 
         except Exception as e:
             logger.error(f"Error executing action {action}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     # Private helper methods
 
-    async def _run_safety_check(self, repo_path: Path) -> List[Vulnerability]:
+    async def _run_safety_check(self, repo_path: Path) -> list[Vulnerability]:
         """Run safety check for Python vulnerabilities."""
         vulnerabilities = []
 
@@ -507,10 +504,14 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
             for req_file in req_files:
                 process = await asyncio.create_subprocess_exec(
-                    "safety", "check", "-r", str(req_file), "--json",
+                    "safety",
+                    "check",
+                    "-r",
+                    str(req_file),
+                    "--json",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    cwd=str(repo_path)
+                    cwd=str(repo_path),
                 )
 
                 stdout, stderr = await process.communicate()
@@ -526,7 +527,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                 severity=item.get("vulnerability_severity", "medium").lower(),
                                 cve_id=item.get("vulnerability_id"),
                                 description=item.get("vulnerability", ""),
-                                advisory_url=item.get("more_info_url")
+                                advisory_url=item.get("more_info_url"),
                             )
                             vulnerabilities.append(vuln)
                     except json.JSONDecodeError:
@@ -537,16 +538,18 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return vulnerabilities
 
-    async def _run_pip_audit(self, repo_path: Path) -> List[Vulnerability]:
+    async def _run_pip_audit(self, repo_path: Path) -> list[Vulnerability]:
         """Run pip-audit for Python vulnerabilities."""
         vulnerabilities = []
 
         try:
             process = await asyncio.create_subprocess_exec(
-                "pip-audit", "--format=json", "--desc",
+                "pip-audit",
+                "--format=json",
+                "--desc",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(repo_path)
+                cwd=str(repo_path),
             )
 
             stdout, stderr = await process.communicate()
@@ -563,7 +566,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                 severity="medium",  # pip-audit doesn't provide severity
                                 cve_id=vuln_info.get("id"),
                                 description=vuln_info.get("description", ""),
-                                fixed_version=vuln_info.get("fix_versions", [None])[0]
+                                fixed_version=vuln_info.get("fix_versions", [None])[0],
                             )
                             vulnerabilities.append(vuln)
                 except json.JSONDecodeError:
@@ -574,7 +577,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return vulnerabilities
 
-    async def _run_npm_audit(self, repo_path: Path) -> List[Vulnerability]:
+    async def _run_npm_audit(self, repo_path: Path) -> list[Vulnerability]:
         """Run npm audit for Node.js vulnerabilities."""
         vulnerabilities = []
 
@@ -586,10 +589,12 @@ class DependencySecurityAgent(BaseGitHubAgent):
                 package_dir = package_file.parent
 
                 process = await asyncio.create_subprocess_exec(
-                    "npm", "audit", "--json",
+                    "npm",
+                    "audit",
+                    "--json",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    cwd=str(package_dir)
+                    cwd=str(package_dir),
                 )
 
                 stdout, stderr = await process.communicate()
@@ -605,7 +610,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                 vulnerable_versions=vuln_info.get("range", ""),
                                 severity=vuln_info.get("severity", "medium").lower(),
                                 description=vuln_info.get("title", ""),
-                                advisory_url=vuln_info.get("url")
+                                advisory_url=vuln_info.get("url"),
                             )
                             vulnerabilities.append(vuln)
                     except json.JSONDecodeError:
@@ -616,7 +621,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return vulnerabilities
 
-    async def _check_python_outdated(self, repo_path: Path) -> List[OutdatedPackage]:
+    async def _check_python_outdated(self, repo_path: Path) -> list[OutdatedPackage]:
         """Check for outdated Python packages."""
         outdated = []
 
@@ -626,22 +631,22 @@ class DependencySecurityAgent(BaseGitHubAgent):
             req_files = list(repo_path.rglob("requirements*.txt"))
 
             for req_file in req_files:
-                with open(req_file, 'r') as f:
+                with open(req_file) as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#'):
+                        if line and not line.startswith("#"):
                             # Parse package requirement
-                            match = re.match(r'^([a-zA-Z0-9_-]+)([><=!]+)([0-9.]+)', line)
+                            match = re.match(r"^([a-zA-Z0-9_-]+)([><=!]+)([0-9.]+)", line)
                             if match:
                                 package, operator, version = match.groups()
                                 # This would require actual API calls to check latest versions
                                 # For now, we'll just note packages with pinned versions
-                                if operator in ['==', '=']:
+                                if operator in ["==", "="]:
                                     outdated_pkg = OutdatedPackage(
                                         package=package,
                                         current_version=version,
                                         latest_version="unknown",
-                                        update_type="unknown"
+                                        update_type="unknown",
                                     )
                                     outdated.append(outdated_pkg)
 
@@ -650,7 +655,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return outdated
 
-    async def _check_nodejs_outdated(self, repo_path: Path) -> List[OutdatedPackage]:
+    async def _check_nodejs_outdated(self, repo_path: Path) -> list[OutdatedPackage]:
         """Check for outdated Node.js packages."""
         outdated = []
 
@@ -661,10 +666,12 @@ class DependencySecurityAgent(BaseGitHubAgent):
                 package_dir = package_file.parent
 
                 process = await asyncio.create_subprocess_exec(
-                    "npm", "outdated", "--json",
+                    "npm",
+                    "outdated",
+                    "--json",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    cwd=str(package_dir)
+                    cwd=str(package_dir),
                 )
 
                 stdout, stderr = await process.communicate()
@@ -680,8 +687,8 @@ class DependencySecurityAgent(BaseGitHubAgent):
                             # Determine update type
                             update_type = "patch"
                             if current and latest:
-                                current_parts = current.split('.')
-                                latest_parts = latest.split('.')
+                                current_parts = current.split(".")
+                                latest_parts = latest.split(".")
 
                                 if len(current_parts) >= 2 and len(latest_parts) >= 2:
                                     if current_parts[0] != latest_parts[0]:
@@ -693,7 +700,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                 package=package,
                                 current_version=current,
                                 latest_version=latest,
-                                update_type=update_type
+                                update_type=update_type,
                             )
                             outdated.append(outdated_pkg)
 
@@ -705,17 +712,18 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return outdated
 
-    async def _check_python_licenses(self, repo_path: Path) -> List[LicenseIssue]:
+    async def _check_python_licenses(self, repo_path: Path) -> list[LicenseIssue]:
         """Check Python package licenses."""
         license_issues = []
 
         try:
             # Try to use pip-licenses if available
             process = await asyncio.create_subprocess_exec(
-                "pip-licenses", "--format=json",
+                "pip-licenses",
+                "--format=json",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(repo_path)
+                cwd=str(repo_path),
             )
 
             stdout, stderr = await process.communicate()
@@ -733,7 +741,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                 package=package_name,
                                 license=license_name,
                                 issue_type="restrictive",
-                                description=f"Package uses restrictive license: {license_name}"
+                                description=f"Package uses restrictive license: {license_name}",
                             )
                             license_issues.append(issue)
                         elif license_name in ["UNKNOWN", "", "UNDEFINED"]:
@@ -741,7 +749,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                 package=package_name,
                                 license=license_name,
                                 issue_type="unknown",
-                                description="Package license is unknown or undefined"
+                                description="Package license is unknown or undefined",
                             )
                             license_issues.append(issue)
 
@@ -755,7 +763,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         return license_issues
 
-    async def _check_nodejs_licenses(self, repo_path: Path) -> List[LicenseIssue]:
+    async def _check_nodejs_licenses(self, repo_path: Path) -> list[LicenseIssue]:
         """Check Node.js package licenses."""
         license_issues = []
 
@@ -767,10 +775,12 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
                 # Try to use license-checker if available
                 process = await asyncio.create_subprocess_exec(
-                    "npx", "license-checker", "--json",
+                    "npx",
+                    "license-checker",
+                    "--json",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    cwd=str(package_dir)
+                    cwd=str(package_dir),
                 )
 
                 stdout, stderr = await process.communicate()
@@ -780,7 +790,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
                         results = json.loads(stdout.decode())
 
                         for package_version, info in results.items():
-                            package = package_version.split('@')[0]
+                            package = package_version.split("@")[0]
                             license_name = info.get("licenses", "").upper()
 
                             if license_name in self.RESTRICTIVE_LICENSES:
@@ -788,15 +798,18 @@ class DependencySecurityAgent(BaseGitHubAgent):
                                     package=package,
                                     license=license_name,
                                     issue_type="restrictive",
-                                    description=f"Package uses restrictive license: {license_name}"
+                                    description=f"Package uses restrictive license: {license_name}",
                                 )
                                 license_issues.append(issue)
-                            elif not license_name or license_name in ["UNKNOWN", "UNDEFINED"]:
+                            elif not license_name or license_name in [
+                                "UNKNOWN",
+                                "UNDEFINED",
+                            ]:
                                 issue = LicenseIssue(
                                     package=package,
                                     license=license_name or "UNKNOWN",
                                     issue_type="unknown",
-                                    description="Package license is unknown or undefined"
+                                    description="Package license is unknown or undefined",
                                 )
                                 license_issues.append(issue)
 
@@ -810,10 +823,10 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
     def _generate_recommendations(
         self,
-        vulnerabilities: List[Vulnerability],
-        outdated_packages: List[OutdatedPackage],
-        license_issues: List[LicenseIssue]
-    ) -> List[str]:
+        vulnerabilities: list[Vulnerability],
+        outdated_packages: list[OutdatedPackage],
+        license_issues: list[LicenseIssue],
+    ) -> list[str]:
         """Generate security recommendations."""
         recommendations = []
 
@@ -853,11 +866,13 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
         # General recommendations
         if vulnerabilities or outdated_packages:
-            recommendations.extend([
-                "🔧 Enable automated dependency updates (Dependabot/Renovate)",
-                "🔒 Implement dependency pinning for production environments",
-                "📊 Set up regular security scanning in CI/CD pipeline"
-            ])
+            recommendations.extend(
+                [
+                    "🔧 Enable automated dependency updates (Dependabot/Renovate)",
+                    "🔒 Implement dependency pinning for production environments",
+                    "📊 Set up regular security scanning in CI/CD pipeline",
+                ]
+            )
 
         if not recommendations:
             recommendations.append("✅ No major security issues detected")
@@ -866,7 +881,7 @@ class DependencySecurityAgent(BaseGitHubAgent):
 
     # Action execution methods
 
-    async def _update_package(self, **kwargs) -> Dict[str, Any]:
+    async def _update_package(self, **kwargs) -> dict[str, Any]:
         """Update a specific package."""
         package = kwargs.get("package")
         version = kwargs.get("version")
@@ -883,11 +898,11 @@ class DependencySecurityAgent(BaseGitHubAgent):
             "details": {
                 "package": package,
                 "target_version": version,
-                "package_manager": package_manager
-            }
+                "package_manager": package_manager,
+            },
         }
 
-    async def _pin_package_version(self, **kwargs) -> Dict[str, Any]:
+    async def _pin_package_version(self, **kwargs) -> dict[str, Any]:
         """Pin a package to a specific version."""
         package = kwargs.get("package")
         version = kwargs.get("version")
@@ -898,13 +913,10 @@ class DependencySecurityAgent(BaseGitHubAgent):
         return {
             "success": True,
             "message": f"Package {package} pinned to version {version}",
-            "details": {
-                "package": package,
-                "pinned_version": version
-            }
+            "details": {"package": package, "pinned_version": version},
         }
 
-    async def _remove_package(self, **kwargs) -> Dict[str, Any]:
+    async def _remove_package(self, **kwargs) -> dict[str, Any]:
         """Remove a package."""
         package = kwargs.get("package")
 
@@ -914,10 +926,10 @@ class DependencySecurityAgent(BaseGitHubAgent):
         return {
             "success": True,
             "message": f"Package {package} removal initiated",
-            "details": {"package": package}
+            "details": {"package": package},
         }
 
-    async def _fix_vulnerabilities(self, **kwargs) -> Dict[str, Any]:
+    async def _fix_vulnerabilities(self, **kwargs) -> dict[str, Any]:
         """Fix vulnerabilities automatically."""
         vulnerabilities = kwargs.get("vulnerabilities", [])
 
@@ -932,16 +944,16 @@ class DependencySecurityAgent(BaseGitHubAgent):
             "message": f"Fixed {fixed_count} vulnerabilities",
             "details": {
                 "total_vulnerabilities": len(vulnerabilities),
-                "fixed_count": fixed_count
-            }
+                "fixed_count": fixed_count,
+            },
         }
 
-    async def _generate_lockfile(self, **kwargs) -> Dict[str, Any]:
+    async def _generate_lockfile(self, **kwargs) -> dict[str, Any]:
         """Generate or update lockfiles."""
         repo_path = kwargs.get("repo_path", self.get_repository_root())
 
         return {
             "success": True,
             "message": "Lockfile generation initiated",
-            "details": {"repo_path": str(repo_path)}
+            "details": {"repo_path": str(repo_path)},
         }

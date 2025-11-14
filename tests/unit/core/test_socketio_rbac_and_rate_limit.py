@@ -31,15 +31,14 @@ import pytest
 os.environ["TESTING"] = "true"
 os.environ["SKIP_AGENTS"] = "true"
 
-from apps.backend.services.socketio import connected_clients, content_request, ping
-from apps.backend.services.socketio import sio as sio_srv
-
 from apps.backend.core.config import settings
 from apps.backend.core.security.rate_limit_manager import (
     clear_all_rate_limits,
     get_rate_limit_manager,
     set_testing_mode,
 )
+from apps.backend.services.socketio import connected_clients, content_request, ping
+from apps.backend.services.socketio import sio as sio_srv
 
 
 @pytest.mark.asyncio(loop_scope="function")
@@ -88,7 +87,7 @@ async def test_socketio_rate_limit_enforced_for_ping(monkeypatch):
     # Configure tight rate limit
     original_limit = getattr(settings, "SIO_RATE_LIMIT_PER_MINUTE", 100)
     settings.SIO_RATE_LIMIT_PER_MINUTE = 1
-    rlm = get_rate_limit_manager()
+    get_rate_limit_manager()
     set_testing_mode(False)  # Disable testing mode to enforce limits
     clear_all_rate_limits()
 

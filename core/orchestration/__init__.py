@@ -13,17 +13,17 @@ Authors: ToolboxAI Team
 Created: September 26, 2025
 """
 
-from typing import Dict, Any, Optional
 import logging
+from typing import Any, Dict, Optional
 
 # Import the master orchestrator
 from ..agents.master_orchestrator import (
+    AgentSystemType,
     MasterOrchestrator,
     OrchestratorConfig,
-    AgentSystemType,
+    TaskInfo,
     TaskPriority,
     TaskStatus,
-    TaskInfo
 )
 
 # Import orchestration modules
@@ -67,17 +67,15 @@ __all__ = [
     "TaskPriority",
     "TaskStatus",
     "TaskInfo",
-
     # Orchestration modules
     "RobloxOrchestrationModule",
     "EducationalOrchestrationModule",
     "GitHubOrchestrationModule",
     "ErrorHandlingOrchestrationModule",
     "SPARCOrchestrationModule",
-
     # Factory functions
     "create_orchestrator",
-    "get_orchestration_module"
+    "get_orchestration_module",
 ]
 
 
@@ -151,7 +149,7 @@ class UnifiedOrchestrator:
 
         return await module.submit_task(**kwargs)
 
-    async def get_system_status(self) -> Dict[str, Any]:
+    async def get_system_status(self) -> dict[str, Any]:
         """Get comprehensive system status."""
         master_stats = await self.master.get_statistics()
 
@@ -165,11 +163,13 @@ class UnifiedOrchestrator:
         return {
             "master_orchestrator": master_stats,
             "modules": module_status,
-            "overall_health": master_stats.get("system_health", "unknown")
+            "overall_health": master_stats.get("system_health", "unknown"),
         }
 
 
-def create_orchestrator(config: Optional[OrchestratorConfig] = None) -> UnifiedOrchestrator:
+def create_orchestrator(
+    config: Optional[OrchestratorConfig] = None,
+) -> UnifiedOrchestrator:
     """
     Factory function to create a new unified orchestrator instance.
 

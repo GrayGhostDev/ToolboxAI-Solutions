@@ -10,13 +10,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import redis
-from database.replica_router import ConsistencyLevel, ReplicaRouter
 
 from apps.backend.core.circuit_breaker import CircuitBreaker, CircuitBreakerError
 from apps.backend.core.edge_cache import EdgeCache
 from apps.backend.core.observability.anomaly_detection import AnomalyDetector
 from apps.backend.core.observability.telemetry import MetricsCollector
 from apps.backend.core.rate_limiter import RateLimiter
+from database.replica_router import ConsistencyLevel, ReplicaRouter
 
 
 class TestLoadBalancingWithObservability:
@@ -146,7 +146,9 @@ class TestLoadBalancingWithObservability:
 
                 duration = (time.time() - start_time) * 1000
                 await metrics_collector.record_histogram(
-                    "db_connection_time", duration, labels={"operation": "read", "replica": replica}
+                    "db_connection_time",
+                    duration,
+                    labels={"operation": "read", "replica": replica},
                 )
 
             # Test write routing to master
@@ -173,7 +175,9 @@ class TestLoadBalancingWithObservability:
         assert result is None
         await metrics_collector.increment_counter("cache_miss", labels={"tier": "edge"})
         await metrics_collector.record_histogram(
-            "cache_operation_duration", duration, labels={"operation": "get", "result": "miss"}
+            "cache_operation_duration",
+            duration,
+            labels={"operation": "get", "result": "miss"},
         )
 
         # Set cache value
@@ -187,7 +191,9 @@ class TestLoadBalancingWithObservability:
         assert result == "cached_value"
         await metrics_collector.increment_counter("cache_hit", labels={"tier": "edge"})
         await metrics_collector.record_histogram(
-            "cache_operation_duration", duration, labels={"operation": "get", "result": "hit"}
+            "cache_operation_duration",
+            duration,
+            labels={"operation": "get", "result": "hit"},
         )
 
         # Calculate hit rate
@@ -217,7 +223,9 @@ class TestLoadBalancingWithObservability:
 
         for latency in anomalous_latencies:
             await metrics_collector.record_histogram(
-                "request_latency", latency, labels={"endpoint": "/api/test", "anomaly": "true"}
+                "request_latency",
+                latency,
+                labels={"endpoint": "/api/test", "anomaly": "true"},
             )
 
             # Detect anomaly
@@ -228,7 +236,8 @@ class TestLoadBalancingWithObservability:
 
             # Record anomaly
             await metrics_collector.increment_counter(
-                "anomaly_detected", labels={"metric": "request_latency", "severity": "high"}
+                "anomaly_detected",
+                labels={"metric": "request_latency", "severity": "high"},
             )
 
         # Verify anomalies were detected
@@ -237,12 +246,16 @@ class TestLoadBalancingWithObservability:
 
     @pytest.mark.asyncio
     async def test_full_system_integration(
-        self, circuit_breaker, rate_limiter, edge_cache, metrics_collector, anomaly_detector
+        self,
+        circuit_breaker,
+        rate_limiter,
+        edge_cache,
+        metrics_collector,
+        anomaly_detector,
     ):
         """Test complete load balancing system with observability."""
 
         # Simulate a full request flow
-        request_id = "req_123"
         user_id = "user_456"
         endpoint = "/api/data"
 
@@ -327,8 +340,18 @@ class TestLoadBalancingWithObservability:
                 "duration": 2,
                 "trace_id": trace_id,
             },
-            {"service": "cache", "operation": "get", "duration": 5, "trace_id": trace_id},
-            {"service": "database", "operation": "query", "duration": 30, "trace_id": trace_id},
+            {
+                "service": "cache",
+                "operation": "get",
+                "duration": 5,
+                "trace_id": trace_id,
+            },
+            {
+                "service": "database",
+                "operation": "query",
+                "duration": 30,
+                "trace_id": trace_id,
+            },
         ]
 
         total_duration = 0

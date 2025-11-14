@@ -3,14 +3,14 @@
 Fix main function indentation issues in test files.
 """
 
-import re
 from pathlib import Path
+
 
 def fix_main_function(file_path: Path) -> bool:
     """Fix async def main() function that has incorrect indentation."""
     
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             lines = f.readlines()
         
         fixed = False

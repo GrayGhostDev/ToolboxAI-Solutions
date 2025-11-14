@@ -6,8 +6,9 @@ Create Date: 2025-09-20 22:06:15.000000
 
 """
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Union
+from typing import Union
 
 import sqlalchemy as sa
 from alembic import op
@@ -39,7 +40,12 @@ def upgrade() -> None:
     gpt_model_enum.create(op.get_bind())
 
     migration_status_enum = ENUM(
-        "pending", "in_progress", "completed", "failed", "rollback", name="migration_status_type"
+        "pending",
+        "in_progress",
+        "completed",
+        "failed",
+        "rollback",
+        name="migration_status_type",
     )
     migration_status_enum.create(op.get_bind())
 
@@ -47,7 +53,10 @@ def upgrade() -> None:
     op.create_table(
         "gpt_migration_tracking",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("migration_id", sa.String(100), nullable=False, unique=True),
         sa.Column("from_model", gpt_model_enum, nullable=False),
@@ -86,7 +95,10 @@ def upgrade() -> None:
     op.create_table(
         "gpt_model_usage",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("model_version", gpt_model_enum, nullable=False),
         sa.Column("service_name", sa.String(100), nullable=False),

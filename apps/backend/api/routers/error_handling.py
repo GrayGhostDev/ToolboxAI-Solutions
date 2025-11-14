@@ -230,7 +230,11 @@ async def analyze_error_patterns(timeframe_days: int = 7):
         # Analyze patterns
         analysis = await pattern_analyzer.analyze_error_patterns(error_history, timeframe_days)
 
-        return {"status": "success", "analysis": analysis, "timeframe_days": timeframe_days}
+        return {
+            "status": "success",
+            "analysis": analysis,
+            "timeframe_days": timeframe_days,
+        }
 
     except Exception as e:
         logger.error(f"Pattern analysis failed: {e}")
@@ -250,7 +254,7 @@ async def predict_errors(timeframe_hours: int = 24):
     """
     try:
         # Get pattern analysis agent
-        pattern_analyzer = swarm_coordinator.agents["pattern_analysis"]
+        swarm_coordinator.agents["pattern_analysis"]
 
         # Generate predictions (simplified)
         predictions = []  # Would generate actual predictions
@@ -292,7 +296,9 @@ async def get_swarm_status():
 
 @router.post("/recovery/trigger", response_model=dict[str, Any])
 async def trigger_recovery(
-    component: str, strategy: str | None = None, background_tasks: BackgroundTasks = None
+    component: str,
+    strategy: str | None = None,
+    background_tasks: BackgroundTasks = None,
 ):
     """
     Trigger recovery for a specific component.
@@ -371,7 +377,11 @@ async def get_error_metrics():
             "total_processed": sum(w.get("errors_processed", 0) for w in active_workflows.values()),
         }
 
-        return {"status": "success", "metrics": metrics, "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "success",
+            "metrics": metrics,
+            "timestamp": datetime.now().isoformat(),
+        }
 
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}")

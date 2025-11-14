@@ -290,7 +290,7 @@ class TestAdvancedSupervisorAgent:
         ]
 
         for task, context in tasks:
-            execution = await supervisor.execute_workflow(
+            await supervisor.execute_workflow(
                 task=task,
                 context=context,
                 workflow_template="lesson_creation",
@@ -653,7 +653,7 @@ class TestRealDataIntegration:
         try:
             from core.mcp.context_manager import ContextManager
 
-            context_manager = ContextManager()
+            ContextManager()
         except Exception as e:
             pytest.skip(f"MCP not available: {e}")
 
@@ -689,7 +689,7 @@ class TestPerformanceAndLoad:
         """Test system under high workflow load"""
 
         # Mock the workflow graph's ainvoke to return proper state
-        with patch.object(AdvancedSupervisorAgent, "_build_workflow_graph") as mock_build:
+        with patch.object(AdvancedSupervisorAgent, "_build_workflow_graph"):
             supervisor = AdvancedSupervisorAgent()
 
             # Create a mock workflow graph that returns proper state
@@ -766,7 +766,7 @@ class TestPerformanceAndLoad:
 
             # Execute workflows continuously
             for i in range(20):
-                execution = await supervisor.execute_workflow(
+                await supervisor.execute_workflow(
                     task=f"Memory test workflow {i}",
                     context={"memory_test": True},
                     workflow_template="lesson_creation",

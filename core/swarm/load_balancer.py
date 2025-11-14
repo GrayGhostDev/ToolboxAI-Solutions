@@ -7,17 +7,15 @@ educational content optimization with predictive scaling and quality-aware distr
 """
 
 import asyncio
-import time
-import statistics
-from typing import Dict, List, Any, Optional, Tuple, Callable
-from dataclasses import dataclass, field
-from enum import Enum
 import logging
-from datetime import datetime, timedelta
-from collections import deque, defaultdict
-import heapq
+import statistics
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+
 import psutil
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +78,7 @@ class ResourceMetrics:
     # Derived metrics
     overall_utilization: float = 0.0
     health_score: float = 1.0
-    bottleneck_indicators: List[str] = field(default_factory=list)
+    bottleneck_indicators: list[str] = field(default_factory=list)
 
     def calculate_overall_utilization(self):
         """Calculate overall resource utilization."""
@@ -153,7 +151,7 @@ class ResourceMetrics:
         if self.average_task_duration > 300:  # 5 minutes
             self.bottleneck_indicators.append("Slow task execution")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary representation."""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -207,12 +205,8 @@ class WorkerResourceState:
 
         # Update predictions
         if len(self.historical_performance) >= 3:
-            recent_durations = [
-                p["duration"] for p in list(self.historical_performance)[-10:]
-            ]
-            recent_qualities = [
-                p["quality"] for p in list(self.historical_performance)[-10:]
-            ]
+            recent_durations = [p["duration"] for p in list(self.historical_performance)[-10:]]
+            recent_qualities = [p["quality"] for p in list(self.historical_performance)[-10:]]
 
             self.predicted_completion_time = statistics.mean(recent_durations)
             self.predicted_quality_score = statistics.mean(recent_qualities)
@@ -294,33 +288,33 @@ class LoadBalancer:
         self.config.strategy = self.strategy
 
         # Worker state management
-        self.worker_states: Dict[str, WorkerResourceState] = {}
+        self.worker_states: dict[str, WorkerResourceState] = {}
         self.worker_selection_history: deque = deque(maxlen=1000)
 
         # Load balancing state
         self._round_robin_index = 0
-        self._weighted_round_robin_weights: Dict[str, int] = {}
+        self._weighted_round_robin_weights: dict[str, int] = {}
 
         # Resource monitoring
         self.system_metrics: ResourceMetrics = ResourceMetrics()
         self.metrics_history: deque = deque(maxlen=1000)
 
         # Performance tracking
-        self.allocation_history: List[Dict[str, Any]] = []
-        self.bottleneck_alerts: List[Dict[str, Any]] = []
+        self.allocation_history: list[dict[str, Any]] = []
+        self.bottleneck_alerts: list[dict[str, Any]] = []
 
         # Educational optimization
-        self.subject_workload_distribution: Dict[str, int] = defaultdict(int)
-        self.grade_level_distribution: Dict[int, int] = defaultdict(int)
-        self.curriculum_coverage_tracking: Dict[str, float] = defaultdict(float)
+        self.subject_workload_distribution: dict[str, int] = defaultdict(int)
+        self.grade_level_distribution: dict[int, int] = defaultdict(int)
+        self.curriculum_coverage_tracking: dict[str, float] = defaultdict(float)
 
         # Predictive modeling
-        self.load_predictions: Dict[str, float] = {}
-        self.capacity_forecasts: Dict[str, Dict[str, float]] = {}
+        self.load_predictions: dict[str, float] = {}
+        self.capacity_forecasts: dict[str, dict[str, float]] = {}
 
         # Batch processing
         self.batch_mode_enabled = False
-        self.pending_batch_tasks: List[Any] = []
+        self.pending_batch_tasks: list[Any] = []
         self.batch_formation_time: Optional[datetime] = None
 
         # Background tasks
@@ -369,9 +363,7 @@ class LoadBalancer:
 
             # Process any pending batch tasks
             if self.batch_mode_enabled and self.pending_batch_tasks:
-                logger.info(
-                    f"Processing {len(self.pending_batch_tasks)} pending batch tasks..."
-                )
+                logger.info(f"Processing {len(self.pending_batch_tasks)} pending batch tasks...")
                 # This would trigger batch processing
 
             logger.info("LoadBalancer shutdown completed")
@@ -382,8 +374,8 @@ class LoadBalancer:
     async def register_worker(
         self,
         worker_id: str,
-        capabilities: List[str],
-        educational_specializations: Optional[List[str]] = None,
+        capabilities: list[str],
+        educational_specializations: Optional[list[str]] = None,
     ):
         """Register a new worker with the load balancer."""
         initial_metrics = ResourceMetrics()
@@ -411,9 +403,7 @@ class LoadBalancer:
 
         logger.info(f"Unregistered worker {worker_id}")
 
-    async def select_worker(
-        self, available_workers: List[Any], task: Optional[Any] = None
-    ) -> Any:
+    async def select_worker(self, available_workers: list[Any], task: Optional[Any] = None) -> Any:
         """
         Select the best worker for task assignment based on load balancing strategy.
 
@@ -449,9 +439,7 @@ class LoadBalancer:
         elif self.strategy == LoadBalancingStrategy.QUALITY_AWARE:
             selected_worker = await self._select_quality_aware(available_workers, task)
         elif self.strategy == LoadBalancingStrategy.EDUCATIONAL_OPTIMIZED:
-            selected_worker = await self._select_educational_optimized(
-                available_workers, task
-            )
+            selected_worker = await self._select_educational_optimized(available_workers, task)
         elif self.strategy == LoadBalancingStrategy.ADAPTIVE:
             selected_worker = await self._select_adaptive(available_workers, task)
         else:
@@ -514,12 +502,11 @@ class LoadBalancer:
 
         return self.worker_states[worker_id].metrics
 
-    async def get_load_balancing_status(self) -> Dict[str, Any]:
+    async def get_load_balancing_status(self) -> dict[str, Any]:
         """Get comprehensive load balancing status."""
         # Calculate distribution statistics
         worker_loads = {
-            worker_id: state.load_factor
-            for worker_id, state in self.worker_states.items()
+            worker_id: state.load_factor for worker_id, state in self.worker_states.items()
         }
 
         # Recent allocation distribution
@@ -529,12 +516,8 @@ class LoadBalancer:
             allocation_distribution[allocation["worker_id"]] += 1
 
         # Performance trends
-        recent_quality_scores = [
-            a["quality_score"] for a in recent_allocations if a["success"]
-        ]
-        avg_quality = (
-            statistics.mean(recent_quality_scores) if recent_quality_scores else 0.0
-        )
+        recent_quality_scores = [a["quality_score"] for a in recent_allocations if a["success"]]
+        avg_quality = statistics.mean(recent_quality_scores) if recent_quality_scores else 0.0
 
         return {
             "strategy": self.strategy.value,
@@ -567,9 +550,7 @@ class LoadBalancer:
         self.batch_formation_time = None
         logger.info("Batch mode disabled")
 
-    async def predict_resource_needs(
-        self, time_horizon_minutes: int = 60
-    ) -> Dict[str, Any]:
+    async def predict_resource_needs(self, time_horizon_minutes: int = 60) -> dict[str, Any]:
         """Predict future resource needs based on current trends."""
         if not self.metrics_history:
             return {"prediction": "insufficient_data"}
@@ -590,9 +571,7 @@ class LoadBalancer:
         # Project future values
         current_cpu = recent_metrics[-1].cpu_percent
         current_memory = recent_metrics[-1].memory_percent
-        current_tasks = (
-            recent_metrics[-1].active_tasks + recent_metrics[-1].queued_tasks
-        )
+        current_tasks = recent_metrics[-1].active_tasks + recent_metrics[-1].queued_tasks
 
         # Simple linear projection
         time_factor = time_horizon_minutes / 10.0  # Trend per 10-minute interval
@@ -603,17 +582,9 @@ class LoadBalancer:
 
         # Determine scaling recommendations
         scaling_recommendation = "maintain"
-        if (
-            predicted_cpu > 80
-            or predicted_memory > 80
-            or predicted_tasks > current_tasks * 1.5
-        ):
+        if predicted_cpu > 80 or predicted_memory > 80 or predicted_tasks > current_tasks * 1.5:
             scaling_recommendation = "scale_up"
-        elif (
-            predicted_cpu < 30
-            and predicted_memory < 50
-            and predicted_tasks < current_tasks * 0.7
-        ):
+        elif predicted_cpu < 30 and predicted_memory < 50 and predicted_tasks < current_tasks * 0.7:
             scaling_recommendation = "scale_down"
 
         return {
@@ -734,7 +705,7 @@ class LoadBalancer:
         metrics.calculate_health_score()
         metrics.detect_bottlenecks()
 
-    async def _update_worker_states(self, workers: List[Any]):
+    async def _update_worker_states(self, workers: list[Any]):
         """Update resource states for all workers."""
         for worker in workers:
             worker_id = worker.worker_id
@@ -757,13 +728,13 @@ class LoadBalancer:
 
             worker_state.last_updated = datetime.now()
 
-    async def _select_round_robin(self, workers: List[Any]) -> Any:
+    async def _select_round_robin(self, workers: list[Any]) -> Any:
         """Select worker using round-robin strategy."""
         selected_worker = workers[self._round_robin_index % len(workers)]
         self._round_robin_index = (self._round_robin_index + 1) % len(workers)
         return selected_worker
 
-    async def _select_weighted_round_robin(self, workers: List[Any]) -> Any:
+    async def _select_weighted_round_robin(self, workers: list[Any]) -> Any:
         """Select worker using weighted round-robin strategy."""
         # Build weighted list
         weighted_workers = []
@@ -774,19 +745,15 @@ class LoadBalancer:
         if not weighted_workers:
             return workers[0]
 
-        selected_worker = weighted_workers[
-            self._round_robin_index % len(weighted_workers)
-        ]
+        selected_worker = weighted_workers[self._round_robin_index % len(weighted_workers)]
         self._round_robin_index = (self._round_robin_index + 1) % len(weighted_workers)
         return selected_worker
 
-    async def _select_least_connections(self, workers: List[Any]) -> Any:
+    async def _select_least_connections(self, workers: list[Any]) -> Any:
         """Select worker with least active connections/tasks."""
-        return min(
-            workers, key=lambda w: w.current_tasks if hasattr(w, "current_tasks") else 0
-        )
+        return min(workers, key=lambda w: w.current_tasks if hasattr(w, "current_tasks") else 0)
 
-    async def _select_least_response_time(self, workers: List[Any]) -> Any:
+    async def _select_least_response_time(self, workers: list[Any]) -> Any:
         """Select worker with least average response time."""
         best_worker = workers[0]
         best_time = float("inf")
@@ -801,7 +768,7 @@ class LoadBalancer:
 
         return best_worker
 
-    async def _select_resource_aware(self, workers: List[Any]) -> Any:
+    async def _select_resource_aware(self, workers: list[Any]) -> Any:
         """Select worker based on resource utilization."""
         best_worker = workers[0]
         best_utilization = 1.0
@@ -818,9 +785,7 @@ class LoadBalancer:
 
         return best_worker
 
-    async def _select_quality_aware(
-        self, workers: List[Any], task: Optional[Any] = None
-    ) -> Any:
+    async def _select_quality_aware(self, workers: list[Any], task: Optional[Any] = None) -> Any:
         """Select worker based on predicted quality outcomes."""
         best_worker = workers[0]
         best_quality_score = 0.0
@@ -843,7 +808,7 @@ class LoadBalancer:
         return best_worker
 
     async def _select_educational_optimized(
-        self, workers: List[Any], task: Optional[Any] = None
+        self, workers: list[Any], task: Optional[Any] = None
     ) -> Any:
         """Select worker optimized for educational content generation."""
         if not task:
@@ -866,10 +831,7 @@ class LoadBalancer:
                 state = self.worker_states[worker_id]
                 score += state.predicted_quality_score * self.config.quality_weight
                 score += (1.0 - state.load_factor) * self.config.performance_weight
-                score += (
-                    state.educational_specialization_score
-                    * self.config.educational_weight
-                )
+                score += state.educational_specialization_score * self.config.educational_weight
 
             # Educational specialization bonus
             if hasattr(worker, "educational_specializations"):
@@ -893,9 +855,7 @@ class LoadBalancer:
 
         return best_worker
 
-    async def _select_adaptive(
-        self, workers: List[Any], task: Optional[Any] = None
-    ) -> Any:
+    async def _select_adaptive(self, workers: list[Any], task: Optional[Any] = None) -> Any:
         """Select worker using adaptive strategy based on current conditions."""
         # Analyze current system state to choose best sub-strategy
         system_load = self.system_metrics.overall_utilization
@@ -950,9 +910,7 @@ class LoadBalancer:
             alert = {
                 "timestamp": current_time,
                 "type": "cpu_bottleneck",
-                "severity": (
-                    "high" if self.system_metrics.cpu_percent > 90 else "medium"
-                ),
+                "severity": ("high" if self.system_metrics.cpu_percent > 90 else "medium"),
                 "message": f"CPU usage at {self.system_metrics.cpu_percent:.1f}%",
                 "recommendation": "Consider scaling up or optimizing CPU-intensive tasks",
             }
@@ -962,9 +920,7 @@ class LoadBalancer:
             alert = {
                 "timestamp": current_time,
                 "type": "memory_bottleneck",
-                "severity": (
-                    "high" if self.system_metrics.memory_percent > 90 else "medium"
-                ),
+                "severity": ("high" if self.system_metrics.memory_percent > 90 else "medium"),
                 "message": f"Memory usage at {self.system_metrics.memory_percent:.1f}%",
                 "recommendation": "Consider scaling up or optimizing memory usage",
             }
@@ -1041,9 +997,7 @@ class LoadBalancer:
         # Analyze recent performance
         recent_allocations = self.allocation_history[-100:]
 
-        success_rate = sum(1 for a in recent_allocations if a["success"]) / len(
-            recent_allocations
-        )
+        success_rate = sum(1 for a in recent_allocations if a["success"]) / len(recent_allocations)
         avg_quality = statistics.mean(
             [a["quality_score"] for a in recent_allocations if a["success"]]
         )
@@ -1119,9 +1073,7 @@ class LoadBalancer:
             # Identify underrepresented subjects
             avg_ratio = 1.0 / len(subject_ratios) if subject_ratios else 0
             underrepresented = [
-                subject
-                for subject, ratio in subject_ratios.items()
-                if ratio < avg_ratio * 0.7
+                subject for subject, ratio in subject_ratios.items() if ratio < avg_ratio * 0.7
             ]
 
             if underrepresented:
@@ -1130,10 +1082,7 @@ class LoadBalancer:
         # Similar analysis for grade levels
         if self.grade_level_distribution:
             total_tasks = sum(self.grade_level_distribution.values())
-            grade_ratios = {
-                grade: count / total_tasks
-                for grade, count in self.grade_level_distribution.items()
-            }
+            {grade: count / total_tasks for grade, count in self.grade_level_distribution.items()}
 
             # This could inform worker specialization recommendations
 
@@ -1155,7 +1104,7 @@ class LoadBalancer:
         # Clear pending tasks
         self.pending_batch_tasks.clear()
 
-    def _group_similar_tasks(self, tasks: List[Any]) -> List[List[Any]]:
+    def _group_similar_tasks(self, tasks: list[Any]) -> list[list[Any]]:
         """Group similar tasks for batch processing."""
         # Simple grouping by task type
         groups = defaultdict(list)
@@ -1166,7 +1115,7 @@ class LoadBalancer:
 
         return list(groups.values())
 
-    def _calculate_trend(self, values: List[float]) -> float:
+    def _calculate_trend(self, values: list[float]) -> float:
         """Calculate simple linear trend in values."""
         if len(values) < 2:
             return 0.0
@@ -1185,9 +1134,7 @@ class LoadBalancer:
         slope = (n * xy_sum - x_sum * y_sum) / denominator
         return slope
 
-    def _forecast_value(
-        self, historical_values: List[float], periods_ahead: int
-    ) -> float:
+    def _forecast_value(self, historical_values: list[float], periods_ahead: int) -> float:
         """Simple forecasting using linear trend."""
         if len(historical_values) < 2:
             return historical_values[0] if historical_values else 0.0

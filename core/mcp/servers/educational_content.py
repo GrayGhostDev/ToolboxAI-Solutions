@@ -3,15 +3,16 @@ MCP Server for Educational Content Generation
 Exposes ContentGenerationAgent via MCP protocol
 """
 
-import sys
-import json
 import asyncio
+import json
 import logging
-from typing import Dict, Any, Optional
 
 # Add parent directory to path for imports
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
+import sys
+from typing import Any
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +41,7 @@ class EducationalContentMCPServer:
             try:
                 # Import only when needed
                 from apps.backend.agents.agent_classes import ContentGenerationAgent
+
                 self.agent = ContentGenerationAgent()
                 self._agent_initialized = True
                 logger.info("ContentGenerationAgent initialized successfully")
@@ -49,7 +51,7 @@ class EducationalContentMCPServer:
                 self.agent = None
                 raise RuntimeError(f"Agent initialization failed: {e}")
 
-    async def handle_generate_content(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_content(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate educational content"""
         try:
             self._ensure_agent_initialized()
@@ -63,21 +65,15 @@ class EducationalContentMCPServer:
                 subject=subject,
                 grade_level=grade_level,
                 objectives=objectives,
-                include_assessment=include_assessment
+                include_assessment=include_assessment,
             )
 
-            return {
-                "status": "success",
-                "content": result
-            }
+            return {"status": "success", "content": result}
         except Exception as e:
             logger.error(f"Error generating content: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_generate_quiz(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_quiz(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate a quiz for educational content"""
         try:
             self._ensure_agent_initialized()
@@ -87,11 +83,9 @@ class EducationalContentMCPServer:
             difficulty = params.get("difficulty", "medium")
 
             # Use the agent's quiz generation capability
-            if hasattr(self.agent, 'generate_quiz'):
+            if hasattr(self.agent, "generate_quiz"):
                 result = await self.agent.generate_quiz(
-                    topic=topic,
-                    num_questions=num_questions,
-                    difficulty=difficulty
+                    topic=topic, num_questions=num_questions, difficulty=difficulty
                 )
             else:
                 # Fallback to content generation with quiz focus
@@ -99,21 +93,15 @@ class EducationalContentMCPServer:
                     subject=topic,
                     grade_level=5,
                     objectives=[f"Create {num_questions} quiz questions"],
-                    include_assessment=True
+                    include_assessment=True,
                 )
 
-            return {
-                "status": "success",
-                "quiz": result
-            }
+            return {"status": "success", "quiz": result}
         except Exception as e:
             logger.error(f"Error generating quiz: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_generate_lesson(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_lesson(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate a complete lesson plan"""
         try:
             self._ensure_agent_initialized()
@@ -126,28 +114,22 @@ class EducationalContentMCPServer:
             objectives = [
                 f"Create a {duration}-minute lesson plan",
                 f"Include introduction, main content, and conclusion",
-                f"Add interactive elements"
+                f"Add interactive elements",
             ]
 
             result = await self.agent.generate_content(
                 subject=topic,
                 grade_level=grade,
                 objectives=objectives,
-                include_assessment=True
+                include_assessment=True,
             )
 
-            return {
-                "status": "success",
-                "lesson": result
-            }
+            return {"status": "success", "lesson": result}
         except Exception as e:
             logger.error(f"Error generating lesson: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_generate_activity(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_activity(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate an educational activity"""
         try:
             self._ensure_agent_initialized()
@@ -161,56 +143,55 @@ class EducationalContentMCPServer:
                 subject=topic,
                 grade_level=age - 5,  # Approximate grade from age
                 objectives=[f"Create {activity_type} activity for {age} year olds"],
-                include_assessment=False
+                include_assessment=False,
             )
 
-            return {
-                "status": "success",
-                "activity": result
-            }
+            return {"status": "success", "activity": result}
         except Exception as e:
             logger.error(f"Error generating activity: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_health(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_health(self, params: dict[str, Any]) -> dict[str, Any]:
         """Health check endpoint"""
         # Check if agent can be initialized without actually doing it
         agent_available = self._agent_initialized or self._check_agent_availability()
         return {
             "status": "healthy",
             "service": "educational_content",
-            "agent_status": "available" if agent_available else "not_initialized"
+            "agent_status": "available" if agent_available else "not_initialized",
         }
 
     def _check_agent_availability(self) -> bool:
         """Check if agent can be initialized without actually doing it"""
         try:
-            import apps.backend.agents.agent_classes
             return True
         except Exception:
             return False
 
-    async def handle_capabilities(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_capabilities(self, params: dict[str, Any]) -> dict[str, Any]:
         """Return server capabilities"""
         return {
             "capabilities": [
                 "generate_content",
                 "generate_quiz",
                 "generate_lesson",
-                "generate_activity"
+                "generate_activity",
             ],
             "supported_subjects": [
-                "Math", "Science", "History", "English",
-                "Geography", "Art", "Music", "Physical Education"
+                "Math",
+                "Science",
+                "History",
+                "English",
+                "Geography",
+                "Art",
+                "Music",
+                "Physical Education",
             ],
             "grade_levels": list(range(1, 13)),
-            "content_types": ["lesson", "quiz", "activity", "assessment"]
+            "content_types": ["lesson", "quiz", "activity", "assessment"],
         }
 
-    async def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """Process incoming MCP request"""
         method = request.get("method")
         params = request.get("params", {})
@@ -219,29 +200,19 @@ class EducationalContentMCPServer:
         if method in self.methods:
             try:
                 result = await self.methods[method](params)
-                return {
-                    "jsonrpc": "2.0",
-                    "result": result,
-                    "id": request_id
-                }
+                return {"jsonrpc": "2.0", "result": result, "id": request_id}
             except Exception as e:
                 logger.error(f"Error processing request: {e}")
                 return {
                     "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32603,
-                        "message": str(e)
-                    },
-                    "id": request_id
+                    "error": {"code": -32603, "message": str(e)},
+                    "id": request_id,
                 }
         else:
             return {
                 "jsonrpc": "2.0",
-                "error": {
-                    "code": -32601,
-                    "message": f"Method not found: {method}"
-                },
-                "id": request_id
+                "error": {"code": -32601, "message": f"Method not found: {method}"},
+                "id": request_id,
             }
 
     async def run_stdio(self):
@@ -269,11 +240,8 @@ class EducationalContentMCPServer:
                 logger.error(f"Invalid JSON: {e}")
                 error_response = {
                     "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32700,
-                        "message": "Parse error"
-                    },
-                    "id": None
+                    "error": {"code": -32700, "message": "Parse error"},
+                    "id": None,
                 }
                 sys.stdout.write(json.dumps(error_response) + "\n")
                 sys.stdout.flush()

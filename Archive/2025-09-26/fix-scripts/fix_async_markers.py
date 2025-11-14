@@ -9,9 +9,9 @@ that are missing it, following pytest-asyncio 2025 best practices.
 import os
 import re
 from pathlib import Path
-from typing import List, Tuple
 
-def find_test_files(root_dir: str = "tests") -> List[Path]:
+
+def find_test_files(root_dir: str = "tests") -> list[Path]:
     """Find all Python test files in the tests directory."""
     test_files = []
     for root, dirs, files in os.walk(root_dir):
@@ -25,7 +25,7 @@ def find_test_files(root_dir: str = "tests") -> List[Path]:
     return test_files
 
 
-def needs_asyncio_marker(lines: List[str], line_idx: int) -> bool:
+def needs_asyncio_marker(lines: list[str], line_idx: int) -> bool:
     """
     Check if an async test function needs the asyncio marker.
     
@@ -47,7 +47,7 @@ def needs_asyncio_marker(lines: List[str], line_idx: int) -> bool:
     return True
 
 
-def add_asyncio_markers(file_path: Path) -> Tuple[int, List[str]]:
+def add_asyncio_markers(file_path: Path) -> tuple[int, list[str]]:
     """
     Add missing asyncio markers to a test file.
     
@@ -57,7 +57,7 @@ def add_asyncio_markers(file_path: Path) -> Tuple[int, List[str]]:
     Returns:
         Tuple of (number of markers added, list of function names fixed)
     """
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         lines = f.readlines()
     
     markers_added = 0
@@ -118,7 +118,7 @@ def add_asyncio_loop_scope(file_path: Path) -> bool:
     Returns:
         True if file was modified, False otherwise
     """
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         content = f.read()
     
     original_content = content

@@ -154,7 +154,7 @@ class TestContentGeneration:
             ) as mock_activity:
                 mock_generate.return_value = sample_generation_result
 
-                result = await content_service.generate_content(
+                await content_service.generate_content(
                     topic="Test Topic", user_id="user_123", content_type="quiz"
                 )
 
@@ -172,7 +172,10 @@ class TestContentRetrieval:
     async def test_get_content_success(self, content_service):
         """Test successful content retrieval"""
         with patch.object(
-            content_service, "_check_content_access", new_callable=AsyncMock, return_value=True
+            content_service,
+            "_check_content_access",
+            new_callable=AsyncMock,
+            return_value=True,
         ):
             with patch.object(content_service, "_log_content_access", new_callable=AsyncMock):
                 content = await content_service.get_content("content_123", "user_123")
@@ -186,7 +189,10 @@ class TestContentRetrieval:
     async def test_get_content_access_denied(self, content_service):
         """Test content retrieval with access denied"""
         with patch.object(
-            content_service, "_check_content_access", new_callable=AsyncMock, return_value=False
+            content_service,
+            "_check_content_access",
+            new_callable=AsyncMock,
+            return_value=False,
         ):
             content = await content_service.get_content("content_123", "user_456")
 
@@ -196,7 +202,10 @@ class TestContentRetrieval:
     async def test_get_content_logs_access(self, content_service):
         """Test that content access is logged"""
         with patch.object(
-            content_service, "_check_content_access", new_callable=AsyncMock, return_value=True
+            content_service,
+            "_check_content_access",
+            new_callable=AsyncMock,
+            return_value=True,
         ):
             with patch.object(
                 content_service, "_log_content_access", new_callable=AsyncMock
@@ -240,7 +249,11 @@ class TestContentListing:
     async def test_list_user_content_with_filters(self, content_service):
         """Test content listing with filters"""
         result = await content_service.list_user_content(
-            user_id="user_123", limit=20, offset=5, content_type="quiz", subject="Science"
+            user_id="user_123",
+            limit=20,
+            offset=5,
+            content_type="quiz",
+            subject="Science",
         )
 
         assert result["filters"]["content_type"] == "quiz"
@@ -283,10 +296,17 @@ class TestContentUpdate:
     @pytest.mark.asyncio
     async def test_update_content_success(self, content_service):
         """Test successful content update"""
-        mock_content = {"id": "content_123", "topic": "Original Topic", "user_id": "user_123"}
+        mock_content = {
+            "id": "content_123",
+            "topic": "Original Topic",
+            "user_id": "user_123",
+        }
 
         with patch.object(
-            content_service, "get_content", new_callable=AsyncMock, return_value=mock_content
+            content_service,
+            "get_content",
+            new_callable=AsyncMock,
+            return_value=mock_content,
         ):
             with patch.object(
                 content_service,
@@ -295,7 +315,10 @@ class TestContentUpdate:
                 return_value=True,
             ):
                 with patch.object(content_service, "_store_content", new_callable=AsyncMock):
-                    updates = {"topic": "Updated Topic", "description": "New description"}
+                    updates = {
+                        "topic": "Updated Topic",
+                        "description": "New description",
+                    }
 
                     result = await content_service.update_content(
                         "content_123", "user_123", updates
@@ -322,7 +345,10 @@ class TestContentUpdate:
         mock_content = {"id": "content_123", "user_id": "user_789"}
 
         with patch.object(
-            content_service, "get_content", new_callable=AsyncMock, return_value=mock_content
+            content_service,
+            "get_content",
+            new_callable=AsyncMock,
+            return_value=mock_content,
         ):
             with patch.object(
                 content_service,
@@ -360,7 +386,10 @@ class TestContentDeletion:
         mock_content = {"id": "content_123", "user_id": "user_123"}
 
         with patch.object(
-            content_service, "get_content", new_callable=AsyncMock, return_value=mock_content
+            content_service,
+            "get_content",
+            new_callable=AsyncMock,
+            return_value=mock_content,
         ):
             with patch.object(
                 content_service,
@@ -369,7 +398,9 @@ class TestContentDeletion:
                 return_value=True,
             ):
                 with patch.object(
-                    content_service, "_delete_content_from_storage", new_callable=AsyncMock
+                    content_service,
+                    "_delete_content_from_storage",
+                    new_callable=AsyncMock,
                 ):
                     result = await content_service.delete_content("content_123", "user_123")
 
@@ -391,7 +422,10 @@ class TestContentDeletion:
         mock_content = {"id": "content_123", "user_id": "user_789"}
 
         with patch.object(
-            content_service, "get_content", new_callable=AsyncMock, return_value=mock_content
+            content_service,
+            "get_content",
+            new_callable=AsyncMock,
+            return_value=mock_content,
         ):
             with patch.object(
                 content_service,
@@ -444,7 +478,10 @@ class TestContentStreaming:
         stages = []
 
         async for stage in content_service.generate_content_stream(
-            topic="Advanced Topic", user_id="user_456", subject="Science", grade_level="8th Grade"
+            topic="Advanced Topic",
+            user_id="user_456",
+            subject="Science",
+            grade_level="8th Grade",
         ):
             stages.append(stage)
 

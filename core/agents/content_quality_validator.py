@@ -10,23 +10,21 @@ Version: 2.0.0
 """
 
 import asyncio
-import re
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
-from langchain_core.messages import SystemMessage
-from pydantic import BaseModel, Field, field_validator
-
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
+from core.agents.base_agent import AgentConfig, BaseAgent
 
 logger = logging.getLogger(__name__)
 
 
 class ValidationCategory(Enum):
     """Categories of content validation"""
+
     EDUCATIONAL_VALUE = "educational_value"
     TECHNICAL_QUALITY = "technical_quality"
     SAFETY_COMPLIANCE = "safety_compliance"
@@ -39,16 +37,18 @@ class ValidationCategory(Enum):
 
 class ValidationSeverity(Enum):
     """Severity levels for validation issues"""
+
     CRITICAL = "critical"  # Must fix before deployment
-    HIGH = "high"         # Should fix before deployment
-    MEDIUM = "medium"     # Can fix after deployment
-    LOW = "low"          # Minor improvements
-    INFO = "info"        # Suggestions only
+    HIGH = "high"  # Should fix before deployment
+    MEDIUM = "medium"  # Can fix after deployment
+    LOW = "low"  # Minor improvements
+    INFO = "info"  # Suggestions only
 
 
 @dataclass
 class ValidationIssue:
     """Represents a validation issue found in content"""
+
     category: ValidationCategory
     severity: ValidationSeverity
     description: str
@@ -61,6 +61,7 @@ class ValidationIssue:
 @dataclass
 class ValidationReport:
     """Comprehensive validation report for content"""
+
     content_id: str
     validated_at: datetime = field(default_factory=datetime.now)
 
@@ -73,17 +74,17 @@ class ValidationReport:
     accessibility_score: float = 0.0
 
     # Detailed findings
-    issues: List[ValidationIssue] = field(default_factory=list)
-    passed_checks: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    issues: list[ValidationIssue] = field(default_factory=list)
+    passed_checks: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
     # Recommendations
-    recommendations: List[str] = field(default_factory=list)
-    best_practices: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
+    best_practices: list[str] = field(default_factory=list)
 
     # Compliance
     compliant: bool = False
-    compliance_details: Dict[str, bool] = field(default_factory=dict)
+    compliance_details: dict[str, bool] = field(default_factory=dict)
 
     # Metadata
     validation_duration: float = 0.0
@@ -112,7 +113,7 @@ class ContentQualityValidator(BaseAgent):
             max_retries=3,
             timeout=300,
             verbose=True,
-            system_prompt=self._get_validator_system_prompt()
+            system_prompt=self._get_validator_system_prompt(),
         )
 
         super().__init__(config)
@@ -166,21 +167,21 @@ Your responsibilities include:
 Always provide specific, actionable feedback with severity levels and improvement suggestions.
 """
 
-    def _load_validation_rules(self) -> Dict[str, Any]:
+    def _load_validation_rules(self) -> dict[str, Any]:
         """Load validation rules for different content aspects"""
         return {
             "educational": {
                 "min_learning_objectives": 3,
                 "max_cognitive_load": 7,
                 "required_assessment_types": ["formative", "summative"],
-                "bloom_levels": ["remember", "understand", "apply", "analyze"]
+                "bloom_levels": ["remember", "understand", "apply", "analyze"],
             },
             "technical": {
                 "max_script_complexity": 100,  # Cyclomatic complexity
                 "max_asset_size_mb": 10,
                 "min_fps": 30,
                 "max_memory_usage_mb": 512,
-                "required_error_handling": True
+                "required_error_handling": True,
             },
             "safety": {
                 "prohibited_patterns": [
@@ -188,23 +189,23 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     r"real\s+name",
                     r"phone\s+number",
                     r"address",
-                    r"email"
+                    r"email",
                 ],
                 "age_ratings": {
                     "E": {"min_age": 0, "max_age": 10},
                     "E10+": {"min_age": 10, "max_age": 13},
-                    "T": {"min_age": 13, "max_age": 18}
-                }
+                    "T": {"min_age": 13, "max_age": 18},
+                },
             },
             "engagement": {
                 "min_interaction_frequency": 30,  # seconds
                 "max_idle_time": 120,  # seconds
                 "required_feedback_types": ["visual", "audio", "haptic"],
-                "progression_requirements": ["clear_goals", "milestones", "rewards"]
-            }
+                "progression_requirements": ["clear_goals", "milestones", "rewards"],
+            },
         }
 
-    def _load_quality_thresholds(self) -> Dict[str, float]:
+    def _load_quality_thresholds(self) -> dict[str, float]:
         """Load quality score thresholds"""
         return {
             "minimum_overall": 0.7,
@@ -212,17 +213,17 @@ Always provide specific, actionable feedback with severity levels and improvemen
             "minimum_technical": 0.6,
             "minimum_safety": 0.9,
             "minimum_engagement": 0.6,
-            "minimum_accessibility": 0.7
+            "minimum_accessibility": 0.7,
         }
 
-    def _load_script_patterns(self) -> Dict[str, Any]:
+    def _load_script_patterns(self) -> dict[str, Any]:
         """Load Roblox Luau script validation patterns"""
         return {
             "security_vulnerabilities": [
                 r"loadstring",  # Dynamic code execution
-                r"getfenv",     # Environment manipulation
-                r"setfenv",     # Environment manipulation
-                r"rawset",      # Bypassing metatables
+                r"getfenv",  # Environment manipulation
+                r"setfenv",  # Environment manipulation
+                r"rawset",  # Bypassing metatables
             ],
             "performance_issues": [
                 r"while\s+true\s+do(?!\s*wait)",  # Infinite loops without yields
@@ -234,34 +235,27 @@ Always provide specific, actionable feedback with severity levels and improvemen
                 "proper_waits": r"wait\(\)|task\.wait\(\)",
                 "event_cleanup": r":Disconnect\(\)",
                 "type_checking": r"typeof\(.*\)\s*==",
-            }
+            },
         }
 
-    def _load_asset_validators(self) -> Dict[str, Any]:
+    def _load_asset_validators(self) -> dict[str, Any]:
         """Load asset validation criteria"""
         return {
             "textures": {
                 "max_resolution": 2048,
                 "supported_formats": ["png", "jpg", "tga"],
-                "max_file_size_mb": 5
+                "max_file_size_mb": 5,
             },
-            "models": {
-                "max_polygons": 10000,
-                "max_draw_calls": 50,
-                "required_lods": 3
-            },
+            "models": {"max_polygons": 10000, "max_draw_calls": 50, "required_lods": 3},
             "audio": {
                 "max_duration_seconds": 120,
                 "supported_formats": ["mp3", "ogg"],
-                "max_file_size_mb": 10
-            }
+                "max_file_size_mb": 10,
+            },
         }
 
     async def validate_content(
-        self,
-        content: Dict[str, Any],
-        content_type: str,
-        target_age: int = 10
+        self, content: dict[str, Any], content_type: str, target_age: int = 10
     ) -> ValidationReport:
         """
         Main entry point for content validation
@@ -276,9 +270,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         """
         logger.info(f"Starting validation for {content_type} content")
 
-        report = ValidationReport(
-            content_id=content.get("id", "unknown")
-        )
+        report = ValidationReport(content_id=content.get("id", "unknown"))
 
         start_time = datetime.now()
 
@@ -290,7 +282,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                 self._validate_safety_compliance(content, target_age, report),
                 self._validate_engagement_design(content, report),
                 self._validate_accessibility(content, report),
-                self._validate_performance(content, report)
+                self._validate_performance(content, report),
             ]
 
             results = await asyncio.gather(*validation_tasks, return_exceptions=True)
@@ -303,7 +295,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         ValidationIssue(
                             category=ValidationCategory.TECHNICAL_QUALITY,
                             severity=ValidationSeverity.HIGH,
-                            description=f"Validation error: {str(result)}"
+                            description=f"Validation error: {str(result)}",
                         )
                     )
 
@@ -322,7 +314,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                 ValidationIssue(
                     category=ValidationCategory.TECHNICAL_QUALITY,
                     severity=ValidationSeverity.CRITICAL,
-                    description=f"Critical validation failure: {str(e)}"
+                    description=f"Critical validation failure: {str(e)}",
                 )
             )
 
@@ -332,10 +324,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         return report
 
     async def _validate_educational_value(
-        self,
-        content: Dict[str, Any],
-        content_type: str,
-        report: ValidationReport
+        self, content: dict[str, Any], content_type: str, report: ValidationReport
     ) -> None:
         """Validate educational value and alignment"""
 
@@ -350,7 +339,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.EDUCATIONAL_VALUE,
                     severity=ValidationSeverity.HIGH,
                     description=f"Insufficient learning objectives: {len(objectives)} < {rules['min_learning_objectives']}",
-                    suggestion="Add more specific learning objectives"
+                    suggestion="Add more specific learning objectives",
                 )
             )
             score -= 0.2
@@ -365,7 +354,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.EDUCATIONAL_VALUE,
                     severity=ValidationSeverity.MEDIUM,
                     description="Limited cognitive level coverage",
-                    suggestion="Include higher-order thinking activities"
+                    suggestion="Include higher-order thinking activities",
                 )
             )
             score -= 0.1
@@ -379,7 +368,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         category=ValidationCategory.EDUCATIONAL_VALUE,
                         severity=ValidationSeverity.MEDIUM,
                         description="Missing required assessment types",
-                        suggestion="Add both formative and summative assessments"
+                        suggestion="Add both formative and summative assessments",
                     )
                 )
                 score -= 0.15
@@ -387,13 +376,11 @@ Always provide specific, actionable feedback with severity levels and improvemen
         report.educational_score = max(0, score)
 
     async def _validate_technical_quality(
-        self,
-        content: Dict[str, Any],
-        report: ValidationReport
+        self, content: dict[str, Any], report: ValidationReport
     ) -> None:
         """Validate technical quality of scripts and assets"""
 
-        rules = self.validation_rules["technical"]
+        self.validation_rules["technical"]
         score = 1.0
 
         # Validate scripts
@@ -402,7 +389,13 @@ Always provide specific, actionable feedback with severity levels and improvemen
             script_issues = self._validate_script(script)
             report.issues.extend(script_issues)
             if script_issues:
-                score -= 0.1 * len([i for i in script_issues if i.severity in [ValidationSeverity.CRITICAL, ValidationSeverity.HIGH]])
+                score -= 0.1 * len(
+                    [
+                        i
+                        for i in script_issues
+                        if i.severity in [ValidationSeverity.CRITICAL, ValidationSeverity.HIGH]
+                    ]
+                )
 
         # Validate assets
         assets = content.get("assets", [])
@@ -410,7 +403,9 @@ Always provide specific, actionable feedback with severity levels and improvemen
             asset_issues = self._validate_asset(asset)
             report.issues.extend(asset_issues)
             if asset_issues:
-                score -= 0.05 * len([i for i in asset_issues if i.severity == ValidationSeverity.HIGH])
+                score -= 0.05 * len(
+                    [i for i in asset_issues if i.severity == ValidationSeverity.HIGH]
+                )
 
         # Check error handling
         if not self._has_proper_error_handling(scripts):
@@ -419,7 +414,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.TECHNICAL_QUALITY,
                     severity=ValidationSeverity.HIGH,
                     description="Missing error handling in scripts",
-                    suggestion="Add try-catch blocks and error recovery"
+                    suggestion="Add try-catch blocks and error recovery",
                 )
             )
             score -= 0.15
@@ -427,10 +422,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         report.technical_score = max(0, score)
 
     async def _validate_safety_compliance(
-        self,
-        content: Dict[str, Any],
-        target_age: int,
-        report: ValidationReport
+        self, content: dict[str, Any], target_age: int, report: ValidationReport
     ) -> None:
         """Validate safety and compliance requirements"""
 
@@ -446,7 +438,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         category=ValidationCategory.SAFETY_COMPLIANCE,
                         severity=ValidationSeverity.CRITICAL,
                         description=f"Prohibited content pattern detected: {pattern}",
-                        suggestion="Remove personal information requests"
+                        suggestion="Remove personal information requests",
                     )
                 )
                 score -= 0.3
@@ -459,7 +451,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.SAFETY_COMPLIANCE,
                     severity=ValidationSeverity.HIGH,
                     description=f"Content not appropriate for age {target_age}",
-                    suggestion="Adjust content complexity and themes"
+                    suggestion="Adjust content complexity and themes",
                 )
             )
             score -= 0.2
@@ -472,12 +464,12 @@ Always provide specific, actionable feedback with severity levels and improvemen
                 score -= 0.2
 
         report.safety_score = max(0, score)
-        report.compliance_details["COPPA"] = len([i for i in report.issues if "COPPA" in i.description]) == 0
+        report.compliance_details["COPPA"] = (
+            len([i for i in report.issues if "COPPA" in i.description]) == 0
+        )
 
     async def _validate_engagement_design(
-        self,
-        content: Dict[str, Any],
-        report: ValidationReport
+        self, content: dict[str, Any], report: ValidationReport
     ) -> None:
         """Validate engagement and game design principles"""
 
@@ -492,21 +484,23 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.ENGAGEMENT_DESIGN,
                     severity=ValidationSeverity.HIGH,
                     description="No interactive elements found",
-                    suggestion="Add interactive gameplay elements"
+                    suggestion="Add interactive gameplay elements",
                 )
             )
             score -= 0.3
 
         # Validate feedback mechanisms
         feedback_types = content.get("feedback_types", [])
-        missing_feedback = [ft for ft in rules["required_feedback_types"] if ft not in feedback_types]
+        missing_feedback = [
+            ft for ft in rules["required_feedback_types"] if ft not in feedback_types
+        ]
         if missing_feedback:
             report.issues.append(
                 ValidationIssue(
                     category=ValidationCategory.ENGAGEMENT_DESIGN,
                     severity=ValidationSeverity.MEDIUM,
                     description=f"Missing feedback types: {missing_feedback}",
-                    suggestion="Add visual and audio feedback for actions"
+                    suggestion="Add visual and audio feedback for actions",
                 )
             )
             score -= 0.1
@@ -519,7 +513,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.ENGAGEMENT_DESIGN,
                     severity=ValidationSeverity.MEDIUM,
                     description="Incomplete progression system",
-                    suggestion="Add clear goals, milestones, and rewards"
+                    suggestion="Add clear goals, milestones, and rewards",
                 )
             )
             score -= 0.15
@@ -527,9 +521,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         report.engagement_score = max(0, score)
 
     async def _validate_accessibility(
-        self,
-        content: Dict[str, Any],
-        report: ValidationReport
+        self, content: dict[str, Any], report: ValidationReport
     ) -> None:
         """Validate accessibility standards"""
 
@@ -557,7 +549,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.ACCESSIBILITY,
                     severity=ValidationSeverity.MEDIUM,
                     description="Controls not fully accessible",
-                    suggestion="Add keyboard navigation and screen reader support"
+                    suggestion="Add keyboard navigation and screen reader support",
                 )
             )
             score -= 0.15
@@ -565,9 +557,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         report.accessibility_score = max(0, score)
 
     async def _validate_performance(
-        self,
-        content: Dict[str, Any],
-        report: ValidationReport
+        self, content: dict[str, Any], report: ValidationReport
     ) -> None:
         """Validate performance characteristics"""
 
@@ -582,7 +572,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.PERFORMANCE,
                     severity=ValidationSeverity.HIGH,
                     description=f"Low estimated FPS: {estimated_fps}",
-                    suggestion="Optimize rendering and reduce complexity"
+                    suggestion="Optimize rendering and reduce complexity",
                 )
             )
             score -= 0.2
@@ -595,7 +585,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.PERFORMANCE,
                     severity=ValidationSeverity.HIGH,
                     description=f"High memory usage: {estimated_memory}MB",
-                    suggestion="Optimize assets and reduce memory footprint"
+                    suggestion="Optimize assets and reduce memory footprint",
                 )
             )
             score -= 0.15
@@ -610,7 +600,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         # Performance score is factored into technical score
         report.technical_score = min(report.technical_score, score)
 
-    def _validate_script(self, script: Dict[str, Any]) -> List[ValidationIssue]:
+    def _validate_script(self, script: dict[str, Any]) -> list[ValidationIssue]:
         """Validate a single script"""
         issues = []
         code = script.get("code", "")
@@ -624,7 +614,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         severity=ValidationSeverity.CRITICAL,
                         description=f"Security vulnerability: {pattern}",
                         location=script.get("name", "unknown"),
-                        suggestion="Remove unsafe code patterns"
+                        suggestion="Remove unsafe code patterns",
                     )
                 )
 
@@ -637,13 +627,13 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         severity=ValidationSeverity.HIGH,
                         description=f"Performance issue detected",
                         location=script.get("name", "unknown"),
-                        suggestion="Optimize script for better performance"
+                        suggestion="Optimize script for better performance",
                     )
                 )
 
         return issues
 
-    def _validate_asset(self, asset: Dict[str, Any]) -> List[ValidationIssue]:
+    def _validate_asset(self, asset: dict[str, Any]) -> list[ValidationIssue]:
         """Validate a single asset"""
         issues = []
         asset_type = asset.get("type", "unknown")
@@ -660,13 +650,13 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         severity=ValidationSeverity.HIGH,
                         description=f"Asset too large: {file_size_mb}MB",
                         location=asset.get("name", "unknown"),
-                        suggestion="Compress or optimize the asset"
+                        suggestion="Compress or optimize the asset",
                     )
                 )
 
         return issues
 
-    def _check_bloom_coverage(self, objectives: List[str], required_levels: List[str]) -> float:
+    def _check_bloom_coverage(self, objectives: list[str], required_levels: list[str]) -> float:
         """Check coverage of Bloom's taxonomy levels"""
         covered = 0
         for level in required_levels:
@@ -674,12 +664,12 @@ Always provide specific, actionable feedback with severity levels and improvemen
                 covered += 1
         return covered / len(required_levels) if required_levels else 0
 
-    def _has_required_assessments(self, assessments: List[Dict], required_types: List[str]) -> bool:
+    def _has_required_assessments(self, assessments: list[dict], required_types: list[str]) -> bool:
         """Check if required assessment types are present"""
         assessment_types = [a.get("type", "") for a in assessments]
         return all(rt in assessment_types for rt in required_types)
 
-    def _has_proper_error_handling(self, scripts: List[Dict]) -> bool:
+    def _has_proper_error_handling(self, scripts: list[dict]) -> bool:
         """Check if scripts have proper error handling"""
         for script in scripts:
             code = script.get("code", "")
@@ -687,7 +677,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
                 return False
         return True
 
-    def _extract_all_text(self, content: Dict[str, Any]) -> str:
+    def _extract_all_text(self, content: dict[str, Any]) -> str:
         """Extract all text content for analysis"""
         text_parts = []
 
@@ -704,7 +694,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         extract_recursive(content)
         return " ".join(text_parts)
 
-    def _determine_age_rating(self, content: Dict[str, Any]) -> str:
+    def _determine_age_rating(self, content: dict[str, Any]) -> str:
         """Determine appropriate age rating for content"""
         # Simplified implementation
         complexity = content.get("complexity", "medium")
@@ -715,14 +705,14 @@ Always provide specific, actionable feedback with severity levels and improvemen
         else:
             return "T"
 
-    def _is_age_appropriate(self, rating: str, target_age: int, ratings: Dict) -> bool:
+    def _is_age_appropriate(self, rating: str, target_age: int, ratings: dict) -> bool:
         """Check if content rating is appropriate for target age"""
         if rating in ratings:
             age_range = ratings[rating]
             return age_range["min_age"] <= target_age <= age_range["max_age"]
         return True
 
-    def _check_coppa_compliance(self, content: Dict[str, Any]) -> List[ValidationIssue]:
+    def _check_coppa_compliance(self, content: dict[str, Any]) -> list[ValidationIssue]:
         """Check COPPA compliance for content targeting children under 13"""
         issues = []
 
@@ -733,17 +723,17 @@ Always provide specific, actionable feedback with severity levels and improvemen
                     category=ValidationCategory.SAFETY_COMPLIANCE,
                     severity=ValidationSeverity.CRITICAL,
                     description="COPPA: Data collection from children under 13",
-                    suggestion="Remove data collection or add parental consent"
+                    suggestion="Remove data collection or add parental consent",
                 )
             )
 
         return issues
 
-    def _has_valid_progression(self, progression: Dict, requirements: List[str]) -> bool:
+    def _has_valid_progression(self, progression: dict, requirements: list[str]) -> bool:
         """Check if progression system meets requirements"""
         return all(req in progression for req in requirements)
 
-    def _check_color_contrast(self, ui_elements: List[Dict]) -> List[ValidationIssue]:
+    def _check_color_contrast(self, ui_elements: list[dict]) -> list[ValidationIssue]:
         """Check color contrast for accessibility"""
         issues = []
         # Simplified - would use actual contrast calculation
@@ -755,12 +745,12 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         severity=ValidationSeverity.MEDIUM,
                         description="Insufficient color contrast",
                         location=element.get("name", "unknown"),
-                        suggestion="Increase contrast to at least 4.5:1"
+                        suggestion="Increase contrast to at least 4.5:1",
                     )
                 )
         return issues
 
-    def _check_readability(self, text_elements: List[Dict]) -> List[ValidationIssue]:
+    def _check_readability(self, text_elements: list[dict]) -> list[ValidationIssue]:
         """Check text readability"""
         issues = []
         for element in text_elements:
@@ -771,23 +761,23 @@ Always provide specific, actionable feedback with severity levels and improvemen
                         severity=ValidationSeverity.LOW,
                         description="Font size too small",
                         location=element.get("name", "unknown"),
-                        suggestion="Use minimum 12pt font size"
+                        suggestion="Use minimum 12pt font size",
                     )
                 )
         return issues
 
-    def _has_accessible_controls(self, controls: List[Dict]) -> bool:
+    def _has_accessible_controls(self, controls: list[dict]) -> bool:
         """Check if controls are accessible"""
         return all(c.get("keyboard_accessible", False) for c in controls)
 
-    def _estimate_fps(self, content: Dict[str, Any]) -> float:
+    def _estimate_fps(self, content: dict[str, Any]) -> float:
         """Estimate FPS based on content complexity"""
         # Simplified estimation
         base_fps = 60
         complexity = content.get("complexity_score", 0.5)
         return base_fps * (1 - complexity * 0.5)
 
-    def _estimate_memory_usage(self, content: Dict[str, Any]) -> float:
+    def _estimate_memory_usage(self, content: dict[str, Any]) -> float:
         """Estimate memory usage in MB"""
         # Simplified estimation
         base_memory = 100
@@ -795,7 +785,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
         scripts = content.get("scripts", [])
         return base_memory + len(assets) * 10 + len(scripts) * 2
 
-    def _is_asset_optimized(self, asset: Dict[str, Any]) -> bool:
+    def _is_asset_optimized(self, asset: dict[str, Any]) -> bool:
         """Check if an asset is optimized"""
         return asset.get("optimized", False)
 
@@ -806,7 +796,7 @@ Always provide specific, actionable feedback with severity levels and improvemen
             report.technical_score * 0.20,
             report.safety_score * 0.25,
             report.engagement_score * 0.15,
-            report.accessibility_score * 0.10
+            report.accessibility_score * 0.10,
         ]
         return sum(scores)
 
@@ -821,33 +811,45 @@ Always provide specific, actionable feedback with severity levels and improvemen
 
         # Check minimum scores
         return (
-            report.overall_score >= thresholds["minimum_overall"] and
-            report.educational_score >= thresholds["minimum_educational"] and
-            report.safety_score >= thresholds["minimum_safety"]
+            report.overall_score >= thresholds["minimum_overall"]
+            and report.educational_score >= thresholds["minimum_educational"]
+            and report.safety_score >= thresholds["minimum_safety"]
         )
 
-    def _generate_recommendations(self, report: ValidationReport) -> List[str]:
+    def _generate_recommendations(self, report: ValidationReport) -> list[str]:
         """Generate improvement recommendations based on validation results"""
         recommendations = []
 
         # Score-based recommendations
         if report.educational_score < 0.8:
-            recommendations.append("Enhance educational value by adding more learning objectives and assessments")
+            recommendations.append(
+                "Enhance educational value by adding more learning objectives and assessments"
+            )
 
         if report.technical_score < 0.7:
-            recommendations.append("Improve technical quality through code optimization and error handling")
+            recommendations.append(
+                "Improve technical quality through code optimization and error handling"
+            )
 
         if report.engagement_score < 0.7:
-            recommendations.append("Increase engagement with more interactive elements and feedback mechanisms")
+            recommendations.append(
+                "Increase engagement with more interactive elements and feedback mechanisms"
+            )
 
         # Issue-based recommendations
-        high_priority_issues = [i for i in report.issues if i.severity in [ValidationSeverity.CRITICAL, ValidationSeverity.HIGH]]
+        high_priority_issues = [
+            i
+            for i in report.issues
+            if i.severity in [ValidationSeverity.CRITICAL, ValidationSeverity.HIGH]
+        ]
         if high_priority_issues:
-            recommendations.append(f"Address {len(high_priority_issues)} high-priority issues before deployment")
+            recommendations.append(
+                f"Address {len(high_priority_issues)} high-priority issues before deployment"
+            )
 
         return recommendations
 
-    async def _process_task(self, state: Dict[str, Any]) -> Any:
+    async def _process_task(self, state: dict[str, Any]) -> Any:
         """Process a validation task"""
         content = state.get("content", {})
         content_type = state.get("content_type", "lesson")
@@ -860,10 +862,12 @@ Always provide specific, actionable feedback with severity levels and improvemen
             "compliant": report.compliant,
             "overall_score": report.overall_score,
             "issues_count": len(report.issues),
-            "recommendations": report.recommendations
+            "recommendations": report.recommendations,
         }
 
-    async def auto_fix_issues(self, content: Dict[str, Any], report: ValidationReport) -> Tuple[Dict[str, Any], List[ValidationIssue]]:
+    async def auto_fix_issues(
+        self, content: dict[str, Any], report: ValidationReport
+    ) -> tuple[dict[str, Any], list[ValidationIssue]]:
         """
         Attempt to automatically fix certain validation issues
 
@@ -888,7 +892,9 @@ Always provide specific, actionable feedback with severity levels and improvemen
 
         return fixed_content, fixed_issues
 
-    async def _apply_auto_fix(self, content: Dict[str, Any], issue: ValidationIssue) -> Dict[str, Any]:
+    async def _apply_auto_fix(
+        self, content: dict[str, Any], issue: ValidationIssue
+    ) -> dict[str, Any]:
         """Apply automatic fix for an issue"""
         # Implementation would depend on specific issue types
         # This is a placeholder for the auto-fix logic

@@ -21,7 +21,7 @@ Standards: Python 3.12, FastAPI async, Pydantic v2
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status

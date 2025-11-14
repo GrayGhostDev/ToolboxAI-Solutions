@@ -70,7 +70,8 @@ class CoordinatorService:
         self.tracer = LangChainTracer(
             project_name="ToolboxAI-Coordinators",
             client=Client(
-                api_key=os.getenv("LANGCHAIN_API_KEY"), api_url="https://api.smith.langchain.com"
+                api_key=os.getenv("LANGCHAIN_API_KEY"),
+                api_url="https://api.smith.langchain.com",
             ),
         )
 
@@ -229,7 +230,7 @@ class CoordinatorService:
             )
 
             # Execute generation with tracing
-            with self.tracer as callback:
+            with self.tracer:
                 result = await self.main_coordinator.generate_educational_content(
                     subject=subject,
                     grade_level=grade_level,
@@ -329,7 +330,10 @@ class CoordinatorService:
             await pusher_service.trigger(
                 channel="private-system",
                 event="coordinator.shutdown",
-                data={"service": "coordinator-service", "timestamp": datetime.now().isoformat()},
+                data={
+                    "service": "coordinator-service",
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
             self.is_initialized = False

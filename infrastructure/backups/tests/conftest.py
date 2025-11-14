@@ -5,42 +5,34 @@ This module provides common fixtures, mocks, and utilities used across
 all backup system tests.
 """
 
-import pytest
 import asyncio
 import os
-import tempfile
 import shutil
-from pathlib import Path
+import tempfile
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
+import pytest
 
 # ============================================================================
 # Pytest Configuration
 # ============================================================================
 
+
 def pytest_configure(config):
     """Configure pytest with custom markers and settings."""
-    config.addinivalue_line(
-        "markers", "unit: mark test as a unit test"
-    )
-    config.addinivalue_line(
-        "markers", "integration: mark test as an integration test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
-    config.addinivalue_line(
-        "markers", "requires_db: mark test as requiring database"
-    )
-    config.addinivalue_line(
-        "markers", "requires_tools: mark test as requiring external tools"
-    )
+    config.addinivalue_line("markers", "unit: mark test as a unit test")
+    config.addinivalue_line("markers", "integration: mark test as an integration test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
+    config.addinivalue_line("markers", "requires_db: mark test as requiring database")
+    config.addinivalue_line("markers", "requires_tools: mark test as requiring external tools")
 
 
 # ============================================================================
 # Event Loop Fixtures
 # ============================================================================
+
 
 @pytest.fixture(scope="session")
 def event_loop_policy():
@@ -62,6 +54,7 @@ async def async_context():
 # Temporary Directory Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def temp_dir():
     """Create temporary directory for test isolation."""
@@ -82,16 +75,13 @@ def backup_test_dir(temp_dir):
     logs_dir = backup_dir / "logs"
     logs_dir.mkdir()
 
-    return {
-        "root": backup_dir,
-        "metadata": metadata_dir,
-        "logs": logs_dir
-    }
+    return {"root": backup_dir, "metadata": metadata_dir, "logs": logs_dir}
 
 
 # ============================================================================
 # Mock Configuration Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_backup_config(temp_dir):
@@ -99,27 +89,23 @@ def mock_backup_config(temp_dir):
     return {
         "version": "1.0.0",
         "backup_strategies": {
-            "full": {
-                "enabled": True,
-                "schedule": "0 2 * * 0",
-                "retention_days": 30
-            },
+            "full": {"enabled": True, "schedule": "0 2 * * 0", "retention_days": 30},
             "incremental": {
                 "enabled": True,
                 "schedule": "0 2 * * 1-6",
-                "retention_days": 7
-            }
+                "retention_days": 7,
+            },
         },
         "encryption": {
             "enabled": True,
             "algorithm": "AES-256-GCM",
-            "key_rotation_days": 90
+            "key_rotation_days": 90,
         },
         "storage": {
             "local": {
                 "path": str(temp_dir / "backups"),
                 "enabled": True,
-                "max_size_gb": 500
+                "max_size_gb": 500,
             }
         },
         "databases": {
@@ -130,30 +116,21 @@ def mock_backup_config(temp_dir):
                 "user": "test_user",
                 "backup_format": "custom",
                 "compress_level": 9,
-                "parallel_jobs": 4
+                "parallel_jobs": 4,
             }
         },
-        "compression": {
-            "enabled": True,
-            "algorithm": "gzip",
-            "level": 9
-        },
-        "validation": {
-            "enabled": True,
-            "checksum_algorithm": "SHA256"
-        },
-        "monitoring": {
-            "prometheus_enabled": True,
-            "prometheus_port": 9090
-        },
+        "compression": {"enabled": True, "algorithm": "gzip", "level": 9},
+        "validation": {"enabled": True, "checksum_algorithm": "SHA256"},
+        "monitoring": {"prometheus_enabled": True, "prometheus_port": 9090},
         "rto_minutes": 30,
-        "rpo_minutes": 60
+        "rpo_minutes": 60,
     }
 
 
 # ============================================================================
 # Mock Database Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_database_url():
@@ -169,13 +146,14 @@ def mock_database_credentials():
         "port": "5432",
         "user": "test_user",
         "password": "test_pass",
-        "database": "test_db"
+        "database": "test_db",
     }
 
 
 # ============================================================================
 # Mock Subprocess Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_pg_dump_success():
@@ -217,6 +195,7 @@ def mock_pg_restore_failure():
 # Mock Backup Metadata Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def sample_backup_metadata():
     """Sample backup metadata for testing."""
@@ -232,7 +211,7 @@ def sample_backup_metadata():
         "compressed": True,
         "status": "completed",
         "duration_seconds": 120.5,
-        "retention_until": "2025-02-10T12:00:00"
+        "retention_until": "2025-02-10T12:00:00",
     }
 
 
@@ -254,7 +233,7 @@ def multiple_backup_metadata():
             "compressed": True,
             "status": "completed",
             "duration_seconds": 120.0,
-            "retention_until": (base_time + timedelta(days=30-i)).isoformat()
+            "retention_until": (base_time + timedelta(days=30 - i)).isoformat(),
         }
         for i in range(5)
     ]
@@ -264,6 +243,7 @@ def multiple_backup_metadata():
 # Mock Environment Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def mock_environment():
     """Mock environment variables for testing."""
@@ -271,7 +251,7 @@ def mock_environment():
         "DATABASE_URL": "postgresql://test_user:test_pass@localhost:5432/test_db",
         "REDIS_URL": "redis://localhost:6379/0",
         "BACKUP_ENCRYPTION_KEY": "test_key_32_bytes_long_for_fernet!",
-        "BACKUP_ALERT_EMAIL": "alerts@example.com"
+        "BACKUP_ALERT_EMAIL": "alerts@example.com",
     }
 
     with patch.dict(os.environ, env_vars, clear=False):
@@ -282,6 +262,7 @@ def mock_environment():
 # Mock File System Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def mock_backup_file(temp_dir):
     """Create mock backup file for testing."""
@@ -289,16 +270,13 @@ def mock_backup_file(temp_dir):
     backup_content = b"Mock backup data" * 1000  # ~16KB
     backup_file.write_bytes(backup_content)
 
-    return {
-        "path": backup_file,
-        "content": backup_content,
-        "size": len(backup_content)
-    }
+    return {"path": backup_file, "content": backup_content, "size": len(backup_content)}
 
 
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def create_test_backup_file(directory: Path, backup_id: str, content: bytes = None) -> Path:
     """
@@ -347,14 +325,14 @@ def create_test_metadata(directory: Path, backup_id: str, **kwargs) -> Path:
         "compressed": False,
         "status": "completed",
         "duration_seconds": 60.0,
-        "retention_until": "2025-12-31T23:59:59"
+        "retention_until": "2025-12-31T23:59:59",
     }
 
     # Override with provided kwargs
     metadata.update(kwargs)
 
     metadata_file = directory / f"{backup_id}.json"
-    with open(metadata_file, 'w') as f:
+    with open(metadata_file, "w") as f:
         json.dump(metadata, f, indent=2)
 
     return metadata_file
@@ -363,6 +341,7 @@ def create_test_metadata(directory: Path, backup_id: str, **kwargs) -> Path:
 # ============================================================================
 # Performance Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def performance_timer():
@@ -392,6 +371,7 @@ def performance_timer():
 # ============================================================================
 # Pytest Hooks
 # ============================================================================
+
 
 def pytest_collection_modifyitems(config, items):
     """Modify test collection to add markers automatically."""

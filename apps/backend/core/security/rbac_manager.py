@@ -117,7 +117,7 @@ class RBACManager:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(RBACManager, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
 
@@ -127,7 +127,12 @@ class RBACManager:
             return
 
         # Role hierarchy (higher level = more privileged)
-        self.ROLE_HIERARCHY = {Role.ADMIN: 100, Role.TEACHER: 50, Role.STUDENT: 10, Role.GUEST: 0}
+        self.ROLE_HIERARCHY = {
+            Role.ADMIN: 100,
+            Role.TEACHER: 50,
+            Role.STUDENT: 10,
+            Role.GUEST: 0,
+        }
 
         # Define roles with permissions
         self.roles: dict[str, RoleDefinition] = self._define_roles()

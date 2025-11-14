@@ -581,7 +581,7 @@ class GDPRComplianceManager:
         """Anonymize analytics data"""
         logger.info(f"Anonymizing analytics for {user_id}")
         # Replace user_id with hash
-        anonymized_id = hashlib.sha256(f"{user_id}_anonymous".encode()).hexdigest()[:16]
+        hashlib.sha256(f"{user_id}_anonymous".encode()).hexdigest()[:16]
         return True
 
     async def _handle_user_content(self, user_id: str) -> bool:

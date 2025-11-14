@@ -15,15 +15,11 @@ Run this demo to see the advanced supervisor in action!
 """
 
 import asyncio
-import json
 import time
-from datetime import datetime
-from typing import Dict, Any
 
 from core.agents.supervisor_advanced import (
-    AdvancedSupervisorAgent,
     WorkflowPriority,
-    create_advanced_supervisor
+    create_advanced_supervisor,
 )
 
 
@@ -311,7 +307,7 @@ class AdvancedSupervisorDemo:
         for i, (task, context) in enumerate(quick_tasks):
             print(f"   Executing workflow {i+1}/3...")
             try:
-                execution = await self.supervisor.execute_workflow(
+                await self.supervisor.execute_workflow(
                     task=task,
                     context=context,
                     workflow_template="lesson_creation",

@@ -37,7 +37,7 @@ class CoordinatorSystem:
         self.error_coordinator = None
         self.is_initialized = False
 
-    async def initialize(self, config: Optional[Dict[str, Any]] = None):
+    async def initialize(self, config: Optional[dict[str, Any]] = None):
         """Initialize all coordinator subsystems"""
         try:
             if config is None:
@@ -136,7 +136,7 @@ _coordinator_system: Optional[CoordinatorSystem] = None
 
 
 async def initialize_coordinators(
-    config: Optional[Dict[str, Any]] = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> CoordinatorSystem:
     """Initialize the global coordinator system"""
     global _coordinator_system
@@ -161,7 +161,7 @@ def get_coordinator_system() -> CoordinatorSystem:
 
 
 @asynccontextmanager
-async def coordinator_context(config: Optional[Dict[str, Any]] = None):
+async def coordinator_context(config: Optional[dict[str, Any]] = None):
     """Async context manager for coordinator system lifecycle"""
     system = await initialize_coordinators(config)
     try:
@@ -219,9 +219,7 @@ async def generate_educational_content(
     )
 
 
-async def create_learning_workflow(
-    workflow_type: str, parameters: Dict[str, Any]
-) -> str:
+async def create_learning_workflow(workflow_type: str, parameters: dict[str, Any]) -> str:
     """Create a new learning workflow"""
     system = get_coordinator_system()
     workflow_coordinator = system.get_workflow_coordinator()

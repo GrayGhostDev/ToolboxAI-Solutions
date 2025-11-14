@@ -11,36 +11,38 @@ This agent handles:
 """
 
 import asyncio
-import logging
-from typing import Dict, Any, Optional, List, Set
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-import json
 import base64
 import hashlib
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+
+from core.agents.base_agent import AgentConfig
 
 from ..base_integration_agent import (
     BaseIntegrationAgent,
-    IntegrationPlatform,
     IntegrationEvent,
-    TaskResult
+    IntegrationPlatform,
+    TaskResult,
 )
-from core.agents.base_agent import AgentConfig
 
 logger = logging.getLogger(__name__)
 
 
 class StudioConnectionType(Enum):
     """Studio connection types"""
+
     HTTP_PLUGIN = "http_plugin"  # HTTP-based plugin communication
-    WEBSOCKET = "websocket"      # WebSocket connection
-    ROJO = "rojo"                 # Rojo sync server
-    OPEN_CLOUD = "open_cloud"    # Open Cloud API
+    WEBSOCKET = "websocket"  # WebSocket connection
+    ROJO = "rojo"  # Rojo sync server
+    OPEN_CLOUD = "open_cloud"  # Open Cloud API
 
 
 class CommandType(Enum):
     """Studio command types"""
+
     SYNC_SCRIPT = "sync_script"
     RELOAD_PLUGIN = "reload_plugin"
     RUN_TEST = "run_test"
@@ -55,6 +57,7 @@ class CommandType(Enum):
 @dataclass
 class StudioSession:
     """Roblox Studio session"""
+
     session_id: str
     place_id: Optional[str]
     universe_id: Optional[str]
@@ -70,6 +73,7 @@ class StudioSession:
 @dataclass
 class ScriptSync:
     """Script synchronization state"""
+
     script_id: str
     script_name: str
     script_type: str  # Script, LocalScript, ModuleScript
@@ -83,9 +87,10 @@ class ScriptSync:
 @dataclass
 class PluginCommand:
     """Plugin command to execute in Studio"""
+
     command_id: str
     command_type: CommandType
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     created_at: datetime = field(default_factory=datetime.utcnow)
     executed: bool = False
     result: Optional[Any] = None
@@ -110,39 +115,35 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 - Routing debug messages
                 - Monitoring Studio sessions
                 - Coordinating development workflows
-                """
+                """,
             )
         super().__init__(config)
 
         # Session management
-        self.sessions: Dict[str, StudioSession] = {}
-        self.active_sessions: Set[str] = set()
+        self.sessions: dict[str, StudioSession] = {}
+        self.active_sessions: set[str] = set()
 
         # Script synchronization
-        self.script_syncs: Dict[str, ScriptSync] = {}
+        self.script_syncs: dict[str, ScriptSync] = {}
         self.sync_queue: asyncio.Queue = asyncio.Queue()
 
         # Command execution
-        self.pending_commands: Dict[str, PluginCommand] = {}
-        self.command_results: Dict[str, Any] = {}
+        self.pending_commands: dict[str, PluginCommand] = {}
+        self.command_results: dict[str, Any] = {}
 
         # Plugin configuration
         self.plugin_port = 64989
         self.plugin_endpoints = {
             "sync": f"http://localhost:{self.plugin_port}/sync",
             "command": f"http://localhost:{self.plugin_port}/command",
-            "heartbeat": f"http://localhost:{self.plugin_port}/heartbeat"
+            "heartbeat": f"http://localhost:{self.plugin_port}/heartbeat",
         }
 
         # Rojo configuration
-        self.rojo_config = {
-            "port": 34872,
-            "project_path": None,
-            "sync_enabled": False
-        }
+        self.rojo_config = {"port": 34872, "project_path": None, "sync_enabled": False}
 
         # Debug routing
-        self.debug_channels: Dict[str, List[str]] = {}  # session_id -> subscribers
+        self.debug_channels: dict[str, list[str]] = {}  # session_id -> subscribers
 
     async def establish_studio_connection(
         self,
@@ -151,7 +152,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
         place_id: Optional[str] = None,
         universe_id: Optional[str] = None,
         connection_type: StudioConnectionType = StudioConnectionType.HTTP_PLUGIN,
-        plugin_version: Optional[str] = None
+        plugin_version: Optional[str] = None,
     ) -> TaskResult:
         """Establish connection with Roblox Studio"""
         try:
@@ -162,7 +163,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 universe_id=universe_id,
                 user_id=user_id,
                 connection_type=connection_type,
-                plugin_version=plugin_version
+                plugin_version=plugin_version,
             )
 
             self.sessions[session_id] = session
@@ -184,35 +185,33 @@ class StudioBridgeAgent(BaseIntegrationAgent):
             logger.info(f"Studio connection established: {session_id}")
 
             # Emit connection event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"studio_connected_{session_id}",
-                event_type="studio_connection_established",
-                source_platform=IntegrationPlatform.ROBLOX,
-                payload={
-                    "session_id": session_id,
-                    "user_id": user_id,
-                    "place_id": place_id,
-                    "universe_id": universe_id,
-                    "connection_type": connection_type.value
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"studio_connected_{session_id}",
+                    event_type="studio_connection_established",
+                    source_platform=IntegrationPlatform.ROBLOX,
+                    payload={
+                        "session_id": session_id,
+                        "user_id": user_id,
+                        "place_id": place_id,
+                        "universe_id": universe_id,
+                        "connection_type": connection_type.value,
+                    },
+                )
+            )
 
             return TaskResult(
                 success=True,
                 output={
                     "session_id": session_id,
                     "connected": True,
-                    "connection_type": connection_type.value
-                }
+                    "connection_type": connection_type.value,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error establishing Studio connection: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def sync_script(
         self,
@@ -220,15 +219,13 @@ class StudioBridgeAgent(BaseIntegrationAgent):
         script_name: str,
         script_type: str,
         content: str,
-        parent_path: Optional[str] = None
+        parent_path: Optional[str] = None,
     ) -> TaskResult:
         """Synchronize a script with Studio"""
         try:
             if session_id not in self.sessions:
                 return TaskResult(
-                    success=False,
-                    output=None,
-                    error=f"Session not found: {session_id}"
+                    success=False, output=None, error=f"Session not found: {session_id}"
                 )
 
             # Create script sync entry
@@ -240,17 +237,19 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 script_name=script_name,
                 script_type=script_type,
                 content=content,
-                checksum=checksum
+                checksum=checksum,
             )
 
             self.script_syncs[script_id] = script_sync
 
             # Queue for synchronization
-            await self.sync_queue.put({
-                "session_id": session_id,
-                "script_sync": script_sync,
-                "parent_path": parent_path
-            })
+            await self.sync_queue.put(
+                {
+                    "session_id": session_id,
+                    "script_sync": script_sync,
+                    "parent_path": parent_path,
+                }
+            )
 
             # Process sync based on connection type
             session = self.sessions[session_id]
@@ -278,8 +277,8 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                     "script_id": script_id,
                     "script_name": script_name,
                     "synced": result,
-                    "checksum": checksum
-                }
+                    "checksum": checksum,
+                },
             )
 
         except Exception as e:
@@ -287,26 +286,20 @@ class StudioBridgeAgent(BaseIntegrationAgent):
             if script_id in self.script_syncs:
                 self.script_syncs[script_id].sync_status = "failed"
                 self.script_syncs[script_id].error = str(e)
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def execute_plugin_command(
         self,
         session_id: str,
         command_type: CommandType,
-        parameters: Optional[Dict[str, Any]] = None,
-        timeout: int = 30
+        parameters: Optional[dict[str, Any]] = None,
+        timeout: int = 30,
     ) -> TaskResult:
         """Execute a command in Studio via plugin"""
         try:
             if session_id not in self.sessions:
                 return TaskResult(
-                    success=False,
-                    output=None,
-                    error=f"Session not found: {session_id}"
+                    success=False, output=None, error=f"Session not found: {session_id}"
                 )
 
             # Create command
@@ -315,7 +308,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 command_id=command_id,
                 command_type=command_type,
                 parameters=parameters or {},
-                timeout=timeout
+                timeout=timeout,
             )
 
             self.pending_commands[command_id] = command
@@ -332,7 +325,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error="Command execution not supported for connection type"
+                    error="Command execution not supported for connection type",
                 )
 
             # Wait for result or timeout
@@ -344,11 +337,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 await asyncio.sleep(0.1)
 
             if command.error:
-                return TaskResult(
-                    success=False,
-                    output=None,
-                    error=command.error
-                )
+                return TaskResult(success=False, output=None, error=command.error)
 
             logger.info(f"Plugin command executed: {command_type.value}")
 
@@ -357,34 +346,28 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 output={
                     "command_id": command_id,
                     "command_type": command_type.value,
-                    "result": command.result
-                }
+                    "result": command.result,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error executing plugin command: {e}")
             if command_id in self.pending_commands:
                 self.pending_commands[command_id].error = str(e)
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def route_debug_message(
         self,
         session_id: str,
         message_type: str,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ) -> TaskResult:
         """Route debug messages from Studio"""
         try:
             if session_id not in self.sessions:
                 return TaskResult(
-                    success=False,
-                    output=None,
-                    error=f"Session not found: {session_id}"
+                    success=False, output=None, error=f"Session not found: {session_id}"
                 )
 
             # Format debug message
@@ -393,7 +376,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 "message_type": message_type,
                 "message": message,
                 "metadata": metadata or {},
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             # Route to subscribers
@@ -403,12 +386,14 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                     pass
 
             # Emit debug event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"debug_{session_id}_{datetime.utcnow().timestamp()}",
-                event_type="studio_debug_message",
-                source_platform=IntegrationPlatform.ROBLOX,
-                payload=debug_data
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"debug_{session_id}_{datetime.utcnow().timestamp()}",
+                    event_type="studio_debug_message",
+                    source_platform=IntegrationPlatform.ROBLOX,
+                    payload=debug_data,
+                )
+            )
 
             # Log based on message type
             if message_type == "error":
@@ -422,17 +407,13 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 success=True,
                 output={
                     "routed": True,
-                    "subscribers": len(self.debug_channels.get(session_id, []))
-                }
+                    "subscribers": len(self.debug_channels.get(session_id, [])),
+                },
             )
 
         except Exception as e:
             logger.error(f"Error routing debug message: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def monitor_studio_sessions(self) -> TaskResult:
         """Monitor active Studio sessions"""
@@ -468,30 +449,22 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                     "active_sessions": active_count,
                     "inactive_sessions": len(inactive_sessions),
                     "total_sessions": len(self.sessions),
-                    "newly_inactive": inactive_sessions
-                }
+                    "newly_inactive": inactive_sessions,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error monitoring Studio sessions: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def handle_heartbeat(
-        self,
-        session_id: str,
-        metadata: Optional[Dict[str, Any]] = None
+        self, session_id: str, metadata: Optional[dict[str, Any]] = None
     ) -> TaskResult:
         """Handle heartbeat from Studio session"""
         try:
             if session_id not in self.sessions:
                 return TaskResult(
-                    success=False,
-                    output=None,
-                    error=f"Session not found: {session_id}"
+                    success=False, output=None, error=f"Session not found: {session_id}"
                 )
 
             session = self.sessions[session_id]
@@ -511,35 +484,25 @@ class StudioBridgeAgent(BaseIntegrationAgent):
 
             return TaskResult(
                 success=True,
-                output={
-                    "session_id": session_id,
-                    "heartbeat_received": True
-                }
+                output={"session_id": session_id, "heartbeat_received": True},
             )
 
         except Exception as e:
             logger.error(f"Error handling heartbeat: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def _sync_via_plugin(
-        self,
-        session_id: str,
-        script_sync: ScriptSync,
-        parent_path: Optional[str]
+        self, session_id: str, script_sync: ScriptSync, parent_path: Optional[str]
     ) -> bool:
         """Sync script via HTTP plugin"""
         try:
             # Prepare sync data
-            sync_data = {
+            {
                 "script_name": script_sync.script_name,
                 "script_type": script_sync.script_type,
                 "content": base64.b64encode(script_sync.content.encode()).decode(),
                 "parent_path": parent_path or "game.ServerScriptService",
-                "checksum": script_sync.checksum
+                "checksum": script_sync.checksum,
             }
 
             # Send to plugin endpoint (simulated)
@@ -553,11 +516,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
             logger.error(f"Plugin sync error: {e}")
             return False
 
-    async def _sync_via_rojo(
-        self,
-        script_sync: ScriptSync,
-        parent_path: Optional[str]
-    ) -> bool:
+    async def _sync_via_rojo(self, script_sync: ScriptSync, parent_path: Optional[str]) -> bool:
         """Sync script via Rojo"""
         try:
             if not self.rojo_config["sync_enabled"]:
@@ -577,62 +536,41 @@ class StudioBridgeAgent(BaseIntegrationAgent):
             return False
 
     async def configure_rojo(
-        self,
-        project_path: str,
-        port: int = 34872,
-        enable_sync: bool = True
+        self, project_path: str, port: int = 34872, enable_sync: bool = True
     ) -> TaskResult:
         """Configure Rojo sync settings"""
         try:
             self.rojo_config = {
                 "project_path": project_path,
                 "port": port,
-                "sync_enabled": enable_sync
+                "sync_enabled": enable_sync,
             }
 
             logger.info(f"Rojo configured: {project_path} on port {port}")
 
-            return TaskResult(
-                success=True,
-                output=self.rojo_config
-            )
+            return TaskResult(success=True, output=self.rojo_config)
 
         except Exception as e:
             logger.error(f"Error configuring Rojo: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def get_studio_selection(
-        self,
-        session_id: str
-    ) -> TaskResult:
+    async def get_studio_selection(self, session_id: str) -> TaskResult:
         """Get current selection in Studio"""
         try:
             result = await self.execute_plugin_command(
-                session_id=session_id,
-                command_type=CommandType.GET_SELECTION
+                session_id=session_id, command_type=CommandType.GET_SELECTION
             )
 
             if result.success:
                 return TaskResult(
-                    success=True,
-                    output={
-                        "selection": result.output.get("result", {})
-                    }
+                    success=True, output={"selection": result.output.get("result", {})}
                 )
             else:
                 return result
 
         except Exception as e:
             logger.error(f"Error getting Studio selection: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def _process_integration_event(self, event: IntegrationEvent):
         """Process integration events for Studio Bridge"""
@@ -643,8 +581,10 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 user_id=event.payload["user_id"],
                 place_id=event.payload.get("place_id"),
                 universe_id=event.payload.get("universe_id"),
-                connection_type=StudioConnectionType[event.payload.get("connection_type", "HTTP_PLUGIN")],
-                plugin_version=event.payload.get("plugin_version")
+                connection_type=StudioConnectionType[
+                    event.payload.get("connection_type", "HTTP_PLUGIN")
+                ],
+                plugin_version=event.payload.get("plugin_version"),
             )
 
         elif event.event_type == "script_sync_request":
@@ -654,7 +594,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 script_name=event.payload["script_name"],
                 script_type=event.payload["script_type"],
                 content=event.payload["content"],
-                parent_path=event.payload.get("parent_path")
+                parent_path=event.payload.get("parent_path"),
             )
 
         elif event.event_type == "plugin_command_request":
@@ -663,17 +603,17 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 session_id=event.payload["session_id"],
                 command_type=CommandType[event.payload["command_type"]],
                 parameters=event.payload.get("parameters"),
-                timeout=event.payload.get("timeout", 30)
+                timeout=event.payload.get("timeout", 30),
             )
 
         elif event.event_type == "studio_heartbeat":
             # Handle heartbeat
             await self.handle_heartbeat(
                 session_id=event.payload["session_id"],
-                metadata=event.payload.get("metadata")
+                metadata=event.payload.get("metadata"),
             )
 
-    async def execute_task(self, task: str, context: Optional[Dict[str, Any]] = None) -> TaskResult:
+    async def execute_task(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
         """Execute Studio Bridge specific tasks"""
         if task == "establish_connection":
             return await self.establish_studio_connection(**context)
@@ -684,7 +624,7 @@ class StudioBridgeAgent(BaseIntegrationAgent):
                 session_id=context["session_id"],
                 command_type=CommandType[context["command_type"]],
                 parameters=context.get("parameters"),
-                timeout=context.get("timeout", 30)
+                timeout=context.get("timeout", 30),
             )
         elif task == "route_debug":
             return await self.route_debug_message(**context)

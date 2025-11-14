@@ -12,21 +12,20 @@ Version: 1.0.0
 import asyncio
 import importlib
 import inspect
-import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentCapability
+from core.agents.base_agent import AgentCapability, AgentConfig, BaseAgent
 
 logger = logging.getLogger(__name__)
 
 
 class AgentCategory(Enum):
     """Categories of agents in the system."""
+
     EDUCATIONAL = "educational"
     CONTENT = "content"
     ASSESSMENT = "assessment"
@@ -46,24 +45,26 @@ class AgentCategory(Enum):
 @dataclass
 class AgentMetadata:
     """Metadata for registered agents."""
+
     name: str
     category: AgentCategory
     class_path: str
-    capabilities: List[AgentCapability] = field(default_factory=list)
+    capabilities: list[AgentCapability] = field(default_factory=list)
     description: str = ""
     version: str = "1.0.0"
-    dependencies: List[str] = field(default_factory=list)
-    config_schema: Dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
+    config_schema: dict[str, Any] = field(default_factory=dict)
     max_instances: int = 10
     min_instances: int = 0
     auto_scale: bool = True
     priority: int = 5  # 1-10, higher is more important
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
 class AgentInstance:
     """Represents an active agent instance."""
+
     instance_id: str
     agent_name: str
     agent: BaseAgent
@@ -84,12 +85,12 @@ class AgentRegistry:
 
     def __init__(self):
         """Initialize the agent registry."""
-        self.registered_agents: Dict[str, AgentMetadata] = {}
-        self.agent_categories: Dict[AgentCategory, List[str]] = {
+        self.registered_agents: dict[str, AgentMetadata] = {}
+        self.agent_categories: dict[AgentCategory, list[str]] = {
             category: [] for category in AgentCategory
         }
-        self.capability_index: Dict[AgentCapability, List[str]] = {}
-        self.tag_index: Dict[str, List[str]] = {}
+        self.capability_index: dict[AgentCapability, list[str]] = {}
+        self.tag_index: dict[str, list[str]] = {}
 
         # Auto-discover and register agents
         self._auto_discover_agents()
@@ -122,11 +123,12 @@ class AgentRegistry:
             module = importlib.import_module(module_path)
 
             for name, obj in inspect.getmembers(module):
-                if (inspect.isclass(obj) and
-                    issubclass(obj, BaseAgent) and
-                    obj != BaseAgent and
-                    not name.startswith('_')):
-
+                if (
+                    inspect.isclass(obj)
+                    and issubclass(obj, BaseAgent)
+                    and obj != BaseAgent
+                    and not name.startswith("_")
+                ):
                     # Create metadata for the agent
                     metadata = AgentMetadata(
                         name=name,
@@ -134,7 +136,7 @@ class AgentRegistry:
                         class_path=f"{module_path}.{name}",
                         description=obj.__doc__ or "",
                         capabilities=self._extract_capabilities(obj),
-                        tags=self._extract_tags(obj)
+                        tags=self._extract_tags(obj),
                     )
 
                     self.register_agent(name, metadata)
@@ -144,7 +146,7 @@ class AgentRegistry:
         except Exception as e:
             logger.error(f"Error discovering agents in {module_path}: {e}")
 
-    def _extract_capabilities(self, agent_class: Type[BaseAgent]) -> List[AgentCapability]:
+    def _extract_capabilities(self, agent_class: type[BaseAgent]) -> list[AgentCapability]:
         """Extract capabilities from an agent class.
 
         Args:
@@ -156,14 +158,14 @@ class AgentRegistry:
         capabilities = []
 
         # Check for capability attributes or methods
-        if hasattr(agent_class, 'capabilities'):
+        if hasattr(agent_class, "capabilities"):
             caps = agent_class.capabilities
             if isinstance(caps, list):
                 capabilities.extend(caps)
 
         # Analyze methods to infer capabilities
         for method_name in dir(agent_class):
-            if method_name.startswith('can_'):
+            if method_name.startswith("can_"):
                 capability_name = method_name[4:].upper()
                 try:
                     capability = AgentCapability[capability_name]
@@ -173,7 +175,7 @@ class AgentRegistry:
 
         return capabilities
 
-    def _extract_tags(self, agent_class: Type[BaseAgent]) -> List[str]:
+    def _extract_tags(self, agent_class: type[BaseAgent]) -> list[str]:
         """Extract tags from an agent class.
 
         Args:
@@ -185,7 +187,7 @@ class AgentRegistry:
         tags = []
 
         # Check for tags attribute
-        if hasattr(agent_class, 'tags'):
+        if hasattr(agent_class, "tags"):
             agent_tags = agent_class.tags
             if isinstance(agent_tags, list):
                 tags.extend(agent_tags)
@@ -260,7 +262,7 @@ class AgentRegistry:
         """
         return self.registered_agents.get(name)
 
-    def find_agents_by_category(self, category: AgentCategory) -> List[str]:
+    def find_agents_by_category(self, category: AgentCategory) -> list[str]:
         """Find all agents in a specific category.
 
         Args:
@@ -271,7 +273,7 @@ class AgentRegistry:
         """
         return self.agent_categories.get(category, [])
 
-    def find_agents_by_capability(self, capability: AgentCapability) -> List[str]:
+    def find_agents_by_capability(self, capability: AgentCapability) -> list[str]:
         """Find agents with a specific capability.
 
         Args:
@@ -282,7 +284,7 @@ class AgentRegistry:
         """
         return self.capability_index.get(capability, [])
 
-    def find_agents_by_tag(self, tag: str) -> List[str]:
+    def find_agents_by_tag(self, tag: str) -> list[str]:
         """Find agents with a specific tag.
 
         Args:
@@ -296,9 +298,9 @@ class AgentRegistry:
     def search_agents(
         self,
         category: Optional[AgentCategory] = None,
-        capabilities: Optional[List[AgentCapability]] = None,
-        tags: Optional[List[str]] = None
-    ) -> List[str]:
+        capabilities: Optional[list[AgentCapability]] = None,
+        tags: Optional[list[str]] = None,
+    ) -> list[str]:
         """Search for agents matching criteria.
 
         Args:
@@ -331,7 +333,7 @@ class AgentRegistry:
 
         return list(results)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get registry statistics.
 
         Returns:
@@ -341,7 +343,7 @@ class AgentRegistry:
             "total_agents": len(self.registered_agents),
             "by_category": {},
             "by_capability": {},
-            "tags": len(self.tag_index)
+            "tags": len(self.tag_index),
         }
 
         # Count by category
@@ -372,8 +374,8 @@ class AgentFactory:
             registry: Agent registry to use (creates new if None)
         """
         self.registry = registry or AgentRegistry()
-        self.active_instances: Dict[str, AgentInstance] = {}
-        self.instance_pools: Dict[str, List[AgentInstance]] = {}
+        self.active_instances: dict[str, AgentInstance] = {}
+        self.instance_pools: dict[str, list[AgentInstance]] = {}
         self.instance_counter = 0
 
         # Configuration
@@ -387,14 +389,14 @@ class AgentFactory:
             "total_created": 0,
             "total_destroyed": 0,
             "cache_hits": 0,
-            "cache_misses": 0
+            "cache_misses": 0,
         }
 
     def create_agent(
         self,
         agent_name: str,
         config: Optional[AgentConfig] = None,
-        use_pool: bool = True
+        use_pool: bool = True,
     ) -> Optional[BaseAgent]:
         """Create an agent instance.
 
@@ -449,9 +451,7 @@ class AgentFactory:
         return None
 
     def _create_new_instance(
-        self,
-        metadata: AgentMetadata,
-        config: Optional[AgentConfig] = None
+        self, metadata: AgentMetadata, config: Optional[AgentConfig] = None
     ) -> Optional[BaseAgent]:
         """Create a new agent instance.
 
@@ -464,7 +464,7 @@ class AgentFactory:
         """
         try:
             # Import the agent class
-            module_path, class_name = metadata.class_path.rsplit('.', 1)
+            module_path, class_name = metadata.class_path.rsplit(".", 1)
             module = importlib.import_module(module_path)
             agent_class = getattr(module, class_name)
 
@@ -473,7 +473,7 @@ class AgentFactory:
                 config = AgentConfig(
                     name=f"{metadata.name}_{self.instance_counter}",
                     model="gpt-3.5-turbo",
-                    temperature=0.7
+                    temperature=0.7,
                 )
 
             # Create agent instance
@@ -487,7 +487,7 @@ class AgentFactory:
                 created_at=datetime.now(),
                 last_used=datetime.now(),
                 is_busy=True,
-                metadata=metadata
+                metadata=metadata,
             )
 
             # Track instance
@@ -539,7 +539,7 @@ class AgentFactory:
                 del self.active_instances[instance_id]
 
                 # Cleanup agent if needed
-                if hasattr(agent, 'cleanup'):
+                if hasattr(agent, "cleanup"):
                     try:
                         asyncio.create_task(agent.cleanup())
                     except Exception as e:
@@ -550,9 +550,7 @@ class AgentFactory:
                 return
 
     def get_or_create_agent(
-        self,
-        agent_name: str,
-        config: Optional[AgentConfig] = None
+        self, agent_name: str, config: Optional[AgentConfig] = None
     ) -> Optional[BaseAgent]:
         """Get an existing agent or create a new one.
 
@@ -566,9 +564,7 @@ class AgentFactory:
         return self.create_agent(agent_name, config, use_pool=True)
 
     def create_agent_by_capability(
-        self,
-        capability: AgentCapability,
-        config: Optional[AgentConfig] = None
+        self, capability: AgentCapability, config: Optional[AgentConfig] = None
     ) -> Optional[BaseAgent]:
         """Create an agent with a specific capability.
 
@@ -613,7 +609,7 @@ class AgentFactory:
         elif current_size > target_size:
             # Remove idle instances
             idle_instances = [i for i in current_pool if not i.is_busy]
-            for instance in idle_instances[:current_size - target_size]:
+            for instance in idle_instances[: current_size - target_size]:
                 self.destroy_agent(instance.agent)
 
         logger.info(f"Scaled {agent_name} pool from {current_size} to {target_size}")
@@ -630,7 +626,7 @@ class AgentFactory:
                     logger.info(f"Cleaning up idle instance: {instance.instance_id}")
                     self.destroy_agent(instance.agent)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get factory statistics.
 
         Returns:
@@ -641,7 +637,7 @@ class AgentFactory:
             "busy_instances": sum(1 for i in self.active_instances.values() if i.is_busy),
             "idle_instances": sum(1 for i in self.active_instances.values() if not i.is_busy),
             "pools": {},
-            "metrics": self.metrics
+            "metrics": self.metrics,
         }
 
         # Pool statistics
@@ -649,7 +645,7 @@ class AgentFactory:
             stats["pools"][agent_name] = {
                 "total": len(pool),
                 "busy": sum(1 for i in pool if i.is_busy),
-                "idle": sum(1 for i in pool if not i.is_busy)
+                "idle": sum(1 for i in pool if not i.is_busy),
             }
 
         return stats

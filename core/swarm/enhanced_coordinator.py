@@ -17,45 +17,46 @@ Features:
 import asyncio
 import logging
 import time
-from typing import Dict, List, Any, Optional, Set, Tuple, Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-from uuid import uuid4
-import json
-import numpy as np
 from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+from uuid import uuid4
 
-from .swarm_controller import SwarmController, SwarmConfig, SwarmMetrics
-from .worker_pool import WorkerPool, WorkerAgent, WorkerStatus
-from .task_distributor import TaskDistributor, Task, TaskPriority, TaskStatus
-from .consensus_engine import ConsensusEngine, ConsensusResult, VotingStrategy
-from .load_balancer import LoadBalancer, ResourceMetrics
+import numpy as np
+
+from .swarm_controller import SwarmController
+from .task_distributor import TaskPriority
+from .worker_pool import WorkerAgent
 
 logger = logging.getLogger(__name__)
 
 
 class CoordinationStrategy(Enum):
     """Coordination strategies for swarm intelligence"""
-    HIERARCHICAL = "hierarchical"      # Leader-follower structure
-    DEMOCRATIC = "democratic"          # Equal voting and consensus
-    COMPETITIVE = "competitive"        # Agents compete for tasks
-    COLLABORATIVE = "collaborative"    # Agents work together
-    ADAPTIVE = "adaptive"              # Strategy adapts to context
-    SPECIALIST = "specialist"          # Task-specific specialization
+
+    HIERARCHICAL = "hierarchical"  # Leader-follower structure
+    DEMOCRATIC = "democratic"  # Equal voting and consensus
+    COMPETITIVE = "competitive"  # Agents compete for tasks
+    COLLABORATIVE = "collaborative"  # Agents work together
+    ADAPTIVE = "adaptive"  # Strategy adapts to context
+    SPECIALIST = "specialist"  # Task-specific specialization
 
 
 class EducationalComplexity(Enum):
     """Educational complexity levels"""
-    ELEMENTARY = "elementary"          # K-5
-    MIDDLE = "middle"                  # 6-8
-    HIGH = "high"                      # 9-12
-    ADVANCED = "advanced"              # Post-secondary
+
+    ELEMENTARY = "elementary"  # K-5
+    MIDDLE = "middle"  # 6-8
+    HIGH = "high"  # 9-12
+    ADVANCED = "advanced"  # Post-secondary
 
 
 @dataclass
 class EducationalTask:
     """Enhanced task with educational context"""
+
     task_id: str = field(default_factory=lambda: str(uuid4()))
     task_type: str = ""
     priority: TaskPriority = TaskPriority.NORMAL
@@ -63,24 +64,24 @@ class EducationalTask:
     # Educational context
     subject_area: str = "general"
     grade_level: int = 5
-    learning_objectives: List[str] = field(default_factory=list)
+    learning_objectives: list[str] = field(default_factory=list)
     content_type: str = "lesson"
     difficulty_level: str = "medium"
 
     # Task parameters
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    requirements: Dict[str, Any] = field(default_factory=dict)
-    constraints: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
+    requirements: dict[str, Any] = field(default_factory=dict)
+    constraints: dict[str, Any] = field(default_factory=dict)
 
     # Execution context
     timeout: float = 300.0
     retry_attempts: int = 3
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
 
     # Quality requirements
     quality_threshold: float = 0.8
-    educational_standards: List[str] = field(default_factory=list)
-    accessibility_requirements: List[str] = field(default_factory=list)
+    educational_standards: list[str] = field(default_factory=list)
+    accessibility_requirements: list[str] = field(default_factory=list)
 
     # Timing and deadlines
     created_at: datetime = field(default_factory=datetime.now)
@@ -117,14 +118,15 @@ class EducationalTask:
 @dataclass
 class AgentCapability:
     """Enhanced agent capability definition"""
+
     capability_id: str
     name: str
     description: str
 
     # Specialization areas
-    subject_specializations: List[str] = field(default_factory=list)
-    grade_level_range: Tuple[int, int] = (1, 12)
-    content_types: List[str] = field(default_factory=list)
+    subject_specializations: list[str] = field(default_factory=list)
+    grade_level_range: tuple[int, int] = (1, 12)
+    content_types: list[str] = field(default_factory=list)
 
     # Performance metrics
     quality_score: float = 0.8
@@ -141,32 +143,33 @@ class AgentCapability:
 @dataclass
 class SwarmCoordinationResult:
     """Result of swarm coordination"""
+
     coordination_id: str
     success: bool
 
     # Task execution results
-    completed_tasks: List[Dict[str, Any]]
-    failed_tasks: List[Dict[str, Any]]
+    completed_tasks: list[dict[str, Any]]
+    failed_tasks: list[dict[str, Any]]
 
     # Performance metrics
     total_execution_time: float
     average_quality_score: float
-    agent_utilization: Dict[str, float]
+    agent_utilization: dict[str, float]
 
     # Educational metrics
     learning_objectives_coverage: float
     curriculum_alignment_score: float
-    content_quality_assessment: Dict[str, float]
+    content_quality_assessment: dict[str, float]
 
     # Coordination metrics
-    consensus_scores: List[float]
+    consensus_scores: list[float]
     coordination_efficiency: float
     resource_utilization: float
 
     # Insights and recommendations
-    performance_insights: List[str] = field(default_factory=list)
-    optimization_suggestions: List[str] = field(default_factory=list)
-    quality_improvements: List[str] = field(default_factory=list)
+    performance_insights: list[str] = field(default_factory=list)
+    optimization_suggestions: list[str] = field(default_factory=list)
+    quality_improvements: list[str] = field(default_factory=list)
 
 
 class EnhancedSwarmCoordinator:
@@ -177,9 +180,11 @@ class EnhancedSwarmCoordinator:
     educational quality, performance optimization, and adaptive strategies.
     """
 
-    def __init__(self,
-                 swarm_controller: SwarmController,
-                 coordination_strategy: CoordinationStrategy = CoordinationStrategy.ADAPTIVE):
+    def __init__(
+        self,
+        swarm_controller: SwarmController,
+        coordination_strategy: CoordinationStrategy = CoordinationStrategy.ADAPTIVE,
+    ):
         """Initialize enhanced coordinator"""
         self.swarm_controller = swarm_controller
         self.coordination_strategy = coordination_strategy
@@ -192,28 +197,30 @@ class EnhancedSwarmCoordinator:
         self.coordination_optimizer = CoordinationOptimizer()
 
         # Coordination state
-        self.active_coordinations: Dict[str, Dict[str, Any]] = {}
-        self.coordination_history: List[SwarmCoordinationResult] = []
+        self.active_coordinations: dict[str, dict[str, Any]] = {}
+        self.coordination_history: list[SwarmCoordinationResult] = []
 
         # Agent management
-        self.agent_capabilities: Dict[str, AgentCapability] = {}
-        self.agent_assignments: Dict[str, List[str]] = {}  # agent_id -> task_ids
-        self.agent_performance: Dict[str, Dict[str, float]] = {}
+        self.agent_capabilities: dict[str, AgentCapability] = {}
+        self.agent_assignments: dict[str, list[str]] = {}  # agent_id -> task_ids
+        self.agent_performance: dict[str, dict[str, float]] = {}
 
         # Educational context tracking
-        self.subject_specialists: Dict[str, List[str]] = {}  # subject -> agent_ids
-        self.grade_level_experts: Dict[int, List[str]] = {}  # grade -> agent_ids
-        self.content_type_specialists: Dict[str, List[str]] = {}  # type -> agent_ids
+        self.subject_specialists: dict[str, list[str]] = {}  # subject -> agent_ids
+        self.grade_level_experts: dict[int, list[str]] = {}  # grade -> agent_ids
+        self.content_type_specialists: dict[str, list[str]] = {}  # type -> agent_ids
 
         # Performance optimization
         self.task_execution_history: deque = deque(maxlen=1000)
-        self.coordination_metrics: Dict[str, float] = {}
+        self.coordination_metrics: dict[str, float] = {}
 
         # Real-time monitoring
-        self.monitoring_tasks: Set[asyncio.Task] = set()
+        self.monitoring_tasks: set[asyncio.Task] = set()
         self.monitoring_enabled = True
 
-        logger.info(f"Enhanced Swarm Coordinator initialized with strategy: {coordination_strategy}")
+        logger.info(
+            f"Enhanced Swarm Coordinator initialized with strategy: {coordination_strategy}"
+        )
 
     async def initialize(self):
         """Initialize the enhanced coordinator"""
@@ -240,8 +247,8 @@ class EnhancedSwarmCoordinator:
 
     async def coordinate_educational_content_generation(
         self,
-        educational_tasks: List[EducationalTask],
-        coordination_config: Optional[Dict[str, Any]] = None
+        educational_tasks: list[EducationalTask],
+        coordination_config: Optional[dict[str, Any]] = None,
     ) -> SwarmCoordinationResult:
         """
         Coordinate swarm for educational content generation
@@ -273,7 +280,7 @@ class EnhancedSwarmCoordinator:
                 "strategy": effective_strategy,
                 "tasks": optimized_tasks,
                 "progress": 0.0,
-                "agents_allocated": []
+                "agents_allocated": [],
             }
 
             logger.info(
@@ -286,7 +293,7 @@ class EnhancedSwarmCoordinator:
                 coordination_id,
                 effective_strategy,
                 optimized_tasks,
-                coordination_config or {}
+                coordination_config or {},
             )
 
             # Calculate comprehensive metrics
@@ -297,8 +304,7 @@ class EnhancedSwarmCoordinator:
 
             # Assess educational quality
             educational_assessment = await self.quality_assessor.assess_educational_outcomes(
-                execution_result["completed_tasks"],
-                educational_tasks
+                execution_result["completed_tasks"], educational_tasks
             )
 
             # Generate insights and recommendations
@@ -323,7 +329,7 @@ class EnhancedSwarmCoordinator:
                 resource_utilization=coordination_metrics["resource_utilization"],
                 performance_insights=insights["performance"],
                 optimization_suggestions=insights["optimization"],
-                quality_improvements=insights["quality"]
+                quality_improvements=insights["quality"],
             )
 
             # Store result and clean up
@@ -369,16 +375,16 @@ class EnhancedSwarmCoordinator:
                 resource_utilization=0.0,
                 performance_insights=[error_msg],
                 optimization_suggestions=["Review task requirements and agent availability"],
-                quality_improvements=["Implement better error handling and recovery"]
+                quality_improvements=["Implement better error handling and recovery"],
             )
 
     async def _execute_coordination_strategy(
         self,
         coordination_id: str,
         strategy: CoordinationStrategy,
-        tasks: List[EducationalTask],
-        config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        tasks: list[EducationalTask],
+        config: dict[str, Any],
+    ) -> dict[str, Any]:
         """Execute specific coordination strategy"""
 
         if strategy == CoordinationStrategy.HIERARCHICAL:
@@ -397,11 +403,8 @@ class EnhancedSwarmCoordinator:
             raise ValueError(f"Unknown coordination strategy: {strategy}")
 
     async def _execute_specialist_coordination(
-        self,
-        coordination_id: str,
-        tasks: List[EducationalTask],
-        config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, coordination_id: str, tasks: list[EducationalTask], config: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute specialist coordination where agents are matched to their expertise"""
 
         completed_tasks = []
@@ -419,7 +422,12 @@ class EnhancedSwarmCoordinator:
 
             if not specialist_agents:
                 logger.warning(f"No specialist agents available for {specialization}")
-                failed_tasks.extend([{"task": task, "error": "No specialist agents available"} for task in task_group])
+                failed_tasks.extend(
+                    [
+                        {"task": task, "error": "No specialist agents available"}
+                        for task in task_group
+                    ]
+                )
                 continue
 
             # Execute tasks with specialists
@@ -439,15 +447,12 @@ class EnhancedSwarmCoordinator:
             "completed_tasks": completed_tasks,
             "failed_tasks": failed_tasks,
             "strategy": "specialist",
-            "coordination_id": coordination_id
+            "coordination_id": coordination_id,
         }
 
     async def _execute_collaborative_coordination(
-        self,
-        coordination_id: str,
-        tasks: List[EducationalTask],
-        config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, coordination_id: str, tasks: list[EducationalTask], config: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute collaborative coordination where agents work together"""
 
         completed_tasks = []
@@ -469,7 +474,12 @@ class EnhancedSwarmCoordinator:
 
             if len(team_agents) < 2:
                 logger.warning(f"Insufficient agents for collaboration in group {group_id}")
-                failed_tasks.extend([{"task": task, "error": "Insufficient collaborative agents"} for task in group_tasks])
+                failed_tasks.extend(
+                    [
+                        {"task": task, "error": "Insufficient collaborative agents"}
+                        for task in group_tasks
+                    ]
+                )
                 continue
 
             # Execute collaborative workflow
@@ -489,15 +499,12 @@ class EnhancedSwarmCoordinator:
             "completed_tasks": completed_tasks,
             "failed_tasks": failed_tasks,
             "strategy": "collaborative",
-            "coordination_id": coordination_id
+            "coordination_id": coordination_id,
         }
 
     async def _execute_adaptive_coordination(
-        self,
-        coordination_id: str,
-        tasks: List[EducationalTask],
-        config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, coordination_id: str, tasks: list[EducationalTask], config: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute adaptive coordination that changes strategy based on performance"""
 
         completed_tasks = []
@@ -510,14 +517,13 @@ class EnhancedSwarmCoordinator:
         task_batches = await self._create_adaptive_batches(tasks)
 
         for batch_idx, batch in enumerate(task_batches):
-            logger.info(f"Executing adaptive batch {batch_idx + 1}/{len(task_batches)} with strategy: {current_strategy.value}")
+            logger.info(
+                f"Executing adaptive batch {batch_idx + 1}/{len(task_batches)} with strategy: {current_strategy.value}"
+            )
 
             # Execute current batch with current strategy
             batch_result = await self._execute_coordination_strategy(
-                f"{coordination_id}_batch_{batch_idx}",
-                current_strategy,
-                batch,
-                config
+                f"{coordination_id}_batch_{batch_idx}", current_strategy, batch, config
             )
 
             # Assess batch performance
@@ -526,11 +532,13 @@ class EnhancedSwarmCoordinator:
             # Adapt strategy if performance is below threshold
             if batch_performance["quality_score"] < config.get("adaptation_threshold", 0.7):
                 new_strategy = await self._select_adaptive_strategy(
-                    current_strategy, batch_performance, tasks[batch_idx * len(batch):]
+                    current_strategy, batch_performance, tasks[batch_idx * len(batch) :]
                 )
 
                 if new_strategy != current_strategy:
-                    logger.info(f"Adapting strategy from {current_strategy.value} to {new_strategy.value}")
+                    logger.info(
+                        f"Adapting strategy from {current_strategy.value} to {new_strategy.value}"
+                    )
                     current_strategy = new_strategy
 
             # Collect results
@@ -542,13 +550,11 @@ class EnhancedSwarmCoordinator:
             "failed_tasks": failed_tasks,
             "strategy": "adaptive",
             "coordination_id": coordination_id,
-            "final_strategy": current_strategy.value
+            "final_strategy": current_strategy.value,
         }
 
     async def _determine_coordination_strategy(
-        self,
-        tasks: List[EducationalTask],
-        config: Optional[Dict[str, Any]]
+        self, tasks: list[EducationalTask], config: Optional[dict[str, Any]]
     ) -> CoordinationStrategy:
         """Determine optimal coordination strategy based on tasks and context"""
 
@@ -562,9 +568,15 @@ class EnhancedSwarmCoordinator:
         resource_status = await self._assess_resource_availability()
 
         # Strategy selection logic
-        if task_analysis["specialization_diversity"] > 0.8 and resource_status["specialist_availability"] > 0.7:
+        if (
+            task_analysis["specialization_diversity"] > 0.8
+            and resource_status["specialist_availability"] > 0.7
+        ):
             return CoordinationStrategy.SPECIALIST
-        elif task_analysis["complexity_score"] > 0.7 and resource_status["collaboration_capacity"] > 0.6:
+        elif (
+            task_analysis["complexity_score"] > 0.7
+            and resource_status["collaboration_capacity"] > 0.6
+        ):
             return CoordinationStrategy.COLLABORATIVE
         elif task_analysis["urgency_score"] > 0.8:
             return CoordinationStrategy.COMPETITIVE
@@ -575,7 +587,7 @@ class EnhancedSwarmCoordinator:
         else:
             return CoordinationStrategy.ADAPTIVE
 
-    async def _analyze_task_characteristics(self, tasks: List[EducationalTask]) -> Dict[str, float]:
+    async def _analyze_task_characteristics(self, tasks: list[EducationalTask]) -> dict[str, float]:
         """Analyze characteristics of task set"""
 
         if not tasks:
@@ -611,7 +623,7 @@ class EnhancedSwarmCoordinator:
             "subject_diversity": len(subjects) / max(1, len(tasks)),
             "grade_level_spread": len(grade_levels) / max(1, len(tasks)),
             "consensus_requirements": self._estimate_consensus_requirements(tasks),
-            "hierarchy_benefits": self._estimate_hierarchy_benefits(tasks)
+            "hierarchy_benefits": self._estimate_hierarchy_benefits(tasks),
         }
 
     def _estimate_task_complexity(self, task: EducationalTask) -> float:
@@ -623,8 +635,12 @@ class EnhancedSwarmCoordinator:
 
         # Subject complexity
         subject_complexity = {
-            "math": 0.8, "science": 0.9, "physics": 0.95,
-            "english": 0.6, "history": 0.7, "art": 0.4
+            "math": 0.8,
+            "science": 0.9,
+            "physics": 0.95,
+            "english": 0.6,
+            "history": 0.7,
+            "art": 0.4,
         }
         complexity_factors.append(subject_complexity.get(task.subject_area.lower(), 0.5))
 
@@ -633,14 +649,17 @@ class EnhancedSwarmCoordinator:
 
         # Content type complexity
         content_complexity = {
-            "lesson": 0.6, "quiz": 0.4, "project": 0.9,
-            "simulation": 0.95, "assessment": 0.7
+            "lesson": 0.6,
+            "quiz": 0.4,
+            "project": 0.9,
+            "simulation": 0.95,
+            "assessment": 0.7,
         }
         complexity_factors.append(content_complexity.get(task.content_type, 0.5))
 
         return sum(complexity_factors) / len(complexity_factors)
 
-    def _estimate_consensus_requirements(self, tasks: List[EducationalTask]) -> float:
+    def _estimate_consensus_requirements(self, tasks: list[EducationalTask]) -> float:
         """Estimate how much consensus is needed for task set"""
         consensus_indicators = 0.0
 
@@ -655,7 +674,7 @@ class EnhancedSwarmCoordinator:
 
         return min(1.0, consensus_indicators / len(tasks))
 
-    def _estimate_hierarchy_benefits(self, tasks: List[EducationalTask]) -> float:
+    def _estimate_hierarchy_benefits(self, tasks: list[EducationalTask]) -> float:
         """Estimate benefits of hierarchical coordination"""
         hierarchy_indicators = 0.0
 
@@ -688,7 +707,7 @@ class EnhancedSwarmCoordinator:
                     "average_quality": 0.8,
                     "average_time": 120.0,
                     "success_rate": 1.0,
-                    "specialization_scores": {}
+                    "specialization_scores": {},
                 }
 
             logger.info(f"Analyzed capabilities for {len(workers)} agents")
@@ -705,13 +724,13 @@ class EnhancedSwarmCoordinator:
             capability_id=f"cap_{worker.worker_id}",
             name=f"Agent {worker.worker_id} Capabilities",
             description=f"Educational content generation capabilities for {worker.worker_id}",
-            subject_specializations=getattr(worker, 'specializations', ['general']),
+            subject_specializations=getattr(worker, "specializations", ["general"]),
             grade_level_range=(1, 12),
             content_types=["lesson", "quiz", "activity"],
             quality_score=0.8,
             speed_score=0.8,
             reliability_score=0.9,
-            educational_expertise=0.7
+            educational_expertise=0.7,
         )
 
     async def _build_specialization_mappings(self):
@@ -767,10 +786,14 @@ class EnhancedSwarmCoordinator:
 
                 # Log performance alerts
                 if current_metrics.get("average_quality", 1.0) < 0.7:
-                    logger.warning(f"Low coordination quality detected: {current_metrics['average_quality']:.2f}")
+                    logger.warning(
+                        f"Low coordination quality detected: {current_metrics['average_quality']:.2f}"
+                    )
 
                 if current_metrics.get("efficiency", 1.0) < 0.6:
-                    logger.warning(f"Low coordination efficiency detected: {current_metrics['efficiency']:.2f}")
+                    logger.warning(
+                        f"Low coordination efficiency detected: {current_metrics['efficiency']:.2f}"
+                    )
 
             except Exception as e:
                 logger.error(f"Coordination monitoring error: {e}")
@@ -789,7 +812,8 @@ class EnhancedSwarmCoordinator:
 
                 # Identify underperforming agents
                 underperformers = [
-                    agent_id for agent_id, metrics in self.agent_performance.items()
+                    agent_id
+                    for agent_id, metrics in self.agent_performance.items()
                     if metrics.get("success_rate", 1.0) < 0.7
                 ]
 
@@ -800,7 +824,7 @@ class EnhancedSwarmCoordinator:
                 logger.error(f"Agent monitoring error: {e}")
                 await asyncio.sleep(60)
 
-    async def get_coordination_status(self) -> Dict[str, Any]:
+    async def get_coordination_status(self) -> dict[str, Any]:
         """Get comprehensive coordination status"""
         return {
             "coordinator_id": self.coordination_id,
@@ -811,11 +835,13 @@ class EnhancedSwarmCoordinator:
             "specialization_mappings": {
                 "subjects": len(self.subject_specialists),
                 "grade_levels": len(self.grade_level_experts),
-                "content_types": len(self.content_type_specialists)
+                "content_types": len(self.content_type_specialists),
             },
             "performance_metrics": self.coordination_metrics,
             "monitoring_active": self.monitoring_enabled,
-            "swarm_status": await self.swarm_controller.get_status() if self.swarm_controller else None
+            "swarm_status": (
+                await self.swarm_controller.get_status() if self.swarm_controller else None
+            ),
         }
 
     async def shutdown(self):
@@ -834,16 +860,17 @@ class EnhancedSwarmCoordinator:
                 await asyncio.sleep(1)
 
         # Shutdown components
-        if hasattr(self.educational_task_analyzer, 'shutdown'):
+        if hasattr(self.educational_task_analyzer, "shutdown"):
             await self.educational_task_analyzer.shutdown()
 
-        if hasattr(self.agent_performance_tracker, 'shutdown'):
+        if hasattr(self.agent_performance_tracker, "shutdown"):
             await self.agent_performance_tracker.shutdown()
 
         logger.info("Enhanced Swarm Coordinator shutdown complete")
 
 
 # Supporting classes for enhanced coordination
+
 
 class EducationalTaskAnalyzer:
     """Analyzes and optimizes educational tasks for swarm execution"""
@@ -852,7 +879,9 @@ class EducationalTaskAnalyzer:
         """Initialize the task analyzer"""
         pass
 
-    async def analyze_and_optimize_tasks(self, tasks: List[EducationalTask]) -> List[EducationalTask]:
+    async def analyze_and_optimize_tasks(
+        self, tasks: list[EducationalTask]
+    ) -> list[EducationalTask]:
         """Analyze and optimize task list for better execution"""
         optimized_tasks = []
 
@@ -888,8 +917,12 @@ class EducationalTaskAnalyzer:
 
         # Subject factor
         subject_complexity = {
-            "math": 0.8, "science": 0.9, "physics": 0.95,
-            "english": 0.6, "history": 0.7, "art": 0.4
+            "math": 0.8,
+            "science": 0.9,
+            "physics": 0.95,
+            "english": 0.6,
+            "history": 0.7,
+            "art": 0.4,
         }
         complexity_factors.append(subject_complexity.get(task.subject_area.lower(), 0.5))
 
@@ -898,14 +931,15 @@ class EducationalTaskAnalyzer:
 
         return sum(complexity_factors) / len(complexity_factors)
 
-    async def _optimize_task_order(self, tasks: List[EducationalTask]) -> List[EducationalTask]:
+    async def _optimize_task_order(self, tasks: list[EducationalTask]) -> list[EducationalTask]:
         """Optimize task execution order"""
+
         # Sort by priority, then by dependencies, then by urgency
         def sort_key(task):
             return (
                 -task.priority.value,  # Higher priority first
                 len(task.dependencies),  # Fewer dependencies first
-                -task.urgency_score  # Higher urgency first
+                -task.urgency_score,  # Higher urgency first
             )
 
         return sorted(tasks, key=sort_key)
@@ -922,7 +956,9 @@ class AgentPerformanceTracker:
         """Initialize performance tracker"""
         pass
 
-    async def update_performance_metrics(self, execution_result: Dict[str, Any], coordination_metrics: Dict[str, Any]):
+    async def update_performance_metrics(
+        self, execution_result: dict[str, Any], coordination_metrics: dict[str, Any]
+    ):
         """Update performance metrics based on execution results"""
         # Extract agent performance from execution results
         for completed_task in execution_result.get("completed_tasks", []):
@@ -932,7 +968,7 @@ class AgentPerformanceTracker:
                     "timestamp": datetime.now(),
                     "quality_score": completed_task.get("quality_score", 0.8),
                     "execution_time": completed_task.get("execution_time", 120.0),
-                    "success": True
+                    "success": True,
                 }
                 self.performance_history[agent_id].append(performance_data)
 
@@ -945,7 +981,7 @@ class AgentPerformanceTracker:
                     "quality_score": 0.0,
                     "execution_time": failed_task.get("execution_time", 0.0),
                     "success": False,
-                    "error": failed_task.get("error", "Unknown error")
+                    "error": failed_task.get("error", "Unknown error"),
                 }
                 self.performance_history[agent_id].append(performance_data)
 
@@ -968,16 +1004,16 @@ class AgentPerformanceTracker:
                     "average_execution_time": sum(execution_times) / len(execution_times),
                     "success_rate": success_rate,
                     "trend_direction": self._calculate_trend_direction(quality_scores),
-                    "consistency_score": self._calculate_consistency(quality_scores)
+                    "consistency_score": self._calculate_consistency(quality_scores),
                 }
 
-    def _calculate_trend_direction(self, scores: List[float]) -> str:
+    def _calculate_trend_direction(self, scores: list[float]) -> str:
         """Calculate if performance is improving, declining, or stable"""
         if len(scores) < 5:
             return "insufficient_data"
 
-        first_half = scores[:len(scores)//2]
-        second_half = scores[len(scores)//2:]
+        first_half = scores[: len(scores) // 2]
+        second_half = scores[len(scores) // 2 :]
 
         first_avg = sum(first_half) / len(first_half)
         second_avg = sum(second_half) / len(second_half)
@@ -991,7 +1027,7 @@ class AgentPerformanceTracker:
         else:
             return "stable"
 
-    def _calculate_consistency(self, scores: List[float]) -> float:
+    def _calculate_consistency(self, scores: list[float]) -> float:
         """Calculate consistency score (lower variance = higher consistency)"""
         if len(scores) < 2:
             return 1.0
@@ -1011,9 +1047,9 @@ class SwarmQualityAssessor:
 
     async def assess_educational_outcomes(
         self,
-        completed_tasks: List[Dict[str, Any]],
-        original_tasks: List[EducationalTask]
-    ) -> Dict[str, Any]:
+        completed_tasks: list[dict[str, Any]],
+        original_tasks: list[EducationalTask],
+    ) -> dict[str, Any]:
         """Assess educational quality of completed tasks"""
 
         assessment = {
@@ -1021,7 +1057,7 @@ class SwarmQualityAssessor:
             "curriculum_alignment": 0.0,
             "quality_metrics": {},
             "educational_effectiveness": 0.0,
-            "accessibility_compliance": 0.0
+            "accessibility_compliance": 0.0,
         }
 
         if not completed_tasks:
@@ -1056,8 +1092,8 @@ class SwarmQualityAssessor:
 
     async def _calculate_objectives_coverage(
         self,
-        completed_tasks: List[Dict[str, Any]],
-        original_tasks: List[EducationalTask]
+        completed_tasks: list[dict[str, Any]],
+        original_tasks: list[EducationalTask],
     ) -> float:
         """Calculate how well learning objectives are covered"""
 
@@ -1079,8 +1115,8 @@ class SwarmQualityAssessor:
 
     async def _calculate_curriculum_alignment(
         self,
-        completed_tasks: List[Dict[str, Any]],
-        original_tasks: List[EducationalTask]
+        completed_tasks: list[dict[str, Any]],
+        original_tasks: list[EducationalTask],
     ) -> float:
         """Calculate curriculum standards alignment"""
 
@@ -1101,9 +1137,8 @@ class SwarmQualityAssessor:
         return min(1.0, alignment_ratio)
 
     async def _calculate_detailed_quality_metrics(
-        self,
-        completed_tasks: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+        self, completed_tasks: list[dict[str, Any]]
+    ) -> dict[str, float]:
         """Calculate detailed quality metrics"""
 
         metrics = {
@@ -1111,7 +1146,7 @@ class SwarmQualityAssessor:
             "instructional_design": 0.0,
             "engagement_potential": 0.0,
             "assessment_validity": 0.0,
-            "technical_accuracy": 0.0
+            "technical_accuracy": 0.0,
         }
 
         if not completed_tasks:
@@ -1120,8 +1155,7 @@ class SwarmQualityAssessor:
         # Aggregate quality scores across all tasks
         for metric_key in metrics.keys():
             scores = [
-                task.get("quality_metrics", {}).get(metric_key, 0.0)
-                for task in completed_tasks
+                task.get("quality_metrics", {}).get(metric_key, 0.0) for task in completed_tasks
             ]
             if scores:
                 metrics[metric_key] = sum(scores) / len(scores)
@@ -1130,8 +1164,8 @@ class SwarmQualityAssessor:
 
     async def _calculate_educational_effectiveness(
         self,
-        completed_tasks: List[Dict[str, Any]],
-        original_tasks: List[EducationalTask]
+        completed_tasks: list[dict[str, Any]],
+        original_tasks: list[EducationalTask],
     ) -> float:
         """Calculate overall educational effectiveness"""
 
@@ -1158,9 +1192,15 @@ class SwarmQualityAssessor:
         ) / len(completed_tasks)
         effectiveness_factors.append(pedagogical_score)
 
-        return sum(effectiveness_factors) / len(effectiveness_factors) if effectiveness_factors else 0.0
+        return (
+            sum(effectiveness_factors) / len(effectiveness_factors)
+            if effectiveness_factors
+            else 0.0
+        )
 
-    def _assess_grade_appropriateness(self, completed_task: Dict[str, Any], target_grade: int) -> float:
+    def _assess_grade_appropriateness(
+        self, completed_task: dict[str, Any], target_grade: int
+    ) -> float:
         """Assess if content is appropriate for target grade level"""
         content_grade_level = completed_task.get("estimated_grade_level", target_grade)
 
@@ -1176,7 +1216,9 @@ class SwarmQualityAssessor:
         else:
             return 0.3
 
-    async def _calculate_accessibility_compliance(self, completed_tasks: List[Dict[str, Any]]) -> float:
+    async def _calculate_accessibility_compliance(
+        self, completed_tasks: list[dict[str, Any]]
+    ) -> float:
         """Calculate accessibility compliance score"""
 
         accessibility_scores = []
@@ -1186,14 +1228,19 @@ class SwarmQualityAssessor:
 
             # Standard accessibility checklist
             required_features = [
-                "alt_text", "captions", "keyboard_navigation",
-                "high_contrast", "screen_reader_support"
+                "alt_text",
+                "captions",
+                "keyboard_navigation",
+                "high_contrast",
+                "screen_reader_support",
             ]
 
             compliance_ratio = len(accessibility_features) / len(required_features)
             accessibility_scores.append(min(1.0, compliance_ratio))
 
-        return sum(accessibility_scores) / len(accessibility_scores) if accessibility_scores else 0.0
+        return (
+            sum(accessibility_scores) / len(accessibility_scores) if accessibility_scores else 0.0
+        )
 
 
 class CoordinationOptimizer:
@@ -1205,17 +1252,17 @@ class CoordinationOptimizer:
 
     async def optimize_coordination_strategy(
         self,
-        current_performance: Dict[str, Any],
-        task_characteristics: Dict[str, Any],
-        resource_status: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        current_performance: dict[str, Any],
+        task_characteristics: dict[str, Any],
+        resource_status: dict[str, Any],
+    ) -> dict[str, Any]:
         """Generate optimization recommendations"""
 
         recommendations = {
             "strategy_adjustments": [],
             "resource_reallocation": {},
             "performance_improvements": [],
-            "quality_enhancements": []
+            "quality_enhancements": [],
         }
 
         # Analyze current performance gaps
@@ -1223,14 +1270,20 @@ class CoordinationOptimizer:
 
         # Generate strategy adjustments
         if performance_gaps.get("coordination_efficiency", 0) < 0.7:
-            recommendations["strategy_adjustments"].append("Consider switching to specialist coordination")
+            recommendations["strategy_adjustments"].append(
+                "Consider switching to specialist coordination"
+            )
 
         if performance_gaps.get("quality_consistency", 0) < 0.8:
-            recommendations["strategy_adjustments"].append("Implement democratic consensus for quality assurance")
+            recommendations["strategy_adjustments"].append(
+                "Implement democratic consensus for quality assurance"
+            )
 
         # Generate resource recommendations
         if resource_status.get("load_imbalance", 0) > 0.3:
-            recommendations["resource_reallocation"] = self._generate_reallocation_plan(resource_status)
+            recommendations["resource_reallocation"] = self._generate_reallocation_plan(
+                resource_status
+            )
 
         # Generate performance improvement suggestions
         recommendations["performance_improvements"] = self._generate_performance_improvements(
@@ -1239,14 +1292,14 @@ class CoordinationOptimizer:
 
         return recommendations
 
-    def _identify_performance_gaps(self, performance: Dict[str, Any]) -> Dict[str, float]:
+    def _identify_performance_gaps(self, performance: dict[str, Any]) -> dict[str, float]:
         """Identify areas where performance is below optimal"""
 
         optimal_thresholds = {
             "coordination_efficiency": 0.8,
             "quality_consistency": 0.85,
             "resource_utilization": 0.75,
-            "task_completion_rate": 0.95
+            "task_completion_rate": 0.95,
         }
 
         gaps = {}
@@ -1257,13 +1310,13 @@ class CoordinationOptimizer:
 
         return gaps
 
-    def _generate_reallocation_plan(self, resource_status: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_reallocation_plan(self, resource_status: dict[str, Any]) -> dict[str, Any]:
         """Generate resource reallocation plan"""
 
         plan = {
             "agent_reassignments": [],
             "workload_redistribution": {},
-            "specialization_adjustments": []
+            "specialization_adjustments": [],
         }
 
         # Identify overloaded and underutilized agents
@@ -1277,17 +1330,15 @@ class CoordinationOptimizer:
                 {
                     "from_agent": overloaded[0],
                     "to_agent": underutilized[0],
-                    "task_transfer_ratio": 0.3
+                    "task_transfer_ratio": 0.3,
                 }
             ]
 
         return plan
 
     def _generate_performance_improvements(
-        self,
-        performance: Dict[str, Any],
-        task_characteristics: Dict[str, Any]
-    ) -> List[str]:
+        self, performance: dict[str, Any], task_characteristics: dict[str, Any]
+    ) -> list[str]:
         """Generate specific performance improvement suggestions"""
 
         improvements = []

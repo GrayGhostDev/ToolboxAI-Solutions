@@ -7,6 +7,7 @@ These are all cases where a function definition has no body.
 import re
 from pathlib import Path
 
+
 def fix_empty_function_bodies(content: str) -> str:
     """Add 'pass' to functions that have no body."""
     

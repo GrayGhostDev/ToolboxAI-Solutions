@@ -999,7 +999,6 @@ def fix_all_tests():
         "role": "student",
         "exp": datetime.utcnow() + timedelta(hours=1),
     }
-    secret = "test_secret_key_123"
 
     # Mock decode functions
     def mock_decode(token, *args, **kwargs):
@@ -1008,10 +1007,6 @@ def fix_all_tests():
         return valid_payload
 
     # Mock Socket.IO clients
-    mock_clients = {
-        "client1": {"authenticated": True, "role": "student"},
-        "client2": {"authenticated": True, "role": "teacher"},
-    }
 
     # Mock CORS validation
     def mock_validate_origin(origin):

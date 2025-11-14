@@ -67,8 +67,10 @@ def test_week2_services():
     # Test 2: Semantic Cache Service
     print("\n2. Testing Semantic Cache Service...")
     try:
-        with patch("redis.asyncio.from_url") as mock_redis, patch("requests.post") as mock_post:
-
+        with (
+            patch("redis.asyncio.from_url") as mock_redis,
+            patch("requests.post") as mock_post,
+        ):
             mock_client = AsyncMock()
             mock_redis.return_value = mock_client
             mock_client.get = AsyncMock(return_value=None)
@@ -107,7 +109,6 @@ def test_week2_services():
             patch("apps.backend.services.semantic_cache.SemanticCacheService") as mock_cache_class,
             patch("openai.AsyncOpenAI") as mock_openai,
         ):
-
             mock_cache = AsyncMock()
             mock_cache_class.return_value = mock_cache
             mock_cache.search_similar = AsyncMock(
@@ -203,7 +204,7 @@ def test_week2_services():
             )
 
             manager = SupabaseMigrationManager()
-            migrations = manager.load_migrations_from_files()
+            manager.load_migrations_from_files()
 
             # Test get_status
             async def test_status():
@@ -230,7 +231,6 @@ def test_week2_services():
             patch("os.walk") as mock_walk,
             patch("builtins.open", create=True) as mock_open,
         ):
-
             mock_client = AsyncMock()
             mock_redis.return_value = mock_client
             mock_client.hset = AsyncMock(return_value=True)
@@ -276,7 +276,6 @@ def test_week2_services():
             patch("redis.asyncio.from_url") as mock_redis,
             patch("aiofiles.open") as mock_aiofiles,
         ):
-
             mock_supabase_client = Mock()
             mock_supabase.return_value = mock_supabase_client
             mock_supabase_client.table = Mock(

@@ -139,7 +139,7 @@ class RateLimitManager:
                     # Parse the Redis URL to get connection parameters
                     from urllib.parse import urlparse
 
-                    parsed_url = urlparse(self.redis_url)
+                    urlparse(self.redis_url)
 
                     # Create SSL context for Redis Cloud
                     ssl_context = ssl.create_default_context()
@@ -568,7 +568,9 @@ from fastapi import HTTPException, Request, status
 
 
 def rate_limit(
-    max_requests: int = 100, window_seconds: int = 60, identifier_func: Callable | None = None
+    max_requests: int = 100,
+    window_seconds: int = 60,
+    identifier_func: Callable | None = None,
 ):
     """
     Rate limiting decorator for FastAPI endpoints.

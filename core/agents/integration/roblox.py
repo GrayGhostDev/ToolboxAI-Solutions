@@ -5,12 +5,16 @@ This module provides agents for Roblox/Studio integration including studio bridg
 asset deployment, game instance management, and educational content integration.
 """
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import asyncio
 import logging
+from datetime import datetime
+from typing import Any
 
-from .base_integration_agent import BaseIntegrationAgent, IntegrationPlatform, IntegrationEvent
+from .base_integration_agent import (
+    BaseIntegrationAgent,
+    IntegrationEvent,
+    IntegrationPlatform,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +26,10 @@ class StudioBridgeAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "StudioBridgeAgent"):
         super().__init__(name, IntegrationPlatform.ROBLOX)
-        self.studio_connections: Dict[str, Any] = {}
-        self.command_queue: List[Dict[str, Any]] = []
+        self.studio_connections: dict[str, Any] = {}
+        self.command_queue: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on studio bridge"""
         return {
             "status": "healthy",
@@ -33,27 +37,31 @@ class StudioBridgeAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "connections": len(self.studio_connections),
             "queued_commands": len(self.command_queue),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def connect_studio(self, studio_id: str, connection_info: Dict[str, Any]):
+    async def connect_studio(self, studio_id: str, connection_info: dict[str, Any]):
         """Connect to a Roblox Studio instance"""
         self.studio_connections[studio_id] = {
             **connection_info,
             "connected_at": datetime.utcnow(),
-            "status": "connected"
+            "status": "connected",
         }
 
-        await self.publish_event(IntegrationEvent(
-            event_type="studio_connected",
-            source=self.platform,
-            target=IntegrationPlatform.ROBLOX,
-            data={"studio_id": studio_id}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="studio_connected",
+                source=self.platform,
+                target=IntegrationPlatform.ROBLOX,
+                data={"studio_id": studio_id},
+            )
+        )
 
         logger.info(f"Studio connected: {studio_id}")
 
-    async def send_command(self, studio_id: str, command: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def send_command(
+        self, studio_id: str, command: str, parameters: dict[str, Any]
+    ) -> dict[str, Any]:
         """Send a command to Roblox Studio"""
         if studio_id not in self.studio_connections:
             raise ValueError(f"Studio {studio_id} not connected")
@@ -63,23 +71,25 @@ class StudioBridgeAgent(BaseIntegrationAgent):
             "studio_id": studio_id,
             "command": command,
             "parameters": parameters,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         self.command_queue.append(command_data)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="command_sent",
-            source=self.platform,
-            target=IntegrationPlatform.ROBLOX,
-            data=command_data
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="command_sent",
+                source=self.platform,
+                target=IntegrationPlatform.ROBLOX,
+                data=command_data,
+            )
+        )
 
         # Mock command execution
         return {
             "command_id": command_data["id"],
             "status": "executed",
-            "result": "success"
+            "result": "success",
         }
 
     async def cleanup(self):
@@ -96,10 +106,10 @@ class AssetDeploymentAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "AssetDeploymentAgent"):
         super().__init__(name, IntegrationPlatform.ROBLOX)
-        self.deployed_assets: List[Dict[str, Any]] = []
-        self.deployment_queue: List[Dict[str, Any]] = []
+        self.deployed_assets: list[dict[str, Any]] = []
+        self.deployment_queue: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on asset deployment"""
         return {
             "status": "healthy",
@@ -107,17 +117,19 @@ class AssetDeploymentAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "deployed": len(self.deployed_assets),
             "queued": len(self.deployment_queue),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def deploy_asset(self, asset_type: str, asset_data: Dict[str, Any], target_game: str) -> Dict[str, Any]:
+    async def deploy_asset(
+        self, asset_type: str, asset_data: dict[str, Any], target_game: str
+    ) -> dict[str, Any]:
         """Deploy an asset to a Roblox game"""
         deployment = {
             "id": f"deploy_{len(self.deployed_assets)}",
             "type": asset_type,
             "target": target_game,
             "data": asset_data,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         self.deployment_queue.append(deployment)
@@ -129,12 +141,14 @@ class AssetDeploymentAgent(BaseIntegrationAgent):
         self.deployed_assets.append(deployment)
         self.deployment_queue.remove(deployment)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="asset_deployed",
-            source=self.platform,
-            target=IntegrationPlatform.ROBLOX,
-            data=deployment
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="asset_deployed",
+                source=self.platform,
+                target=IntegrationPlatform.ROBLOX,
+                data=deployment,
+            )
+        )
 
         logger.info(f"Asset deployed: {asset_type} to {target_game}")
 
@@ -154,13 +168,14 @@ class GameInstanceAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "GameInstanceAgent"):
         super().__init__(name, IntegrationPlatform.ROBLOX)
-        self.game_instances: Dict[str, Any] = {}
-        self.player_sessions: Dict[str, List[str]] = {}
+        self.game_instances: dict[str, Any] = {}
+        self.player_sessions: dict[str, list[str]] = {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on game instances"""
-        active_instances = sum(1 for instance in self.game_instances.values()
-                             if instance.get("status") == "running")
+        active_instances = sum(
+            1 for instance in self.game_instances.values() if instance.get("status") == "running"
+        )
 
         return {
             "status": "healthy",
@@ -169,10 +184,10 @@ class GameInstanceAgent(BaseIntegrationAgent):
             "total_instances": len(self.game_instances),
             "active_instances": active_instances,
             "player_sessions": sum(len(players) for players in self.player_sessions.values()),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def create_instance(self, game_id: str, configuration: Dict[str, Any]) -> str:
+    async def create_instance(self, game_id: str, configuration: dict[str, Any]) -> str:
         """Create a new game instance"""
         instance_id = f"instance_{len(self.game_instances)}"
 
@@ -180,19 +195,21 @@ class GameInstanceAgent(BaseIntegrationAgent):
             "game_id": game_id,
             "configuration": configuration,
             "status": "starting",
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
         }
 
         # Mock instance startup
         await asyncio.sleep(0.5)
         self.game_instances[instance_id]["status"] = "running"
 
-        await self.publish_event(IntegrationEvent(
-            event_type="instance_created",
-            source=self.platform,
-            target=IntegrationPlatform.ROBLOX,
-            data={"instance_id": instance_id, "game_id": game_id}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="instance_created",
+                source=self.platform,
+                target=IntegrationPlatform.ROBLOX,
+                data={"instance_id": instance_id, "game_id": game_id},
+            )
+        )
 
         logger.info(f"Game instance created: {instance_id}")
 
@@ -208,12 +225,14 @@ class GameInstanceAgent(BaseIntegrationAgent):
 
         self.player_sessions[instance_id].append(player_id)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="player_joined",
-            source=self.platform,
-            target=IntegrationPlatform.ROBLOX,
-            data={"instance_id": instance_id, "player_id": player_id}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="player_joined",
+                source=self.platform,
+                target=IntegrationPlatform.ROBLOX,
+                data={"instance_id": instance_id, "player_id": player_id},
+            )
+        )
 
     async def cleanup(self):
         """Clean up game instances"""
@@ -229,10 +248,10 @@ class EducationalContentIntegrationAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "EducationalContentIntegrationAgent"):
         super().__init__(name, IntegrationPlatform.ROBLOX)
-        self.content_mappings: Dict[str, Any] = {}
-        self.integrated_lessons: List[Dict[str, Any]] = []
+        self.content_mappings: dict[str, Any] = {}
+        self.integrated_lessons: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on educational content integration"""
         return {
             "status": "healthy",
@@ -240,40 +259,43 @@ class EducationalContentIntegrationAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "content_mappings": len(self.content_mappings),
             "integrated_lessons": len(self.integrated_lessons),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def integrate_lesson(self, lesson_id: str, lesson_content: Dict[str, Any],
-                              game_id: str) -> Dict[str, Any]:
+    async def integrate_lesson(
+        self, lesson_id: str, lesson_content: dict[str, Any], game_id: str
+    ) -> dict[str, Any]:
         """Integrate an educational lesson into a Roblox game"""
         integration = {
             "id": f"integration_{len(self.integrated_lessons)}",
             "lesson_id": lesson_id,
             "game_id": game_id,
             "content": lesson_content,
-            "integrated_at": datetime.utcnow().isoformat()
+            "integrated_at": datetime.utcnow().isoformat(),
         }
 
         # Create content mapping
         self.content_mappings[lesson_id] = {
             "game_id": game_id,
-            "integration_id": integration["id"]
+            "integration_id": integration["id"],
         }
 
         self.integrated_lessons.append(integration)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="lesson_integrated",
-            source=self.platform,
-            target=IntegrationPlatform.ROBLOX,
-            data=integration
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="lesson_integrated",
+                source=self.platform,
+                target=IntegrationPlatform.ROBLOX,
+                data=integration,
+            )
+        )
 
         logger.info(f"Lesson {lesson_id} integrated into game {game_id}")
 
         return integration
 
-    async def get_lesson_progress(self, lesson_id: str, player_id: str) -> Dict[str, Any]:
+    async def get_lesson_progress(self, lesson_id: str, player_id: str) -> dict[str, Any]:
         """Get a player's progress for a lesson"""
         # Mock progress data
         return {
@@ -282,7 +304,7 @@ class EducationalContentIntegrationAgent(BaseIntegrationAgent):
             "progress": 65,  # Mock percentage
             "completed_objectives": 3,
             "total_objectives": 5,
-            "last_activity": datetime.utcnow().isoformat()
+            "last_activity": datetime.utcnow().isoformat(),
         }
 
     async def cleanup(self):
@@ -296,5 +318,5 @@ __all__ = [
     "StudioBridgeAgent",
     "AssetDeploymentAgent",
     "GameInstanceAgent",
-    "EducationalContentIntegrationAgent"
+    "EducationalContentIntegrationAgent",
 ]

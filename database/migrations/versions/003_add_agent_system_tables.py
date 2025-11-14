@@ -6,7 +6,8 @@ Create Date: 2025-09-21 12:00:00.000000
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
 import sqlalchemy as sa
 from alembic import op
@@ -57,7 +58,11 @@ def upgrade() -> None:
         ),
         sa.Column("configuration", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("resource_limits", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("performance_thresholds", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "performance_thresholds",
+            postgresql.JSONB(astext_type=sa.Text()),
+            nullable=True,
+        ),
         sa.Column("current_task_id", sa.String(length=100), nullable=True),
         sa.Column("last_activity", sa.DateTime(timezone=True), nullable=True),
         sa.Column("last_heartbeat", sa.DateTime(timezone=True), nullable=True),
@@ -73,7 +78,10 @@ def upgrade() -> None:
 
     # Create indexes for agent_instances
     op.create_index(
-        "idx_agent_type_status", "agent_instances", ["agent_type", "status"], unique=False
+        "idx_agent_type_status",
+        "agent_instances",
+        ["agent_type", "status"],
+        unique=False,
     )
     op.create_index("idx_agent_last_activity", "agent_instances", ["last_activity"], unique=False)
     op.create_index(
@@ -83,10 +91,16 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_instances_agent_id"), "agent_instances", ["agent_id"], unique=False
+        op.f("ix_agent_instances_agent_id"),
+        "agent_instances",
+        ["agent_id"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_instances_agent_type"), "agent_instances", ["agent_type"], unique=False
+        op.f("ix_agent_instances_agent_type"),
+        "agent_instances",
+        ["agent_type"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_agent_instances_current_task_id"),
@@ -95,7 +109,10 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_instances_last_activity"), "agent_instances", ["last_activity"], unique=False
+        op.f("ix_agent_instances_last_activity"),
+        "agent_instances",
+        ["last_activity"],
+        unique=False,
     )
     op.create_index(op.f("ix_agent_instances_status"), "agent_instances", ["status"], unique=False)
 
@@ -161,10 +178,12 @@ def upgrade() -> None:
         sa.Column("parent_task_id", sa.String(length=100), nullable=True),
         sa.CheckConstraint("execution_time_seconds >= 0", name="check_positive_execution_time"),
         sa.CheckConstraint(
-            "quality_score >= 0 AND quality_score <= 1", name="check_quality_score_range"
+            "quality_score >= 0 AND quality_score <= 1",
+            name="check_quality_score_range",
         ),
         sa.CheckConstraint(
-            "confidence_score >= 0 AND confidence_score <= 1", name="check_confidence_score_range"
+            "confidence_score >= 0 AND confidence_score <= 1",
+            name="check_confidence_score_range",
         ),
         sa.CheckConstraint("user_rating >= 1 AND user_rating <= 5", name="check_user_rating_range"),
         sa.CheckConstraint("retry_count >= 0", name="check_positive_retry_count"),
@@ -178,7 +197,10 @@ def upgrade() -> None:
 
     # Create indexes for agent_executions
     op.create_index(
-        "idx_execution_status_created", "agent_executions", ["status", "created_at"], unique=False
+        "idx_execution_status_created",
+        "agent_executions",
+        ["status", "created_at"],
+        unique=False,
     )
     op.create_index(
         "idx_execution_agent_task_type",
@@ -187,7 +209,10 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        "idx_execution_user_session", "agent_executions", ["user_id", "session_id"], unique=False
+        "idx_execution_user_session",
+        "agent_executions",
+        ["user_id", "session_id"],
+        unique=False,
     )
     op.create_index(
         "idx_execution_performance",
@@ -202,13 +227,22 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_agent_type"), "agent_executions", ["agent_type"], unique=False
+        op.f("ix_agent_executions_agent_type"),
+        "agent_executions",
+        ["agent_type"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_completed_at"), "agent_executions", ["completed_at"], unique=False
+        op.f("ix_agent_executions_completed_at"),
+        "agent_executions",
+        ["completed_at"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_created_at"), "agent_executions", ["created_at"], unique=False
+        op.f("ix_agent_executions_created_at"),
+        "agent_executions",
+        ["created_at"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_agent_executions_parent_task_id"),
@@ -217,25 +251,43 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_priority"), "agent_executions", ["priority"], unique=False
+        op.f("ix_agent_executions_priority"),
+        "agent_executions",
+        ["priority"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_session_id"), "agent_executions", ["session_id"], unique=False
+        op.f("ix_agent_executions_session_id"),
+        "agent_executions",
+        ["session_id"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_started_at"), "agent_executions", ["started_at"], unique=False
+        op.f("ix_agent_executions_started_at"),
+        "agent_executions",
+        ["started_at"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_agent_executions_status"), "agent_executions", ["status"], unique=False
     )
     op.create_index(
-        op.f("ix_agent_executions_task_id"), "agent_executions", ["task_id"], unique=False
+        op.f("ix_agent_executions_task_id"),
+        "agent_executions",
+        ["task_id"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_task_type"), "agent_executions", ["task_type"], unique=False
+        op.f("ix_agent_executions_task_type"),
+        "agent_executions",
+        ["task_type"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_executions_user_id"), "agent_executions", ["user_id"], unique=False
+        op.f("ix_agent_executions_user_id"),
+        "agent_executions",
+        ["user_id"],
+        unique=False,
     )
 
     # Create agent_metrics table
@@ -288,7 +340,8 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint("error_rate >= 0 AND error_rate <= 100", name="check_error_rate_range"),
         sa.CheckConstraint(
-            "uptime_percentage >= 0 AND uptime_percentage <= 100", name="check_uptime_range"
+            "uptime_percentage >= 0 AND uptime_percentage <= 100",
+            name="check_uptime_range",
         ),
         sa.CheckConstraint(
             "availability_percentage >= 0 AND availability_percentage <= 100",
@@ -305,7 +358,10 @@ def upgrade() -> None:
 
     # Create indexes for agent_metrics
     op.create_index(
-        "idx_metrics_period", "agent_metrics", ["period_start", "period_end"], unique=False
+        "idx_metrics_period",
+        "agent_metrics",
+        ["period_start", "period_end"],
+        unique=False,
     )
     op.create_index(
         "idx_metrics_performance",
@@ -320,13 +376,22 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_metrics_agent_type"), "agent_metrics", ["agent_type"], unique=False
+        op.f("ix_agent_metrics_agent_type"),
+        "agent_metrics",
+        ["agent_type"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_metrics_period_end"), "agent_metrics", ["period_end"], unique=False
+        op.f("ix_agent_metrics_period_end"),
+        "agent_metrics",
+        ["period_end"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_metrics_period_start"), "agent_metrics", ["period_start"], unique=False
+        op.f("ix_agent_metrics_period_start"),
+        "agent_metrics",
+        ["period_start"],
+        unique=False,
     )
 
     # Create agent_task_queue table
@@ -396,19 +461,34 @@ def upgrade() -> None:
 
     # Create indexes for agent_task_queue
     op.create_index(
-        "idx_queue_priority_created", "agent_task_queue", ["priority", "created_at"], unique=False
+        "idx_queue_priority_created",
+        "agent_task_queue",
+        ["priority", "created_at"],
+        unique=False,
     )
     op.create_index(
-        "idx_queue_agent_status", "agent_task_queue", ["agent_type", "status"], unique=False
+        "idx_queue_agent_status",
+        "agent_task_queue",
+        ["agent_type", "status"],
+        unique=False,
     )
     op.create_index(
-        "idx_queue_scheduled", "agent_task_queue", ["scheduled_at", "status"], unique=False
+        "idx_queue_scheduled",
+        "agent_task_queue",
+        ["scheduled_at", "status"],
+        unique=False,
     )
     op.create_index(
-        "idx_queue_user_session", "agent_task_queue", ["user_id", "session_id"], unique=False
+        "idx_queue_user_session",
+        "agent_task_queue",
+        ["user_id", "session_id"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_agent_type"), "agent_task_queue", ["agent_type"], unique=False
+        op.f("ix_agent_task_queue_agent_type"),
+        "agent_task_queue",
+        ["agent_type"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_agent_task_queue_assigned_agent_id"),
@@ -417,31 +497,55 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_created_at"), "agent_task_queue", ["created_at"], unique=False
+        op.f("ix_agent_task_queue_created_at"),
+        "agent_task_queue",
+        ["created_at"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_deadline"), "agent_task_queue", ["deadline"], unique=False
+        op.f("ix_agent_task_queue_deadline"),
+        "agent_task_queue",
+        ["deadline"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_priority"), "agent_task_queue", ["priority"], unique=False
+        op.f("ix_agent_task_queue_priority"),
+        "agent_task_queue",
+        ["priority"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_scheduled_at"), "agent_task_queue", ["scheduled_at"], unique=False
+        op.f("ix_agent_task_queue_scheduled_at"),
+        "agent_task_queue",
+        ["scheduled_at"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_session_id"), "agent_task_queue", ["session_id"], unique=False
+        op.f("ix_agent_task_queue_session_id"),
+        "agent_task_queue",
+        ["session_id"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_agent_task_queue_status"), "agent_task_queue", ["status"], unique=False
     )
     op.create_index(
-        op.f("ix_agent_task_queue_task_id"), "agent_task_queue", ["task_id"], unique=False
+        op.f("ix_agent_task_queue_task_id"),
+        "agent_task_queue",
+        ["task_id"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_task_type"), "agent_task_queue", ["task_type"], unique=False
+        op.f("ix_agent_task_queue_task_type"),
+        "agent_task_queue",
+        ["task_type"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_agent_task_queue_user_id"), "agent_task_queue", ["user_id"], unique=False
+        op.f("ix_agent_task_queue_user_id"),
+        "agent_task_queue",
+        ["user_id"],
+        unique=False,
     )
 
     # Create system_health table
@@ -492,7 +596,8 @@ def upgrade() -> None:
             name="check_system_success_rate",
         ),
         sa.CheckConstraint(
-            "system_error_rate >= 0 AND system_error_rate <= 100", name="check_system_error_rate"
+            "system_error_rate >= 0 AND system_error_rate <= 100",
+            name="check_system_error_rate",
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -532,7 +637,11 @@ def upgrade() -> None:
         ),
         sa.Column("configuration", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("resource_limits", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-        sa.Column("performance_thresholds", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "performance_thresholds",
+            postgresql.JSONB(astext_type=sa.Text()),
+            nullable=True,
+        ),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("environment", sa.String(length=50), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=True),
@@ -548,10 +657,16 @@ def upgrade() -> None:
 
     # Create indexes for agent_configurations
     op.create_index(
-        "idx_config_active", "agent_configurations", ["is_active", "agent_type"], unique=False
+        "idx_config_active",
+        "agent_configurations",
+        ["is_active", "agent_type"],
+        unique=False,
     )
     op.create_index(
-        "idx_config_environment", "agent_configurations", ["environment", "is_active"], unique=False
+        "idx_config_environment",
+        "agent_configurations",
+        ["environment", "is_active"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_agent_configurations_agent_type"),
@@ -584,7 +699,10 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_agent_configurations_name"), "agent_configurations", ["name"], unique=False
+        op.f("ix_agent_configurations_name"),
+        "agent_configurations",
+        ["name"],
+        unique=False,
     )
 
 

@@ -3,16 +3,14 @@ API Key Management Endpoints for Roblox Plugin Authentication
 """
 
 import logging
-from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.core.deps import get_async_db
 from apps.backend.core.security.api_keys import (
     APIKeyCreate,
-    APIKeyManager,
     APIKeyResponse,
     APIKeyScope,
     APIKeyValidation,
@@ -91,7 +89,7 @@ async def create_api_key(
         raise HTTPException(status_code=500, detail="Failed to create API key")
 
 
-@router.get("/list", response_model=List[APIKeyResponse])
+@router.get("/list", response_model=list[APIKeyResponse])
 async def list_api_keys(
     include_revoked: bool = Query(False, description="Include revoked keys"),
     current_user: TokenPayload = Depends(get_current_user),
@@ -202,7 +200,9 @@ async def generate_script_with_api_key(
         logger.info(f"API key {api_key_validation.key_id} generating script")
 
         # Import Roblox content generation agent
-        from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
+        from core.agents.roblox.roblox_content_generation_agent import (
+            RobloxContentGenerationAgent,
+        )
 
         agent = RobloxContentGenerationAgent(llm=None)
         script = agent.generate_educational_script(
@@ -286,7 +286,9 @@ async def get_educational_content_with_api_key(
         logger.info(f"API key {api_key_validation.key_id} accessing content")
 
         # Import content generation agent
-        from core.agents.roblox.roblox_content_generation_agent import RobloxContentGenerationAgent
+        from core.agents.roblox.roblox_content_generation_agent import (
+            RobloxContentGenerationAgent,
+        )
 
         agent = RobloxContentGenerationAgent(llm=None)
         content = agent.generate_educational_content(

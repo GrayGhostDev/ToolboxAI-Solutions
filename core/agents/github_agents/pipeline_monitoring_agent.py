@@ -12,10 +12,9 @@ import asyncio
 import json
 import logging
 import statistics
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin
+from typing import Any, Optional
 
 import aiohttp
 import yaml
@@ -53,12 +52,13 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             "deployment_frequency": 0,
             "lead_time": 0.0,
             "mttr": 0.0,
-            "change_failure_rate": 0.0
+            "change_failure_rate": 0.0,
         }
 
     def _get_github_token(self) -> Optional[str]:
         """Get GitHub token from environment or config."""
         import os
+
         token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
         if not token:
             logger.warning("No GitHub token found. API requests will be limited.")
@@ -81,11 +81,13 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             await self.session.close()
             self.session = None
 
-    async def analyze(self,
-                     repository: str,
-                     days_back: int = 30,
-                     include_resource_usage: bool = True,
-                     **kwargs) -> Dict[str, Any]:
+    async def analyze(
+        self,
+        repository: str,
+        days_back: int = 30,
+        include_resource_usage: bool = True,
+        **kwargs,
+    ) -> dict[str, Any]:
         """Main pipeline analysis method.
 
         Args:
@@ -137,14 +139,17 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                     "dora_metrics": dora_metrics,
                     "resource_usage": resource_usage,
                     "optimization_suggestions": suggestions,
-                    "health_score": self._calculate_health_score(metrics, performance)
+                    "health_score": self._calculate_health_score(metrics, performance),
                 }
 
-                await self.log_operation("pipeline_analysis", {
-                    "repository": repository,
-                    "metrics_collected": len(metrics.get("workflow_runs", [])),
-                    "health_score": results["health_score"]
-                })
+                await self.log_operation(
+                    "pipeline_analysis",
+                    {
+                        "repository": repository,
+                        "metrics_collected": len(metrics.get("workflow_runs", [])),
+                        "health_score": results["health_score"],
+                    },
+                )
 
                 return results
 
@@ -154,10 +159,12 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             return {
                 "error": str(e),
                 "repository": repository,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def collect_pipeline_metrics(self, repository: str, days_back: int = 30) -> Dict[str, Any]:
+    async def collect_pipeline_metrics(
+        self, repository: str, days_back: int = 30
+    ) -> dict[str, Any]:
         """Gather metrics from GitHub Actions workflows.
 
         Args:
@@ -174,11 +181,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
         # Get workflow runs
         url = f"{self.base_url}/repos/{repository}/actions/runs"
-        params = {
-            "per_page": 100,
-            "created": f">={since_date}",
-            "status": "completed"
-        }
+        params = {"per_page": 100, "created": f">={since_date}", "status": "completed"}
 
         all_runs = []
         page = 1
@@ -225,10 +228,10 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             "total_runs": len(all_runs),
             "workflow_runs": all_runs,
             "workflows": workflows,
-            "processed_metrics": processed_metrics
+            "processed_metrics": processed_metrics,
         }
 
-    async def analyze_build_performance(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_build_performance(self, metrics: dict[str, Any]) -> dict[str, Any]:
         """Analyze build times and performance trends.
 
         Args:
@@ -273,7 +276,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                 "median_duration": statistics.median(workflow_durations),
                 "run_count": len(workflow_durations),
                 "slowest_run": max(workflow_durations),
-                "fastest_run": min(workflow_durations)
+                "fastest_run": min(workflow_durations),
             }
 
         # Trend analysis
@@ -281,7 +284,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         for day, day_durations in durations_by_day.items():
             daily_trends[day] = {
                 "average_duration": statistics.mean(day_durations),
-                "run_count": len(day_durations)
+                "run_count": len(day_durations),
             }
 
         return {
@@ -291,14 +294,14 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                 "standard_deviation": std_duration,
                 "total_runs_analyzed": len(durations),
                 "slowest_run_seconds": max(durations),
-                "fastest_run_seconds": min(durations)
+                "fastest_run_seconds": min(durations),
             },
             "workflow_performance": workflow_performance,
             "daily_trends": daily_trends,
-            "performance_grade": self._grade_performance(avg_duration, std_duration)
+            "performance_grade": self._grade_performance(avg_duration, std_duration),
         }
 
-    async def detect_anomalies(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+    async def detect_anomalies(self, metrics: dict[str, Any]) -> dict[str, Any]:
         """Identify unusual patterns in pipeline behavior.
 
         Args:
@@ -312,11 +315,14 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             "duration_anomalies": [],
             "failure_spikes": [],
             "unusual_patterns": [],
-            "resource_anomalies": []
+            "resource_anomalies": [],
         }
 
         if len(runs) < 10:
-            return {"warning": "Insufficient data for anomaly detection", "anomalies": anomalies}
+            return {
+                "warning": "Insufficient data for anomaly detection",
+                "anomalies": anomalies,
+            }
 
         # Analyze duration anomalies
         durations = []
@@ -336,14 +342,18 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
             for timestamp, duration, run in durations:
                 if duration > threshold:
-                    anomalies["duration_anomalies"].append({
-                        "run_id": run["id"],
-                        "workflow": run["name"],
-                        "duration_seconds": duration,
-                        "threshold_seconds": threshold,
-                        "timestamp": timestamp.isoformat(),
-                        "deviation_factor": duration / mean_duration if mean_duration > 0 else 0
-                    })
+                    anomalies["duration_anomalies"].append(
+                        {
+                            "run_id": run["id"],
+                            "workflow": run["name"],
+                            "duration_seconds": duration,
+                            "threshold_seconds": threshold,
+                            "timestamp": timestamp.isoformat(),
+                            "deviation_factor": (
+                                duration / mean_duration if mean_duration > 0 else 0
+                            ),
+                        }
+                    )
 
         # Detect failure spikes
         failure_counts_by_hour = defaultdict(int)
@@ -361,12 +371,14 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
             for hour, count in failure_counts_by_hour.items():
                 if count > spike_threshold and count > 3:  # At least 3 failures
-                    anomalies["failure_spikes"].append({
-                        "hour": hour.isoformat(),
-                        "failure_count": count,
-                        "threshold": spike_threshold,
-                        "severity": "high" if count > spike_threshold * 1.5 else "medium"
-                    })
+                    anomalies["failure_spikes"].append(
+                        {
+                            "hour": hour.isoformat(),
+                            "failure_count": count,
+                            "threshold": spike_threshold,
+                            "severity": "high" if count > spike_threshold * 1.5 else "medium",
+                        }
+                    )
 
         # Pattern detection
         workflow_failure_rates = defaultdict(lambda: {"total": 0, "failures": 0})
@@ -379,17 +391,19 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             if stats["total"] >= 5:  # Only analyze workflows with sufficient data
                 failure_rate = stats["failures"] / stats["total"]
                 if failure_rate > 0.3:  # More than 30% failure rate
-                    anomalies["unusual_patterns"].append({
-                        "type": "high_failure_rate",
-                        "workflow": workflow,
-                        "failure_rate": failure_rate,
-                        "total_runs": stats["total"],
-                        "failed_runs": stats["failures"]
-                    })
+                    anomalies["unusual_patterns"].append(
+                        {
+                            "type": "high_failure_rate",
+                            "workflow": workflow,
+                            "failure_rate": failure_rate,
+                            "total_runs": stats["total"],
+                            "failed_runs": stats["failures"],
+                        }
+                    )
 
         return anomalies
 
-    async def analyze_failure_patterns(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_failure_patterns(self, metrics: dict[str, Any]) -> dict[str, Any]:
         """Find common failure causes and patterns.
 
         Args:
@@ -427,16 +441,18 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         for run in recent_failures:
             # Try to get job details for more context
             job_details = await self._get_job_details(run["jobs_url"])
-            detailed_failures.append({
-                "run_id": run["id"],
-                "workflow": run["name"],
-                "branch": run.get("head_branch"),
-                "actor": run.get("actor", {}).get("login"),
-                "event": run.get("event"),
-                "created_at": run["created_at"],
-                "html_url": run["html_url"],
-                "job_details": job_details
-            })
+            detailed_failures.append(
+                {
+                    "run_id": run["id"],
+                    "workflow": run["name"],
+                    "branch": run.get("head_branch"),
+                    "actor": run.get("actor", {}).get("login"),
+                    "event": run.get("event"),
+                    "created_at": run["created_at"],
+                    "html_url": run["html_url"],
+                    "job_details": job_details,
+                }
+            )
 
         # Calculate failure rates
         total_runs = len(runs)
@@ -447,30 +463,27 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                 "total_failures": len(failed_runs),
                 "total_runs": total_runs,
                 "failure_rate": overall_failure_rate,
-                "analysis_period": metrics.get("collection_date")
+                "analysis_period": metrics.get("collection_date"),
             },
             "failure_distribution": {
                 "by_workflow": dict(failure_by_workflow),
                 "by_branch": dict(failure_by_branch),
                 "by_actor": dict(failure_by_actor),
                 "by_event": dict(failure_by_event),
-                "by_hour": dict(failure_by_hour)
+                "by_hour": dict(failure_by_hour),
             },
             "top_failing_workflows": sorted(
-                failure_by_workflow.items(),
-                key=lambda x: x[1],
-                reverse=True
+                failure_by_workflow.items(), key=lambda x: x[1], reverse=True
             )[:5],
             "recent_detailed_failures": detailed_failures,
             "recommendations": self._generate_failure_recommendations(
                 failure_by_workflow, failure_by_branch, overall_failure_rate
-            )
+            ),
         }
 
-    async def generate_performance_report(self,
-                                         repository: str,
-                                         days_back: int = 30,
-                                         format_type: str = "markdown") -> str:
+    async def generate_performance_report(
+        self, repository: str, days_back: int = 30, format_type: str = "markdown"
+    ) -> str:
         """Create detailed performance reports.
 
         Args:
@@ -490,7 +503,9 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         else:  # markdown
             return self._generate_markdown_report(analysis)
 
-    async def calculate_deployment_metrics(self, repository: str, days_back: int = 30) -> Dict[str, Any]:
+    async def calculate_deployment_metrics(
+        self, repository: str, days_back: int = 30
+    ) -> dict[str, Any]:
         """Calculate DORA metrics (deployment frequency, lead time, MTTR, change failure rate).
 
         Args:
@@ -522,7 +537,9 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
         # Calculate change failure rate
         total_deployments = len(deployment_runs)
-        failed_deployments = len([run for run in deployment_runs if run.get("conclusion") == "failure"])
+        failed_deployments = len(
+            [run for run in deployment_runs if run.get("conclusion") == "failure"]
+        )
         change_failure_rate = failed_deployments / total_deployments if total_deployments > 0 else 0
 
         # Calculate MTTR (Mean Time To Recovery)
@@ -538,14 +555,16 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             "failed_deployments": failed_deployments,
             "dora_score": self._calculate_dora_score(
                 deployment_frequency, avg_lead_time, change_failure_rate, mttr
-            )
+            ),
         }
 
-    async def provide_optimization_suggestions(self,
-                                             metrics: Dict[str, Any],
-                                             performance: Dict[str, Any],
-                                             anomalies: Dict[str, Any],
-                                             failure_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def provide_optimization_suggestions(
+        self,
+        metrics: dict[str, Any],
+        performance: dict[str, Any],
+        anomalies: dict[str, Any],
+        failure_analysis: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         """Generate actionable optimization recommendations.
 
         Args:
@@ -564,89 +583,99 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         avg_duration = overall_stats.get("average_duration_seconds", 0)
 
         if avg_duration > 1800:  # 30 minutes
-            suggestions.append({
-                "type": "performance",
-                "priority": "high",
-                "title": "Reduce Build Time",
-                "description": f"Average build time is {avg_duration/60:.1f} minutes, which is quite long",
-                "recommendations": [
-                    "Enable build caching for dependencies",
-                    "Parallelize test execution",
-                    "Use matrix builds for different environments",
-                    "Consider using faster runners (GitHub-hosted vs self-hosted)",
-                    "Optimize Docker layer caching"
-                ]
-            })
+            suggestions.append(
+                {
+                    "type": "performance",
+                    "priority": "high",
+                    "title": "Reduce Build Time",
+                    "description": f"Average build time is {avg_duration/60:.1f} minutes, which is quite long",
+                    "recommendations": [
+                        "Enable build caching for dependencies",
+                        "Parallelize test execution",
+                        "Use matrix builds for different environments",
+                        "Consider using faster runners (GitHub-hosted vs self-hosted)",
+                        "Optimize Docker layer caching",
+                    ],
+                }
+            )
 
         # Failure rate suggestions
         failure_stats = failure_analysis.get("overall_statistics", {})
         failure_rate = failure_stats.get("failure_rate", 0)
 
         if failure_rate > 0.2:  # More than 20% failure rate
-            suggestions.append({
-                "type": "reliability",
-                "priority": "critical",
-                "title": "High Failure Rate Detected",
-                "description": f"Failure rate is {failure_rate:.1%}, indicating reliability issues",
-                "recommendations": [
-                    "Review and improve test suite reliability",
-                    "Add retry mechanisms for flaky tests",
-                    "Implement better error handling",
-                    "Consider splitting large workflows into smaller ones",
-                    "Add health checks before deployment"
-                ]
-            })
+            suggestions.append(
+                {
+                    "type": "reliability",
+                    "priority": "critical",
+                    "title": "High Failure Rate Detected",
+                    "description": f"Failure rate is {failure_rate:.1%}, indicating reliability issues",
+                    "recommendations": [
+                        "Review and improve test suite reliability",
+                        "Add retry mechanisms for flaky tests",
+                        "Implement better error handling",
+                        "Consider splitting large workflows into smaller ones",
+                        "Add health checks before deployment",
+                    ],
+                }
+            )
 
         # Workflow-specific suggestions
         workflow_performance = performance.get("workflow_performance", {})
         for workflow, stats in workflow_performance.items():
             if stats.get("average_duration", 0) > 2400:  # 40 minutes
-                suggestions.append({
-                    "type": "workflow_optimization",
-                    "priority": "medium",
-                    "title": f"Optimize {workflow} Workflow",
-                    "description": f"Workflow '{workflow}' takes {stats['average_duration']/60:.1f} minutes on average",
-                    "recommendations": [
-                        f"Break down '{workflow}' into smaller, parallel jobs",
-                        "Use conditional execution to skip unnecessary steps",
-                        "Implement incremental builds",
-                        "Cache build artifacts between jobs"
-                    ]
-                })
+                suggestions.append(
+                    {
+                        "type": "workflow_optimization",
+                        "priority": "medium",
+                        "title": f"Optimize {workflow} Workflow",
+                        "description": f"Workflow '{workflow}' takes {stats['average_duration']/60:.1f} minutes on average",
+                        "recommendations": [
+                            f"Break down '{workflow}' into smaller, parallel jobs",
+                            "Use conditional execution to skip unnecessary steps",
+                            "Implement incremental builds",
+                            "Cache build artifacts between jobs",
+                        ],
+                    }
+                )
 
         # Anomaly-based suggestions
         duration_anomalies = anomalies.get("anomalies", {}).get("duration_anomalies", [])
         if len(duration_anomalies) > 5:
-            suggestions.append({
-                "type": "stability",
-                "priority": "medium",
-                "title": "Inconsistent Build Times",
-                "description": f"Detected {len(duration_anomalies)} builds with unusually long durations",
-                "recommendations": [
-                    "Investigate resource contention issues",
-                    "Add monitoring for external dependency availability",
-                    "Implement timeout mechanisms",
-                    "Consider using dedicated build agents"
-                ]
-            })
+            suggestions.append(
+                {
+                    "type": "stability",
+                    "priority": "medium",
+                    "title": "Inconsistent Build Times",
+                    "description": f"Detected {len(duration_anomalies)} builds with unusually long durations",
+                    "recommendations": [
+                        "Investigate resource contention issues",
+                        "Add monitoring for external dependency availability",
+                        "Implement timeout mechanisms",
+                        "Consider using dedicated build agents",
+                    ],
+                }
+            )
 
         # Resource optimization suggestions
-        suggestions.append({
-            "type": "resource_optimization",
-            "priority": "low",
-            "title": "Resource Usage Optimization",
-            "description": "General recommendations for better resource utilization",
-            "recommendations": [
-                "Use appropriate runner sizes for different job types",
-                "Implement artifact cleanup after successful builds",
-                "Consider using spot instances for non-critical builds",
-                "Monitor and optimize memory usage in builds"
-            ]
-        })
+        suggestions.append(
+            {
+                "type": "resource_optimization",
+                "priority": "low",
+                "title": "Resource Usage Optimization",
+                "description": "General recommendations for better resource utilization",
+                "recommendations": [
+                    "Use appropriate runner sizes for different job types",
+                    "Implement artifact cleanup after successful builds",
+                    "Consider using spot instances for non-critical builds",
+                    "Monitor and optimize memory usage in builds",
+                ],
+            }
+        )
 
         return suggestions
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute a specific monitoring action.
 
         Args:
@@ -664,13 +693,13 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             "check_health": self._action_check_health,
             "get_metrics": self._action_get_metrics,
             "detect_issues": self._action_detect_issues,
-            "optimize_workflows": self._action_optimize_workflows
+            "optimize_workflows": self._action_optimize_workflows,
         }
 
         if action not in actions:
             return {
                 "error": f"Unknown action: {action}",
-                "available_actions": list(actions.keys())
+                "available_actions": list(actions.keys()),
             }
 
         try:
@@ -683,16 +712,24 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
             return {"error": str(e), "action": action}
 
     # Action implementations
-    async def _action_analyze_pipeline(self, repository: str, days_back: int = 30, **kwargs) -> Dict[str, Any]:
+    async def _action_analyze_pipeline(
+        self, repository: str, days_back: int = 30, **kwargs
+    ) -> dict[str, Any]:
         """Analyze pipeline action."""
         return await self.analyze(repository, days_back, **kwargs)
 
-    async def _action_generate_report(self, repository: str, days_back: int = 30, format_type: str = "markdown", **kwargs) -> Dict[str, Any]:
+    async def _action_generate_report(
+        self,
+        repository: str,
+        days_back: int = 30,
+        format_type: str = "markdown",
+        **kwargs,
+    ) -> dict[str, Any]:
         """Generate report action."""
         report = await self.generate_performance_report(repository, days_back, format_type)
         return {"report": report, "format": format_type}
 
-    async def _action_check_health(self, repository: str, **kwargs) -> Dict[str, Any]:
+    async def _action_check_health(self, repository: str, **kwargs) -> dict[str, Any]:
         """Check pipeline health action."""
         metrics = await self.collect_pipeline_metrics(repository, 7)  # Last 7 days
         performance = await self.analyze_build_performance(metrics)
@@ -701,15 +738,23 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         return {
             "repository": repository,
             "health_score": health_score,
-            "status": "healthy" if health_score > 0.7 else "needs_attention" if health_score > 0.4 else "critical",
-            "last_check": datetime.now().isoformat()
+            "status": (
+                "healthy"
+                if health_score > 0.7
+                else "needs_attention" if health_score > 0.4 else "critical"
+            ),
+            "last_check": datetime.now().isoformat(),
         }
 
-    async def _action_get_metrics(self, repository: str, days_back: int = 30, **kwargs) -> Dict[str, Any]:
+    async def _action_get_metrics(
+        self, repository: str, days_back: int = 30, **kwargs
+    ) -> dict[str, Any]:
         """Get metrics action."""
         return await self.collect_pipeline_metrics(repository, days_back)
 
-    async def _action_detect_issues(self, repository: str, days_back: int = 30, **kwargs) -> Dict[str, Any]:
+    async def _action_detect_issues(
+        self, repository: str, days_back: int = 30, **kwargs
+    ) -> dict[str, Any]:
         """Detect issues action."""
         metrics = await self.collect_pipeline_metrics(repository, days_back)
         anomalies = await self.detect_anomalies(metrics)
@@ -718,11 +763,13 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         return {
             "anomalies": anomalies,
             "failure_analysis": failure_analysis,
-            "issues_found": len(anomalies.get("anomalies", {}).get("duration_anomalies", [])) > 0 or
-                           len(anomalies.get("anomalies", {}).get("failure_spikes", [])) > 0
+            "issues_found": len(anomalies.get("anomalies", {}).get("duration_anomalies", [])) > 0
+            or len(anomalies.get("anomalies", {}).get("failure_spikes", [])) > 0,
         }
 
-    async def _action_optimize_workflows(self, repository: str, days_back: int = 30, **kwargs) -> Dict[str, Any]:
+    async def _action_optimize_workflows(
+        self, repository: str, days_back: int = 30, **kwargs
+    ) -> dict[str, Any]:
         """Optimize workflows action."""
         analysis = await self.analyze(repository, days_back)
         suggestions = analysis.get("optimization_suggestions", [])
@@ -735,18 +782,18 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         return {
             "repository": repository,
             "optimization_suggestions": suggestions,
-            "total_suggestions": len(suggestions)
+            "total_suggestions": len(suggestions),
         }
 
     # Helper methods
-    def _process_workflow_runs(self, runs: List[Dict], workflows: List[Dict]) -> Dict[str, Any]:
+    def _process_workflow_runs(self, runs: list[dict], workflows: list[dict]) -> dict[str, Any]:
         """Process raw workflow run data into metrics."""
         processed = {
             "success_rate": 0,
             "average_duration": 0,
             "workflow_stats": {},
             "status_distribution": Counter(),
-            "conclusion_distribution": Counter()
+            "conclusion_distribution": Counter(),
         }
 
         if not runs:
@@ -755,7 +802,9 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         durations = []
         successes = 0
 
-        workflow_stats = defaultdict(lambda: {"runs": 0, "successes": 0, "failures": 0, "durations": []})
+        workflow_stats = defaultdict(
+            lambda: {"runs": 0, "successes": 0, "failures": 0, "durations": []}
+        )
 
         for run in runs:
             # Status and conclusion tracking
@@ -792,12 +841,12 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                     "success_rate": stats["successes"] / stats["runs"] if stats["runs"] > 0 else 0,
                     "average_duration": statistics.mean(stats["durations"]),
                     "total_successes": stats["successes"],
-                    "total_failures": stats["failures"]
+                    "total_failures": stats["failures"],
                 }
 
         return processed
 
-    async def _get_workflows(self, repository: str) -> List[Dict]:
+    async def _get_workflows(self, repository: str) -> list[dict]:
         """Get workflow definitions for the repository."""
         if not self.session:
             return []
@@ -813,7 +862,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
         return []
 
-    async def _get_job_details(self, jobs_url: str) -> List[Dict]:
+    async def _get_job_details(self, jobs_url: str) -> list[dict]:
         """Get detailed job information."""
         if not self.session or not jobs_url:
             return []
@@ -829,7 +878,13 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                             "conclusion": job.get("conclusion"),
                             "status": job.get("status"),
                             "steps": len(job.get("steps", [])),
-                            "failed_steps": len([s for s in job.get("steps", []) if s.get("conclusion") == "failure"])
+                            "failed_steps": len(
+                                [
+                                    s
+                                    for s in job.get("steps", [])
+                                    if s.get("conclusion") == "failure"
+                                ]
+                            ),
                         }
                         for job in jobs
                     ]
@@ -838,7 +893,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
         return []
 
-    async def _get_deployment_runs(self, repository: str, days_back: int) -> List[Dict]:
+    async def _get_deployment_runs(self, repository: str, days_back: int) -> list[dict]:
         """Get workflow runs related to deployments."""
         metrics = await self.collect_pipeline_metrics(repository, days_back)
         runs = metrics.get("workflow_runs", [])
@@ -864,17 +919,23 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         for i, run in enumerate(deployment_runs):
             if run.get("conclusion") == "failure" and i < len(deployment_runs) - 1:
                 # Find next successful deployment
-                for next_run in deployment_runs[i+1:]:
+                for next_run in deployment_runs[i + 1 :]:
                     if next_run.get("conclusion") == "success":
-                        failure_time = datetime.fromisoformat(run["created_at"].replace("Z", "+00:00"))
-                        recovery_time = datetime.fromisoformat(next_run["created_at"].replace("Z", "+00:00"))
+                        failure_time = datetime.fromisoformat(
+                            run["created_at"].replace("Z", "+00:00")
+                        )
+                        recovery_time = datetime.fromisoformat(
+                            next_run["created_at"].replace("Z", "+00:00")
+                        )
                         mttr_hours = (recovery_time - failure_time).total_seconds() / 3600
                         recovery_times.append(mttr_hours)
                         break
 
         return statistics.mean(recovery_times) if recovery_times else 0
 
-    def _calculate_health_score(self, metrics: Dict[str, Any], performance: Dict[str, Any]) -> float:
+    def _calculate_health_score(
+        self, metrics: dict[str, Any], performance: dict[str, Any]
+    ) -> float:
         """Calculate overall pipeline health score (0-1)."""
         processed = metrics.get("processed_metrics", {})
         success_rate = processed.get("success_rate", 0)
@@ -912,8 +973,13 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         else:
             return "F"
 
-    def _calculate_dora_score(self, deployment_freq: float, lead_time: float,
-                            change_failure_rate: float, mttr: float) -> str:
+    def _calculate_dora_score(
+        self,
+        deployment_freq: float,
+        lead_time: float,
+        change_failure_rate: float,
+        mttr: float,
+    ) -> str:
         """Calculate DORA maturity score."""
         # Elite performers: Daily deployments, <1hr lead time, <15% failure rate, <1hr MTTR
         # High performers: Weekly-monthly deployments, <1 day lead time, <15% failure rate, <1 day MTTR
@@ -970,30 +1036,41 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         else:
             return "Low"
 
-    def _generate_failure_recommendations(self, failure_by_workflow: Dict,
-                                        failure_by_branch: Dict,
-                                        overall_failure_rate: float) -> List[str]:
+    def _generate_failure_recommendations(
+        self,
+        failure_by_workflow: dict,
+        failure_by_branch: dict,
+        overall_failure_rate: float,
+    ) -> list[str]:
         """Generate recommendations based on failure patterns."""
         recommendations = []
 
         if overall_failure_rate > 0.3:
-            recommendations.append("Overall failure rate is high. Consider improving test reliability and adding retry mechanisms.")
+            recommendations.append(
+                "Overall failure rate is high. Consider improving test reliability and adding retry mechanisms."
+            )
 
         # Top failing workflows
         if failure_by_workflow:
             top_failing = max(failure_by_workflow.items(), key=lambda x: x[1])
             if top_failing[1] > 5:
-                recommendations.append(f"Workflow '{top_failing[0]}' has {top_failing[1]} failures. Focus optimization efforts here.")
+                recommendations.append(
+                    f"Workflow '{top_failing[0]}' has {top_failing[1]} failures. Focus optimization efforts here."
+                )
 
         # Branch-specific issues
         if failure_by_branch:
-            problematic_branches = [branch for branch, count in failure_by_branch.items() if count > 3]
+            problematic_branches = [
+                branch for branch, count in failure_by_branch.items() if count > 3
+            ]
             if problematic_branches:
-                recommendations.append(f"Branches {problematic_branches} have multiple failures. Consider branch protection rules.")
+                recommendations.append(
+                    f"Branches {problematic_branches} have multiple failures. Consider branch protection rules."
+                )
 
         return recommendations
 
-    def _generate_markdown_report(self, analysis: Dict[str, Any]) -> str:
+    def _generate_markdown_report(self, analysis: dict[str, Any]) -> str:
         """Generate a markdown-formatted report."""
         repo = analysis.get("repository", "Unknown")
         period = analysis.get("analysis_period", "Unknown")
@@ -1010,7 +1087,11 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 """
 
         health_score = analysis.get("health_score", 0)
-        health_status = "🟢 Healthy" if health_score > 0.7 else "🟡 Needs Attention" if health_score > 0.4 else "🔴 Critical"
+        health_status = (
+            "🟢 Healthy"
+            if health_score > 0.7
+            else "🟡 Needs Attention" if health_score > 0.4 else "🔴 Critical"
+        )
 
         report += f"**Pipeline Health:** {health_status} (Score: {health_score:.2f}/1.00)\n\n"
 
@@ -1048,7 +1129,12 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
         if suggestions:
             report += "## Optimization Recommendations\n\n"
             for i, suggestion in enumerate(suggestions[:5], 1):  # Top 5 suggestions
-                priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}.get(suggestion.get("priority", "low"), "🔵")
+                priority_emoji = {
+                    "critical": "🔴",
+                    "high": "🟠",
+                    "medium": "🟡",
+                    "low": "🟢",
+                }.get(suggestion.get("priority", "low"), "🔵")
                 report += f"### {i}. {suggestion.get('title', 'Optimization')} {priority_emoji}\n\n"
                 report += f"{suggestion.get('description', '')}\n\n"
 
@@ -1077,7 +1163,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
         return report
 
-    async def _analyze_resource_usage(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_resource_usage(self, metrics: dict[str, Any]) -> dict[str, Any]:
         """Analyze resource usage patterns (simplified implementation)."""
         # This would typically integrate with monitoring systems
         # For now, we'll analyze based on duration patterns as a proxy
@@ -1092,7 +1178,7 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
                     "run_count": 0,
                     "total_duration": 0,
                     "avg_duration": 0,
-                    "resource_efficiency": "unknown"
+                    "resource_efficiency": "unknown",
                 }
 
             if run.get("status") == "completed":
@@ -1120,5 +1206,5 @@ class PipelineMonitoringAgent(BaseGitHubAgent):
 
         return {
             "workflow_patterns": workflow_resource_patterns,
-            "analysis_note": "Resource usage analysis is simplified. For detailed resource metrics, integrate with monitoring systems."
+            "analysis_note": "Resource usage analysis is simplified. For detailed resource metrics, integrate with monitoring systems.",
         }

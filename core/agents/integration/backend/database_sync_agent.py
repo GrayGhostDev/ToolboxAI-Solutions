@@ -11,35 +11,37 @@ This agent handles:
 """
 
 import asyncio
-import logging
-from typing import Dict, Any, Optional, List, Set
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
 import json
-import hashlib
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+
+from core.agents.base_agent import AgentConfig
 
 from ..base_integration_agent import (
     BaseIntegrationAgent,
-    IntegrationPlatform,
     IntegrationEvent,
-    TaskResult
+    IntegrationPlatform,
+    TaskResult,
 )
-from core.agents.base_agent import AgentConfig
 
 logger = logging.getLogger(__name__)
 
 
 class SyncStrategy(Enum):
     """Database synchronization strategies"""
+
     WRITE_THROUGH = "write_through"  # Write to both immediately
-    WRITE_BEHIND = "write_behind"    # Write to cache, async to DB
+    WRITE_BEHIND = "write_behind"  # Write to cache, async to DB
     REFRESH_AHEAD = "refresh_ahead"  # Proactive cache refresh
-    LAZY_LOADING = "lazy_loading"    # Load on demand
+    LAZY_LOADING = "lazy_loading"  # Load on demand
 
 
 class ConflictResolution(Enum):
     """Conflict resolution strategies"""
+
     LAST_WRITE_WINS = "last_write_wins"
     FIRST_WRITE_WINS = "first_write_wins"
     MANUAL = "manual"
@@ -49,11 +51,12 @@ class ConflictResolution(Enum):
 @dataclass
 class SyncOperation:
     """Database synchronization operation"""
+
     operation_id: str
     table_name: str
     operation_type: str  # insert, update, delete
     primary_key: Any
-    data: Dict[str, Any]
+    data: dict[str, Any]
     source: IntegrationPlatform
     target: IntegrationPlatform
     timestamp: datetime = field(default_factory=datetime.utcnow)
@@ -65,12 +68,13 @@ class SyncOperation:
 @dataclass
 class DataConsistencyCheck:
     """Data consistency validation result"""
+
     table_name: str
     postgresql_count: int
     redis_count: int
-    mismatched_keys: List[str]
-    missing_in_redis: List[str]
-    missing_in_postgresql: List[str]
+    mismatched_keys: list[str]
+    missing_in_redis: list[str]
+    missing_in_postgresql: list[str]
     is_consistent: bool
     check_timestamp: datetime = field(default_factory=datetime.utcnow)
 
@@ -78,11 +82,12 @@ class DataConsistencyCheck:
 @dataclass
 class MigrationTask:
     """Database migration task"""
+
     migration_id: str
     version: str
     description: str
-    sql_statements: List[str]
-    rollback_statements: List[str]
+    sql_statements: list[str]
+    rollback_statements: list[str]
     applied_at: Optional[datetime] = None
     status: str = "pending"
 
@@ -90,7 +95,7 @@ class MigrationTask:
         """Connect to a specific platform"""
         try:
             # Placeholder implementation
-            self.connected_platforms = getattr(self, 'connected_platforms', set())
+            self.connected_platforms = getattr(self, "connected_platforms", set())
             self.connected_platforms.add(platform)
             return True
         except Exception:
@@ -113,37 +118,37 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 - Resolving data conflicts and inconsistencies
                 - Optimizing cache performance
                 - Performing backup and recovery operations
-                """
+                """,
             )
         super().__init__(config)
 
         # Sync management
-        self.sync_operations: Dict[str, SyncOperation] = {}
+        self.sync_operations: dict[str, SyncOperation] = {}
         self.sync_strategy = SyncStrategy.WRITE_THROUGH
         self.conflict_resolution = ConflictResolution.LAST_WRITE_WINS
 
         # Migration tracking
-        self.migrations: Dict[str, MigrationTask] = {}
+        self.migrations: dict[str, MigrationTask] = {}
         self.current_version: Optional[str] = None
 
         # Consistency tracking
-        self.consistency_checks: List[DataConsistencyCheck] = []
-        self.table_checksums: Dict[str, str] = {}
+        self.consistency_checks: list[DataConsistencyCheck] = []
+        self.table_checksums: dict[str, str] = {}
 
         # Cache configuration
-        self.cache_ttl: Dict[str, int] = {}  # Table-specific TTLs in seconds
-        self.cache_invalidation_rules: Dict[str, List[str]] = {}
+        self.cache_ttl: dict[str, int] = {}  # Table-specific TTLs in seconds
+        self.cache_invalidation_rules: dict[str, list[str]] = {}
 
         # Performance metrics
-        self.sync_latency: List[float] = []
+        self.sync_latency: list[float] = []
         self.cache_hit_rate: float = 0.0
 
     async def sync_data_to_cache(
         self,
         table_name: str,
         primary_key: Any,
-        data: Dict[str, Any],
-        ttl: Optional[int] = None
+        data: dict[str, Any],
+        ttl: Optional[int] = None,
     ) -> TaskResult:
         """Sync data from PostgreSQL to Redis cache"""
         try:
@@ -154,7 +159,7 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 primary_key=primary_key,
                 data=data,
                 source=IntegrationPlatform.DATABASE,
-                target=IntegrationPlatform.CACHE
+                target=IntegrationPlatform.CACHE,
             )
 
             self.sync_operations[operation.operation_id] = operation
@@ -171,31 +176,29 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
 
             # Store in cache (simulated - actual implementation would use Redis client)
             if IntegrationPlatform.CACHE in self.platform_clients:
-                redis_client = self.platform_clients[IntegrationPlatform.CACHE]
+                self.platform_clients[IntegrationPlatform.CACHE]
                 # await redis_client.setex(cache_key, ttl, cache_value)
 
             operation.status = "completed"
 
             # Emit sync event
-            await self.emit_event(IntegrationEvent(
-                event_id=operation.operation_id,
-                event_type="data_synced_to_cache",
-                source_platform=IntegrationPlatform.DATABASE,
-                target_platform=IntegrationPlatform.CACHE,
-                payload={
-                    "table": table_name,
-                    "key": str(primary_key),
-                    "ttl": ttl
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=operation.operation_id,
+                    event_type="data_synced_to_cache",
+                    source_platform=IntegrationPlatform.DATABASE,
+                    target_platform=IntegrationPlatform.CACHE,
+                    payload={"table": table_name, "key": str(primary_key), "ttl": ttl},
+                )
+            )
 
             return TaskResult(
                 success=True,
                 output={
                     "cache_key": cache_key,
                     "ttl": ttl,
-                    "data_size": len(cache_value)
-                }
+                    "data_size": len(cache_value),
+                },
             )
 
         except Exception as e:
@@ -203,17 +206,10 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             if operation:
                 operation.status = "failed"
                 operation.error = str(e)
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def sync_data_to_database(
-        self,
-        table_name: str,
-        primary_key: Any,
-        data: Dict[str, Any]
+        self, table_name: str, primary_key: Any, data: dict[str, Any]
     ) -> TaskResult:
         """Sync data from cache to PostgreSQL database"""
         try:
@@ -224,14 +220,14 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 primary_key=primary_key,
                 data=data,
                 source=IntegrationPlatform.CACHE,
-                target=IntegrationPlatform.DATABASE
+                target=IntegrationPlatform.DATABASE,
             )
 
             self.sync_operations[operation.operation_id] = operation
 
             # Perform database update (simulated)
             if IntegrationPlatform.DATABASE in self.platform_clients:
-                db_client = self.platform_clients[IntegrationPlatform.DATABASE]
+                self.platform_clients[IntegrationPlatform.DATABASE]
                 # await db_client.update(table_name, primary_key, data)
 
             operation.status = "completed"
@@ -241,8 +237,8 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 output={
                     "table": table_name,
                     "primary_key": primary_key,
-                    "updated_fields": list(data.keys())
-                }
+                    "updated_fields": list(data.keys()),
+                },
             )
 
         except Exception as e:
@@ -250,16 +246,10 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             if operation:
                 operation.status = "failed"
                 operation.error = str(e)
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def validate_consistency(
-        self,
-        table_name: str,
-        sample_size: Optional[int] = None
+        self, table_name: str, sample_size: Optional[int] = None
     ) -> DataConsistencyCheck:
         """Validate data consistency between PostgreSQL and Redis"""
         check = DataConsistencyCheck(
@@ -269,7 +259,7 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             mismatched_keys=[],
             missing_in_redis=[],
             missing_in_postgresql=[],
-            is_consistent=True
+            is_consistent=True,
         )
 
         try:
@@ -303,28 +293,30 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                     check.mismatched_keys.append(str(key))
 
             check.is_consistent = (
-                len(check.missing_in_redis) == 0 and
-                len(check.missing_in_postgresql) == 0 and
-                len(check.mismatched_keys) == 0
+                len(check.missing_in_redis) == 0
+                and len(check.missing_in_postgresql) == 0
+                and len(check.mismatched_keys) == 0
             )
 
             self.consistency_checks.append(check)
 
             # Emit consistency check event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"consistency_check_{table_name}_{datetime.utcnow().timestamp()}",
-                event_type="consistency_check_completed",
-                source_platform=IntegrationPlatform.DATABASE,
-                payload={
-                    "table": table_name,
-                    "is_consistent": check.is_consistent,
-                    "discrepancies": {
-                        "missing_in_redis": len(check.missing_in_redis),
-                        "missing_in_postgresql": len(check.missing_in_postgresql),
-                        "mismatched": len(check.mismatched_keys)
-                    }
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"consistency_check_{table_name}_{datetime.utcnow().timestamp()}",
+                    event_type="consistency_check_completed",
+                    source_platform=IntegrationPlatform.DATABASE,
+                    payload={
+                        "table": table_name,
+                        "is_consistent": check.is_consistent,
+                        "discrepancies": {
+                            "missing_in_redis": len(check.missing_in_redis),
+                            "missing_in_postgresql": len(check.missing_in_postgresql),
+                            "mismatched": len(check.mismatched_keys),
+                        },
+                    },
+                )
+            )
 
         except Exception as e:
             logger.error(f"Error validating consistency: {e}")
@@ -336,8 +328,8 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
         self,
         table_name: str,
         primary_key: Any,
-        postgresql_data: Dict[str, Any],
-        redis_data: Dict[str, Any]
+        postgresql_data: dict[str, Any],
+        redis_data: dict[str, Any],
     ) -> TaskResult:
         """Resolve data conflicts between PostgreSQL and Redis"""
         try:
@@ -377,21 +369,23 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
 
             else:  # MANUAL
                 # Emit event for manual resolution
-                await self.emit_event(IntegrationEvent(
-                    event_id=f"conflict_{table_name}_{primary_key}",
-                    event_type="manual_conflict_resolution_required",
-                    source_platform=IntegrationPlatform.DATABASE,
-                    payload={
-                        "table": table_name,
-                        "primary_key": primary_key,
-                        "postgresql_data": postgresql_data,
-                        "redis_data": redis_data
-                    }
-                ))
+                await self.emit_event(
+                    IntegrationEvent(
+                        event_id=f"conflict_{table_name}_{primary_key}",
+                        event_type="manual_conflict_resolution_required",
+                        source_platform=IntegrationPlatform.DATABASE,
+                        payload={
+                            "table": table_name,
+                            "primary_key": primary_key,
+                            "postgresql_data": postgresql_data,
+                            "redis_data": redis_data,
+                        },
+                    )
+                )
                 return TaskResult(
                     success=False,
                     output=None,
-                    error="Manual conflict resolution required"
+                    error="Manual conflict resolution required",
                 )
 
             return TaskResult(
@@ -399,29 +393,23 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 output={
                     "resolved": True,
                     "strategy": resolution_strategy.value,
-                    "resolved_data": resolved_data
-                }
+                    "resolved_data": resolved_data,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error resolving conflict: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def invalidate_cache(
-        self,
-        table_name: Optional[str] = None,
-        keys: Optional[List[str]] = None
+        self, table_name: Optional[str] = None, keys: Optional[list[str]] = None
     ) -> TaskResult:
         """Invalidate cache entries"""
         try:
             invalidated_count = 0
 
             if IntegrationPlatform.CACHE in self.platform_clients:
-                redis_client = self.platform_clients[IntegrationPlatform.CACHE]
+                self.platform_clients[IntegrationPlatform.CACHE]
 
                 if keys:
                     # Invalidate specific keys
@@ -430,49 +418,41 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                         invalidated_count += 1
                 elif table_name:
                     # Invalidate all keys for a table
-                    pattern = f"{table_name}:*"
+                    pass
                     # keys_to_delete = await redis_client.keys(pattern)
                     # for key in keys_to_delete:
                     #     await redis_client.delete(key)
                     #     invalidated_count += 1
 
             # Emit invalidation event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"cache_invalidation_{datetime.utcnow().timestamp()}",
-                event_type="cache_invalidated",
-                source_platform=IntegrationPlatform.CACHE,
-                payload={
-                    "table": table_name,
-                    "keys_invalidated": invalidated_count
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"cache_invalidation_{datetime.utcnow().timestamp()}",
+                    event_type="cache_invalidated",
+                    source_platform=IntegrationPlatform.CACHE,
+                    payload={
+                        "table": table_name,
+                        "keys_invalidated": invalidated_count,
+                    },
+                )
+            )
 
             return TaskResult(
                 success=True,
-                output={
-                    "invalidated_count": invalidated_count,
-                    "table": table_name
-                }
+                output={"invalidated_count": invalidated_count, "table": table_name},
             )
 
         except Exception as e:
             logger.error(f"Error invalidating cache: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def apply_migration(
-        self,
-        migration: MigrationTask
-    ) -> TaskResult:
+    async def apply_migration(self, migration: MigrationTask) -> TaskResult:
         """Apply a database migration"""
         try:
             migration.status = "applying"
 
             if IntegrationPlatform.DATABASE in self.platform_clients:
-                db_client = self.platform_clients[IntegrationPlatform.DATABASE]
+                self.platform_clients[IntegrationPlatform.DATABASE]
 
                 # Execute migration statements
                 for sql in migration.sql_statements:
@@ -494,8 +474,8 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 output={
                     "migration_id": migration.migration_id,
                     "version": migration.version,
-                    "applied_at": migration.applied_at.isoformat()
-                }
+                    "applied_at": migration.applied_at.isoformat(),
+                },
             )
 
         except Exception as e:
@@ -512,11 +492,7 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 except Exception as rollback_error:
                     logger.error(f"Rollback failed: {rollback_error}")
 
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     def _generate_cache_key(self, table_name: str, primary_key: Any) -> str:
         """Generate a cache key for a database record"""
@@ -530,15 +506,17 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 await self.sync_data_to_cache(
                     table_name=event.payload["table"],
                     primary_key=event.payload["primary_key"],
-                    data=event.payload["data"]
+                    data=event.payload["data"],
                 )
             elif self.sync_strategy == SyncStrategy.WRITE_BEHIND:
                 # Queue for async sync
-                await asyncio.create_task(self.sync_data_to_cache(
-                    table_name=event.payload["table"],
-                    primary_key=event.payload["primary_key"],
-                    data=event.payload["data"]
-                ))
+                await asyncio.create_task(
+                    self.sync_data_to_cache(
+                        table_name=event.payload["table"],
+                        primary_key=event.payload["primary_key"],
+                        data=event.payload["data"],
+                    )
+                )
 
         elif event.event_type == "cache_miss":
             # Load data from database
@@ -562,7 +540,9 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             # Calculate cache metrics
             total_hits = self.metrics.cache_hits
             total_misses = self.metrics.cache_misses
-            hit_rate = total_hits / (total_hits + total_misses) if (total_hits + total_misses) > 0 else 0
+            hit_rate = (
+                total_hits / (total_hits + total_misses) if (total_hits + total_misses) > 0 else 0
+            )
 
             # Identify hot keys
             # This would need actual Redis monitoring
@@ -580,43 +560,37 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                     "cache_hit_rate": hit_rate,
                     "total_hits": total_hits,
                     "total_misses": total_misses,
-                    "recommendations": recommendations
-                }
+                    "recommendations": recommendations,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error optimizing cache performance: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def execute_task(self, task: str, context: Optional[Dict[str, Any]] = None) -> TaskResult:
+    async def execute_task(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
         """Execute Database Sync specific tasks"""
         if task == "sync_to_cache":
             return await self.sync_data_to_cache(
                 table_name=context["table"],
                 primary_key=context["primary_key"],
                 data=context["data"],
-                ttl=context.get("ttl")
+                ttl=context.get("ttl"),
             )
         elif task == "sync_to_database":
             return await self.sync_data_to_database(
                 table_name=context["table"],
                 primary_key=context["primary_key"],
-                data=context["data"]
+                data=context["data"],
             )
         elif task == "validate_consistency":
             check = await self.validate_consistency(
-                table_name=context["table"],
-                sample_size=context.get("sample_size")
+                table_name=context["table"], sample_size=context.get("sample_size")
             )
             return TaskResult(success=check.is_consistent, output=check.__dict__)
         elif task == "invalidate_cache":
             return await self.invalidate_cache(
-                table_name=context.get("table"),
-                keys=context.get("keys")
+                table_name=context.get("table"), keys=context.get("keys")
             )
         elif task == "apply_migration":
             migration = MigrationTask(**context["migration"])
@@ -625,12 +599,14 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             return await self.optimize_cache_performance()
         else:
             return await super().execute_task(task, context)
+
     async def sync_to_cache(self, key: str, value: Any) -> bool:
         """Sync data to cache"""
-        if not hasattr(self, 'cache'):
+        if not hasattr(self, "cache"):
             self.cache = {}
-        if not hasattr(self, 'sync_strategy'):
+        if not hasattr(self, "sync_strategy"):
             from core.agents.integration.models import SyncStrategy
+
             self.sync_strategy = SyncStrategy.WRITE_THROUGH
 
         if self.sync_strategy == SyncStrategy.WRITE_THROUGH:

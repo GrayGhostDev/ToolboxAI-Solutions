@@ -58,7 +58,7 @@ def get_email_service(force_mock: bool = False):
         try:
             sg = SendGridAPIClient(api_key)
             # Try to get API key scopes (this will fail with 401 if invalid)
-            response = sg.client.scopes.get()
+            sg.client.scopes.get()
 
             logger.info("✅ Using SendGridEmailService (API key validated)")
             return SendGridEmailService()

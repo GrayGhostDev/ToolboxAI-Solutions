@@ -101,7 +101,8 @@ class TestSemanticCache:
     async def semantic_cache(self, redis_mock, langcache_mock):
         """Create SemanticCacheService instance with mocks"""
         with patch(
-            "apps.backend.services.semantic_cache.aioredis.from_url", return_value=redis_mock
+            "apps.backend.services.semantic_cache.aioredis.from_url",
+            return_value=redis_mock,
         ):
             with patch("apps.backend.services.semantic_cache.lang_cache", langcache_mock):
                 cache = SemanticCacheService()
@@ -224,10 +225,12 @@ class TestAPIKeyManager:
     async def api_key_manager(self, redis_mock, supabase_mock):
         """Create APIKeyManager instance with mocks"""
         with patch(
-            "apps.backend.services.api_key_manager.aioredis.from_url", return_value=redis_mock
+            "apps.backend.services.api_key_manager.aioredis.from_url",
+            return_value=redis_mock,
         ):
             with patch(
-                "apps.backend.services.api_key_manager.create_client", return_value=supabase_mock
+                "apps.backend.services.api_key_manager.create_client",
+                return_value=supabase_mock,
             ):
                 manager = APIKeyManager()
                 await manager.initialize()
@@ -464,7 +467,8 @@ class TestBackupManager:
         }
 
         with patch(
-            "infrastructure.backups.scripts.backup_manager.boto3.client", return_value=s3_mock
+            "infrastructure.backups.scripts.backup_manager.boto3.client",
+            return_value=s3_mock,
         ):
             manager = BackupManager(config)
             await manager.initialize()
@@ -524,7 +528,7 @@ class TestBackupManager:
             await backup_manager.create_backup(BackupType.FULL)
 
         # Apply retention policy
-        deleted_count = await backup_manager.apply_retention_policy()
+        await backup_manager.apply_retention_policy()
 
         # Should keep only configured number of backups
         remaining_backups = await backup_manager.list_backups()
@@ -546,9 +550,9 @@ class TestBackupManager:
     async def test_point_in_time_recovery(self, backup_manager):
         """Test point-in-time recovery"""
         # Create backups at different times
-        backup1 = await backup_manager.create_backup(BackupType.FULL)
+        await backup_manager.create_backup(BackupType.FULL)
         await asyncio.sleep(0.1)
-        backup2 = await backup_manager.create_backup(BackupType.INCREMENTAL)
+        await backup_manager.create_backup(BackupType.INCREMENTAL)
 
         # Restore to specific point in time
         target_time = datetime.utcnow() - timedelta(minutes=5)
@@ -571,7 +575,8 @@ class TestRobloxAssetManager:
     async def asset_manager(self, redis_mock):
         """Create RobloxAssetManager instance with mocks"""
         with patch(
-            "apps.backend.services.roblox_deployment.aioredis.from_url", return_value=redis_mock
+            "apps.backend.services.roblox_deployment.aioredis.from_url",
+            return_value=redis_mock,
         ):
             manager = RobloxAssetManager()
             await manager.initialize()
@@ -616,7 +621,7 @@ class TestRobloxAssetManager:
     async def test_version_control(self, asset_manager):
         """Test asset version control"""
         # Upload initial version
-        v1_id = await asset_manager.upload_asset(
+        await asset_manager.upload_asset(
             {
                 "name": "VersionedScript",
                 "type": AssetType.SCRIPT,
@@ -626,7 +631,7 @@ class TestRobloxAssetManager:
         )
 
         # Upload new version
-        v2_id = await asset_manager.upload_asset(
+        await asset_manager.upload_asset(
             {
                 "name": "VersionedScript",
                 "type": AssetType.SCRIPT,
@@ -686,7 +691,8 @@ class TestWeek2Integration:
     async def test_cached_ai_service_integration(self, redis_mock, langcache_mock):
         """Test CachedAIService with SemanticCache"""
         with patch(
-            "apps.backend.services.semantic_cache.aioredis.from_url", return_value=redis_mock
+            "apps.backend.services.semantic_cache.aioredis.from_url",
+            return_value=redis_mock,
         ):
             with patch("apps.backend.services.semantic_cache.lang_cache", langcache_mock):
                 # Initialize services
@@ -830,7 +836,10 @@ class TestWeek2Performance:
 
         # Simple migration
         migration = Migration(
-            id="perf-test", name="Performance test", up_sql="SELECT 1;", down_sql="SELECT 1;"
+            id="perf-test",
+            name="Performance test",
+            up_sql="SELECT 1;",
+            down_sql="SELECT 1;",
         )
 
         start = time.time()
@@ -845,7 +854,6 @@ class TestWeek2Performance:
     async def test_backup_compression_ratio(self, backup_manager):
         """Test backup compression efficiency"""
         # Create test data
-        test_data = "x" * 10000  # Highly compressible
 
         # Create compressed backup
         backup_job = await backup_manager.create_backup(backup_type=BackupType.FULL, compress=True)
@@ -989,7 +997,7 @@ class TestWeek2ErrorHandling:
         await cache.initialize()
 
         # Should fall back to exact match
-        result = await cache.get("test prompt")
+        await cache.get("test prompt")
         assert cache.errors == 1
 
     @pytest.mark.asyncio

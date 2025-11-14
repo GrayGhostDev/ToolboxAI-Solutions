@@ -79,7 +79,10 @@ class TestVaultManager:
         """Test dynamic database credential generation"""
         with patch.object(vault_manager, "vault") as mock_vault:
             mock_vault.secrets.database.generate_credentials.return_value = {
-                "data": {"username": "v-token-db-abc123", "password": "temp_pass_xyz789"}
+                "data": {
+                    "username": "v-token-db-abc123",
+                    "password": "temp_pass_xyz789",
+                }
             }
 
             creds = vault_manager.get_dynamic_database_credentials("postgres", ttl="1h")
@@ -183,7 +186,10 @@ class TestJWTManager:
     def test_token_revocation(self, jwt_manager):
         """Test token revocation/blacklisting"""
         token = jwt_manager.create_access_token(
-            user_id="user123", username="testuser", roles=["user"], permissions=["read:own"]
+            user_id="user123",
+            username="testuser",
+            roles=["user"],
+            permissions=["read:own"],
         )
 
         with patch.object(jwt_manager, "_blacklist_token") as mock_blacklist:
@@ -230,7 +236,8 @@ class TestRBACManager:
 
         # User with 'all' scope should have 'team' and 'own' access
         has_perm = rbac_manager.check_permission(
-            [Role.ADMIN], "content:read:team"  # Has content:read:all
+            [Role.ADMIN],
+            "content:read:team",  # Has content:read:all
         )
         assert has_perm is True
 
@@ -328,7 +335,7 @@ class TestPIIEncryption:
         email = "search@example.com"
 
         # Encrypt with searchable index
-        encrypted = pii_manager.encrypt_field(email, PIIField.EMAIL)
+        pii_manager.encrypt_field(email, PIIField.EMAIL)
 
         # Generate search index
         search_index = pii_manager.search_encrypted(email, PIIField.EMAIL)
@@ -444,7 +451,10 @@ class TestGDPRCompliance:
         from apps.backend.core.compliance.gdpr_manager import ConsentRecord
 
         expired_consent = ConsentRecord(
-            user_id="user456", consent_type=ConsentType.MARKETING, granted=True, expiry=past_time
+            user_id="user456",
+            consent_type=ConsentType.MARKETING,
+            granted=True,
+            expiry=past_time,
         )
 
         gdpr_manager.consent_records["user456"] = [expired_consent]

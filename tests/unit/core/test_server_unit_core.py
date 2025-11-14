@@ -251,13 +251,13 @@ class TestFastAPIEndpoints:
                 "apps.backend.main.get_agent_health", new_callable=AsyncMock
             ) as mock_agent_health,
             patch(
-                "apps.backend.main.websocket_manager.get_connection_stats", new_callable=AsyncMock
+                "apps.backend.main.websocket_manager.get_connection_stats",
+                new_callable=AsyncMock,
             ) as mock_ws_stats,
             patch(
                 "apps.backend.main.check_flask_server", new_callable=AsyncMock
             ) as mock_flask_check,
         ):
-
             # Mock healthy responses
             mock_agent_health.return_value = {"system_health": "healthy"}
             mock_ws_stats.return_value = {"status": "healthy"}
@@ -315,10 +315,15 @@ class TestFastAPIEndpoints:
             mock_generate.return_value = ContentResponse(
                 success=True,
                 message="Content generated successfully",
-                content={"lesson": {"title": "Test Lesson"}, "description": "Test description"},
+                content={
+                    "lesson": {"title": "Test Lesson"},
+                    "description": "Test description",
+                },
                 scripts=[
                     GeneratedScript(
-                        name="LessonScript", content="-- Lua script content", script_type="server"
+                        name="LessonScript",
+                        content="-- Lua script content",
+                        script_type="server",
                     ),
                     GeneratedScript(name="UIScript", content="-- UI script", script_type="client"),
                 ],
@@ -941,7 +946,7 @@ class TestServerIntegration:
             # Since notify_flask_server doesn't exist, we'll test the sync endpoint
             import requests
 
-            response = requests.post(
+            requests.post(
                 "http://127.0.0.1:5001/sync",
                 json={
                     "action": "sync_content",
@@ -998,7 +1003,10 @@ class TestErrorHandling:
         # Send invalid data type
         response = client.post(
             "/generate_content",
-            json={"subject": 123, "grade_level": "five"},  # Should be string  # Should be integer
+            json={
+                "subject": 123,
+                "grade_level": "five",
+            },  # Should be string  # Should be integer
         )
 
         assert response.status_code in [

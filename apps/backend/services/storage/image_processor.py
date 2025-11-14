@@ -153,7 +153,7 @@ class ImageProcessor:
             optimize: Whether to optimize images
 
         Returns:
-            Dict[str, ImageVariant]: Dictionary of processed variants
+            dict[str, ImageVariant]: Dictionary of processed variants
         """
         options = options or self.default_options
         variants = {}
@@ -316,7 +316,7 @@ class ImageProcessor:
             image_data: Image data
 
         Returns:
-            Dict[str, Any]: Image information
+            dict[str, Any]: Image information
         """
         try:
             if not PIL_AVAILABLE:
@@ -563,7 +563,9 @@ class ImageProcessor:
 
             # Convert to WebP
             webp_data = await self._image_to_bytes(
-                webp_image, ImageFormat.WEBP, options.quality if not options.lossless_webp else None
+                webp_image,
+                ImageFormat.WEBP,
+                options.quality if not options.lossless_webp else None,
             )
 
             variants["webp"] = ImageVariant(
@@ -636,7 +638,12 @@ class ImageProcessor:
 
         if format == ImageFormat.JPEG:
             save_kwargs.update(
-                {"format": "JPEG", "quality": quality or 85, "optimize": True, "progressive": True}
+                {
+                    "format": "JPEG",
+                    "quality": quality or 85,
+                    "optimize": True,
+                    "progressive": True,
+                }
             )
         elif format == ImageFormat.PNG:
             save_kwargs.update({"format": "PNG", "optimize": True})

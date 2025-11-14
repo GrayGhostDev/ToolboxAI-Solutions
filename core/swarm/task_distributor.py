@@ -7,16 +7,13 @@ content optimization with failure detection and retry mechanisms.
 """
 
 import asyncio
-import time
-import uuid
-from typing import Dict, List, Optional, Any, Set, Callable, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import logging
-from datetime import datetime, timedelta
 import heapq
-import json
-from contextlib import asynccontextmanager
+import logging
+import uuid
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +69,7 @@ class Task:
 
     task_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     task_type: str = "generic"
-    task_data: Dict[str, Any] = field(default_factory=dict)
+    task_data: dict[str, Any] = field(default_factory=dict)
     priority: TaskPriority = TaskPriority.NORMAL
     status: TaskStatus = TaskStatus.PENDING
 
@@ -84,10 +81,10 @@ class Task:
     timeout: int = 300  # seconds
 
     # Dependencies and relationships
-    dependencies: List[TaskDependency] = field(default_factory=list)
-    dependent_tasks: Set[str] = field(default_factory=set)
+    dependencies: list[TaskDependency] = field(default_factory=list)
+    dependent_tasks: set[str] = field(default_factory=set)
     parent_task_id: Optional[str] = None
-    child_task_ids: Set[str] = field(default_factory=set)
+    child_task_ids: set[str] = field(default_factory=set)
 
     # Execution context
     assigned_worker_id: Optional[str] = None
@@ -101,11 +98,11 @@ class Task:
     execution_time: float = 0.0
 
     # Educational context
-    educational_context: Dict[str, Any] = field(default_factory=dict)
+    educational_context: dict[str, Any] = field(default_factory=dict)
     requires_consensus: bool = False
-    curriculum_standards: List[str] = field(default_factory=list)
-    learning_objectives: List[str] = field(default_factory=list)
-    target_grade_levels: List[int] = field(default_factory=list)
+    curriculum_standards: list[str] = field(default_factory=list)
+    learning_objectives: list[str] = field(default_factory=list)
+    target_grade_levels: list[int] = field(default_factory=list)
 
     # Callback functions
     on_completion: Optional[Callable] = None
@@ -134,7 +131,7 @@ class Task:
             return False
         return (datetime.now() - self.started_at).total_seconds() > self.timeout
 
-    def can_execute(self, completed_tasks: Set[str]) -> bool:
+    def can_execute(self, completed_tasks: set[str]) -> bool:
         """Check if all dependencies are satisfied."""
         for dependency in self.dependencies:
             if dependency.task_id not in completed_tasks:
@@ -160,7 +157,7 @@ class Task:
             self.status = TaskStatus.FAILED
             self.completed_at = datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert task to dictionary representation."""
         return {
             "task_id": self.task_id,
@@ -169,9 +166,7 @@ class Task:
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
             "execution_time": self.execution_time,
             "retry_count": self.retry_count,
             "assigned_worker_id": self.assigned_worker_id,
@@ -255,32 +250,32 @@ class TaskDistributor:
             self.config = DistributorConfig(
                 timeout=timeout,
                 max_queue_size=max_queue_size,
-                scheduling_policy=scheduling_policy
+                scheduling_policy=scheduling_policy,
             )
             self.timeout = timeout
             self.max_queue_size = max_queue_size
             self.policy = scheduling_policy or SchedulingPolicy()
 
         # Task storage and queuing
-        self.tasks: Dict[str, Task] = {}
-        self.priority_queue: List[Task] = []  # Heap-based priority queue
-        self.dependency_graph: Dict[str, Set[str]] = {}  # task_id -> dependent_task_ids
-        self.completed_tasks: Set[str] = set()
-        self.failed_tasks: Set[str] = set()
+        self.tasks: dict[str, Task] = {}
+        self.priority_queue: list[Task] = []  # Heap-based priority queue
+        self.dependency_graph: dict[str, set[str]] = {}  # task_id -> dependent_task_ids
+        self.completed_tasks: set[str] = set()
+        self.failed_tasks: set[str] = set()
 
         # Execution tracking
-        self.running_tasks: Dict[str, Task] = {}
-        self.task_completion_events: Dict[str, asyncio.Event] = {}
-        self.task_results: Dict[str, Any] = {}
+        self.running_tasks: dict[str, Task] = {}
+        self.task_completion_events: dict[str, asyncio.Event] = {}
+        self.task_results: dict[str, Any] = {}
 
         # Educational optimization
-        self.subject_task_queues: Dict[str, List[Task]] = {}
-        self.grade_level_task_queues: Dict[int, List[Task]] = {}
-        self.curriculum_task_mapping: Dict[str, List[str]] = {}  # standard -> task_ids
+        self.subject_task_queues: dict[str, list[Task]] = {}
+        self.grade_level_task_queues: dict[int, list[Task]] = {}
+        self.curriculum_task_mapping: dict[str, list[str]] = {}  # standard -> task_ids
 
         # Load balancing and monitoring
-        self.worker_load_history: Dict[str, List[float]] = {}
-        self.task_execution_history: List[Dict[str, Any]] = []
+        self.worker_load_history: dict[str, list[float]] = {}
+        self.task_execution_history: list[dict[str, Any]] = []
 
         # Background tasks
         self._scheduler_task: Optional[asyncio.Task] = None
@@ -299,9 +294,7 @@ class TaskDistributor:
             "dependency_resolution_time": 0.0,
         }
 
-        logger.info(
-            "TaskDistributor initialized with policy: {}".format(self.policy.algorithm)
-        )
+        logger.info(f"TaskDistributor initialized with policy: {self.policy.algorithm}")
 
     async def initialize(self):
         """Initialize the task distributor and start background processes."""
@@ -337,9 +330,7 @@ class TaskDistributor:
 
             # Complete any remaining tasks
             if self.running_tasks:
-                logger.info(
-                    f"Waiting for {len(self.running_tasks)} running tasks to complete..."
-                )
+                logger.info(f"Waiting for {len(self.running_tasks)} running tasks to complete...")
                 try:
                     await asyncio.wait_for(self._wait_for_running_tasks(), timeout=30.0)
                 except asyncio.TimeoutError:
@@ -360,10 +351,10 @@ class TaskDistributor:
     async def submit_task(
         self,
         task_type: str,
-        task_data: Dict[str, Any],
+        task_data: dict[str, Any],
         priority: TaskPriority = TaskPriority.NORMAL,
-        dependencies: Optional[List[str]] = None,
-        educational_context: Optional[Dict[str, Any]] = None,
+        dependencies: Optional[list[str]] = None,
+        educational_context: Optional[dict[str, Any]] = None,
         timeout: Optional[int] = None,
         on_completion: Optional[Callable] = None,
         on_failure: Optional[Callable] = None,
@@ -422,9 +413,7 @@ class TaskDistributor:
         # Update metrics
         self.metrics["tasks_submitted"] += 1
 
-        logger.info(
-            f"Task {task.task_id} submitted: {task_type} (priority: {priority.name})"
-        )
+        logger.info(f"Task {task.task_id} submitted: {task_type} (priority: {priority.name})")
         return task.task_id
 
     async def submit_task_object(self, task: Task) -> str:
@@ -456,7 +445,7 @@ class TaskDistributor:
         return task.task_id
 
     async def get_next_task(
-        self, worker_capabilities: Optional[List[str]] = None
+        self, worker_capabilities: Optional[list[str]] = None
     ) -> Optional[Task]:
         """
         Get the next task for execution based on scheduling policy.
@@ -479,9 +468,7 @@ class TaskDistributor:
                 continue
 
             # Check worker capabilities
-            if worker_capabilities and not self._worker_can_handle_task(
-                worker_capabilities, task
-            ):
+            if worker_capabilities and not self._worker_can_handle_task(worker_capabilities, task):
                 continue
 
             suitable_tasks.append((i, task))
@@ -490,9 +477,7 @@ class TaskDistributor:
             return None
 
         # Select best task based on scheduling policy
-        selected_index, selected_task = await self._select_task_by_policy(
-            suitable_tasks
-        )
+        selected_index, selected_task = await self._select_task_by_policy(suitable_tasks)
 
         # Remove from queue and update status
         del self.priority_queue[selected_index]
@@ -603,9 +588,7 @@ class TaskDistributor:
 
             logger.error(f"Task {task_id} failed permanently: {error}")
 
-    async def wait_for_completion(
-        self, task_id: str, timeout: Optional[float] = None
-    ) -> Any:
+    async def wait_for_completion(self, task_id: str, timeout: Optional[float] = None) -> Any:
         """
         Wait for a task to complete and return its result.
 
@@ -681,7 +664,7 @@ class TaskDistributor:
         logger.info(f"Task {task_id} cancelled")
         return True
 
-    async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, task_id: str) -> Optional[dict[str, Any]]:
         """Get comprehensive status information for a task."""
         if task_id not in self.tasks:
             return None
@@ -693,7 +676,7 @@ class TaskDistributor:
         """Get the current number of queued tasks."""
         return len(self.priority_queue)
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of the task distributor."""
         return {
             "queue_size": len(self.priority_queue),
@@ -708,19 +691,17 @@ class TaskDistributor:
                 "educational_optimization": self.policy.enable_educational_optimization,
             },
             "subject_queues": {
-                subject: len(tasks)
-                for subject, tasks in self.subject_task_queues.items()
+                subject: len(tasks) for subject, tasks in self.subject_task_queues.items()
             },
             "grade_level_queues": {
-                level: len(tasks)
-                for level, tasks in self.grade_level_task_queues.items()
+                level: len(tasks) for level, tasks in self.grade_level_task_queues.items()
             },
         }
 
-    async def check_stalled_tasks(self) -> List[str]:
+    async def check_stalled_tasks(self) -> list[str]:
         """Check for tasks that have stalled and may need intervention."""
         stalled_tasks = []
-        current_time = datetime.now()
+        datetime.now()
 
         for task_id, task in self.running_tasks.items():
             if task.is_expired():
@@ -911,8 +892,8 @@ class TaskDistributor:
         await self._dequeue_task(task)
 
     async def _select_task_by_policy(
-        self, suitable_tasks: List[Tuple[int, Task]]
-    ) -> Tuple[int, Task]:
+        self, suitable_tasks: list[tuple[int, Task]]
+    ) -> tuple[int, Task]:
         """Select the best task based on scheduling policy."""
         if len(suitable_tasks) == 1:
             return suitable_tasks[0]
@@ -937,9 +918,7 @@ class TaskDistributor:
             # Default to priority
             return suitable_tasks[0]
 
-    def _select_by_fairness(
-        self, suitable_tasks: List[Tuple[int, Task]]
-    ) -> Tuple[int, Task]:
+    def _select_by_fairness(self, suitable_tasks: list[tuple[int, Task]]) -> tuple[int, Task]:
         """Select task using fairness algorithm."""
         # Weight by age to prevent starvation
         best_index, best_task = suitable_tasks[0]
@@ -954,8 +933,8 @@ class TaskDistributor:
         return best_index, best_task
 
     def _select_by_priority_fairness(
-        self, suitable_tasks: List[Tuple[int, Task]]
-    ) -> Tuple[int, Task]:
+        self, suitable_tasks: list[tuple[int, Task]]
+    ) -> tuple[int, Task]:
         """Select task using priority-fairness algorithm."""
         best_index, best_task = suitable_tasks[0]
         best_score = best_task.priority.value + self.policy.age_factor_weight * (
@@ -963,9 +942,7 @@ class TaskDistributor:
         )  # Age in hours
 
         for index, task in suitable_tasks[1:]:
-            score = task.priority.value + self.policy.age_factor_weight * (
-                task.get_age() / 3600
-            )
+            score = task.priority.value + self.policy.age_factor_weight * (task.get_age() / 3600)
 
             if score > best_score:
                 best_score = score
@@ -973,9 +950,7 @@ class TaskDistributor:
 
         return best_index, best_task
 
-    def _worker_can_handle_task(
-        self, worker_capabilities: List[str], task: Task
-    ) -> bool:
+    def _worker_can_handle_task(self, worker_capabilities: list[str], task: Task) -> bool:
         """Check if worker has required capabilities for task."""
         required_capability = self._get_required_capability(task.task_type)
         return required_capability in worker_capabilities
@@ -1059,8 +1034,7 @@ class TaskDistributor:
         old_task_ids = []
         for task_id, task in self.tasks.items():
             if (
-                task.status
-                in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
+                task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
                 and task.completed_at
                 and task.completed_at < cutoff_time
             ):

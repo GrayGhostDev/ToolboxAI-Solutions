@@ -11,20 +11,25 @@ This module provides:
 - Test failure analysis and resolution
 """
 
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 # Import base orchestration components
-from ...agents.master_orchestrator import MasterOrchestrator, AgentSystemType, TaskPriority
+from ...agents.master_orchestrator import (
+    AgentSystemType,
+    MasterOrchestrator,
+    TaskPriority,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorHandlingWorkflowType(Enum):
     """Error handling workflow types."""
+
     TESTING_VALIDATION = "testing_validation"
     AUTO_RECOVERY = "auto_recovery"
     HEALTH_MONITORING = "health_monitoring"
@@ -50,7 +55,7 @@ class ErrorHandlingOrchestrationModule:
             "recoveries_attempted": 0,
             "successful_recoveries": 0,
             "failed_recoveries": 0,
-            "health_checks": 0
+            "health_checks": 0,
         }
 
         logger.info("Error Handling Orchestration Module initialized")
@@ -87,19 +92,19 @@ class ErrorHandlingOrchestrationModule:
             "workflow_type": workflow_type.value,
             "test_data": test_data,
             "recovery_data": recovery_data,
-            "module": "error_handling"
+            "module": "error_handling",
         }
 
         # Submit to master orchestrator
         task_id = await self.master.submit_task(
             agent_type=AgentSystemType.TESTING,
             task_data=task_data,
-            priority=TaskPriority.HIGH  # Error handling is high priority
+            priority=TaskPriority.HIGH,  # Error handling is high priority
         )
 
         return task_id
 
-    async def execute_tests(self, test_config: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def execute_tests(self, test_config: dict[str, Any] = None) -> dict[str, Any]:
         """
         Execute comprehensive testing suite.
 
@@ -119,7 +124,7 @@ class ErrorHandlingOrchestrationModule:
                 "tests_failed": 0,
                 "coverage_percentage": 0.0,
                 "test_results": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             self.metrics["tests_executed"] += result["tests_run"]
@@ -132,10 +137,10 @@ class ErrorHandlingOrchestrationModule:
                 "error": str(e),
                 "tests_run": 0,
                 "tests_passed": 0,
-                "tests_failed": 0
+                "tests_failed": 0,
             }
 
-    async def attempt_recovery(self, error_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def attempt_recovery(self, error_data: dict[str, Any]) -> dict[str, Any]:
         """
         Attempt automatic recovery from errors.
 
@@ -155,7 +160,7 @@ class ErrorHandlingOrchestrationModule:
                 "recovery_strategy": "placeholder",
                 "actions_taken": [],
                 "recovery_time": 0.0,
-                "status": "recovered"
+                "status": "recovered",
             }
 
             if result["success"]:
@@ -172,10 +177,10 @@ class ErrorHandlingOrchestrationModule:
                 "success": False,
                 "error": str(e),
                 "recovery_strategy": "failed",
-                "status": "unrecovered"
+                "status": "unrecovered",
             }
 
-    async def monitor_health(self) -> Dict[str, Any]:
+    async def monitor_health(self) -> dict[str, Any]:
         """
         Monitor system health and detect issues.
 
@@ -192,11 +197,11 @@ class ErrorHandlingOrchestrationModule:
                     "database": "healthy",
                     "api": "healthy",
                     "agents": "healthy",
-                    "orchestrator": "healthy"
+                    "orchestrator": "healthy",
                 },
                 "alerts": [],
                 "recommendations": [],
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             return health_status
@@ -206,10 +211,10 @@ class ErrorHandlingOrchestrationModule:
             return {
                 "overall_health": "error",
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def analyze_test_failures(self, failure_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_test_failures(self, failure_data: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze test failures and provide recommendations.
 
@@ -226,20 +231,16 @@ class ErrorHandlingOrchestrationModule:
                 "root_causes": [],
                 "recommendations": [],
                 "priority": "medium",
-                "estimated_fix_time": "unknown"
+                "estimated_fix_time": "unknown",
             }
 
             return analysis
 
         except Exception as e:
             logger.error(f"Error analyzing test failures: {e}")
-            return {
-                "error": str(e),
-                "failure_patterns": [],
-                "recommendations": []
-            }
+            return {"error": str(e), "failure_patterns": [], "recommendations": []}
 
-    async def remediate_system(self, remediation_plan: Dict[str, Any]) -> Dict[str, Any]:
+    async def remediate_system(self, remediation_plan: dict[str, Any]) -> dict[str, Any]:
         """
         Execute system remediation based on analysis.
 
@@ -256,7 +257,7 @@ class ErrorHandlingOrchestrationModule:
                 "actions_executed": [],
                 "time_taken": 0.0,
                 "issues_resolved": 0,
-                "remaining_issues": 0
+                "remaining_issues": 0,
             }
 
             return result
@@ -267,17 +268,17 @@ class ErrorHandlingOrchestrationModule:
                 "success": False,
                 "error": str(e),
                 "actions_executed": [],
-                "issues_resolved": 0
+                "issues_resolved": 0,
             }
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get the status of the error handling orchestration module."""
         return {
             "module": "error_handling",
             "initialized": True,
             "available_workflows": [wf.value for wf in ErrorHandlingWorkflowType],
             "metrics": self.metrics,
-            "note": "Placeholder implementation - archived agents to be integrated"
+            "note": "Placeholder implementation - archived agents to be integrated",
         }
 
     async def cleanup(self):
@@ -291,12 +292,12 @@ class ErrorHandlingOrchestrationModule:
 
 
 # Export key classes
-__all__ = [
-    "ErrorHandlingOrchestrationModule",
-    "ErrorHandlingWorkflowType"
-]
+__all__ = ["ErrorHandlingOrchestrationModule", "ErrorHandlingWorkflowType"]
+
 
 # Convenience factory function
-def create_error_handling_orchestrator(master_orchestrator: MasterOrchestrator) -> ErrorHandlingOrchestrationModule:
+def create_error_handling_orchestrator(
+    master_orchestrator: MasterOrchestrator,
+) -> ErrorHandlingOrchestrationModule:
     """Create and initialize an error handling orchestration module."""
     return ErrorHandlingOrchestrationModule(master_orchestrator)

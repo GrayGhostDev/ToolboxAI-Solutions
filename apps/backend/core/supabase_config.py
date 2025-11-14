@@ -108,7 +108,7 @@ class SupabaseInitializer:
             )
 
             # Verify connection with a simple query
-            result = self.client.table("agent_instances").select("count").execute()
+            self.client.table("agent_instances").select("count").execute()
 
             logger.info("Supabase client initialized successfully")
             return True
@@ -136,7 +136,7 @@ class SupabaseInitializer:
         for table in required_tables:
             try:
                 # Try to query the table
-                result = self.client.table(table).select("count").execute()
+                self.client.table(table).select("count").execute()
                 table_status[table] = True
                 logger.debug(f"Table {table} exists and is accessible")
             except Exception as e:
@@ -198,7 +198,10 @@ class SupabaseInitializer:
                             "max_tokens": 2000,
                             "timeout_seconds": 30,
                         },
-                        "resource_limits": {"max_memory_mb": 1024, "max_cpu_percent": 80},
+                        "resource_limits": {
+                            "max_memory_mb": 1024,
+                            "max_cpu_percent": 80,
+                        },
                         "performance_thresholds": {
                             "min_quality_score": 0.85,
                             "max_execution_time": 30,
@@ -258,7 +261,11 @@ async def initialize_supabase_for_agents() -> dict[str, Any]:
         config = get_supabase_config()
 
         if not config.is_configured():
-            return {"success": False, "error": "Supabase not configured", "configured": False}
+            return {
+                "success": False,
+                "error": "Supabase not configured",
+                "configured": False,
+            }
 
         initializer = await get_supabase_initializer()
 
@@ -307,7 +314,7 @@ async def health_check_supabase() -> dict[str, Any]:
 
         # Test connection with simple query
         start_time = datetime.now()
-        result = client.table("agent_instances").select("count").execute()
+        client.table("agent_instances").select("count").execute()
         end_time = datetime.now()
 
         response_time = (end_time - start_time).total_seconds() * 1000  # ms

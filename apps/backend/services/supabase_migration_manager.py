@@ -146,7 +146,7 @@ class SupabaseMigrationManager:
         """
 
         try:
-            result = self.primary_client.rpc("exec_sql", {"sql": create_table_sql}).execute()
+            self.primary_client.rpc("exec_sql", {"sql": create_table_sql}).execute()
 
             logger.info("Migration tracking table ready")
 
@@ -290,7 +290,12 @@ class SupabaseMigrationManager:
         Returns:
             Migration results
         """
-        results = {"success": True, "migrations_applied": [], "errors": [], "duration_ms": 0}
+        results = {
+            "success": True,
+            "migrations_applied": [],
+            "errors": [],
+            "duration_ms": 0,
+        }
 
         start_time = datetime.now(timezone.utc)
 
@@ -415,22 +420,27 @@ class SupabaseMigrationManager:
             # For this implementation, we'll use transaction-based approach
 
             # Start transaction
-            result = self.primary_client.rpc(
+            self.primary_client.rpc(
                 "exec_sql_transaction",
-                {"sql": migration.up_sql, "savepoint": f"migration_{migration.version}"},
+                {
+                    "sql": migration.up_sql,
+                    "savepoint": f"migration_{migration.version}",
+                },
             ).execute()
 
             # Step 2: Validate
             if await self._validate_migration(migration):
                 # Commit transaction
                 self.primary_client.rpc(
-                    "commit_transaction", {"savepoint": f"migration_{migration.version}"}
+                    "commit_transaction",
+                    {"savepoint": f"migration_{migration.version}"},
                 ).execute()
                 return True
             else:
                 # Rollback transaction
                 self.primary_client.rpc(
-                    "rollback_transaction", {"savepoint": f"migration_{migration.version}"}
+                    "rollback_transaction",
+                    {"savepoint": f"migration_{migration.version}"},
                 ).execute()
                 return False
 
@@ -441,7 +451,7 @@ class SupabaseMigrationManager:
     async def _apply_direct(self, migration: Migration) -> bool:
         """Apply migration directly to database."""
         try:
-            result = self.primary_client.rpc("exec_sql", {"sql": migration.up_sql}).execute()
+            self.primary_client.rpc("exec_sql", {"sql": migration.up_sql}).execute()
 
             return await self._validate_migration(migration)
 
@@ -523,9 +533,7 @@ class SupabaseMigrationManager:
             for migration in migrations_to_rollback:
                 try:
                     # Execute down SQL
-                    result = self.primary_client.rpc(
-                        "exec_sql", {"sql": migration.down_sql}
-                    ).execute()
+                    self.primary_client.rpc("exec_sql", {"sql": migration.down_sql}).execute()
 
                     # Update migration record
                     self.primary_client.table("schema_migrations").update(
@@ -562,7 +570,7 @@ class SupabaseMigrationManager:
         try:
             # Trigger Supabase backup
             # Note: In production, use Supabase Management API
-            result = self.primary_client.rpc("create_backup", {"backup_id": backup_id}).execute()
+            self.primary_client.rpc("create_backup", {"backup_id": backup_id}).execute()
 
             logger.info(f"Created backup: {backup_id}")
             return backup_id

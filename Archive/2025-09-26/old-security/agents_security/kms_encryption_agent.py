@@ -3,17 +3,15 @@ KMS Encryption Agent - Handles AWS KMS encryption and decryption operations
 Implements data-at-rest and data-in-transit encryption with SPARC reasoning
 """
 
-import json
 import base64
+import json
 import logging
-import hashlib
-from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Any
+
 import boto3
 from botocore.exceptions import ClientError
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
 
 from core.agents.base_agent import BaseAgent
 
@@ -55,7 +53,7 @@ class KMSEncryptionAgent(BaseAgent):
             'service': 'KMSEncryptionAgent'
         }
 
-    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, task: dict[str, Any]) -> dict[str, Any]:
         """
         Execute an encryption task using SPARC framework
 
@@ -82,7 +80,7 @@ class KMSEncryptionAgent(BaseAgent):
 
         return result
 
-    def _analyze_situation(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_situation(self, task: dict[str, Any]) -> dict[str, Any]:
         """Analyze the encryption requirements"""
         action = task.get('action', 'unknown')
         data_size = len(str(task.get('data', '')))
@@ -99,7 +97,7 @@ class KMSEncryptionAgent(BaseAgent):
         logger.info(f"Analyzing encryption situation for action: {action}")
         return situation
 
-    def _identify_problem(self, situation: Dict[str, Any]) -> Dict[str, Any]:
+    def _identify_problem(self, situation: dict[str, Any]) -> dict[str, Any]:
         """Identify the specific encryption problem"""
         problems = []
 
@@ -118,7 +116,7 @@ class KMSEncryptionAgent(BaseAgent):
             'encryption_level': self._determine_encryption_level(situation)
         }
 
-    def _evaluate_alternatives(self, problem: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _evaluate_alternatives(self, problem: dict[str, Any]) -> list[dict[str, Any]]:
         """Evaluate encryption alternatives"""
         alternatives = []
 
@@ -147,7 +145,7 @@ class KMSEncryptionAgent(BaseAgent):
 
         return alternatives
 
-    def _make_recommendation(self, alternatives: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _make_recommendation(self, alternatives: list[dict[str, Any]]) -> dict[str, Any]:
         """Make encryption method recommendation"""
         if not alternatives:
             return {'method': 'direct_kms', 'priority': 3}
@@ -160,7 +158,7 @@ class KMSEncryptionAgent(BaseAgent):
 
         return recommendation
 
-    def _generate_reasoning(self, recommendation: Dict[str, Any]) -> str:
+    def _generate_reasoning(self, recommendation: dict[str, Any]) -> str:
         """Generate reasoning for the encryption method"""
         method = recommendation['method']
 
@@ -172,7 +170,7 @@ class KMSEncryptionAgent(BaseAgent):
 
         return reasoning_map.get(method, "Selected based on security requirements")
 
-    async def _execute_recommendation(self, recommendation: Dict[str, Any], task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_recommendation(self, recommendation: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
         """Execute the recommended encryption approach"""
         action = task.get('action', 'unknown')
 
@@ -201,7 +199,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _encrypt_data(self, task: Dict[str, Any], recommendation: Dict[str, Any]) -> Dict[str, Any]:
+    async def _encrypt_data(self, task: dict[str, Any], recommendation: dict[str, Any]) -> dict[str, Any]:
         """Encrypt data using the recommended method"""
         data = task.get('data')
         key_id = task.get('key_id', self.default_key_id)
@@ -228,7 +226,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _decrypt_data(self, task: Dict[str, Any], recommendation: Dict[str, Any]) -> Dict[str, Any]:
+    async def _decrypt_data(self, task: dict[str, Any], recommendation: dict[str, Any]) -> dict[str, Any]:
         """Decrypt data using the appropriate method"""
         encrypted_data = task.get('encrypted_data')
         method = task.get('encryption_method', 'direct_kms')
@@ -254,7 +252,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _direct_kms_encrypt(self, data: Any, key_id: str, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _direct_kms_encrypt(self, data: Any, key_id: str, task: dict[str, Any]) -> dict[str, Any]:
         """Direct encryption using KMS (for small data < 4KB)"""
         # Convert data to bytes
         if isinstance(data, str):
@@ -292,7 +290,7 @@ class KMSEncryptionAgent(BaseAgent):
             'encryption_context': encryption_context
         }
 
-    async def _direct_kms_decrypt(self, encrypted_data: str, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _direct_kms_decrypt(self, encrypted_data: str, task: dict[str, Any]) -> dict[str, Any]:
         """Direct decryption using KMS"""
         # Decode from base64
         try:
@@ -336,7 +334,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _envelope_encrypt(self, data: Any, key_id: str, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _envelope_encrypt(self, data: Any, key_id: str, task: dict[str, Any]) -> dict[str, Any]:
         """Envelope encryption for large data"""
         # Generate data key
         data_key_result = await self._create_data_key({
@@ -379,7 +377,7 @@ class KMSEncryptionAgent(BaseAgent):
             'envelope': envelope
         }
 
-    async def _envelope_decrypt(self, envelope: Dict[str, Any], task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _envelope_decrypt(self, envelope: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
         """Envelope decryption for large data"""
         encrypted_data = envelope.get('encrypted_data')
         encrypted_key = envelope.get('encrypted_key')
@@ -423,16 +421,16 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _hybrid_encrypt(self, data: Any, key_id: str, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _hybrid_encrypt(self, data: Any, key_id: str, task: dict[str, Any]) -> dict[str, Any]:
         """Hybrid encryption combining KMS and local encryption"""
         # Similar to envelope but with optimizations
         return await self._envelope_encrypt(data, key_id, task)
 
-    async def _hybrid_decrypt(self, encrypted_data: Any, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _hybrid_decrypt(self, encrypted_data: Any, task: dict[str, Any]) -> dict[str, Any]:
         """Hybrid decryption"""
         return await self._envelope_decrypt(encrypted_data, task)
 
-    async def _create_data_key(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _create_data_key(self, task: dict[str, Any]) -> dict[str, Any]:
         """Create a data encryption key"""
         key_id = task.get('key_id', self.default_key_id)
         key_spec = task.get('key_spec', 'AES_256')
@@ -457,7 +455,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _rotate_key(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _rotate_key(self, task: dict[str, Any]) -> dict[str, Any]:
         """Rotate KMS key"""
         key_id = task.get('key_id', self.default_key_id)
 
@@ -481,7 +479,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _validate_key(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_key(self, task: dict[str, Any]) -> dict[str, Any]:
         """Validate KMS key configuration"""
         key_id = task.get('key_id', self.default_key_id)
 
@@ -498,7 +496,7 @@ class KMSEncryptionAgent(BaseAgent):
             key_usage = key_metadata.get('KeyUsage', 'ENCRYPT_DECRYPT')
 
             # Get key policy
-            policy_response = self.kms_client.get_key_policy(KeyId=key_id, PolicyName='default')
+            self.kms_client.get_key_policy(KeyId=key_id, PolicyName='default')
 
             validation_result = {
                 'key_id': key_metadata['KeyId'],
@@ -523,7 +521,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _audit_encryption(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _audit_encryption(self, task: dict[str, Any]) -> dict[str, Any]:
         """Audit encryption usage and compliance"""
         try:
             # List all KMS keys
@@ -603,7 +601,7 @@ class KMSEncryptionAgent(BaseAgent):
                 'message': str(e)
             }
 
-    def _determine_encryption_level(self, situation: Dict[str, Any]) -> str:
+    def _determine_encryption_level(self, situation: dict[str, Any]) -> str:
         """Determine required encryption level"""
         if situation['data_sensitivity'] == 'high':
             return 'maximum'

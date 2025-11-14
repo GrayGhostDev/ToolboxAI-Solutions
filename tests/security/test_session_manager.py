@@ -608,7 +608,10 @@ class TestSessionManager:
         """Test session event logging"""
         with patch("apps.backend.core.security.session_manager.logger") as mock_logger:
             session = self.session_manager.create_session(
-                user_id="user123", username="testuser", role="student", ip_address="192.168.1.1"
+                user_id="user123",
+                username="testuser",
+                role="student",
+                ip_address="192.168.1.1",
             )
 
             # Should log session creation
@@ -841,7 +844,7 @@ class TestErrorHandling:
         manager._memory_sessions["malformed"] = "not_a_session_object"
 
         # Should handle gracefully
-        session = manager.get_session("malformed")
+        manager.get_session("malformed")
         # Depending on implementation, might return None or handle gracefully
 
     def test_redis_connection_failure(self):
@@ -854,7 +857,7 @@ class TestErrorHandling:
         # Should handle Redis failures gracefully
         # Implementation might fall back to memory or handle errors
         try:
-            session = manager.create_session(user_id="user123", username="testuser", role="student")
+            manager.create_session(user_id="user123", username="testuser", role="student")
             # Should either succeed with fallback or handle error gracefully
         except Exception:
             # Redis errors should be handled internally
@@ -901,7 +904,10 @@ class TestErrorHandling:
 
         # Create session
         session = manager.create_session(
-            user_id="user123", username="testuser", role="student", ip_address="192.168.1.1"
+            user_id="user123",
+            username="testuser",
+            role="student",
+            ip_address="192.168.1.1",
         )
 
         # Manually corrupt session data

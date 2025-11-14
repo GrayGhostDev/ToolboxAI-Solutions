@@ -13,16 +13,16 @@ Features:
 - Configurable limits per endpoint
 """
 
-import time
 import hashlib
-from typing import Optional, Callable, Tuple
+import time
 from functools import wraps
+from typing import Callable, Optional
 
-from fastapi import Request, Response, HTTPException, status
+import redis.asyncio as aioredis
+from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-import redis.asyncio as aioredis
 
 from apps.backend.core.config import settings
 from apps.backend.core.logging import logging_manager
@@ -38,7 +38,7 @@ class RateLimitExceeded(HTTPException):
         detail: str = "Rate limit exceeded",
         limit: int = 0,
         window: int = 0,
-        retry_after: int = 0
+        retry_after: int = 0,
     ):
         super().__init__(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -46,8 +46,8 @@ class RateLimitExceeded(HTTPException):
             headers={
                 "X-RateLimit-Limit": str(limit),
                 "X-RateLimit-Window": str(window),
-                "Retry-After": str(retry_after)
-            }
+                "Retry-After": str(retry_after),
+            },
         )
 
 
@@ -58,11 +58,7 @@ class RateLimiter:
     Supports multiple time windows and distributed rate limiting
     """
 
-    def __init__(
-        self,
-        redis_url: str = "redis://localhost:6379/0",
-        prefix: str = "rate_limit"
-    ):
+    def __init__(self, redis_url: str = "redis://localhost:6379/0", prefix: str = "rate_limit"):
         self.redis_url = redis_url
         self.prefix = prefix
         self.redis: Optional[aioredis.Redis] = None
@@ -71,9 +67,7 @@ class RateLimiter:
         """Connect to Redis"""
         if not self.redis:
             self.redis = await aioredis.from_url(
-                self.redis_url,
-                encoding="utf-8",
-                decode_responses=True
+                self.redis_url, encoding="utf-8", decode_responses=True
             )
             logger.info("Rate limiter connected to Redis")
 
@@ -88,11 +82,8 @@ class RateLimiter:
         return f"{self.prefix}:{identifier}:{window}"
 
     async def is_allowed(
-        self,
-        identifier: str,
-        limit: int,
-        window_seconds: int
-    ) -> Tuple[bool, int, int]:
+        self, identifier: str, limit: int, window_seconds: int
+    ) -> tuple[bool, int, int]:
         """
         Check if request is allowed under rate limit
 
@@ -148,10 +139,8 @@ class RateLimiter:
         return is_allowed, current_count, max(0, retry_after)
 
     async def check_multiple_windows(
-        self,
-        identifier: str,
-        limits: dict[int, int]
-    ) -> Tuple[bool, dict]:
+        self, identifier: str, limits: dict[int, int]
+    ) -> tuple[bool, dict]:
         """
         Check rate limits across multiple time windows
 
@@ -167,16 +156,14 @@ class RateLimiter:
 
         for window_seconds, max_requests in limits.items():
             is_allowed, current, retry_after = await self.is_allowed(
-                identifier,
-                max_requests,
-                window_seconds
+                identifier, max_requests, window_seconds
             )
 
             window_stats[f"{window_seconds}s"] = {
                 "allowed": is_allowed,
                 "current": current,
                 "limit": max_requests,
-                "retry_after": retry_after
+                "retry_after": retry_after,
             }
 
             if not is_allowed:
@@ -195,28 +182,23 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     3. IP address (fallback)
     """
 
-    def __init__(
-        self,
-        app: ASGIApp,
-        redis_url: str = None,
-        default_limits: dict = None
-    ):
+    def __init__(self, app: ASGIApp, redis_url: str = None, default_limits: dict = None):
         super().__init__(app)
         self.redis_url = redis_url or settings.REDIS_URL or "redis://localhost:6379/0"
         self.rate_limiter = RateLimiter(redis_url=self.redis_url)
 
         # Default rate limits (window_seconds: max_requests)
         self.default_limits = default_limits or {
-            60: 60,        # 60 requests per minute
-            3600: 1000,    # 1000 requests per hour
-            86400: 10000   # 10000 requests per day
+            60: 60,  # 60 requests per minute
+            3600: 1000,  # 1000 requests per hour
+            86400: 10000,  # 10000 requests per day
         }
 
         # Endpoint-specific rate limits
         self.endpoint_limits = {
-            "/api/v1/ai_chat/": {60: 10, 3600: 100},      # Chat endpoints
-            "/api/v1/content/generate": {60: 5, 3600: 50}, # Content generation
-            "/api/v1/agents/": {60: 20, 3600: 200},        # Agent endpoints
+            "/api/v1/ai_chat/": {60: 10, 3600: 100},  # Chat endpoints
+            "/api/v1/content/generate": {60: 5, 3600: 50},  # Content generation
+            "/api/v1/agents/": {60: 20, 3600: 200},  # Agent endpoints
         }
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -234,16 +216,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Check rate limits
         try:
             is_allowed, window_stats = await self.rate_limiter.check_multiple_windows(
-                identifier,
-                limits
+                identifier, limits
             )
 
             if not is_allowed:
                 # Find the shortest retry time
                 retry_after = min(
-                    stats["retry_after"]
-                    for stats in window_stats.values()
-                    if not stats["allowed"]
+                    stats["retry_after"] for stats in window_stats.values() if not stats["allowed"]
                 )
 
                 logger.warning(
@@ -251,8 +230,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     extra={
                         "identifier": identifier,
                         "path": request.url.path,
-                        "window_stats": window_stats
-                    }
+                        "window_stats": window_stats,
+                    },
                 )
 
                 # Build headers for the 429 response
@@ -269,9 +248,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                         "status": "error",
                         "message": "Rate limit exceeded. Please try again later.",
                         "retry_after": retry_after,
-                        "limits": window_stats
+                        "limits": window_stats,
                     },
-                    headers=headers
+                    headers=headers,
                 )
 
             # Only call the downstream handler if we're allowed
@@ -290,7 +269,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             logger.error(
                 f"Rate limiting error: {e}",
-                extra={"identifier": identifier, "path": request.url.path}
+                extra={"identifier": identifier, "path": request.url.path},
             )
             # On error, allow the request but log it
             return await call_next(request)
@@ -334,10 +313,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 
 # Decorator for endpoint-specific rate limiting
-def rate_limit(
-    requests_per_minute: int = 60,
-    requests_per_hour: int = 1000
-):
+def rate_limit(requests_per_minute: int = 60, requests_per_hour: int = 1000):
     """
     Decorator to apply custom rate limits to specific endpoints
 
@@ -347,6 +323,7 @@ def rate_limit(
         async def generate_content(...):
             ...
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -355,11 +332,9 @@ def rate_limit(
             return await func(*args, **kwargs)
 
         # Store rate limit config in function metadata
-        wrapper._rate_limit = {
-            60: requests_per_minute,
-            3600: requests_per_hour
-        }
+        wrapper._rate_limit = {60: requests_per_minute, 3600: requests_per_hour}
         return wrapper
+
     return decorator
 
 

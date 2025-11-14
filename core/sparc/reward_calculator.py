@@ -14,22 +14,21 @@ This component provides the feedback mechanism that drives the learning
 optimization loop in the SPARC framework.
 """
 
-import asyncio
-import json
 import logging
-import os
-import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-from collections import defaultdict, deque
-import statistics
-from pathlib import Path
 import math
+import os
+import statistics
+from collections import defaultdict, deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
 
-from .state_manager import EnvironmentState, StateType
+import numpy as np
+
 from .action_executor import ActionResult
+from .state_manager import EnvironmentState, StateType
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +78,8 @@ class RewardComponent:
     confidence: float = 1.0  # Confidence in assessment
 
     # Context information
-    evidence: List[str] = field(default_factory=list)
-    contributing_factors: Dict[str, float] = field(default_factory=dict)
+    evidence: list[str] = field(default_factory=list)
+    contributing_factors: dict[str, float] = field(default_factory=dict)
 
     # Educational metadata
     learning_objective: Optional[str] = None
@@ -92,7 +91,7 @@ class RewardComponent:
         """Calculate weighted and confidence-adjusted value"""
         return self.raw_value * self.weight * self.confidence
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
         result["dimension"] = self.dimension.value
@@ -106,7 +105,7 @@ class RewardSignal:
 
     # Core reward data
     total_reward: float
-    components: List[RewardComponent] = field(default_factory=list)
+    components: list[RewardComponent] = field(default_factory=list)
     reward_type: RewardType = RewardType.IMMEDIATE
 
     # Contextual information
@@ -116,28 +115,28 @@ class RewardSignal:
 
     # Temporal data
     timestamp: datetime = field(default_factory=datetime.now)
-    time_window: Optional[Tuple[datetime, datetime]] = None
+    time_window: Optional[tuple[datetime, datetime]] = None
 
     # Quality metrics
     confidence: float = 1.0
     reliability: float = 1.0  # How reliable is this reward signal
 
     # Educational outcomes
-    learning_gains: Dict[str, float] = field(default_factory=dict)
-    skill_improvements: Dict[str, float] = field(default_factory=dict)
-    behavioral_indicators: Dict[str, Any] = field(default_factory=dict)
+    learning_gains: dict[str, float] = field(default_factory=dict)
+    skill_improvements: dict[str, float] = field(default_factory=dict)
+    behavioral_indicators: dict[str, Any] = field(default_factory=dict)
 
     # Feedback and recommendations
     feedback_message: Optional[str] = None
-    recommended_actions: List[str] = field(default_factory=list)
-    areas_for_improvement: List[str] = field(default_factory=list)
+    recommended_actions: list[str] = field(default_factory=list)
+    areas_for_improvement: list[str] = field(default_factory=list)
 
     # Metadata
     calculation_method: str = "standard"
     normalization_applied: bool = False
 
     @property
-    def dimension_breakdown(self) -> Dict[str, float]:
+    def dimension_breakdown(self) -> dict[str, float]:
         """Get reward breakdown by dimension"""
         breakdown = {}
         for component in self.components:
@@ -153,7 +152,7 @@ class RewardSignal:
         """Overall quality of the reward signal"""
         return (self.confidence + self.reliability) / 2
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
         result["reward_type"] = self.reward_type.value
@@ -176,14 +175,10 @@ class LearningCurveAnalyzer:
 
     def __init__(self, window_size: int = 20):
         self.window_size = window_size
-        self.learning_curves: Dict[str, deque] = defaultdict(
-            lambda: deque(maxlen=window_size)
-        )
-        self.performance_baselines: Dict[str, float] = {}
+        self.learning_curves: dict[str, deque] = defaultdict(lambda: deque(maxlen=window_size))
+        self.performance_baselines: dict[str, float] = {}
 
-    def add_performance_point(
-        self, student_id: str, performance: float, timestamp: datetime
-    ):
+    def add_performance_point(self, student_id: str, performance: float, timestamp: datetime):
         """Add a performance data point"""
         self.learning_curves[student_id].append(
             {"performance": performance, "timestamp": timestamp}
@@ -194,16 +189,11 @@ class LearningCurveAnalyzer:
             recent_performances = [
                 p["performance"] for p in list(self.learning_curves[student_id])[-5:]
             ]
-            self.performance_baselines[student_id] = statistics.mean(
-                recent_performances
-            )
+            self.performance_baselines[student_id] = statistics.mean(recent_performances)
 
     def calculate_learning_velocity(self, student_id: str) -> float:
         """Calculate the rate of learning (improvement over time)"""
-        if (
-            student_id not in self.learning_curves
-            or len(self.learning_curves[student_id]) < 3
-        ):
+        if student_id not in self.learning_curves or len(self.learning_curves[student_id]) < 3:
             return 0.0
 
         curve = list(self.learning_curves[student_id])
@@ -230,10 +220,7 @@ class LearningCurveAnalyzer:
 
     def calculate_consistency(self, student_id: str) -> float:
         """Calculate consistency of performance (lower variance = higher consistency)"""
-        if (
-            student_id not in self.learning_curves
-            or len(self.learning_curves[student_id]) < 3
-        ):
+        if student_id not in self.learning_curves or len(self.learning_curves[student_id]) < 3:
             return 0.5
 
         performances = [p["performance"] for p in self.learning_curves[student_id]]
@@ -262,7 +249,7 @@ class EngagementAnalyzer:
         state: EnvironmentState,
         action_result: ActionResult,
         time_window: int = DEFAULT_TIME_WINDOW_SECONDS,
-    ) -> Tuple[float, Dict[str, float]]:
+    ) -> tuple[float, dict[str, float]]:
         """Calculate engagement score based on various indicators"""
 
         indicators = {}
@@ -284,8 +271,7 @@ class EngagementAnalyzer:
         if state.game_state:
             interactions = state.game_state.get("interaction_count", 0)
             time_minutes = (
-                state.game_state.get("active_time", SECONDS_PER_MINUTE)
-                / SECONDS_PER_MINUTE
+                state.game_state.get("active_time", SECONDS_PER_MINUTE) / SECONDS_PER_MINUTE
             )
             interaction_rate = interactions / max(time_minutes, 1)
             # Optimal interaction rate is around 5-10 per minute
@@ -299,9 +285,7 @@ class EngagementAnalyzer:
 
         # Exploration behavior (variety of actions/areas)
         if state.active_tools:
-            tool_variety = len(set(state.active_tools)) / max(
-                len(state.active_tools), 1
-            )
+            tool_variety = len(set(state.active_tools)) / max(len(state.active_tools), 1)
             indicators["exploration_behavior"] = tool_variety
         else:
             indicators["exploration_behavior"] = 0.4
@@ -309,17 +293,11 @@ class EngagementAnalyzer:
         # Help seeking behavior (moderate help seeking is positive)
         help_requests = state.data.get("help_requests", 0)
         if help_requests == 0:
-            indicators["help_seeking"] = (
-                0.3  # No help seeking might indicate disengagement
-            )
+            indicators["help_seeking"] = 0.3  # No help seeking might indicate disengagement
         elif help_requests <= 3:
-            indicators["help_seeking"] = 0.5 + (
-                help_requests * 0.15
-            )  # Moderate help seeking
+            indicators["help_seeking"] = 0.5 + (help_requests * 0.15)  # Moderate help seeking
         else:
-            indicators["help_seeking"] = 0.8 - (
-                (help_requests - 3) * 0.1
-            )  # Too much help seeking
+            indicators["help_seeking"] = 0.8 - ((help_requests - 3) * 0.1)  # Too much help seeking
 
         # Persistence (continuing after failures)
         failures = state.data.get("failed_attempts", 0)
@@ -358,7 +336,7 @@ class CreativityAssessment:
 
     def assess_creativity(
         self, state: EnvironmentState, action_result: ActionResult
-    ) -> Tuple[float, Dict[str, float]]:
+    ) -> tuple[float, dict[str, float]]:
         """Assess creativity based on student actions and outputs"""
 
         creativity_scores = {}
@@ -368,9 +346,7 @@ class CreativityAssessment:
             # Look for unique building patterns, novel tool usage
             unique_combinations = state.data.get("unique_combinations", 0)
             standard_patterns = state.data.get("standard_patterns", 1)
-            originality = unique_combinations / max(
-                unique_combinations + standard_patterns, 1
-            )
+            originality = unique_combinations / max(unique_combinations + standard_patterns, 1)
             creativity_scores["originality"] = originality
         else:
             creativity_scores["originality"] = 0.5
@@ -383,16 +359,12 @@ class CreativityAssessment:
 
         # Flexibility - variety in problem-solving strategies
         strategy_types = set(state.data.get("strategy_types", ["basic"]))
-        flexibility = min(
-            1.0, len(strategy_types) / 4
-        )  # Up to 4 different strategy types
+        flexibility = min(1.0, len(strategy_types) / 4)  # Up to 4 different strategy types
         creativity_scores["flexibility"] = flexibility
 
         # Elaboration - detail and refinement
         if state.state_type == StateType.ROBLOX_GAME:
-            detail_level = (
-                state.game_state.get("detail_score", 0.5) if state.game_state else 0.5
-            )
+            detail_level = state.game_state.get("detail_score", 0.5) if state.game_state else 0.5
             creativity_scores["elaboration"] = detail_level
         else:
             content_detail = (
@@ -422,7 +394,7 @@ class CollaborationAssessment:
 
     def assess_collaboration(
         self, state: EnvironmentState, action_result: ActionResult
-    ) -> Tuple[float, Dict[str, float]]:
+    ) -> tuple[float, dict[str, float]]:
         """Assess collaborative learning behaviors"""
 
         collab_scores = {}
@@ -444,9 +416,7 @@ class CollaborationAssessment:
             participation = student_actions / max(total_actions, 1)
             # Normalize around fair participation (1/n where n is number of players)
             expected_participation = 1 / max(len(player_actions), 1)
-            collab_scores["participation"] = min(
-                1.0, participation / expected_participation
-            )
+            collab_scores["participation"] = min(1.0, participation / expected_participation)
         else:
             collab_scores["participation"] = 0.5
 
@@ -498,7 +468,7 @@ class RewardCalculator:
 
     def __init__(
         self,
-        dimensions: Optional[List[str]] = None,
+        dimensions: Optional[list[str]] = None,
         normalization: bool = True,
         history_size: int = DEFAULT_HISTORY_SIZE,
     ):
@@ -522,12 +492,12 @@ class RewardCalculator:
 
         # Reward history and statistics
         self.reward_history: deque = deque(maxlen=history_size)
-        self.dimension_statistics: Dict[str, Dict[str, float]] = defaultdict(
+        self.dimension_statistics: dict[str, dict[str, float]] = defaultdict(
             lambda: {"mean": 0.0, "std": 0.1, "min": 0.0, "max": 1.0}
         )
 
         # Student-specific reward patterns
-        self.student_reward_profiles: Dict[str, Dict[str, Any]] = {}
+        self.student_reward_profiles: dict[str, dict[str, Any]] = {}
 
         # Educational objective weights
         self.objective_weights = {
@@ -577,7 +547,7 @@ class RewardCalculator:
         }
 
         # Persistence - use environment-aware path for Docker compatibility
-        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        data_dir = os.environ.get("DATA_DIR", "/tmp" if os.path.exists("/tmp") else "data")
         self.persistence_path = Path(data_dir) / "reward_calculator"
         try:
             self.persistence_path.mkdir(parents=True, exist_ok=True)
@@ -586,11 +556,9 @@ class RewardCalculator:
             self.persistence_path = Path("/tmp/reward_calculator")
             self.persistence_path.mkdir(parents=True, exist_ok=True)
 
-        logger.info(
-            f"RewardCalculator initialized with {len(self.dimensions)} dimensions"
-        )
+        logger.info(f"RewardCalculator initialized with {len(self.dimensions)} dimensions")
 
-    async def calculate_rewards(self, reward_input: Dict[str, Any]) -> RewardSignal:
+    async def calculate_rewards(self, reward_input: dict[str, Any]) -> RewardSignal:
         """
         Calculate comprehensive reward signal for an educational interaction.
 
@@ -659,10 +627,8 @@ class RewardCalculator:
                 reward_components.append(thinking_component)
 
             if RewardDimension.PROBLEM_SOLVING.value in self.dimensions:
-                problem_solving_component = (
-                    await self._calculate_problem_solving_reward(
-                        state, action, result, context
-                    )
+                problem_solving_component = await self._calculate_problem_solving_reward(
+                    state, action, result, context
                 )
                 reward_components.append(problem_solving_component)
 
@@ -676,30 +642,24 @@ class RewardCalculator:
 
             # Normalize if enabled
             if self.normalization_enabled:
-                total_reward = await self._normalize_reward(
-                    total_reward, state.student_id
-                )
+                total_reward = await self._normalize_reward(total_reward, state.student_id)
 
             # Determine reward type
             reward_type = self._determine_reward_type(action, result, context)
 
             # Calculate confidence and reliability
             confidence = self._calculate_reward_confidence(weighted_components, state)
-            reliability = self._calculate_reward_reliability(
-                weighted_components, context
-            )
+            reliability = self._calculate_reward_reliability(weighted_components, context)
 
             # Generate educational feedback
-            feedback_message, recommendations, improvements = (
-                await self._generate_educational_feedback(
-                    weighted_components, state, total_reward
-                )
-            )
+            (
+                feedback_message,
+                recommendations,
+                improvements,
+            ) = await self._generate_educational_feedback(weighted_components, state, total_reward)
 
             # Calculate learning gains and skill improvements
-            learning_gains = await self._calculate_learning_gains(
-                weighted_components, state
-            )
+            learning_gains = await self._calculate_learning_gains(weighted_components, state)
             skill_improvements = await self._calculate_skill_improvements(
                 weighted_components, state
             )
@@ -726,9 +686,7 @@ class RewardCalculator:
 
             # Update student reward profile
             if state.student_id:
-                await self._update_student_reward_profile(
-                    state.student_id, reward_signal
-                )
+                await self._update_student_reward_profile(state.student_id, reward_signal)
 
             # Track performance
             calculation_time = (datetime.now() - start_time).total_seconds()
@@ -739,9 +697,7 @@ class RewardCalculator:
                 + calculation_time
             ) / self.calculation_stats["total_calculations"]
 
-            logger.debug(
-                f"Reward calculated: {total_reward:.3f} (took {calculation_time:.3f}s)"
-            )
+            logger.debug(f"Reward calculated: {total_reward:.3f} (took {calculation_time:.3f}s)")
             return reward_signal
 
         except Exception as e:
@@ -762,7 +718,7 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on learning progress"""
 
@@ -788,9 +744,7 @@ class RewardCalculator:
             self.learning_curve_analyzer.add_performance_point(
                 state.student_id, base_progress, datetime.now()
             )
-            velocity = self.learning_curve_analyzer.calculate_learning_velocity(
-                state.student_id
-            )
+            velocity = self.learning_curve_analyzer.calculate_learning_velocity(state.student_id)
             velocity_contribution = min(0.3, max(-0.3, velocity))  # Cap contribution
             base_progress += velocity_contribution
             evidence.append(f"Learning velocity: {velocity:.3f}")
@@ -839,12 +793,12 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on student engagement"""
 
-        engagement_score, indicators = (
-            self.engagement_analyzer.calculate_engagement_score(state, result)
+        engagement_score, indicators = self.engagement_analyzer.calculate_engagement_score(
+            state, result
         )
 
         evidence = []
@@ -877,7 +831,7 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on accuracy of responses/actions"""
 
@@ -912,9 +866,7 @@ class RewardCalculator:
         if result and hasattr(result, "success") and hasattr(result, "result_data"):
             if result.success:
                 action_accuracy = result.result_data.get("accuracy", 0.8)
-                accuracy_score = (
-                    accuracy_score + action_accuracy
-                ) / 2  # Average with existing
+                accuracy_score = (accuracy_score + action_accuracy) / 2  # Average with existing
                 evidence.append(f"Action accuracy: {action_accuracy:.1%}")
                 contributing_factors["action_accuracy"] = action_accuracy
 
@@ -948,12 +900,12 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on creativity and innovation"""
 
-        creativity_score, creativity_breakdown = (
-            self.creativity_assessment.assess_creativity(state, result)
+        creativity_score, creativity_breakdown = self.creativity_assessment.assess_creativity(
+            state, result
         )
 
         evidence = []
@@ -984,12 +936,12 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on collaborative behaviors"""
 
-        collaboration_score, collab_breakdown = (
-            self.collaboration_assessment.assess_collaboration(state, result)
+        collaboration_score, collab_breakdown = self.collaboration_assessment.assess_collaboration(
+            state, result
         )
 
         evidence = []
@@ -1018,7 +970,7 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on persistence and effort"""
 
@@ -1084,7 +1036,7 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on critical thinking skills"""
 
@@ -1151,7 +1103,7 @@ class RewardCalculator:
         state: EnvironmentState,
         action: Any,
         result: ActionResult,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> RewardComponent:
         """Calculate reward based on problem-solving skills"""
 
@@ -1222,10 +1174,10 @@ class RewardCalculator:
 
     async def _apply_adaptive_weighting(
         self,
-        components: List[RewardComponent],
+        components: list[RewardComponent],
         state: EnvironmentState,
-        context: Dict[str, Any],
-    ) -> List[RewardComponent]:
+        context: dict[str, Any],
+    ) -> list[RewardComponent]:
         """Apply adaptive weighting based on learning objectives and student stage"""
 
         weighted_components = []
@@ -1245,9 +1197,7 @@ class RewardCalculator:
             # Apply stage-based weighting
             student_stage = self._determine_learning_stage(state, context)
             if student_stage in self.stage_weights:
-                stage_weight = self.stage_weights[student_stage].get(
-                    component.dimension, 1.0
-                )
+                stage_weight = self.stage_weights[student_stage].get(component.dimension, 1.0)
                 new_weight *= stage_weight
 
             # Create new component with adjusted weight
@@ -1267,9 +1217,7 @@ class RewardCalculator:
 
         return weighted_components
 
-    def _determine_learning_stage(
-        self, state: EnvironmentState, context: Dict[str, Any]
-    ) -> str:
+    def _determine_learning_stage(self, state: EnvironmentState, context: dict[str, Any]) -> str:
         """Determine the student's current learning stage"""
 
         # Use multiple indicators to determine stage
@@ -1287,13 +1235,9 @@ class RewardCalculator:
 
         # Performance indicator
         if state.student_id:
-            recent_performance = self.learning_curve_analyzer.learning_curves.get(
-                state.student_id
-            )
+            recent_performance = self.learning_curve_analyzer.learning_curves.get(state.student_id)
             if recent_performance:
-                avg_performance = np.mean(
-                    [p["performance"] for p in recent_performance]
-                )
+                avg_performance = np.mean([p["performance"] for p in recent_performance])
                 if avg_performance < 0.4:
                     indicators.append("novice")
                 elif avg_performance < 0.7:
@@ -1311,9 +1255,7 @@ class RewardCalculator:
         else:
             return "developing"  # Default
 
-    async def _normalize_reward(
-        self, raw_reward: float, student_id: Optional[str]
-    ) -> float:
+    async def _normalize_reward(self, raw_reward: float, student_id: Optional[str]) -> float:
         """Normalize reward based on historical distribution"""
 
         if not self.reward_history:
@@ -1336,7 +1278,7 @@ class RewardCalculator:
         return float(normalized)
 
     def _determine_reward_type(
-        self, action: Any, result: ActionResult, context: Dict[str, Any]
+        self, action: Any, result: ActionResult, context: dict[str, Any]
     ) -> RewardType:
         """Determine the type of reward based on context"""
 
@@ -1364,7 +1306,7 @@ class RewardCalculator:
         return RewardType.IMMEDIATE
 
     def _calculate_reward_confidence(
-        self, components: List[RewardComponent], state: EnvironmentState
+        self, components: list[RewardComponent], state: EnvironmentState
     ) -> float:
         """Calculate overall confidence in the reward signal"""
 
@@ -1372,9 +1314,7 @@ class RewardCalculator:
             return 0.0
 
         # Weight confidence by component weights
-        total_weighted_confidence = sum(
-            comp.confidence * comp.weight for comp in components
-        )
+        total_weighted_confidence = sum(comp.confidence * comp.weight for comp in components)
         total_weight = sum(comp.weight for comp in components)
 
         if total_weight == 0:
@@ -1393,7 +1333,7 @@ class RewardCalculator:
         return base_confidence * state_quality_factor
 
     def _calculate_reward_reliability(
-        self, components: List[RewardComponent], context: Dict[str, Any]
+        self, components: list[RewardComponent], context: dict[str, Any]
     ) -> float:
         """Calculate reliability of the reward signal"""
 
@@ -1422,10 +1362,10 @@ class RewardCalculator:
 
     async def _generate_educational_feedback(
         self,
-        components: List[RewardComponent],
+        components: list[RewardComponent],
         state: EnvironmentState,
         total_reward: float,
-    ) -> Tuple[str, List[str], List[str]]:
+    ) -> tuple[str, list[str], list[str]]:
         """Generate educational feedback and recommendations"""
 
         # Determine overall performance level
@@ -1454,8 +1394,7 @@ class RewardCalculator:
 
         if strong_dimensions:
             strengths = [
-                comp.dimension.value.replace("_", " ").title()
-                for comp in strong_dimensions[:2]
+                comp.dimension.value.replace("_", " ").title() for comp in strong_dimensions[:2]
             ]
             base_feedback += f" Your {' and '.join(strengths)} are particularly strong."
 
@@ -1474,13 +1413,9 @@ class RewardCalculator:
 
         if not recommendations:
             if total_reward >= 0.7:
-                recommendations.append(
-                    "Continue challenging yourself with harder problems"
-                )
+                recommendations.append("Continue challenging yourself with harder problems")
             else:
-                recommendations.append(
-                    "Keep practicing and don't hesitate to ask for help"
-                )
+                recommendations.append("Keep practicing and don't hesitate to ask for help")
 
         # Identify areas for improvement
         improvements = []
@@ -1491,8 +1426,8 @@ class RewardCalculator:
         return base_feedback, recommendations[:3], improvements[:3]
 
     async def _calculate_learning_gains(
-        self, components: List[RewardComponent], state: EnvironmentState
-    ) -> Dict[str, float]:
+        self, components: list[RewardComponent], state: EnvironmentState
+    ) -> dict[str, float]:
         """Calculate specific learning gains by area"""
 
         gains = {}
@@ -1517,8 +1452,8 @@ class RewardCalculator:
         return gains
 
     async def _calculate_skill_improvements(
-        self, components: List[RewardComponent], state: EnvironmentState
-    ) -> Dict[str, float]:
+        self, components: list[RewardComponent], state: EnvironmentState
+    ) -> dict[str, float]:
         """Calculate skill improvements in different areas"""
 
         improvements = {}
@@ -1544,12 +1479,8 @@ class RewardCalculator:
                 comp for comp in components if comp.skill_area == state.subject_area
             ]
             if subject_components:
-                subject_improvement = np.mean(
-                    [comp.weighted_value for comp in subject_components]
-                )
-                improvements[f"{state.subject_area.title()} Skills"] = (
-                    subject_improvement
-                )
+                subject_improvement = np.mean([comp.weighted_value for comp in subject_components])
+                improvements[f"{state.subject_area.title()} Skills"] = subject_improvement
 
         return improvements
 
@@ -1584,17 +1515,13 @@ class RewardCalculator:
 
                 # Approximate std update (simplified)
                 if n > 2:
-                    stats["std"] = (
-                        stats["std"] * 0.95 + abs(value - stats["mean"]) * 0.05
-                    )
+                    stats["std"] = stats["std"] * 0.95 + abs(value - stats["mean"]) * 0.05
 
         # Update reward distribution
         reward_bucket = int(reward_signal.total_reward * 10)  # 0-10 buckets
         self.calculation_stats["reward_distribution"][reward_bucket] += 1
 
-    async def _update_student_reward_profile(
-        self, student_id: str, reward_signal: RewardSignal
-    ):
+    async def _update_student_reward_profile(self, student_id: str, reward_signal: RewardSignal):
         """Update individual student reward profile"""
 
         if student_id not in self.student_reward_profiles:
@@ -1631,7 +1558,7 @@ class RewardCalculator:
 
         profile["last_updated"] = datetime.now()
 
-    async def get_student_profile(self, student_id: str) -> Optional[Dict[str, Any]]:
+    async def get_student_profile(self, student_id: str) -> Optional[dict[str, Any]]:
         """Get student reward profile"""
 
         if student_id not in self.student_reward_profiles:
@@ -1659,7 +1586,7 @@ class RewardCalculator:
 
         return profile
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of RewardCalculator"""
 
         return {
@@ -1670,9 +1597,7 @@ class RewardCalculator:
             "calculation_stats": self.calculation_stats.copy(),
             "dimension_statistics": dict(self.dimension_statistics),
             "analyzers": {
-                "learning_curves_tracked": len(
-                    self.learning_curve_analyzer.learning_curves
-                ),
+                "learning_curves_tracked": len(self.learning_curve_analyzer.learning_curves),
                 "engagement_analyzer_active": True,
                 "creativity_assessment_active": True,
                 "collaboration_assessment_active": True,

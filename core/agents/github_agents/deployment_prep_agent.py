@@ -2,12 +2,10 @@
 Deployment Preparation Agent for validating deployment readiness.
 """
 
-import asyncio
 import json
 import os
 import subprocess
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 
@@ -27,33 +25,21 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                     "render.yaml",
                     "requirements.txt",
                     "Dockerfile.backend",
-                    ".env.render"
+                    ".env.render",
                 ],
-                "required_services": [
-                    "backend",
-                    "frontend",
-                    "database",
-                    "redis"
-                ]
+                "required_services": ["backend", "frontend", "database", "redis"],
             },
             "heroku": {
                 "config_file": "app.json",
-                "required_files": [
-                    "Procfile",
-                    "requirements.txt",
-                    "runtime.txt"
-                ]
+                "required_files": ["Procfile", "requirements.txt", "runtime.txt"],
             },
             "aws": {
                 "config_file": "aws-config.yaml",
-                "required_files": [
-                    "Dockerfile",
-                    "docker-compose.yml"
-                ]
-            }
+                "required_files": ["Dockerfile", "docker-compose.yml"],
+            },
         }
 
-    async def analyze(self, service: str = "render", **kwargs) -> Dict[str, Any]:
+    async def analyze(self, service: str = "render", **kwargs) -> dict[str, Any]:
         """Analyze deployment readiness for specified service.
 
         Args:
@@ -69,7 +55,7 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 return {
                     "success": False,
                     "ready": False,
-                    "error": "Not in a git repository"
+                    "error": "Not in a git repository",
                 }
 
             # Run all checks
@@ -87,7 +73,7 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 "config_check": config_check["passed"],
                 "docker_check": docker_check["passed"],
                 "environment_check": env_check["passed"],
-                "migration_check": migration_check["passed"]
+                "migration_check": migration_check["passed"],
             }
 
             ready = all(all_checks.values())
@@ -108,12 +94,15 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 recommendations.extend(migration_check.get("recommendations", []))
 
             # Log operation
-            await self.log_operation("deployment_prep", {
-                "service": service,
-                "ready": ready,
-                "checks": all_checks,
-                "recommendations_count": len(recommendations)
-            })
+            await self.log_operation(
+                "deployment_prep",
+                {
+                    "service": service,
+                    "ready": ready,
+                    "checks": all_checks,
+                    "recommendations_count": len(recommendations),
+                },
+            )
 
             return {
                 "success": True,
@@ -126,10 +115,10 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                     "configuration": config_check,
                     "docker": docker_check,
                     "environment": env_check,
-                    "migrations": migration_check
+                    "migrations": migration_check,
                 },
                 "recommendations": recommendations,
-                "deployment_score": sum(all_checks.values()) / len(all_checks) * 100
+                "deployment_score": sum(all_checks.values()) / len(all_checks) * 100,
             }
 
         except Exception as e:
@@ -137,21 +126,18 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 "success": False,
                 "ready": False,
                 "error": str(e),
-                "service": service
+                "service": service,
             }
 
-    async def _check_repository_size(self) -> Dict[str, Any]:
+    async def _check_repository_size(self) -> dict[str, Any]:
         """Check repository size for deployment."""
         try:
-            repo_root = self.get_repository_root()
+            self.get_repository_root()
 
             # Get repository size
             result = await self.execute_git_command("count-objects -vH")
             if not result["success"]:
-                return {
-                    "passed": False,
-                    "error": "Failed to check repository size"
-                }
+                return {"passed": False, "error": "Failed to check repository size"}
 
             # Parse size information
             size_info = {}
@@ -171,10 +157,12 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                     if line:
                         parts = line.split()
                         if len(parts) >= 2:
-                            large_files.append({
-                                "path": parts[0],
-                                "size": int(parts[1]) if parts[1].isdigit() else 0
-                            })
+                            large_files.append(
+                                {
+                                    "path": parts[0],
+                                    "size": int(parts[1]) if parts[1].isdigit() else 0,
+                                }
+                            )
 
             # Determine if size is acceptable
             pack_size_str = size_info.get("size-pack", "0")
@@ -188,24 +176,25 @@ class DeploymentPrepAgent(BaseGitHubAgent):
 
             recommendations = []
             if pack_size_mb > 500:
-                recommendations.append(f"Repository size ({pack_size_mb:.1f} MB) exceeds recommended 500 MB")
+                recommendations.append(
+                    f"Repository size ({pack_size_mb:.1f} MB) exceeds recommended 500 MB"
+                )
             if large_files:
-                recommendations.append(f"Found {len(large_files)} files over 50 MB - consider using Git LFS")
+                recommendations.append(
+                    f"Found {len(large_files)} files over 50 MB - consider using Git LFS"
+                )
 
             return {
                 "passed": passed,
                 "pack_size_mb": pack_size_mb,
                 "large_files": large_files,
-                "recommendations": recommendations
+                "recommendations": recommendations,
             }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
-    async def _check_dependencies(self) -> Dict[str, Any]:
+    async def _check_dependencies(self) -> dict[str, Any]:
         """Check dependency health and security."""
         try:
             repo_root = self.get_repository_root()
@@ -216,11 +205,16 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             requirements_file = repo_root / "requirements.txt"
             if requirements_file.exists():
                 # Check for version pinning
-                with open(requirements_file, 'r') as f:
+                with open(requirements_file) as f:
                     lines = f.readlines()
-                    unpinned = [line.strip() for line in lines
-                               if line.strip() and not line.startswith("#")
-                               and "==" not in line and ">=" not in line]
+                    unpinned = [
+                        line.strip()
+                        for line in lines
+                        if line.strip()
+                        and not line.startswith("#")
+                        and "==" not in line
+                        and ">=" not in line
+                    ]
 
                 if unpinned:
                     issues.append(f"Found {len(unpinned)} unpinned dependencies")
@@ -229,8 +223,8 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             # Check Node dependencies
             package_json = repo_root / "apps" / "dashboard" / "package.json"
             if package_json.exists():
-                with open(package_json, 'r') as f:
-                    pkg = json.load(f)
+                with open(package_json) as f:
+                    json.load(f)
 
                 # Check for missing lock file
                 package_lock = repo_root / "apps" / "dashboard" / "package-lock.json"
@@ -243,16 +237,13 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             return {
                 "passed": passed,
                 "issues": issues,
-                "recommendations": recommendations
+                "recommendations": recommendations,
             }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
-    async def _check_configuration(self, service: str) -> Dict[str, Any]:
+    async def _check_configuration(self, service: str) -> dict[str, Any]:
         """Check deployment configuration for specified service."""
         try:
             repo_root = self.get_repository_root()
@@ -260,7 +251,7 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             if service not in self.deployment_configs:
                 return {
                     "passed": True,
-                    "warning": f"No specific configuration requirements for {service}"
+                    "warning": f"No specific configuration requirements for {service}",
                 }
 
             config = self.deployment_configs[service]
@@ -279,7 +270,7 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             if service == "render" and not missing_files:
                 render_yaml = repo_root / "render.yaml"
                 try:
-                    with open(render_yaml, 'r') as f:
+                    with open(render_yaml) as f:
                         render_config = yaml.safe_load(f)
 
                     # Check for required services
@@ -304,16 +295,13 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 "missing_files": missing_files,
                 "config_valid": config_valid,
                 "config_errors": config_errors,
-                "recommendations": recommendations
+                "recommendations": recommendations,
             }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
-    async def _check_docker_readiness(self) -> Dict[str, Any]:
+    async def _check_docker_readiness(self) -> dict[str, Any]:
         """Check Docker configuration and build readiness."""
         try:
             repo_root = self.get_repository_root()
@@ -326,11 +314,14 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 dockerfile = repo_root / "Dockerfile"
 
             if dockerfile.exists():
-                with open(dockerfile, 'r') as f:
+                with open(dockerfile) as f:
                     content = f.read()
 
                 # Check for best practices
-                if "USER root" in content and "USER" not in content[content.find("USER root")+9:]:
+                if (
+                    "USER root" in content
+                    and "USER" not in content[content.find("USER root") + 9 :]
+                ):
                     issues.append("Running as root user in production")
                     recommendations.append("Add a non-root USER directive in Dockerfile")
 
@@ -350,16 +341,13 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             return {
                 "passed": passed,
                 "issues": issues,
-                "recommendations": recommendations
+                "recommendations": recommendations,
             }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
-    async def _check_environment_variables(self, service: str) -> Dict[str, Any]:
+    async def _check_environment_variables(self, service: str) -> dict[str, Any]:
         """Check environment variable configuration."""
         try:
             repo_root = self.get_repository_root()
@@ -371,13 +359,13 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 "DATABASE_URL",
                 "REDIS_URL",
                 "SECRET_KEY",
-                "JWT_SECRET_KEY"
+                "JWT_SECRET_KEY",
             ]
 
             if service == "render":
                 env_file = repo_root / ".env.render"
                 if env_file.exists():
-                    with open(env_file, 'r') as f:
+                    with open(env_file) as f:
                         content = f.read()
 
                     for var in required_vars:
@@ -390,21 +378,20 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             passed = len(missing_vars) == 0
 
             if missing_vars:
-                recommendations.append(f"Add missing environment variables: {', '.join(missing_vars)}")
+                recommendations.append(
+                    f"Add missing environment variables: {', '.join(missing_vars)}"
+                )
 
             return {
                 "passed": passed,
                 "missing_vars": missing_vars,
-                "recommendations": recommendations
+                "recommendations": recommendations,
             }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
-    async def _check_database_migrations(self) -> Dict[str, Any]:
+    async def _check_database_migrations(self) -> dict[str, Any]:
         """Check database migration status."""
         try:
             repo_root = self.get_repository_root()
@@ -422,22 +409,19 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                 return {
                     "passed": True,
                     "migration_count": migration_count,
-                    "recommendations": []
+                    "recommendations": [],
                 }
             else:
                 return {
                     "passed": True,
                     "warning": "No database migrations directory found",
-                    "recommendations": ["Initialize database migrations if using a database"]
+                    "recommendations": ["Initialize database migrations if using a database"],
                 }
 
         except Exception as e:
-            return {
-                "passed": False,
-                "error": str(e)
-            }
+            return {"passed": False, "error": str(e)}
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute deployment preparation actions.
 
         Args:
@@ -453,7 +437,7 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             "build_docker": self._action_build_docker,
             "generate_env_template": self._action_generate_env_template,
             "check_secrets": self._action_check_secrets,
-            "optimize_build": self._action_optimize_build
+            "optimize_build": self._action_optimize_build,
         }
 
         if action in actions:
@@ -462,14 +446,14 @@ class DeploymentPrepAgent(BaseGitHubAgent):
             return {
                 "success": False,
                 "error": f"Unknown action: {action}",
-                "available_actions": list(actions.keys())
+                "available_actions": list(actions.keys()),
             }
 
-    async def _action_validate(self, service: str = "render", **kwargs) -> Dict[str, Any]:
+    async def _action_validate(self, service: str = "render", **kwargs) -> dict[str, Any]:
         """Validate deployment readiness."""
         return await self.analyze(service, **kwargs)
 
-    async def _action_prepare_render(self, **kwargs) -> Dict[str, Any]:
+    async def _action_prepare_render(self, **kwargs) -> dict[str, Any]:
         """Prepare for Render.com deployment."""
         try:
             repo_root = self.get_repository_root()
@@ -481,27 +465,21 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                     ["bash", str(validate_script)],
                     capture_output=True,
                     text=True,
-                    cwd=repo_root
+                    cwd=repo_root,
                 )
 
                 return {
                     "success": result.returncode == 0,
                     "stdout": result.stdout,
-                    "stderr": result.stderr
+                    "stderr": result.stderr,
                 }
             else:
-                return {
-                    "success": False,
-                    "error": "Validation script not found"
-                }
+                return {"success": False, "error": "Validation script not found"}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def _action_build_docker(self, **kwargs) -> Dict[str, Any]:
+    async def _action_build_docker(self, **kwargs) -> dict[str, Any]:
         """Test Docker build."""
         try:
             repo_root = self.get_repository_root()
@@ -517,32 +495,25 @@ class DeploymentPrepAgent(BaseGitHubAgent):
                     capture_output=True,
                     text=True,
                     cwd=repo_root,
-                    timeout=300
+                    timeout=300,
                 )
 
                 return {
                     "success": result.returncode == 0,
                     "stdout": result.stdout[-1000:] if result.stdout else "",  # Last 1000 chars
-                    "stderr": result.stderr[-1000:] if result.stderr else ""
+                    "stderr": result.stderr[-1000:] if result.stderr else "",
                 }
             else:
-                return {
-                    "success": False,
-                    "error": "Dockerfile not found"
-                }
+                return {"success": False, "error": "Dockerfile not found"}
 
         except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": "Docker build timed out"
-            }
+            return {"success": False, "error": "Docker build timed out"}
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def _action_generate_env_template(self, service: str = "render", **kwargs) -> Dict[str, Any]:
+    async def _action_generate_env_template(
+        self, service: str = "render", **kwargs
+    ) -> dict[str, Any]:
         """Generate environment variable template."""
         try:
             repo_root = self.get_repository_root()
@@ -587,28 +558,23 @@ DEBUG=false
 """
 
             from datetime import datetime
-            content = template.format(
-                service=service,
-                date=datetime.now().isoformat()
-            )
+
+            content = template.format(service=service, date=datetime.now().isoformat())
 
             env_file = repo_root / f".env.{service}.template"
-            with open(env_file, 'w') as f:
+            with open(env_file, "w") as f:
                 f.write(content)
 
             return {
                 "success": True,
                 "file_created": str(env_file),
-                "message": f"Environment template created at {env_file}"
+                "message": f"Environment template created at {env_file}",
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def _action_check_secrets(self, **kwargs) -> Dict[str, Any]:
+    async def _action_check_secrets(self, **kwargs) -> dict[str, Any]:
         """Check for exposed secrets in code."""
         try:
             # Run basic secret detection
@@ -625,16 +591,20 @@ DEBUG=false
             return {
                 "success": len(potential_secrets) == 0,
                 "potential_secrets": potential_secrets,
-                "message": f"Found {len(potential_secrets)} potential exposed secrets" if potential_secrets else "No exposed secrets found"
+                "message": (
+                    f"Found {len(potential_secrets)} potential exposed secrets"
+                    if potential_secrets
+                    else "No exposed secrets found"
+                ),
             }
 
-        except Exception as e:
+        except Exception:
             return {
                 "success": True,  # Don't fail on grep errors
-                "message": "Secret check completed"
+                "message": "Secret check completed",
             }
 
-    async def _action_optimize_build(self, **kwargs) -> Dict[str, Any]:
+    async def _action_optimize_build(self, **kwargs) -> dict[str, Any]:
         """Optimize build configuration."""
         try:
             recommendations = [
@@ -642,17 +612,14 @@ DEBUG=false
                 "Implement build caching for dependencies",
                 "Minimize layers in Dockerfile",
                 "Use .dockerignore to exclude unnecessary files",
-                "Enable BuildKit for improved build performance"
+                "Enable BuildKit for improved build performance",
             ]
 
             return {
                 "success": True,
                 "recommendations": recommendations,
-                "message": "Build optimization recommendations generated"
+                "message": "Build optimization recommendations generated",
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}

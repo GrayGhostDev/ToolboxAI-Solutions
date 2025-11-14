@@ -100,7 +100,13 @@ class TestComprehensiveSecurity:
                             match_text = match.group(0)
                             if any(
                                 fp in match_text.lower()
-                                for fp in ["example", "test", "mock", "placeholder", "dummy"]
+                                for fp in [
+                                    "example",
+                                    "test",
+                                    "mock",
+                                    "placeholder",
+                                    "dummy",
+                                ]
                             ):
                                 continue
 
@@ -138,7 +144,13 @@ class TestComprehensiveSecurity:
                                 match_text = match.group(0)
                                 if any(
                                     fp in match_text.lower()
-                                    for fp in ["example", "test", "mock", "placeholder", "dummy"]
+                                    for fp in [
+                                        "example",
+                                        "test",
+                                        "mock",
+                                        "placeholder",
+                                        "dummy",
+                                    ]
                                 ):
                                     continue
 
@@ -307,7 +319,13 @@ class TestComprehensiveSecurity:
                 # Skip node_modules and test files
                 if any(
                     excluded in str(file)
-                    for excluded in ["node_modules", "test_", "__tests__", ".test.", ".spec."]
+                    for excluded in [
+                        "node_modules",
+                        "test_",
+                        "__tests__",
+                        ".test.",
+                        ".spec.",
+                    ]
                 ):
                     continue
 
@@ -323,7 +341,12 @@ class TestComprehensiveSecurity:
                             surrounding = content[max(0, match.start() - 100) : match.end() + 100]
                             if any(
                                 sanitizer in surrounding.lower()
-                                for sanitizer in ["dompurify", "sanitize", "escape", "htmlescape"]
+                                for sanitizer in [
+                                    "dompurify",
+                                    "sanitize",
+                                    "escape",
+                                    "htmlescape",
+                                ]
                             ):
                                 continue
 
@@ -398,7 +421,6 @@ class TestComprehensiveSecurity:
     def test_cors_configuration(self):
         """Test CORS is properly configured"""
         project_root = Path.cwd()
-        issues = []
 
         # Check backend CORS settings
         backend_files = list(project_root.rglob("main.py")) + list(project_root.rglob("app.py"))
@@ -597,7 +619,13 @@ class TestComprehensiveSecurity:
         issues = []
 
         # Look for file upload handlers
-        upload_patterns = [r"upload", r"multipart", r"file.*save", r"File\(", r"UploadFile"]
+        upload_patterns = [
+            r"upload",
+            r"multipart",
+            r"file.*save",
+            r"File\(",
+            r"UploadFile",
+        ]
 
         upload_files = []
         for py_file in project_root.rglob("*.py"):

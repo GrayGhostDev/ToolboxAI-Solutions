@@ -146,7 +146,11 @@ class TestListAgentInstances:
 
     @pytest.mark.asyncio
     async def test_list_agents_with_results(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test listing agents with results."""
         # Mock database to return sample agents
@@ -179,7 +183,11 @@ class TestListAgentInstances:
 
     @pytest.mark.asyncio
     async def test_list_agents_with_status_filter(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test filtering agents by status."""
         agents = [sample_agent_instance]
@@ -208,7 +216,11 @@ class TestListAgentInstances:
 
     @pytest.mark.asyncio
     async def test_list_agents_with_type_filter(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test filtering agents by type."""
         agents = [sample_agent_instance]
@@ -237,7 +249,11 @@ class TestListAgentInstances:
 
     @pytest.mark.asyncio
     async def test_list_agents_pagination(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test pagination with multiple pages."""
         # Mock 150 total agents, page 2 with 50 items
@@ -339,7 +355,11 @@ class TestCreateAgentInstance:
 
     @pytest.mark.asyncio
     async def test_create_agent_duplicate_id(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test creating agent with duplicate ID in same organization."""
         # Mock existing agent with same ID
@@ -407,7 +427,11 @@ class TestGetAgentInstance:
 
     @pytest.mark.asyncio
     async def test_get_agent_success(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test successfully retrieving an agent."""
         # Mock database query to return agent
@@ -481,7 +505,11 @@ class TestUpdateAgentInstance:
 
     @pytest.mark.asyncio
     async def test_update_agent_status(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test updating agent status."""
         # Mock database query to return agent
@@ -493,7 +521,7 @@ class TestUpdateAgentInstance:
         update_data = AgentInstanceUpdate(status="BUSY")
 
         # Call endpoint
-        result = await update_agent_instance(
+        await update_agent_instance(
             agent_id=sample_agent_instance.agent_id,
             data=update_data,
             org_id=mock_organization_id,
@@ -507,7 +535,11 @@ class TestUpdateAgentInstance:
 
     @pytest.mark.asyncio
     async def test_update_agent_configuration(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test updating agent configuration."""
         # Mock database query
@@ -563,7 +595,11 @@ class TestDeleteAgentInstance:
 
     @pytest.mark.asyncio
     async def test_delete_agent_success(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test successful agent deletion."""
         # Mock database query to return agent
@@ -605,7 +641,11 @@ class TestDeleteAgentInstance:
 
     @pytest.mark.asyncio
     async def test_delete_agent_database_error(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test handling database errors during deletion."""
         # Mock successful query
@@ -693,7 +733,11 @@ class TestGetAgentExecutions:
 
     @pytest.mark.asyncio
     async def test_get_executions_empty(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test getting executions when none exist."""
         # Mock agent exists
@@ -761,7 +805,11 @@ class TestGetAgentMetrics:
 
     @pytest.mark.asyncio
     async def test_get_metrics_no_metrics_available(
-        self, mock_db_session, mock_organization_id, mock_current_user, sample_agent_instance
+        self,
+        mock_db_session,
+        mock_organization_id,
+        mock_current_user,
+        sample_agent_instance,
     ):
         """Test getting metrics when none exist yet."""
         # Mock agent exists

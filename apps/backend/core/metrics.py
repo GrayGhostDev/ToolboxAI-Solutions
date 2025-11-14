@@ -75,7 +75,21 @@ class ToolBoxAIMetrics:
             name="http_request_duration_seconds",
             documentation="HTTP request duration in seconds",
             labelnames=["method", "endpoint", "status_code", "handler"],
-            buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.25, 0.5, 1.0, 2.0, 5.0],
+            buckets=[
+                0.001,
+                0.005,
+                0.01,
+                0.025,
+                0.05,
+                0.075,
+                0.1,
+                0.15,
+                0.25,
+                0.5,
+                1.0,
+                2.0,
+                5.0,
+            ],
             registry=self.registry,
         )
 
@@ -396,7 +410,7 @@ class ToolBoxAIMetrics:
             yield
         finally:
             # Clean up tracking
-            duration = time.time() - start_time
+            time.time() - start_time
             self.http_active_requests.dec()
             if request_id in self._active_requests:
                 del self._active_requests[request_id]
@@ -438,7 +452,10 @@ class ToolBoxAIMetrics:
 
         # Error metrics
         if status_code >= 400:
-            error_labels = {**labels, "error_type": error_type or self._classify_error(status_code)}
+            error_labels = {
+                **labels,
+                "error_type": error_type or self._classify_error(status_code),
+            }
             self.http_errors_total.labels(**error_labels).inc()
 
     def _classify_error(self, status_code: int) -> str:
@@ -468,7 +485,11 @@ class ToolBoxAIMetrics:
         status: str = "success",
     ):
         """Record content generation metrics"""
-        labels = {"content_type": content_type, "subject": subject, "grade_level": grade_level}
+        labels = {
+            "content_type": content_type,
+            "subject": subject,
+            "grade_level": grade_level,
+        }
 
         self.content_generation_requests.labels(**labels, status=status).inc()
 
@@ -516,7 +537,12 @@ class ToolBoxAIMetrics:
 
     # Database metrics methods
     def record_database_query(
-        self, query_type: str, table: str, operation: str, duration: float, status: str = "success"
+        self,
+        query_type: str,
+        table: str,
+        operation: str,
+        duration: float,
+        status: str = "success",
     ):
         """Record database query performance"""
         labels = {"query_type": query_type, "table": table, "operation": operation}
@@ -709,7 +735,11 @@ def check_metrics_health() -> dict[str, Any]:
             "last_collection_time": time.time(),
         }
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e), "last_collection_time": time.time()}
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "last_collection_time": time.time(),
+        }
 
 
 # Export main components

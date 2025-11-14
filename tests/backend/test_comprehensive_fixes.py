@@ -55,7 +55,6 @@ def test_imports() -> bool:
 
     # Test 2: Backend main imports
     try:
-
         print("✅ Backend main app import successful")
         test_results.append(True)
     except Exception as e:
@@ -66,7 +65,7 @@ def test_imports() -> bool:
     try:
         from core.mcp.context_manager import MCPContextManager
 
-        manager = MCPContextManager(max_tokens=128000)
+        MCPContextManager(max_tokens=128000)
         print("✅ MCP Context Manager import and instantiation successful")
         test_results.append(True)
     except Exception as e:
@@ -75,7 +74,6 @@ def test_imports() -> bool:
 
     # Test 4: WebSocket auth imports
     try:
-
         print("✅ WebSocket auth imports successful")
         test_results.append(True)
     except Exception as e:
@@ -196,7 +194,7 @@ def test_agent_functionality() -> bool:
         for agent_type in agent_types:
             try:
                 config = AgentConfig(name=f"test_{agent_type}", model="gpt-4")
-                agent = create_agent(agent_type, config)
+                create_agent(agent_type, config)
                 print(f"✅ Created {agent_type} agent successfully")
                 test_results.append(True)
             except Exception as e:

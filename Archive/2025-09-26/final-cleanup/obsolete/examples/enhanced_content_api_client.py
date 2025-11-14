@@ -21,14 +21,12 @@ import asyncio
 import json
 import logging
 import time
-import websockets
-from datetime import datetime
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from typing import Any, Optional
 
 import aiohttp
 import pusher
-
+import websockets
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -58,7 +56,7 @@ class EnhancedContentAPIClient:
         self.config = config
         self.session: Optional[aiohttp.ClientSession] = None
         self.pusher_client: Optional[pusher.Pusher] = None
-        self.websocket_connections: Dict[str, websockets.WebSocketServerProtocol] = {}
+        self.websocket_connections: dict[str, websockets.WebSocketServerProtocol] = {}
 
         # Initialize Pusher client if credentials provided
         if config.pusher_key and config.pusher_cluster:
@@ -107,7 +105,7 @@ class EnhancedContentAPIClient:
         """Get full API URL for endpoint"""
         return f"{self.config.base_url}/api/{self.config.api_version}{endpoint}"
 
-    async def authenticate(self, username: str, password: str) -> Dict[str, Any]:
+    async def authenticate(self, username: str, password: str) -> dict[str, Any]:
         """
         Authenticate with the API and get JWT token
 
@@ -148,12 +146,12 @@ class EnhancedContentAPIClient:
         subject: str,
         grade_level: str,
         content_type: str,
-        learning_objectives: List[str],
+        learning_objectives: list[str],
         difficulty_level: str = "medium",
         duration_minutes: int = 30,
         personalization_enabled: bool = True,
-        roblox_requirements: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        roblox_requirements: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Initiate enhanced content generation
 
@@ -199,7 +197,7 @@ class EnhancedContentAPIClient:
                 error_text = await response.text()
                 raise Exception(f"Content generation failed: {error_text}")
 
-    async def get_generation_status(self, pipeline_id: str) -> Dict[str, Any]:
+    async def get_generation_status(self, pipeline_id: str) -> dict[str, Any]:
         """
         Get the current status of a generation pipeline
 
@@ -229,7 +227,7 @@ class EnhancedContentAPIClient:
         pipeline_id: str,
         check_interval: int = 5,
         max_wait_time: int = 600
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Wait for a generation pipeline to complete
 
@@ -269,7 +267,7 @@ class EnhancedContentAPIClient:
         self,
         content_id: str,
         include_validation: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Retrieve generated content by ID
 
@@ -300,12 +298,12 @@ class EnhancedContentAPIClient:
 
     async def validate_content(
         self,
-        content: Dict[str, Any],
+        content: dict[str, Any],
         content_type: str,
         target_age: int = 10,
-        validation_categories: Optional[List[str]] = None,
+        validation_categories: Optional[list[str]] = None,
         strict_mode: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Validate content for quality, safety, and compliance
 
@@ -353,7 +351,7 @@ class EnhancedContentAPIClient:
         page_size: int = 20,
         content_type: Optional[str] = None,
         subject: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get user's content generation history
 
@@ -391,10 +389,10 @@ class EnhancedContentAPIClient:
     async def apply_personalization(
         self,
         content_id: str,
-        personalization_params: Dict[str, Any],
+        personalization_params: dict[str, Any],
         learning_style: Optional[str] = None,
         difficulty_preference: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Apply personalization to existing content
 
@@ -616,7 +614,7 @@ async def main():
                     # Step 7: Apply personalization (optional)
                     if content.get("personalization_applied", False):
                         logger.info("=== Applying Additional Personalization ===")
-                        personalization_result = await client.apply_personalization(
+                        await client.apply_personalization(
                             content_id=content_id,
                             personalization_params={
                                 "visual_style": "colorful",

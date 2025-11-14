@@ -22,7 +22,6 @@ from fastapi.testclient import TestClient
 # Import the Pusher backend handler
 try:
     from apps.backend.core.pusher_handler import PusherHandler
-
     from apps.backend.main import app
 except ImportError:
     # Fallback for test environment
@@ -51,7 +50,10 @@ class TestPusherIntegration:
     @pytest.fixture
     def auth_headers(self):
         """Authentication headers for requests"""
-        return {"Authorization": "Bearer test-jwt-token", "Content-Type": "application/json"}
+        return {
+            "Authorization": "Bearer test-jwt-token",
+            "Content-Type": "application/json",
+        }
 
     def test_pusher_auth_endpoint(self, client, auth_headers):
         """Test Pusher authentication endpoint"""
@@ -105,7 +107,11 @@ class TestPusherIntegration:
             "channel": "dashboard-updates",
             "event": "message",
             "type": "content_progress",
-            "payload": {"requestId": "req-123", "stage": "generating", "percentage": 45},
+            "payload": {
+                "requestId": "req-123",
+                "stage": "generating",
+                "percentage": 45,
+            },
         }
 
         response = client.post("/api/v1/realtime/trigger", json=trigger_data, headers=auth_headers)
@@ -286,7 +292,12 @@ class TestPusherIntegration:
         # Capture messages in order
         async def capture_message(channel, event, data):
             messages.append(
-                {"timestamp": time.time(), "channel": channel, "event": event, "data": data}
+                {
+                    "timestamp": time.time(),
+                    "channel": channel,
+                    "event": event,
+                    "data": data,
+                }
             )
 
         pusher_handler.trigger_event.side_effect = capture_message
@@ -351,7 +362,9 @@ class TestPusherIntegration:
 
         for i in range(10):
             auth_task = pusher_handler.authenticate_channel(
-                channel=f"private-user-{i}", socket_id=f"socket-{i}", user_id=f"user-{i}"
+                channel=f"private-user-{i}",
+                socket_id=f"socket-{i}",
+                user_id=f"user-{i}",
             )
             concurrent_auths.append(auth_task)
 
@@ -413,11 +426,14 @@ class TestPusherIntegration:
             await pusher_handler.authenticate_channel(
                 channel=channel,
                 socket_id=f"socket-{i}",
-                user_data={"id": f"user-{i}", "info": {"name": f"User {i}", "role": "student"}},
+                user_data={
+                    "id": f"user-{i}",
+                    "info": {"name": f"User {i}", "role": "student"},
+                },
             )
 
         # Get channel info to check member count
-        channel_info = await pusher_handler.get_channel_info(channel)
+        await pusher_handler.get_channel_info(channel)
 
         # Verify that the service handles large member counts
         assert pusher_handler.authenticate_channel.call_count == 100
@@ -438,7 +454,9 @@ class TestPusherPerformance:
         tasks = []
         for i in range(1000):
             task = handler.trigger_event(
-                channel="performance-test", event="throughput-test", data={"messageId": i}
+                channel="performance-test",
+                event="throughput-test",
+                data={"messageId": i},
             )
             tasks.append(task)
 
@@ -463,7 +481,9 @@ class TestPusherPerformance:
         tasks = []
         for i in range(500):
             task = handler.authenticate_channel(
-                channel=f"private-user-{i}", socket_id=f"socket-{i}", user_id=f"user-{i}"
+                channel=f"private-user-{i}",
+                socket_id=f"socket-{i}",
+                user_id=f"user-{i}",
             )
             tasks.append(task)
 
@@ -486,7 +506,9 @@ class TestPusherSecurity:
         # Attempt to authenticate for channel without permission
         with pytest.raises(Exception):
             await pusher_handler.authenticate_channel(
-                channel="private-admin-only", socket_id="socket-123", user_id="regular-user-123"
+                channel="private-admin-only",
+                socket_id="socket-123",
+                user_id="regular-user-123",
             )
 
     @pytest.mark.asyncio

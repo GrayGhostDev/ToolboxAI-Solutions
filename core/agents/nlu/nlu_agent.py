@@ -5,15 +5,16 @@ entities, and context for Roblox content generation workflows.
 """
 
 import asyncio
-import re
 import logging
-from typing import Dict, List, Any, Optional, Set, Tuple
+import re
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
-from .llm_integration import LLMIntegration, LLMConfig, LLMProvider
+from core.agents.base_agent import AgentConfig, AgentState, BaseAgent, TaskResult
+
+from .llm_integration import LLMConfig, LLMIntegration, LLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -109,15 +110,24 @@ class NLUConfig(AgentConfig):
     language_model: str = "educational"  # Specialized educational language model
 
     # Educational-specific settings
-    grade_level_range: Tuple[int, int] = (1, 12)  # K-12
-    supported_subjects: List[str] = field(default_factory=lambda: [
-        "math", "science", "history", "english", "art", "music",
-        "physical_education", "computer_science", "social_studies"
-    ])
+    grade_level_range: tuple[int, int] = (1, 12)  # K-12
+    supported_subjects: list[str] = field(
+        default_factory=lambda: [
+            "math",
+            "science",
+            "history",
+            "english",
+            "art",
+            "music",
+            "physical_education",
+            "computer_science",
+            "social_studies",
+        ]
+    )
 
     # Pattern matching configurations
     enable_pattern_matching: bool = True
-    custom_patterns: Dict[str, str] = field(default_factory=dict)
+    custom_patterns: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -128,8 +138,8 @@ class ExtractedIntent:
     confidence: float
     raw_text: str
     normalized_text: str
-    keywords: List[str] = field(default_factory=list)
-    modifiers: Dict[str, Any] = field(default_factory=dict)
+    keywords: list[str] = field(default_factory=list)
+    modifiers: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -144,21 +154,21 @@ class ExtractedEntity:
     end_pos: int
     raw_text: str
     normalized_value: Any = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class NLUResult:
     """Complete NLU processing result."""
 
-    intents: List[ExtractedIntent]
-    entities: List[ExtractedEntity]
+    intents: list[ExtractedIntent]
+    entities: list[ExtractedEntity]
     sentiment: str  # positive, negative, neutral
     language: str
-    educational_context: Dict[str, Any]
-    suggestions: List[str]
+    educational_context: dict[str, Any]
+    suggestions: list[str]
     requires_clarification: bool
-    clarification_questions: List[str]
+    clarification_questions: list[str]
     processing_time: float
     raw_input: str
     processed_input: str
@@ -186,7 +196,7 @@ class NLUAgent(BaseAgent):
         # Initialize LLM integration for intelligent understanding
         llm_config = LLMConfig(
             provider=LLMProvider.MOCK,  # Will auto-detect if API keys are available
-            temperature=0.7
+            temperature=0.7,
         )
         self.llm_integration = LLMIntegration(llm_config)
         self.conversation_history = []
@@ -205,44 +215,46 @@ class NLUAgent(BaseAgent):
         self.patterns = {
             # Grade level patterns
             "grade_level": [
-                (r'(\d+)(?:st|nd|rd|th)\s*grade', lambda m: f"{m.group(1)}th grade"),
-                (r'grade\s*(\d+)', lambda m: f"{m.group(1)}th grade"),
-                (r'(kindergarten|k-\d+|pre-?k)', lambda m: m.group(1).lower()),
-                (r'(elementary|middle|high)\s*school', lambda m: m.group(1).lower()),
+                (r"(\d+)(?:st|nd|rd|th)\s*grade", lambda m: f"{m.group(1)}th grade"),
+                (r"grade\s*(\d+)", lambda m: f"{m.group(1)}th grade"),
+                (r"(kindergarten|k-\d+|pre-?k)", lambda m: m.group(1).lower()),
+                (r"(elementary|middle|high)\s*school", lambda m: m.group(1).lower()),
             ],
-
             # Subject patterns
             "subject": [
-                (r'(math|mathematics|algebra|geometry|calculus)', lambda m: "math"),
-                (r'(science|biology|chemistry|physics|earth science)', lambda m: "science"),
-                (r'(history|social studies|geography|civics)', lambda m: "history"),
-                (r'(english|ela|language arts|reading|writing)', lambda m: "english"),
-                (r'(computer science|coding|programming|cs)', lambda m: "computer_science"),
+                (r"(math|mathematics|algebra|geometry|calculus)", lambda m: "math"),
+                (
+                    r"(science|biology|chemistry|physics|earth science)",
+                    lambda m: "science",
+                ),
+                (r"(history|social studies|geography|civics)", lambda m: "history"),
+                (r"(english|ela|language arts|reading|writing)", lambda m: "english"),
+                (
+                    r"(computer science|coding|programming|cs)",
+                    lambda m: "computer_science",
+                ),
             ],
-
             # Learning activity patterns
             "activity": [
-                (r'(quiz|test|assessment|exam)', lambda m: "assessment"),
-                (r'(game|play|fun|interactive)', lambda m: "game"),
-                (r'(simulation|model|demonstrate)', lambda m: "simulation"),
-                (r'(lesson|tutorial|teach|explain)', lambda m: "lesson"),
-                (r'(project|build|create|make)', lambda m: "project"),
+                (r"(quiz|test|assessment|exam)", lambda m: "assessment"),
+                (r"(game|play|fun|interactive)", lambda m: "game"),
+                (r"(simulation|model|demonstrate)", lambda m: "simulation"),
+                (r"(lesson|tutorial|teach|explain)", lambda m: "lesson"),
+                (r"(project|build|create|make)", lambda m: "project"),
             ],
-
             # Temporal patterns
             "duration": [
-                (r'(\d+)\s*(minute|min|m)s?', lambda m: f"{m.group(1)}_minutes"),
-                (r'(\d+)\s*(hour|hr|h)s?', lambda m: f"{m.group(1)}_hours"),
-                (r'(\d+)\s*(day|d)s?', lambda m: f"{m.group(1)}_days"),
-                (r'(\d+)\s*(week|w)s?', lambda m: f"{m.group(1)}_weeks"),
+                (r"(\d+)\s*(minute|min|m)s?", lambda m: f"{m.group(1)}_minutes"),
+                (r"(\d+)\s*(hour|hr|h)s?", lambda m: f"{m.group(1)}_hours"),
+                (r"(\d+)\s*(day|d)s?", lambda m: f"{m.group(1)}_days"),
+                (r"(\d+)\s*(week|w)s?", lambda m: f"{m.group(1)}_weeks"),
             ],
-
             # Student count patterns
             "student_count": [
-                (r'(\d+)\s*student', lambda m: int(m.group(1))),
-                (r'class\s*of\s*(\d+)', lambda m: int(m.group(1))),
-                (r'about\s*(\d+)\s*kid', lambda m: int(m.group(1))),
-                (r'(\d+)\s*learner', lambda m: int(m.group(1))),
+                (r"(\d+)\s*student", lambda m: int(m.group(1))),
+                (r"class\s*of\s*(\d+)", lambda m: int(m.group(1))),
+                (r"about\s*(\d+)\s*kid", lambda m: int(m.group(1))),
+                (r"(\d+)\s*learner", lambda m: int(m.group(1))),
             ],
         }
 
@@ -250,44 +262,103 @@ class NLUAgent(BaseAgent):
         """Initialize keyword mappings for intent classification."""
         self.intent_keywords = {
             IntentType.CREATE_LESSON: [
-                "create", "make", "build", "design", "lesson", "tutorial",
-                "teach", "explain", "show", "demonstrate"
+                "create",
+                "make",
+                "build",
+                "design",
+                "lesson",
+                "tutorial",
+                "teach",
+                "explain",
+                "show",
+                "demonstrate",
             ],
             IntentType.CREATE_QUIZ: [
-                "quiz", "test", "assess", "evaluate", "question",
-                "examination", "check", "measure"
+                "quiz",
+                "test",
+                "assess",
+                "evaluate",
+                "question",
+                "examination",
+                "check",
+                "measure",
             ],
             IntentType.CREATE_GAME: [
-                "game", "play", "fun", "gamify", "interactive",
-                "engage", "entertainment", "adventure"
+                "game",
+                "play",
+                "fun",
+                "gamify",
+                "interactive",
+                "engage",
+                "entertainment",
+                "adventure",
             ],
             IntentType.CREATE_SIMULATION: [
-                "simulate", "model", "demonstrate", "visualize",
-                "represent", "replicate", "emulate"
+                "simulate",
+                "model",
+                "demonstrate",
+                "visualize",
+                "represent",
+                "replicate",
+                "emulate",
             ],
             IntentType.CREATE_ENVIRONMENT: [
-                "environment", "world", "space", "area", "scene",
-                "setting", "place", "location"
+                "environment",
+                "world",
+                "space",
+                "area",
+                "scene",
+                "setting",
+                "place",
+                "location",
             ],
             IntentType.MODIFY_CONTENT: [
-                "change", "modify", "update", "edit", "adjust",
-                "alter", "revise", "improve"
+                "change",
+                "modify",
+                "update",
+                "edit",
+                "adjust",
+                "alter",
+                "revise",
+                "improve",
             ],
             IntentType.ADD_FEATURE: [
-                "add", "include", "append", "insert", "incorporate",
-                "integrate", "attach"
+                "add",
+                "include",
+                "append",
+                "insert",
+                "incorporate",
+                "integrate",
+                "attach",
             ],
             IntentType.GET_HELP: [
-                "help", "assist", "support", "guide", "how",
-                "what", "explain", "understand"
+                "help",
+                "assist",
+                "support",
+                "guide",
+                "how",
+                "what",
+                "explain",
+                "understand",
             ],
             IntentType.CREATE_ASSESSMENT: [
-                "assessment", "evaluate", "grade", "score", "rubric",
-                "criteria", "measure", "benchmark"
+                "assessment",
+                "evaluate",
+                "grade",
+                "score",
+                "rubric",
+                "criteria",
+                "measure",
+                "benchmark",
             ],
             IntentType.DELEGATE_CONTROL: [
-                "go ahead", "make it", "you decide", "create something",
-                "surprise me", "your choice", "do it"
+                "go ahead",
+                "make it",
+                "you decide",
+                "create something",
+                "surprise me",
+                "your choice",
+                "do it",
             ],
         }
 
@@ -299,28 +370,25 @@ class NLUAgent(BaseAgent):
             EntityType.ACTIVITY_TYPE: self.patterns["activity"],
             EntityType.DURATION: self.patterns["duration"],
             EntityType.STUDENT_COUNT: self.patterns["student_count"],
-
             # Additional entity patterns
             EntityType.DIFFICULTY_LEVEL: [
-                (r'(easy|simple|basic|beginner)', lambda m: "beginner"),
-                (r'(medium|moderate|intermediate)', lambda m: "intermediate"),
-                (r'(hard|difficult|challenging|advanced)', lambda m: "advanced"),
+                (r"(easy|simple|basic|beginner)", lambda m: "beginner"),
+                (r"(medium|moderate|intermediate)", lambda m: "intermediate"),
+                (r"(hard|difficult|challenging|advanced)", lambda m: "advanced"),
             ],
-
             EntityType.GAME_STYLE: [
-                (r'(adventure|rpg|role-?playing)', lambda m: "adventure"),
-                (r'(puzzle|brain|logic)', lambda m: "puzzle"),
-                (r'(action|platformer|runner)', lambda m: "action"),
-                (r'(simulation|tycoon|builder)', lambda m: "simulation"),
-                (r'(educational|learning|teaching)', lambda m: "educational"),
+                (r"(adventure|rpg|role-?playing)", lambda m: "adventure"),
+                (r"(puzzle|brain|logic)", lambda m: "puzzle"),
+                (r"(action|platformer|runner)", lambda m: "action"),
+                (r"(simulation|tycoon|builder)", lambda m: "simulation"),
+                (r"(educational|learning|teaching)", lambda m: "educational"),
             ],
-
             EntityType.ENVIRONMENT_THEME: [
-                (r'(space|solar|planet|galaxy)', lambda m: "space"),
-                (r'(ocean|underwater|marine|sea)', lambda m: "ocean"),
-                (r'(forest|jungle|nature|woods)', lambda m: "forest"),
-                (r'(city|urban|town|metropolis)', lambda m: "city"),
-                (r'(historical|ancient|past|medieval)', lambda m: "historical"),
+                (r"(space|solar|planet|galaxy)", lambda m: "space"),
+                (r"(ocean|underwater|marine|sea)", lambda m: "ocean"),
+                (r"(forest|jungle|nature|woods)", lambda m: "forest"),
+                (r"(city|urban|town|metropolis)", lambda m: "city"),
+                (r"(historical|ancient|past|medieval)", lambda m: "historical"),
             ],
         }
 
@@ -328,25 +396,52 @@ class NLUAgent(BaseAgent):
         """Initialize educational-specific vocabulary and concepts."""
         self.educational_vocab = {
             "learning_objectives": [
-                "understand", "analyze", "apply", "create", "evaluate",
-                "remember", "synthesize", "compare", "contrast", "identify"
+                "understand",
+                "analyze",
+                "apply",
+                "create",
+                "evaluate",
+                "remember",
+                "synthesize",
+                "compare",
+                "contrast",
+                "identify",
             ],
             "curriculum_standards": [
-                "common core", "ngss", "state standards", "national standards",
-                "learning targets", "essential questions", "big ideas"
+                "common core",
+                "ngss",
+                "state standards",
+                "national standards",
+                "learning targets",
+                "essential questions",
+                "big ideas",
             ],
             "pedagogical_terms": [
-                "differentiation", "scaffolding", "formative", "summative",
-                "authentic assessment", "project-based", "inquiry-based",
-                "collaborative", "hands-on", "experiential"
+                "differentiation",
+                "scaffolding",
+                "formative",
+                "summative",
+                "authentic assessment",
+                "project-based",
+                "inquiry-based",
+                "collaborative",
+                "hands-on",
+                "experiential",
             ],
             "engagement_strategies": [
-                "gamification", "interactive", "collaborative", "competitive",
-                "rewards", "badges", "leaderboard", "achievements", "progress"
+                "gamification",
+                "interactive",
+                "collaborative",
+                "competitive",
+                "rewards",
+                "badges",
+                "leaderboard",
+                "achievements",
+                "progress",
             ],
         }
 
-    async def process(self, input_text: str, context: Optional[Dict[str, Any]] = None) -> NLUResult:
+    async def process(self, input_text: str, context: Optional[dict[str, Any]] = None) -> NLUResult:
         """
         Process natural language input to extract intent and entities.
 
@@ -375,7 +470,7 @@ class NLUAgent(BaseAgent):
             llm_result = await self.llm_integration.understand_intent(
                 input_text,
                 self.conversation_history[-10:],  # Last 10 messages for context
-                self.accumulated_context
+                self.accumulated_context,
             )
 
             # Update accumulated context with what was understood
@@ -432,7 +527,7 @@ class NLUAgent(BaseAgent):
             clarification_questions=questions,
             processing_time=processing_time,
             raw_input=input_text,
-            processed_input=processed_text
+            processed_input=processed_text,
         )
 
         logger.info(f"NLU processing completed in {processing_time:.3f}s")
@@ -459,13 +554,13 @@ class NLUAgent(BaseAgent):
             processed = processed.replace(contraction, expansion)
 
         # Remove extra whitespace
-        processed = re.sub(r'\s+', ' ', processed)
+        processed = re.sub(r"\s+", " ", processed)
 
         return processed
 
     async def _extract_intents(
-        self, text: str, context: Optional[Dict[str, Any]]
-    ) -> List[ExtractedIntent]:
+        self, text: str, context: Optional[dict[str, Any]]
+    ) -> list[ExtractedIntent]:
         """Extract intents from processed text."""
         intents = []
 
@@ -489,7 +584,7 @@ class NLUAgent(BaseAgent):
                         confidence=confidence,
                         raw_text=text,
                         normalized_text=text,
-                        keywords=matched_keywords
+                        keywords=matched_keywords,
                     )
                     intents.append(intent)
 
@@ -503,8 +598,8 @@ class NLUAgent(BaseAgent):
         return intents
 
     async def _extract_entities(
-        self, text: str, context: Optional[Dict[str, Any]]
-    ) -> List[ExtractedEntity]:
+        self, text: str, context: Optional[dict[str, Any]]
+    ) -> list[ExtractedEntity]:
         """Extract entities from processed text."""
         entities = []
 
@@ -522,7 +617,7 @@ class NLUAgent(BaseAgent):
                         start_pos=match.start(),
                         end_pos=match.end(),
                         raw_text=match.group(0),
-                        normalized_value=value
+                        normalized_value=value,
                     )
                     entities.append(entity)
 
@@ -531,7 +626,7 @@ class NLUAgent(BaseAgent):
 
         return entities
 
-    def _deduplicate_entities(self, entities: List[ExtractedEntity]) -> List[ExtractedEntity]:
+    def _deduplicate_entities(self, entities: list[ExtractedEntity]) -> list[ExtractedEntity]:
         """Remove duplicate or overlapping entities."""
         if not entities:
             return entities
@@ -552,8 +647,24 @@ class NLUAgent(BaseAgent):
 
     def _analyze_sentiment(self, text: str) -> str:
         """Analyze the sentiment of the input text."""
-        positive_words = ["great", "good", "excellent", "wonderful", "love", "excited", "fun"]
-        negative_words = ["bad", "difficult", "hard", "confused", "stuck", "problem", "issue"]
+        positive_words = [
+            "great",
+            "good",
+            "excellent",
+            "wonderful",
+            "love",
+            "excited",
+            "fun",
+        ]
+        negative_words = [
+            "bad",
+            "difficult",
+            "hard",
+            "confused",
+            "stuck",
+            "problem",
+            "issue",
+        ]
 
         positive_count = sum(1 for word in positive_words if word in text)
         negative_count = sum(1 for word in negative_words if word in text)
@@ -567,10 +678,10 @@ class NLUAgent(BaseAgent):
 
     def _build_educational_context(
         self,
-        intents: List[ExtractedIntent],
-        entities: List[ExtractedEntity],
-        context: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        intents: list[ExtractedIntent],
+        entities: list[ExtractedEntity],
+        context: Optional[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Build comprehensive educational context from extracted information."""
         educational_context = {
             "primary_intent": intents[0].intent_type.value if intents else None,
@@ -605,10 +716,10 @@ class NLUAgent(BaseAgent):
 
     def _generate_suggestions(
         self,
-        intents: List[ExtractedIntent],
-        entities: List[ExtractedEntity],
-        educational_context: Dict[str, Any]
-    ) -> List[str]:
+        intents: list[ExtractedIntent],
+        entities: list[ExtractedEntity],
+        educational_context: dict[str, Any],
+    ) -> list[str]:
         """Generate helpful suggestions based on extracted information."""
         suggestions = []
 
@@ -630,16 +741,18 @@ class NLUAgent(BaseAgent):
 
         elif intents and intents[0].intent_type == IntentType.CREATE_GAME:
             if not educational_context.get("game_style"):
-                suggestions.append("Choosing a game style (puzzle, adventure, etc.) will enhance engagement")
+                suggestions.append(
+                    "Choosing a game style (puzzle, adventure, etc.) will enhance engagement"
+                )
 
         return suggestions
 
     def _check_clarification_needed(
         self,
-        intents: List[ExtractedIntent],
-        entities: List[ExtractedEntity],
-        educational_context: Dict[str, Any]
-    ) -> Tuple[bool, List[str]]:
+        intents: list[ExtractedIntent],
+        entities: list[ExtractedEntity],
+        educational_context: dict[str, Any],
+    ) -> tuple[bool, list[str]]:
         """Check if clarification is needed and generate questions."""
         questions = []
 
@@ -655,7 +768,7 @@ class NLUAgent(BaseAgent):
             IntentType.CREATE_LESSON,
             IntentType.CREATE_QUIZ,
             IntentType.CREATE_GAME,
-            IntentType.CREATE_SIMULATION
+            IntentType.CREATE_SIMULATION,
         ]:
             if not educational_context.get("grade_level"):
                 questions.append("What grade level is this for?")
@@ -669,8 +782,8 @@ class NLUAgent(BaseAgent):
         return len(questions) > 0, questions
 
     def _infer_intent_from_context(
-        self, text: str, context: Dict[str, Any]
-    ) -> List[ExtractedIntent]:
+        self, text: str, context: dict[str, Any]
+    ) -> list[ExtractedIntent]:
         """Infer intent from context when direct extraction fails."""
         intents = []
 
@@ -683,7 +796,7 @@ class NLUAgent(BaseAgent):
                 raw_text=text,
                 normalized_text=text,
                 keywords=[],
-                modifiers={"inferred": True}
+                modifiers={"inferred": True},
             )
             intents.append(intent)
 
@@ -694,13 +807,13 @@ class NLUAgent(BaseAgent):
                 confidence=0.7,
                 raw_text=text,
                 normalized_text=text,
-                keywords=["confirmation"]
+                keywords=["confirmation"],
             )
             intents.append(intent)
 
         return intents
 
-    async def execute_task(self, task: Dict[str, Any]) -> TaskResult:
+    async def execute_task(self, task: dict[str, Any]) -> TaskResult:
         """
         Execute an NLU task.
 
@@ -723,7 +836,7 @@ class NLUAgent(BaseAgent):
                     {
                         "type": intent.intent_type.value,
                         "confidence": intent.confidence,
-                        "keywords": intent.keywords
+                        "keywords": intent.keywords,
                     }
                     for intent in result.intents
                 ],
@@ -731,7 +844,7 @@ class NLUAgent(BaseAgent):
                     {
                         "type": entity.entity_type.value,
                         "value": entity.value,
-                        "confidence": entity.confidence
+                        "confidence": entity.confidence,
                     }
                     for entity in result.entities
                 ],
@@ -749,19 +862,15 @@ class NLUAgent(BaseAgent):
                     "processing_time": result.processing_time,
                     "input_length": len(input_text),
                     "intent_count": len(result.intents),
-                    "entity_count": len(result.entities)
-                }
+                    "entity_count": len(result.entities),
+                },
             )
 
         except Exception as e:
             logger.error(f"NLU task execution failed: {e}")
-            return TaskResult(
-                success=False,
-                error=str(e),
-                metadata={"task": task}
-            )
+            return TaskResult(success=False, error=str(e), metadata={"task": task})
 
-    async def get_capabilities(self) -> Dict[str, Any]:
+    async def get_capabilities(self) -> dict[str, Any]:
         """Get the capabilities of this NLU agent."""
         return {
             "agent_type": "nlu",
@@ -771,14 +880,14 @@ class NLUAgent(BaseAgent):
                 "context_understanding",
                 "educational_focus",
                 "clarification_generation",
-                "sentiment_analysis"
+                "sentiment_analysis",
             ],
             "supported_intents": [intent.value for intent in IntentType],
             "supported_entities": [entity.value for entity in EntityType],
             "supported_subjects": self.config.supported_subjects,
             "grade_range": self.config.grade_level_range,
             "languages": ["en"],
-            "max_context_window": self.config.context_window
+            "max_context_window": self.config.context_window,
         }
 
     async def _process_task(self, state: AgentState) -> Any:

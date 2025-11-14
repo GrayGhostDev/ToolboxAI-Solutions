@@ -48,7 +48,11 @@ class PusherHandler:
         }
 
     async def handle_message(
-        self, message_type: str, payload: dict[str, Any], user_id: str = None, channel: str = None
+        self,
+        message_type: str,
+        payload: dict[str, Any],
+        user_id: str = None,
+        channel: str = None,
     ) -> None:
         """Route incoming message to appropriate handler"""
         try:
@@ -92,7 +96,11 @@ class PusherHandler:
             # Send response through Pusher
             await self._send_to_user(
                 user_id,
-                {"type": "agent_response", "conversationId": conversation_id, "response": result},
+                {
+                    "type": "agent_response",
+                    "conversationId": conversation_id,
+                    "response": result,
+                },
                 channel or self.channels["agent"],
             )
 
@@ -148,7 +156,7 @@ class PusherHandler:
                 raise ValueError("Missing conversationId or spec")
 
             # Start environment generation
-            result = await roblox_ai_agent.generate_environment(conversation_id, spec)
+            await roblox_ai_agent.generate_environment(conversation_id, spec)
 
             # Send progress updates through Pusher
             await self._send_to_channel(
@@ -170,7 +178,7 @@ class PusherHandler:
         """Handle environment creation request"""
         try:
             environment_type = payload.get("type")
-            config = payload.get("config", {})
+            payload.get("config", {})
 
             logger.info(f"Creating environment: {environment_type}")
 
@@ -217,7 +225,9 @@ class PusherHandler:
         except Exception as e:
             logger.error(f"Error handling environment creation: {e}")
             await self._send_error_message(
-                user_id, f"Environment creation failed: {str(e)}", self.channels["content"]
+                user_id,
+                f"Environment creation failed: {str(e)}",
+                self.channels["content"],
             )
 
     async def _handle_analytics_request(
@@ -225,7 +235,7 @@ class PusherHandler:
     ) -> None:
         """Handle real-time analytics request"""
         try:
-            metric_type = payload.get("metric_type", "all")
+            payload.get("metric_type", "all")
 
             # Generate mock analytics data
             analytics_data = {
@@ -251,7 +261,7 @@ class PusherHandler:
         """Handle design file processing request"""
         try:
             file_path = payload.get("file_path")
-            include_content = payload.get("include_content", True)
+            payload.get("include_content", True)
 
             if not file_path:
                 raise ValueError("Missing file_path")
@@ -264,7 +274,11 @@ class PusherHandler:
             # Send result through Pusher
             await self._send_to_user(
                 user_id,
-                {"type": "design_file_processed", "file_path": file_path, "result": result},
+                {
+                    "type": "design_file_processed",
+                    "file_path": file_path,
+                    "result": result,
+                },
                 channel or self.channels["content"],
             )
 
@@ -293,7 +307,11 @@ class PusherHandler:
             # Send result through Pusher
             await self._send_to_user(
                 user_id,
-                {"type": "design_folder_scanned", "folder_path": folder_path, "result": result},
+                {
+                    "type": "design_folder_scanned",
+                    "folder_path": folder_path,
+                    "result": result,
+                },
                 channel or self.channels["content"],
             )
 

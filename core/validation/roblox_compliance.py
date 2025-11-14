@@ -5,16 +5,15 @@ Validates scripts for compliance with Roblox Community Standards,
 Developer Terms of Service, and platform best practices.
 """
 
-import re
 import logging
-from typing import Dict, List, Any, Optional, Set, Tuple
+import re
 from dataclasses import dataclass
 from enum import Enum
-import json
 
 
 class ComplianceLevel(Enum):
     """Compliance levels"""
+
     COMPLIANT = "compliant"
     WARNING = "warning"
     VIOLATION = "violation"
@@ -23,6 +22,7 @@ class ComplianceLevel(Enum):
 
 class ViolationType(Enum):
     """Types of compliance violations"""
+
     COMMUNITY_STANDARDS = "community_standards"
     DEVELOPER_TERMS = "developer_terms"
     PLATFORM_POLICY = "platform_policy"
@@ -34,6 +34,7 @@ class ViolationType(Enum):
 @dataclass
 class ComplianceViolation:
     """Represents a compliance violation"""
+
     violation_type: ViolationType
     severity: ComplianceLevel
     line_number: int
@@ -46,14 +47,15 @@ class ComplianceViolation:
 @dataclass
 class ComplianceReport:
     """Complete compliance assessment report"""
+
     overall_compliance: ComplianceLevel
-    violations: List[ComplianceViolation]
-    compliant_areas: List[str]
-    warnings: List[str]
-    critical_issues: List[str]
+    violations: list[ComplianceViolation]
+    compliant_areas: list[str]
+    warnings: list[str]
+    critical_issues: list[str]
     platform_ready: bool
     moderation_risk: str  # low, medium, high
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class RobloxComplianceChecker:
@@ -66,162 +68,188 @@ class RobloxComplianceChecker:
 
         # Community Standards violations
         self.community_standards = {
-            'inappropriate_content': {
-                'patterns': [
-                    r'\b(sex|sexual|porn|nude|naked|breast|penis|vagina)\b',
-                    r'\b(kill|murder|suicide|death|die|blood|gore)\b',
-                    r'\b(drug|cocaine|marijuana|weed|alcohol|beer|wine)\b',
-                    r'\b(hate|racist|nazi|hitler|terrorist|bomb)\b',
-                    r'\b(scam|hack|exploit|cheat|robux|money)\b'
+            "inappropriate_content": {
+                "patterns": [
+                    r"\b(sex|sexual|porn|nude|naked|breast|penis|vagina)\b",
+                    r"\b(kill|murder|suicide|death|die|blood|gore)\b",
+                    r"\b(drug|cocaine|marijuana|weed|alcohol|beer|wine)\b",
+                    r"\b(hate|racist|nazi|hitler|terrorist|bomb)\b",
+                    r"\b(scam|hack|exploit|cheat|robux|money)\b",
                 ],
-                'severity': ComplianceLevel.CRITICAL_VIOLATION,
-                'policy': 'Community Standards - Inappropriate Content'
+                "severity": ComplianceLevel.CRITICAL_VIOLATION,
+                "policy": "Community Standards - Inappropriate Content",
             },
-            'harassment': {
-                'patterns': [
-                    r'\b(stupid|idiot|loser|noob|trash|garbage)\b',
-                    r'\b(kill yourself|kys|die|hate you)\b',
-                    r'\b(report|ban|kick|mute|block)\b.*\b(you|player)\b'
+            "harassment": {
+                "patterns": [
+                    r"\b(stupid|idiot|loser|noob|trash|garbage)\b",
+                    r"\b(kill yourself|kys|die|hate you)\b",
+                    r"\b(report|ban|kick|mute|block)\b.*\b(you|player)\b",
                 ],
-                'severity': ComplianceLevel.VIOLATION,
-                'policy': 'Community Standards - Harassment and Bullying'
+                "severity": ComplianceLevel.VIOLATION,
+                "policy": "Community Standards - Harassment and Bullying",
             },
-            'personal_information': {
-                'patterns': [
-                    r'\b\d{3}-\d{3}-\d{4}\b',  # Phone numbers
-                    r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',  # Email
-                    r'\b\d{1,5}\s+\w+\s+(street|st|avenue|ave|road|rd)\b',  # Addresses
+            "personal_information": {
+                "patterns": [
+                    r"\b\d{3}-\d{3}-\d{4}\b",  # Phone numbers
+                    r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",  # Email
+                    r"\b\d{1,5}\s+\w+\s+(street|st|avenue|ave|road|rd)\b",  # Addresses
                     r'\bpassword\s*[:=]\s*["\']?\w+["\']?\b',  # Passwords
-                    r'\bsocial\s*security\b|\bssn\b'  # SSN references
+                    r"\bsocial\s*security\b|\bssn\b",  # SSN references
                 ],
-                'severity': ComplianceLevel.CRITICAL_VIOLATION,
-                'policy': 'Community Standards - Personal Information'
-            }
+                "severity": ComplianceLevel.CRITICAL_VIOLATION,
+                "policy": "Community Standards - Personal Information",
+            },
         }
 
         # Developer Terms violations
         self.developer_terms = {
-            'unauthorized_monetization': {
-                'patterns': [
-                    r'\b(paypal|venmo|cashapp|bitcoin|cryptocurrency)\b',
-                    r'\b(real\s*money|irl\s*money|usd|dollars)\b',
-                    r'\b(sell|buy|purchase).*\b(robux|limiteds|accounts)\b'
+            "unauthorized_monetization": {
+                "patterns": [
+                    r"\b(paypal|venmo|cashapp|bitcoin|cryptocurrency)\b",
+                    r"\b(real\s*money|irl\s*money|usd|dollars)\b",
+                    r"\b(sell|buy|purchase).*\b(robux|limiteds|accounts)\b",
                 ],
-                'severity': ComplianceLevel.CRITICAL_VIOLATION,
-                'policy': 'Developer Terms - Unauthorized Monetization'
+                "severity": ComplianceLevel.CRITICAL_VIOLATION,
+                "policy": "Developer Terms - Unauthorized Monetization",
             },
-            'platform_exploitation': {
-                'patterns': [
-                    r'getfenv|setfenv|loadstring|debug\.',
-                    r'rawget|rawset.*_G',
-                    r'game:HttpGet|HttpService.*evil|malicious',
-                    r'require\s*\(\s*\d+\s*\)'  # Suspicious require calls with IDs
+            "platform_exploitation": {
+                "patterns": [
+                    r"getfenv|setfenv|loadstring|debug\.",
+                    r"rawget|rawset.*_G",
+                    r"game:HttpGet|HttpService.*evil|malicious",
+                    r"require\s*\(\s*\d+\s*\)",  # Suspicious require calls with IDs
                 ],
-                'severity': ComplianceLevel.VIOLATION,
-                'policy': 'Developer Terms - Platform Exploitation'
+                "severity": ComplianceLevel.VIOLATION,
+                "policy": "Developer Terms - Platform Exploitation",
             },
-            'api_misuse': {
-                'patterns': [
-                    r'while\s+true\s+do\s*(?!.*wait)',  # Infinite loops
-                    r'for\s+i\s*=\s*1\s*,\s*math\.huge',  # Infinite iterations
-                    r'spawn\s*\(\s*function\s*\(\s*\)\s*while',  # Spawn infinite loops
-                    r'HttpService:RequestAsync.*(?:1000|5000)',  # Excessive HTTP requests
+            "api_misuse": {
+                "patterns": [
+                    r"while\s+true\s+do\s*(?!.*wait)",  # Infinite loops
+                    r"for\s+i\s*=\s*1\s*,\s*math\.huge",  # Infinite iterations
+                    r"spawn\s*\(\s*function\s*\(\s*\)\s*while",  # Spawn infinite loops
+                    r"HttpService:RequestAsync.*(?:1000|5000)",  # Excessive HTTP requests
                 ],
-                'severity': ComplianceLevel.WARNING,
-                'policy': 'Developer Terms - API Misuse'
-            }
+                "severity": ComplianceLevel.WARNING,
+                "policy": "Developer Terms - API Misuse",
+            },
         }
 
         # Safety violations
         self.safety_violations = {
-            'external_links': {
-                'patterns': [
-                    r'https?://(?!roblox\.com|rbxcdn\.com|robloxcdn\.com)',
-                    r'\b(discord|youtube|twitter|instagram|tiktok)\.com\b',
-                    r'\b(join\s*my\s*discord|discord\s*server)\b'
+            "external_links": {
+                "patterns": [
+                    r"https?://(?!roblox\.com|rbxcdn\.com|robloxcdn\.com)",
+                    r"\b(discord|youtube|twitter|instagram|tiktok)\.com\b",
+                    r"\b(join\s*my\s*discord|discord\s*server)\b",
                 ],
-                'severity': ComplianceLevel.VIOLATION,
-                'policy': 'Safety - External Links'
+                "severity": ComplianceLevel.VIOLATION,
+                "policy": "Safety - External Links",
             },
-            'social_engineering': {
-                'patterns': [
-                    r'\b(free\s*robux|robux\s*generator|hack\s*robux)\b',
-                    r'\b(admin|owner|developer)\b.*\b(give|grant|make)\b',
-                    r'\b(trust\s*me|believe\s*me|secret|special)\b'
+            "social_engineering": {
+                "patterns": [
+                    r"\b(free\s*robux|robux\s*generator|hack\s*robux)\b",
+                    r"\b(admin|owner|developer)\b.*\b(give|grant|make)\b",
+                    r"\b(trust\s*me|believe\s*me|secret|special)\b",
                 ],
-                'severity': ComplianceLevel.WARNING,
-                'policy': 'Safety - Social Engineering'
-            }
+                "severity": ComplianceLevel.WARNING,
+                "policy": "Safety - Social Engineering",
+            },
         }
 
         # Technical compliance
         self.technical_compliance = {
-            'performance_standards': {
-                'patterns': [
-                    r'while\s+true\s+do\s*(?!.*wait)',
-                    r'workspace:GetDescendants\(\)',
-                    r'game\.Players:GetPlayers\(\)\s*\[',
-                    r'pairs\(\s*workspace\s*\)'
+            "performance_standards": {
+                "patterns": [
+                    r"while\s+true\s+do\s*(?!.*wait)",
+                    r"workspace:GetDescendants\(\)",
+                    r"game\.Players:GetPlayers\(\)\s*\[",
+                    r"pairs\(\s*workspace\s*\)",
                 ],
-                'severity': ComplianceLevel.WARNING,
-                'policy': 'Technical Standards - Performance'
+                "severity": ComplianceLevel.WARNING,
+                "policy": "Technical Standards - Performance",
             },
-            'security_standards': {
-                'patterns': [
-                    r'RemoteEvent:FireClient\(\s*[^)]*\)\s*(?!--.*validation)',
-                    r'RemoteFunction:InvokeClient\(\s*[^)]*\)\s*(?!--.*validation)',
-                    r'player\s*:\s*Kick\(\s*\)(?!.*permission)',
-                    r'DataStore.*:SetAsync\(\s*[^)]*\)\s*(?!--.*validation)'
+            "security_standards": {
+                "patterns": [
+                    r"RemoteEvent:FireClient\(\s*[^)]*\)\s*(?!--.*validation)",
+                    r"RemoteFunction:InvokeClient\(\s*[^)]*\)\s*(?!--.*validation)",
+                    r"player\s*:\s*Kick\(\s*\)(?!.*permission)",
+                    r"DataStore.*:SetAsync\(\s*[^)]*\)\s*(?!--.*validation)",
                 ],
-                'severity': ComplianceLevel.WARNING,
-                'policy': 'Technical Standards - Security'
-            }
+                "severity": ComplianceLevel.WARNING,
+                "policy": "Technical Standards - Security",
+            },
         }
 
         # Content policy
         self.content_policy = {
-            'educational_appropriateness': {
-                'patterns': [
-                    r'\b(gambling|casino|poker|blackjack|lottery)\b',
-                    r'\b(war|battle|combat|fight|violence)\b',
-                    r'\b(romance|dating|love|kiss|marriage)\b'
+            "educational_appropriateness": {
+                "patterns": [
+                    r"\b(gambling|casino|poker|blackjack|lottery)\b",
+                    r"\b(war|battle|combat|fight|violence)\b",
+                    r"\b(romance|dating|love|kiss|marriage)\b",
                 ],
-                'severity': ComplianceLevel.WARNING,
-                'policy': 'Content Policy - Educational Appropriateness'
+                "severity": ComplianceLevel.WARNING,
+                "policy": "Content Policy - Educational Appropriateness",
             },
-            'age_appropriateness': {
-                'patterns': [
-                    r'\b(mature|adult|18\+|nsfw)\b',
-                    r'\b(scary|horror|nightmare|fear)\b',
-                    r'\b(political|religion|religious)\b'
+            "age_appropriateness": {
+                "patterns": [
+                    r"\b(mature|adult|18\+|nsfw)\b",
+                    r"\b(scary|horror|nightmare|fear)\b",
+                    r"\b(political|religion|religious)\b",
                 ],
-                'severity': ComplianceLevel.WARNING,
-                'policy': 'Content Policy - Age Appropriateness'
-            }
+                "severity": ComplianceLevel.WARNING,
+                "policy": "Content Policy - Age Appropriateness",
+            },
         }
 
         # Approved Roblox services and APIs
         self.approved_services = {
-            'workspace', 'game', 'Players', 'ReplicatedStorage', 'ReplicatedFirst',
-            'ServerScriptService', 'ServerStorage', 'StarterGui', 'StarterPack',
-            'StarterPlayer', 'Lighting', 'SoundService', 'TweenService',
-            'RunService', 'UserInputService', 'ContextActionService',
-            'GuiService', 'PathfindingService', 'DataStoreService',
-            'HttpService', 'TeleportService', 'MessagingService',
-            'MarketplaceService', 'BadgeService', 'GroupService',
-            'Teams', 'Debris', 'Chat', 'TextService', 'LocalizationService'
+            "workspace",
+            "game",
+            "Players",
+            "ReplicatedStorage",
+            "ReplicatedFirst",
+            "ServerScriptService",
+            "ServerStorage",
+            "StarterGui",
+            "StarterPack",
+            "StarterPlayer",
+            "Lighting",
+            "SoundService",
+            "TweenService",
+            "RunService",
+            "UserInputService",
+            "ContextActionService",
+            "GuiService",
+            "PathfindingService",
+            "DataStoreService",
+            "HttpService",
+            "TeleportService",
+            "MessagingService",
+            "MarketplaceService",
+            "BadgeService",
+            "GroupService",
+            "Teams",
+            "Debris",
+            "Chat",
+            "TextService",
+            "LocalizationService",
         }
 
         # Restricted APIs for educational content
         self.restricted_apis = {
-            'HttpService': 'Use with caution - requires proper validation',
-            'DataStoreService': 'Ensure data validation and limits',
-            'MessagingService': 'Monitor for spam and abuse',
-            'TeleportService': 'Validate destination places'
+            "HttpService": "Use with caution - requires proper validation",
+            "DataStoreService": "Ensure data validation and limits",
+            "MessagingService": "Monitor for spam and abuse",
+            "TeleportService": "Validate destination places",
         }
 
-    def check_compliance(self, lua_code: str, script_name: str = "unknown",
-                        educational_context: bool = True) -> ComplianceReport:
+    def check_compliance(
+        self,
+        lua_code: str,
+        script_name: str = "unknown",
+        educational_context: bool = True,
+    ) -> ComplianceReport:
         """
         Perform comprehensive compliance check
 
@@ -258,10 +286,10 @@ class RobloxComplianceChecker:
         overall_compliance = self._assess_overall_compliance(violations)
 
         # Categorize findings
-        critical_issues = [v.description for v in violations
-                          if v.severity == ComplianceLevel.CRITICAL_VIOLATION]
-        warnings = [v.description for v in violations
-                   if v.severity == ComplianceLevel.WARNING]
+        critical_issues = [
+            v.description for v in violations if v.severity == ComplianceLevel.CRITICAL_VIOLATION
+        ]
+        warnings = [v.description for v in violations if v.severity == ComplianceLevel.WARNING]
 
         # Identify compliant areas
         compliant_areas = self._identify_compliant_areas(lua_code, violations)
@@ -270,8 +298,10 @@ class RobloxComplianceChecker:
         moderation_risk = self._assess_moderation_risk(violations)
 
         # Determine if platform ready
-        platform_ready = (overall_compliance in [ComplianceLevel.COMPLIANT, ComplianceLevel.WARNING] and
-                          not critical_issues)
+        platform_ready = (
+            overall_compliance in [ComplianceLevel.COMPLIANT, ComplianceLevel.WARNING]
+            and not critical_issues
+        )
 
         # Generate recommendations
         recommendations = self._generate_compliance_recommendations(violations, educational_context)
@@ -284,105 +314,115 @@ class RobloxComplianceChecker:
             critical_issues=critical_issues,
             platform_ready=platform_ready,
             moderation_risk=moderation_risk,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
-    def _check_community_standards(self, lua_code: str, violations: List[ComplianceViolation]):
+    def _check_community_standards(self, lua_code: str, violations: list[ComplianceViolation]):
         """Check against Roblox Community Standards"""
-        lines = lua_code.split('\n')
+        lines = lua_code.split("\n")
 
         for category, rules in self.community_standards.items():
             for line_num, line in enumerate(lines, 1):
-                for pattern in rules['patterns']:
+                for pattern in rules["patterns"]:
                     matches = re.finditer(pattern, line, re.IGNORECASE)
                     for match in matches:
-                        violations.append(ComplianceViolation(
-                            violation_type=ViolationType.COMMUNITY_STANDARDS,
-                            severity=rules['severity'],
-                            line_number=line_num,
-                            description=f"Community Standards violation ({category}): {match.group()}",
-                            policy_reference=rules['policy'],
-                            recommendation=f"Remove or replace content that violates {category} policies",
-                            auto_fixable=False
-                        ))
+                        violations.append(
+                            ComplianceViolation(
+                                violation_type=ViolationType.COMMUNITY_STANDARDS,
+                                severity=rules["severity"],
+                                line_number=line_num,
+                                description=f"Community Standards violation ({category}): {match.group()}",
+                                policy_reference=rules["policy"],
+                                recommendation=f"Remove or replace content that violates {category} policies",
+                                auto_fixable=False,
+                            )
+                        )
 
-    def _check_developer_terms(self, lua_code: str, violations: List[ComplianceViolation]):
+    def _check_developer_terms(self, lua_code: str, violations: list[ComplianceViolation]):
         """Check against Developer Terms of Service"""
-        lines = lua_code.split('\n')
+        lines = lua_code.split("\n")
 
         for category, rules in self.developer_terms.items():
             for line_num, line in enumerate(lines, 1):
-                for pattern in rules['patterns']:
+                for pattern in rules["patterns"]:
                     matches = re.finditer(pattern, line, re.IGNORECASE)
                     for match in matches:
-                        violations.append(ComplianceViolation(
-                            violation_type=ViolationType.DEVELOPER_TERMS,
-                            severity=rules['severity'],
-                            line_number=line_num,
-                            description=f"Developer Terms violation ({category}): {match.group()}",
-                            policy_reference=rules['policy'],
-                            recommendation=f"Modify code to comply with {category} requirements",
-                            auto_fixable=category == 'api_misuse'
-                        ))
+                        violations.append(
+                            ComplianceViolation(
+                                violation_type=ViolationType.DEVELOPER_TERMS,
+                                severity=rules["severity"],
+                                line_number=line_num,
+                                description=f"Developer Terms violation ({category}): {match.group()}",
+                                policy_reference=rules["policy"],
+                                recommendation=f"Modify code to comply with {category} requirements",
+                                auto_fixable=category == "api_misuse",
+                            )
+                        )
 
-    def _check_safety_violations(self, lua_code: str, violations: List[ComplianceViolation]):
+    def _check_safety_violations(self, lua_code: str, violations: list[ComplianceViolation]):
         """Check for safety violations"""
-        lines = lua_code.split('\n')
+        lines = lua_code.split("\n")
 
         for category, rules in self.safety_violations.items():
             for line_num, line in enumerate(lines, 1):
-                for pattern in rules['patterns']:
+                for pattern in rules["patterns"]:
                     matches = re.finditer(pattern, line, re.IGNORECASE)
                     for match in matches:
-                        violations.append(ComplianceViolation(
-                            violation_type=ViolationType.SAFETY_VIOLATION,
-                            severity=rules['severity'],
-                            line_number=line_num,
-                            description=f"Safety violation ({category}): {match.group()}",
-                            policy_reference=rules['policy'],
-                            recommendation=f"Address safety concerns related to {category}",
-                            auto_fixable=False
-                        ))
+                        violations.append(
+                            ComplianceViolation(
+                                violation_type=ViolationType.SAFETY_VIOLATION,
+                                severity=rules["severity"],
+                                line_number=line_num,
+                                description=f"Safety violation ({category}): {match.group()}",
+                                policy_reference=rules["policy"],
+                                recommendation=f"Address safety concerns related to {category}",
+                                auto_fixable=False,
+                            )
+                        )
 
-    def _check_technical_compliance(self, lua_code: str, violations: List[ComplianceViolation]):
+    def _check_technical_compliance(self, lua_code: str, violations: list[ComplianceViolation]):
         """Check technical compliance standards"""
-        lines = lua_code.split('\n')
+        lines = lua_code.split("\n")
 
         for category, rules in self.technical_compliance.items():
             for line_num, line in enumerate(lines, 1):
-                for pattern in rules['patterns']:
+                for pattern in rules["patterns"]:
                     matches = re.finditer(pattern, line, re.IGNORECASE)
                     for match in matches:
-                        violations.append(ComplianceViolation(
-                            violation_type=ViolationType.TECHNICAL_VIOLATION,
-                            severity=rules['severity'],
-                            line_number=line_num,
-                            description=f"Technical violation ({category}): {match.group()}",
-                            policy_reference=rules['policy'],
-                            recommendation=f"Improve {category} compliance",
-                            auto_fixable=True
-                        ))
+                        violations.append(
+                            ComplianceViolation(
+                                violation_type=ViolationType.TECHNICAL_VIOLATION,
+                                severity=rules["severity"],
+                                line_number=line_num,
+                                description=f"Technical violation ({category}): {match.group()}",
+                                policy_reference=rules["policy"],
+                                recommendation=f"Improve {category} compliance",
+                                auto_fixable=True,
+                            )
+                        )
 
-    def _check_content_policy(self, lua_code: str, violations: List[ComplianceViolation]):
+    def _check_content_policy(self, lua_code: str, violations: list[ComplianceViolation]):
         """Check content policy compliance"""
-        lines = lua_code.split('\n')
+        lines = lua_code.split("\n")
 
         for category, rules in self.content_policy.items():
             for line_num, line in enumerate(lines, 1):
-                for pattern in rules['patterns']:
+                for pattern in rules["patterns"]:
                     matches = re.finditer(pattern, line, re.IGNORECASE)
                     for match in matches:
-                        violations.append(ComplianceViolation(
-                            violation_type=ViolationType.CONTENT_POLICY,
-                            severity=rules['severity'],
-                            line_number=line_num,
-                            description=f"Content policy issue ({category}): {match.group()}",
-                            policy_reference=rules['policy'],
-                            recommendation=f"Review content for {category} compliance",
-                            auto_fixable=False
-                        ))
+                        violations.append(
+                            ComplianceViolation(
+                                violation_type=ViolationType.CONTENT_POLICY,
+                                severity=rules["severity"],
+                                line_number=line_num,
+                                description=f"Content policy issue ({category}): {match.group()}",
+                                policy_reference=rules["policy"],
+                                recommendation=f"Review content for {category} compliance",
+                                auto_fixable=False,
+                            )
+                        )
 
-    def _check_api_usage(self, lua_code: str, violations: List[ComplianceViolation]):
+    def _check_api_usage(self, lua_code: str, violations: list[ComplianceViolation]):
         """Check API usage compliance"""
         # Check for unapproved services
         service_pattern = r'game:GetService\s*\(\s*["\'](\w+)["\']\s*\)'
@@ -391,32 +431,36 @@ class RobloxComplianceChecker:
         for match in matches:
             service_name = match.group(1)
             if service_name not in self.approved_services:
-                line_num = lua_code[:match.start()].count('\n') + 1
-                violations.append(ComplianceViolation(
-                    violation_type=ViolationType.PLATFORM_POLICY,
-                    severity=ComplianceLevel.VIOLATION,
-                    line_number=line_num,
-                    description=f"Unapproved service usage: {service_name}",
-                    policy_reference="Platform Policy - API Usage",
-                    recommendation=f"Use only approved Roblox services",
-                    auto_fixable=False
-                ))
+                line_num = lua_code[: match.start()].count("\n") + 1
+                violations.append(
+                    ComplianceViolation(
+                        violation_type=ViolationType.PLATFORM_POLICY,
+                        severity=ComplianceLevel.VIOLATION,
+                        line_number=line_num,
+                        description=f"Unapproved service usage: {service_name}",
+                        policy_reference="Platform Policy - API Usage",
+                        recommendation=f"Use only approved Roblox services",
+                        auto_fixable=False,
+                    )
+                )
 
         # Check for restricted API usage
         for api, warning in self.restricted_apis.items():
-            if re.search(rf'\b{api}\b', lua_code, re.IGNORECASE):
+            if re.search(rf"\b{api}\b", lua_code, re.IGNORECASE):
                 line_num = 1  # Could be refined to find actual line
-                violations.append(ComplianceViolation(
-                    violation_type=ViolationType.PLATFORM_POLICY,
-                    severity=ComplianceLevel.WARNING,
-                    line_number=line_num,
-                    description=f"Restricted API usage: {api}",
-                    policy_reference="Platform Policy - Restricted APIs",
-                    recommendation=warning,
-                    auto_fixable=False
-                ))
+                violations.append(
+                    ComplianceViolation(
+                        violation_type=ViolationType.PLATFORM_POLICY,
+                        severity=ComplianceLevel.WARNING,
+                        line_number=line_num,
+                        description=f"Restricted API usage: {api}",
+                        policy_reference="Platform Policy - Restricted APIs",
+                        recommendation=warning,
+                        auto_fixable=False,
+                    )
+                )
 
-    def _assess_overall_compliance(self, violations: List[ComplianceViolation]) -> ComplianceLevel:
+    def _assess_overall_compliance(self, violations: list[ComplianceViolation]) -> ComplianceLevel:
         """Assess overall compliance level"""
         if any(v.severity == ComplianceLevel.CRITICAL_VIOLATION for v in violations):
             return ComplianceLevel.CRITICAL_VIOLATION
@@ -427,20 +471,22 @@ class RobloxComplianceChecker:
         else:
             return ComplianceLevel.COMPLIANT
 
-    def _identify_compliant_areas(self, lua_code: str, violations: List[ComplianceViolation]) -> List[str]:
+    def _identify_compliant_areas(
+        self, lua_code: str, violations: list[ComplianceViolation]
+    ) -> list[str]:
         """Identify areas that are compliant"""
         compliant_areas = []
 
         # Check for good practices
-        if re.search(r'game:GetService', lua_code) and not any(
+        if re.search(r"game:GetService", lua_code) and not any(
             v.description.startswith("Unapproved service") for v in violations
         ):
             compliant_areas.append("Proper service usage")
 
-        if re.search(r'local\s+\w+\s*=', lua_code):
+        if re.search(r"local\s+\w+\s*=", lua_code):
             compliant_areas.append("Local variable usage")
 
-        if re.search(r'wait\s*\([0-9.]+\)', lua_code):
+        if re.search(r"wait\s*\([0-9.]+\)", lua_code):
             compliant_areas.append("Proper wait usage")
 
         if not any(v.violation_type == ViolationType.COMMUNITY_STANDARDS for v in violations):
@@ -451,9 +497,11 @@ class RobloxComplianceChecker:
 
         return compliant_areas
 
-    def _assess_moderation_risk(self, violations: List[ComplianceViolation]) -> str:
+    def _assess_moderation_risk(self, violations: list[ComplianceViolation]) -> str:
         """Assess moderation risk level"""
-        critical_count = sum(1 for v in violations if v.severity == ComplianceLevel.CRITICAL_VIOLATION)
+        critical_count = sum(
+            1 for v in violations if v.severity == ComplianceLevel.CRITICAL_VIOLATION
+        )
         violation_count = sum(1 for v in violations if v.severity == ComplianceLevel.VIOLATION)
 
         if critical_count > 0:
@@ -463,8 +511,9 @@ class RobloxComplianceChecker:
         else:
             return "low"
 
-    def _generate_compliance_recommendations(self, violations: List[ComplianceViolation],
-                                           educational_context: bool) -> List[str]:
+    def _generate_compliance_recommendations(
+        self, violations: list[ComplianceViolation], educational_context: bool
+    ) -> list[str]:
         """Generate compliance recommendations"""
         recommendations = []
 
@@ -477,7 +526,9 @@ class RobloxComplianceChecker:
 
         # Generate specific recommendations
         if ViolationType.COMMUNITY_STANDARDS in violation_types:
-            recommendations.append("Review and remove all content that violates Community Standards")
+            recommendations.append(
+                "Review and remove all content that violates Community Standards"
+            )
 
         if ViolationType.SAFETY_VIOLATION in violation_types:
             recommendations.append("Implement additional safety measures and content filtering")
@@ -486,26 +537,30 @@ class RobloxComplianceChecker:
             recommendations.append("Optimize code for better performance and security")
 
         if educational_context:
-            recommendations.extend([
-                "Ensure all content is age-appropriate for target audience",
-                "Implement proper moderation and reporting systems",
-                "Add clear terms of use and community guidelines",
-                "Regular compliance audits and updates"
-            ])
+            recommendations.extend(
+                [
+                    "Ensure all content is age-appropriate for target audience",
+                    "Implement proper moderation and reporting systems",
+                    "Add clear terms of use and community guidelines",
+                    "Regular compliance audits and updates",
+                ]
+            )
 
         # General recommendations
-        recommendations.extend([
-            "Regular review of Roblox policy updates",
-            "Implement automated content filtering",
-            "User education on platform policies",
-            "Clear escalation procedures for violations"
-        ])
+        recommendations.extend(
+            [
+                "Regular review of Roblox policy updates",
+                "Implement automated content filtering",
+                "User education on platform policies",
+                "Clear escalation procedures for violations",
+            ]
+        )
 
         return list(set(recommendations))  # Remove duplicates
 
     def generate_compliance_template(self) -> str:
         """Generate a compliance-friendly script template"""
-        return '''
+        return """
 -- ToolBoxAI Educational Content - Compliance Template
 -- This template follows Roblox Community Standards and Developer Terms
 
@@ -599,9 +654,9 @@ end
 createLearningActivity()
 
 print("Educational content loaded successfully - Compliance verified")
-        '''
+        """
 
-    def get_compliance_checklist(self) -> Dict[str, List[str]]:
+    def get_compliance_checklist(self) -> dict[str, list[str]]:
         """Get compliance checklist for developers"""
         return {
             "Community Standards": [
@@ -609,34 +664,34 @@ print("Educational content loaded successfully - Compliance verified")
                 "No harassment or bullying language",
                 "No personal information sharing",
                 "No unauthorized monetization schemes",
-                "Age-appropriate content only"
+                "Age-appropriate content only",
             ],
             "Safety Requirements": [
                 "No external links or social media promotion",
                 "No social engineering attempts",
                 "Proper input validation and sanitization",
                 "Safe communication channels only",
-                "Clear reporting mechanisms"
+                "Clear reporting mechanisms",
             ],
             "Technical Standards": [
                 "Proper API usage and rate limiting",
                 "No performance-degrading code",
                 "Secure remote event handling",
                 "Memory leak prevention",
-                "Error handling implementation"
+                "Error handling implementation",
             ],
             "Educational Standards": [
                 "Content appropriate for target age group",
                 "Clear learning objectives",
                 "Safe collaborative features",
                 "Proper moderation tools",
-                "Accessibility considerations"
+                "Accessibility considerations",
             ],
             "Developer Terms": [
                 "No platform exploitation attempts",
                 "Proper service usage",
                 "No unauthorized API access",
                 "Compliance with usage limits",
-                "Regular policy review and updates"
-            ]
+                "Regular policy review and updates",
+            ],
         }

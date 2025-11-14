@@ -6,8 +6,8 @@ tenant isolation, RLS policies, and organization management.
 """
 
 import asyncio
+from collections.abc import Generator
 from datetime import datetime, timedelta
-from typing import Generator
 from uuid import uuid4
 
 import pytest
@@ -124,12 +124,16 @@ class TestOrganizationManagement:
         """Test unique slug generation"""
         # Create first organization
         org1, _ = await tenant_service.create_organization(
-            name="Test Company", admin_email="admin1@testcompany.com", admin_password="password123"
+            name="Test Company",
+            admin_email="admin1@testcompany.com",
+            admin_password="password123",
         )
 
         # Create second organization with same name
         org2, _ = await tenant_service.create_organization(
-            name="Test Company", admin_email="admin2@testcompany.com", admin_password="password123"
+            name="Test Company",
+            admin_email="admin2@testcompany.com",
+            admin_password="password123",
         )
 
         assert org1.slug == "test-company"
@@ -263,7 +267,7 @@ class TestTenantIsolation:
         # Create users in different organizations
         async with TenantContextManager(session, sample_organization.id) as ctx:
             user_repo = ctx.get_repository(User)
-            user1 = await user_repo.create(
+            await user_repo.create(
                 email="user1@org1.com",
                 username="user1",
                 password_hash="hash1",
@@ -272,7 +276,7 @@ class TestTenantIsolation:
 
         async with TenantContextManager(session, second_organization.id) as ctx:
             user_repo = ctx.get_repository(User)
-            user2 = await user_repo.create(
+            await user_repo.create(
                 email="user2@org2.com",
                 username="user2",
                 password_hash="hash2",
@@ -325,7 +329,7 @@ class TestTenantIsolation:
 
         # Test 1: Query without tenant context should return no results
         result = await session.execute(select(User))
-        users_no_context = result.scalars().all()
+        result.scalars().all()
         # Depending on RLS configuration, this might return empty or raise error
 
         # Test 2: Set invalid tenant context
@@ -334,7 +338,7 @@ class TestTenantIsolation:
             {"org_id": str(uuid4())},
         )
         result = await session.execute(select(User))
-        users_invalid_context = result.scalars().all()
+        result.scalars().all()
         # Should return empty results for non-existent organization
 
 
@@ -393,11 +397,15 @@ class TestErrorHandling:
         """Test handling of duplicate organization slugs"""
         # This should be handled by the slug generation logic
         org1, _ = await tenant_service.create_organization(
-            name="Duplicate Test", admin_email="admin1@duplicate.com", admin_password="password123"
+            name="Duplicate Test",
+            admin_email="admin1@duplicate.com",
+            admin_password="password123",
         )
 
         org2, _ = await tenant_service.create_organization(
-            name="Duplicate Test", admin_email="admin2@duplicate.com", admin_password="password123"
+            name="Duplicate Test",
+            admin_email="admin2@duplicate.com",
+            admin_password="password123",
         )
 
         assert org1.slug != org2.slug
@@ -487,7 +495,9 @@ class TestIntegrationScenarios:
 
         # 7. Upgrade subscription
         final_org = await tenant_service.upgrade_subscription(
-            organization_id=org.id, new_tier=SubscriptionTier.PROFESSIONAL, updated_by_id=admin.id
+            organization_id=org.id,
+            new_tier=SubscriptionTier.PROFESSIONAL,
+            updated_by_id=admin.id,
         )
 
         assert final_org.subscription_tier == SubscriptionTier.PROFESSIONAL

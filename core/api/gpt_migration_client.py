@@ -4,39 +4,43 @@ Supports migration from GPT-4.1 to GPT-4.5/GPT-5 with zero downtime
 September 2025 - Phase 2 Implementation
 """
 
-import asyncio
+import hashlib
 import json
 import time
-from datetime import datetime, timedelta
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, AsyncGenerator
-from dataclasses import dataclass, field
+from typing import Any, Optional
+
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
 import structlog
-from prometheus_client import Counter, Histogram, Gauge
-import hashlib
-from functools import lru_cache
+from prometheus_client import Counter, Gauge, Histogram
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = structlog.get_logger(__name__)
 
 # Metrics for monitoring migration
-api_requests = Counter('gpt_api_requests_total', 'Total GPT API requests', ['model', 'status'])
-api_latency = Histogram('gpt_api_latency_seconds', 'GPT API latency', ['model'])
-api_errors = Counter('gpt_api_errors_total', 'GPT API errors', ['model', 'error_type'])
-migration_progress = Gauge('gpt_migration_progress_percent', 'GPT migration progress percentage')
-fallback_triggers = Counter('gpt_fallback_triggers_total', 'GPT fallback triggers')
+api_requests = Counter("gpt_api_requests_total", "Total GPT API requests", ["model", "status"])
+api_latency = Histogram("gpt_api_latency_seconds", "GPT API latency", ["model"])
+api_errors = Counter("gpt_api_errors_total", "GPT API errors", ["model", "error_type"])
+migration_progress = Gauge("gpt_migration_progress_percent", "GPT migration progress percentage")
+fallback_triggers = Counter("gpt_fallback_triggers_total", "GPT fallback triggers")
+
 
 class GPTModel(Enum):
     """Supported GPT models with migration path"""
+
     GPT_4_1 = "gpt-4.1-turbo"  # Deprecated July 14, 2025
     GPT_4_5 = "gpt-4.5-turbo"  # Current stable
     GPT_5 = "gpt-5"  # Latest model (Sept 2025)
     GPT_5_TURBO = "gpt-5-turbo"  # Performance optimized
 
+
 @dataclass
 class ModelCapabilities:
     """Model-specific capabilities and limits"""
+
     context_window: int
     max_tokens: int
     supports_functions: bool
@@ -45,6 +49,7 @@ class ModelCapabilities:
     cost_per_1k_input: float
     cost_per_1k_output: float
     deprecation_date: Optional[datetime] = None
+
 
 # Model capability registry
 MODEL_CAPABILITIES = {
@@ -56,7 +61,7 @@ MODEL_CAPABILITIES = {
         supports_streaming=True,
         cost_per_1k_input=0.01,
         cost_per_1k_output=0.03,
-        deprecation_date=datetime(2025, 7, 14)
+        deprecation_date=datetime(2025, 7, 14),
     ),
     GPTModel.GPT_4_5: ModelCapabilities(
         context_window=256000,
@@ -87,9 +92,11 @@ MODEL_CAPABILITIES = {
     ),
 }
 
+
 @dataclass
 class MigrationConfig:
     """Migration configuration with feature flags"""
+
     primary_model: GPTModel = GPTModel.GPT_4_5
     fallback_model: GPTModel = GPTModel.GPT_4_1
     rollout_percentage: float = 0.0  # 0-100
@@ -101,53 +108,55 @@ class MigrationConfig:
     cache_responses: bool = True
     cache_ttl_seconds: int = 3600
 
+
 class ResponseCompatibilityLayer:
     """Ensures consistent response format across model versions"""
 
     @staticmethod
-    def normalize_response(response: Dict[str, Any], source_model: GPTModel) -> Dict[str, Any]:
+    def normalize_response(response: dict[str, Any], source_model: GPTModel) -> dict[str, Any]:
         """Normalize response format across different model versions"""
 
         # Handle GPT-5 enhanced response format
         if source_model in [GPTModel.GPT_5, GPTModel.GPT_5_TURBO]:
-            if 'enhanced_content' in response:
+            if "enhanced_content" in response:
                 # Convert enhanced format to standard format
-                response['choices'][0]['message']['content'] = (
-                    response['enhanced_content']['primary']
-                )
+                response["choices"][0]["message"]["content"] = response["enhanced_content"][
+                    "primary"
+                ]
 
                 # Add metadata as function call if present
-                if 'metadata' in response['enhanced_content']:
-                    response['choices'][0]['message']['function_call'] = {
-                        'name': 'metadata',
-                        'arguments': json.dumps(response['enhanced_content']['metadata'])
+                if "metadata" in response["enhanced_content"]:
+                    response["choices"][0]["message"]["function_call"] = {
+                        "name": "metadata",
+                        "arguments": json.dumps(response["enhanced_content"]["metadata"]),
                     }
 
         # Ensure consistent structure
         normalized = {
-            'id': response.get('id', f"migration-{int(time.time())}"),
-            'object': 'chat.completion',
-            'created': response.get('created', int(time.time())),
-            'model': str(source_model.value),
-            'choices': response.get('choices', []),
-            'usage': response.get('usage', {}),
-            'system_fingerprint': response.get('system_fingerprint'),
+            "id": response.get("id", f"migration-{int(time.time())}"),
+            "object": "chat.completion",
+            "created": response.get("created", int(time.time())),
+            "model": str(source_model.value),
+            "choices": response.get("choices", []),
+            "usage": response.get("usage", {}),
+            "system_fingerprint": response.get("system_fingerprint"),
         }
 
         # Add migration metadata
-        normalized['_migration_metadata'] = {
-            'source_model': source_model.value,
-            'normalized_at': datetime.utcnow().isoformat(),
-            'compatibility_version': '1.0.0'
+        normalized["_migration_metadata"] = {
+            "source_model": source_model.value,
+            "normalized_at": datetime.utcnow().isoformat(),
+            "compatibility_version": "1.0.0",
         }
 
         return normalized
+
 
 class PerformanceMonitor:
     """Monitors and collects performance metrics"""
 
     def __init__(self):
-        self.metrics_buffer: List[Dict[str, Any]] = []
+        self.metrics_buffer: list[dict[str, Any]] = []
         self.max_buffer_size = 1000
 
     async def record_request(
@@ -156,12 +165,12 @@ class PerformanceMonitor:
         latency: float,
         tokens_used: int,
         success: bool,
-        error_type: Optional[str] = None
+        error_type: Optional[str] = None,
     ):
         """Record request metrics"""
 
         # Update Prometheus metrics
-        api_requests.labels(model=model.value, status='success' if success else 'failure').inc()
+        api_requests.labels(model=model.value, status="success" if success else "failure").inc()
         api_latency.labels(model=model.value).observe(latency)
 
         if not success and error_type:
@@ -169,12 +178,12 @@ class PerformanceMonitor:
 
         # Buffer detailed metrics for analysis
         metric = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'model': model.value,
-            'latency_ms': latency * 1000,
-            'tokens_used': tokens_used,
-            'success': success,
-            'error_type': error_type
+            "timestamp": datetime.utcnow().isoformat(),
+            "model": model.value,
+            "latency_ms": latency * 1000,
+            "tokens_used": tokens_used,
+            "success": success,
+            "error_type": error_type,
         }
 
         self.metrics_buffer.append(metric)
@@ -192,10 +201,11 @@ class PerformanceMonitor:
         logger.info(
             "flushing_performance_metrics",
             count=len(self.metrics_buffer),
-            sample=self.metrics_buffer[-1]
+            sample=self.metrics_buffer[-1],
         )
 
         self.metrics_buffer.clear()
+
 
 class GPTMigrationClient:
     """Production-ready GPT API client with migration support"""
@@ -204,7 +214,7 @@ class GPTMigrationClient:
         self,
         api_key: str,
         config: Optional[MigrationConfig] = None,
-        base_url: str = "https://api.openai.com/v1"
+        base_url: str = "https://api.openai.com/v1",
     ):
         self.api_key = api_key
         self.config = config or MigrationConfig()
@@ -219,17 +229,17 @@ class GPTMigrationClient:
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
-            }
+            },
         )
 
         # Response cache for deduplication
-        self._response_cache: Dict[str, Dict[str, Any]] = {}
+        self._response_cache: dict[str, dict[str, Any]] = {}
 
         logger.info(
             "gpt_migration_client_initialized",
             primary_model=self.config.primary_model.value,
             fallback_model=self.config.fallback_model.value,
-            rollout_percentage=self.config.rollout_percentage
+            rollout_percentage=self.config.rollout_percentage,
         )
 
     def _should_use_new_model(self, request_hash: str) -> bool:
@@ -243,24 +253,15 @@ class GPTMigrationClient:
         hash_int = int(hashlib.md5(request_hash.encode()).hexdigest()[:8], 16)
         return (hash_int % 100) < self.config.rollout_percentage
 
-    def _get_cache_key(self, messages: List[Dict[str, str]], **kwargs) -> str:
+    def _get_cache_key(self, messages: list[dict[str, str]], **kwargs) -> str:
         """Generate cache key for request deduplication"""
-        content = json.dumps({
-            'messages': messages,
-            **kwargs
-        }, sort_keys=True)
+        content = json.dumps({"messages": messages, **kwargs}, sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=60)
-    )
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=60))
     async def _make_request(
-        self,
-        model: GPTModel,
-        messages: List[Dict[str, str]],
-        **kwargs
-    ) -> Dict[str, Any]:
+        self, model: GPTModel, messages: list[dict[str, str]], **kwargs
+    ) -> dict[str, Any]:
         """Make API request with retry logic"""
 
         # Check deprecation
@@ -269,31 +270,26 @@ class GPTMigrationClient:
             logger.warning(
                 "using_deprecated_model",
                 model=model.value,
-                deprecation_date=capabilities.deprecation_date.isoformat()
+                deprecation_date=capabilities.deprecation_date.isoformat(),
             )
 
         # Prepare request
-        request_data = {
-            "model": model.value,
-            "messages": messages,
-            **kwargs
-        }
+        request_data = {"model": model.value, "messages": messages, **kwargs}
 
         # Validate against model capabilities
-        if 'max_tokens' in kwargs and kwargs['max_tokens'] > capabilities.max_tokens:
-            kwargs['max_tokens'] = capabilities.max_tokens
+        if "max_tokens" in kwargs and kwargs["max_tokens"] > capabilities.max_tokens:
+            kwargs["max_tokens"] = capabilities.max_tokens
             logger.warning(
                 "max_tokens_adjusted",
-                requested=kwargs['max_tokens'],
-                adjusted=capabilities.max_tokens
+                requested=kwargs["max_tokens"],
+                adjusted=capabilities.max_tokens,
             )
 
         start_time = time.time()
 
         try:
             response = await self.client.post(
-                f"{self.base_url}/chat/completions",
-                json=request_data
+                f"{self.base_url}/chat/completions", json=request_data
             )
             response.raise_for_status()
 
@@ -304,8 +300,8 @@ class GPTMigrationClient:
             await self.performance_monitor.record_request(
                 model=model,
                 latency=latency,
-                tokens_used=result.get('usage', {}).get('total_tokens', 0),
-                success=True
+                tokens_used=result.get("usage", {}).get("total_tokens", 0),
+                success=True,
             )
 
             return result
@@ -318,25 +314,25 @@ class GPTMigrationClient:
                 latency=latency,
                 tokens_used=0,
                 success=False,
-                error_type=f"http_{e.response.status_code}"
+                error_type=f"http_{e.response.status_code}",
             )
 
             logger.error(
                 "api_request_failed",
                 model=model.value,
                 status_code=e.response.status_code,
-                error=str(e)
+                error=str(e),
             )
 
             raise
 
     async def chat_completion(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
+        **kwargs,
+    ) -> dict[str, Any]:
         """
         Create chat completion with automatic model selection and fallback
 
@@ -356,9 +352,9 @@ class GPTMigrationClient:
         # Check cache
         if self.config.cache_responses and cache_key in self._response_cache:
             cached = self._response_cache[cache_key]
-            if time.time() - cached['_cached_at'] < self.config.cache_ttl_seconds:
+            if time.time() - cached["_cached_at"] < self.config.cache_ttl_seconds:
                 logger.info("returning_cached_response", cache_key=cache_key[:8])
-                return cached['response']
+                return cached["response"]
 
         # Determine model based on rollout
         use_new_model = self._should_use_new_model(cache_key)
@@ -368,7 +364,7 @@ class GPTMigrationClient:
             "selecting_model",
             primary=primary_model.value,
             use_new_model=use_new_model,
-            rollout_percentage=self.config.rollout_percentage
+            rollout_percentage=self.config.rollout_percentage,
         )
 
         # Update migration progress metric
@@ -381,7 +377,7 @@ class GPTMigrationClient:
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
-                **kwargs
+                **kwargs,
             )
 
             # Normalize response
@@ -391,8 +387,8 @@ class GPTMigrationClient:
             # Cache successful response
             if self.config.cache_responses:
                 self._response_cache[cache_key] = {
-                    'response': response,
-                    '_cached_at': time.time()
+                    "response": response,
+                    "_cached_at": time.time(),
                 }
 
                 # Cleanup old cache entries
@@ -405,7 +401,7 @@ class GPTMigrationClient:
             logger.error(
                 "primary_model_failed",
                 model=primary_model.value,
-                error=str(primary_error)
+                error=str(primary_error),
             )
 
             # Attempt fallback if enabled
@@ -414,7 +410,7 @@ class GPTMigrationClient:
 
                 logger.info(
                     "attempting_fallback",
-                    fallback_model=self.config.fallback_model.value
+                    fallback_model=self.config.fallback_model.value,
                 )
 
                 try:
@@ -423,23 +419,19 @@ class GPTMigrationClient:
                         messages=messages,
                         temperature=temperature,
                         max_tokens=max_tokens,
-                        **kwargs
+                        **kwargs,
                     )
 
                     # Normalize fallback response
                     if self.config.enable_response_compatibility:
                         response = self.compatibility_layer.normalize_response(
-                            response,
-                            self.config.fallback_model
+                            response, self.config.fallback_model
                         )
 
                     return response
 
                 except Exception as fallback_error:
-                    logger.error(
-                        "fallback_also_failed",
-                        error=str(fallback_error)
-                    )
+                    logger.error("fallback_also_failed", error=str(fallback_error))
 
                     # Re-raise original error with context
                     raise Exception(
@@ -450,10 +442,8 @@ class GPTMigrationClient:
             raise primary_error
 
     async def stream_chat_completion(
-        self,
-        messages: List[Dict[str, str]],
-        **kwargs
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        self, messages: list[dict[str, str]], **kwargs
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream chat completion with model migration support"""
 
         # Determine model
@@ -466,7 +456,7 @@ class GPTMigrationClient:
             logger.warning(
                 "model_does_not_support_streaming",
                 model=model.value,
-                falling_back_to_regular=True
+                falling_back_to_regular=True,
             )
             response = await self.chat_completion(messages, **kwargs)
             yield response
@@ -476,14 +466,12 @@ class GPTMigrationClient:
             "model": model.value,
             "messages": messages,
             "stream": True,
-            **kwargs
+            **kwargs,
         }
 
         try:
             async with self.client.stream(
-                "POST",
-                f"{self.base_url}/chat/completions",
-                json=request_data
+                "POST", f"{self.base_url}/chat/completions", json=request_data
             ) as response:
                 response.raise_for_status()
 
@@ -507,11 +495,7 @@ class GPTMigrationClient:
                             continue
 
         except Exception as e:
-            logger.error(
-                "streaming_failed",
-                model=model.value,
-                error=str(e)
-            )
+            logger.error("streaming_failed", model=model.value, error=str(e))
 
             # Fallback to non-streaming
             if self.config.enable_fallback:
@@ -524,8 +508,9 @@ class GPTMigrationClient:
         """Remove expired cache entries"""
         current_time = time.time()
         expired_keys = [
-            key for key, value in self._response_cache.items()
-            if current_time - value['_cached_at'] > self.config.cache_ttl_seconds
+            key
+            for key, value in self._response_cache.items()
+            if current_time - value["_cached_at"] > self.config.cache_ttl_seconds
         ]
 
         for key in expired_keys:
@@ -534,7 +519,7 @@ class GPTMigrationClient:
         logger.info(
             "cache_cleanup",
             removed=len(expired_keys),
-            remaining=len(self._response_cache)
+            remaining=len(self._response_cache),
         )
 
     async def update_rollout_percentage(self, percentage: float):
@@ -552,40 +537,37 @@ class GPTMigrationClient:
             "rollout_percentage_updated",
             old=old_percentage,
             new=percentage,
-            primary_model=self.config.primary_model.value
+            primary_model=self.config.primary_model.value,
         )
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of API endpoints"""
 
-        health_status = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'models': {}
-        }
+        health_status = {"timestamp": datetime.utcnow().isoformat(), "models": {}}
 
         for model in [self.config.primary_model, self.config.fallback_model]:
             try:
                 start = time.time()
-                response = await self._make_request(
+                await self._make_request(
                     model=model,
                     messages=[{"role": "user", "content": "ping"}],
-                    max_tokens=1
+                    max_tokens=1,
                 )
 
-                health_status['models'][model.value] = {
-                    'status': 'healthy',
-                    'latency_ms': (time.time() - start) * 1000,
-                    'deprecation_warning': (
+                health_status["models"][model.value] = {
+                    "status": "healthy",
+                    "latency_ms": (time.time() - start) * 1000,
+                    "deprecation_warning": (
                         MODEL_CAPABILITIES[model].deprecation_date.isoformat()
                         if MODEL_CAPABILITIES[model].deprecation_date
                         else None
-                    )
+                    ),
                 }
 
             except Exception as e:
-                health_status['models'][model.value] = {
-                    'status': 'unhealthy',
-                    'error': str(e)
+                health_status["models"][model.value] = {
+                    "status": "unhealthy",
+                    "error": str(e),
                 }
 
         return health_status

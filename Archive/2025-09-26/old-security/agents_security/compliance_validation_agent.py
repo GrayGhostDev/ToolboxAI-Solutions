@@ -3,11 +3,10 @@ Compliance Validation Agent - Ensures COPPA, FERPA, and GDPR compliance
 Validates data handling, privacy requirements, and regulatory compliance
 """
 
-import json
 import logging
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
 from core.agents.base_agent import BaseAgent
 
@@ -45,7 +44,7 @@ class ComplianceValidationAgent(BaseAgent):
         self._validation_cache = {}
         self._cache_expiry = {}
 
-    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, task: dict[str, Any]) -> dict[str, Any]:
         """
         Execute compliance validation using SPARC framework
 
@@ -72,7 +71,7 @@ class ComplianceValidationAgent(BaseAgent):
 
         return result
 
-    def _analyze_situation(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_situation(self, task: dict[str, Any]) -> dict[str, Any]:
         """Analyze compliance requirements for the task"""
         data_type = task.get('data_type', 'general')
         user_age = task.get('user_age')
@@ -92,7 +91,7 @@ class ComplianceValidationAgent(BaseAgent):
         logger.info(f"Analyzing compliance situation: {situation['required_compliance']}")
         return situation
 
-    def _identify_problem(self, situation: Dict[str, Any]) -> Dict[str, Any]:
+    def _identify_problem(self, situation: dict[str, Any]) -> dict[str, Any]:
         """Identify compliance gaps and issues"""
         problems = []
 
@@ -126,7 +125,7 @@ class ComplianceValidationAgent(BaseAgent):
             'max_severity': max([p['severity'] for p in problems], default='low') if problems else 'none'
         }
 
-    def _evaluate_alternatives(self, problem: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _evaluate_alternatives(self, problem: dict[str, Any]) -> list[dict[str, Any]]:
         """Evaluate compliance remediation alternatives"""
         alternatives = []
 
@@ -157,7 +156,7 @@ class ComplianceValidationAgent(BaseAgent):
 
         return alternatives
 
-    def _make_recommendation(self, alternatives: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _make_recommendation(self, alternatives: list[dict[str, Any]]) -> dict[str, Any]:
         """Make compliance recommendation"""
         if not alternatives:
             return {
@@ -176,7 +175,7 @@ class ComplianceValidationAgent(BaseAgent):
 
         return recommendation
 
-    async def _execute_recommendation(self, recommendation: Dict[str, Any], task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_recommendation(self, recommendation: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
         """Execute compliance validation and remediation"""
         action = task.get('action', 'validate')
 
@@ -207,7 +206,7 @@ class ComplianceValidationAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _validate_compliance(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_compliance(self, task: dict[str, Any]) -> dict[str, Any]:
         """Validate overall compliance status"""
         compliance_types = task.get('compliance_types', ['COPPA', 'FERPA', 'GDPR'])
 
@@ -235,7 +234,7 @@ class ComplianceValidationAgent(BaseAgent):
             'timestamp': datetime.utcnow().isoformat()
         }
 
-    async def _validate_coppa(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_coppa(self, task: dict[str, Any]) -> dict[str, Any]:
         """Validate COPPA compliance for children under 13"""
         user_age = task.get('user_age')
         has_parental_consent = task.get('parental_consent', False)
@@ -287,7 +286,7 @@ class ComplianceValidationAgent(BaseAgent):
 
         return validation
 
-    async def _validate_ferpa(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_ferpa(self, task: dict[str, Any]) -> dict[str, Any]:
         """Validate FERPA compliance for educational records"""
         data_type = task.get('data_type', 'general')
         access_controls = task.get('access_controls', {})
@@ -340,7 +339,7 @@ class ComplianceValidationAgent(BaseAgent):
 
         return validation
 
-    async def _validate_gdpr(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_gdpr(self, task: dict[str, Any]) -> dict[str, Any]:
         """Validate GDPR compliance for EU residents"""
         user_location = task.get('user_location', 'US')
         consent_obtained = task.get('consent_obtained', False)
@@ -406,7 +405,7 @@ class ComplianceValidationAgent(BaseAgent):
 
         return validation
 
-    async def _check_consent(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _check_consent(self, task: dict[str, Any]) -> dict[str, Any]:
         """Check consent status for a user"""
         user_id = task.get('user_id')
         user_age = task.get('user_age')
@@ -451,7 +450,7 @@ class ComplianceValidationAgent(BaseAgent):
             'timestamp': datetime.utcnow().isoformat()
         }
 
-    async def _audit_compliance(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _audit_compliance(self, task: dict[str, Any]) -> dict[str, Any]:
         """Perform comprehensive compliance audit"""
         audit_results = {
             'timestamp': datetime.utcnow().isoformat(),
@@ -508,7 +507,7 @@ class ComplianceValidationAgent(BaseAgent):
             'audit_results': audit_results
         }
 
-    async def _generate_compliance_report(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_compliance_report(self, task: dict[str, Any]) -> dict[str, Any]:
         """Generate detailed compliance report"""
         # Perform audit
         audit_result = await self._audit_compliance(task)
@@ -539,14 +538,14 @@ class ComplianceValidationAgent(BaseAgent):
             'report': report
         }
 
-    def _generate_executive_summary(self, audit_data: Dict[str, Any]) -> str:
+    def _generate_executive_summary(self, audit_data: dict[str, Any]) -> str:
         """Generate executive summary for compliance report"""
         if audit_data['overall_compliant']:
             return "The platform is fully compliant with COPPA, FERPA, and GDPR regulations."
         else:
             return f"The platform has {audit_data['critical_issues']} critical compliance issues requiring immediate attention."
 
-    def _generate_compliance_section(self, regulation: str, score: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_compliance_section(self, regulation: str, score: dict[str, Any]) -> dict[str, Any]:
         """Generate report section for specific regulation"""
         return {
             'regulation': regulation,
@@ -556,7 +555,7 @@ class ComplianceValidationAgent(BaseAgent):
             'severity': 'Critical' if score['issues'] > 0 else 'None'
         }
 
-    def _assess_compliance_risk(self, audit_data: Dict[str, Any]) -> str:
+    def _assess_compliance_risk(self, audit_data: dict[str, Any]) -> str:
         """Assess overall compliance risk level"""
         if audit_data['critical_issues'] == 0:
             return 'Low Risk'
@@ -565,7 +564,7 @@ class ComplianceValidationAgent(BaseAgent):
         else:
             return 'High Risk'
 
-    def _generate_action_items(self, audit_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _generate_action_items(self, audit_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Generate prioritized action items"""
         action_items = []
 
@@ -588,7 +587,7 @@ class ComplianceValidationAgent(BaseAgent):
         ]
         return location.upper() in eu_countries
 
-    def _determine_required_compliance(self, data_type: str, user_age: Optional[int], user_location: str) -> List[str]:
+    def _determine_required_compliance(self, data_type: str, user_age: Optional[int], user_location: str) -> list[str]:
         """Determine which compliance regulations apply"""
         required = []
 

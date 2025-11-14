@@ -1,12 +1,18 @@
-import sys, json, os
+import json
+import os
 from pathlib import Path
 
 # Simple cleaner that removes temporary task-scoped artifacts
-PATTERNS = [
-    "*.tmp", "*.bak", "*.tmp.md"
-]
+PATTERNS = ["*.tmp", "*.bak", "*.tmp.md"]
 
-EXCLUDES = {".git", ".venv", "node_modules", "Archive", "Documentation/Archive", "docs/Archive"}
+EXCLUDES = {
+    ".git",
+    ".venv",
+    "node_modules",
+    "Archive",
+    "Documentation/Archive",
+    "docs/Archive",
+}
 
 
 def list_files(root: Path):
@@ -29,6 +35,7 @@ def main():
                     pass
                 break
     print(json.dumps({"removed": removed}))
+
 
 if __name__ == "__main__":
     main()

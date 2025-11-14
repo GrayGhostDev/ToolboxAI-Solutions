@@ -128,13 +128,18 @@ class CloudflareCDN(CDNProvider):
         self.zone_id = zone_id
         self.api_token = api_token
         self.base_url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}"
-        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        }
 
     async def purge(self, urls: list[str]):
         """Purge URLs from Cloudflare cache"""
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/purge_cache", headers=self.headers, json={"files": urls}
+                f"{self.base_url}/purge_cache",
+                headers=self.headers,
+                json={"files": urls},
             )
             response.raise_for_status()
             return response.json()
@@ -161,7 +166,9 @@ class CloudFrontCDN(CDNProvider):
     def __init__(self, distribution_id: str, aws_access_key: str, aws_secret_key: str):
         self.distribution_id = distribution_id
         self.client = boto3.client(
-            "cloudfront", aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key
+            "cloudfront",
+            aws_access_key_id=aws_access_key,
+            aws_secret_access_key=aws_secret_key,
         )
 
     async def purge(self, urls: list[str]):
@@ -575,7 +582,7 @@ class EdgeCache:
             try:
                 for tier in CacheTier:
                     # Get Redis info
-                    info = await self.redis_clients[tier].info("stats")
+                    await self.redis_clients[tier].info("stats")
 
                     # Log metrics
                     metrics = self.metrics[tier]
@@ -764,7 +771,9 @@ class EdgeCacheMiddleware:
 
 # Decorator for caching specific endpoints
 def edge_cache(
-    ttl: int = 3600, tags: list[str] = None, strategy: CacheStrategy = CacheStrategy.CACHE_FIRST
+    ttl: int = 3600,
+    tags: list[str] = None,
+    strategy: CacheStrategy = CacheStrategy.CACHE_FIRST,
 ):
     """Decorator for caching endpoint responses"""
 

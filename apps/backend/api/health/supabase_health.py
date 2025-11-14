@@ -227,7 +227,8 @@ async def get_supabase_health():
     except Exception as e:
         logger.error(f"Supabase health check endpoint failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Supabase unhealthy: {e}"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Supabase unhealthy: {e}",
         )
 
 
@@ -426,7 +427,7 @@ async def get_supabase_performance_metrics():
             try:
                 # Test simple query performance
                 test_start = time.time()
-                health_check = await supabase_service.health_check()
+                await supabase_service.health_check()
                 simple_query_time = (time.time() - test_start) * 1000
                 performance_metrics["query_performance"]["simple_query_ms"] = simple_query_time
 
@@ -482,11 +483,20 @@ async def get_supabase_storage_health():
             "buckets": {},
             "upload_test": "not_tested",
             "download_test": "not_tested",
-            "storage_quota": {"used_mb": 0, "total_mb": 1024, "usage_percent": 0},  # 1GB default
+            "storage_quota": {
+                "used_mb": 0,
+                "total_mb": 1024,
+                "usage_percent": 0,
+            },  # 1GB default
         }
 
         # Define expected storage buckets
-        expected_buckets = ["agent-outputs", "user-uploads", "system-backups", "temporary-files"]
+        expected_buckets = [
+            "agent-outputs",
+            "user-uploads",
+            "system-backups",
+            "temporary-files",
+        ]
 
         # Check each bucket (mock data - would be real in production)
         for bucket_name in expected_buckets:

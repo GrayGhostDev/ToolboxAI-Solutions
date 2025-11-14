@@ -4,17 +4,15 @@ Terrain Agent - Specializes in 3D terrain and environment generation
 Creates immersive educational environments in Roblox.
 """
 
-import logging
-import math
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
-import random
 import json
+import logging
+import random
+from datetime import datetime
+from typing import Any, Optional
 
-from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel, Field
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from .base_agent import AgentConfig, AgentState, BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -47,13 +45,13 @@ MODEL_TEMPERATURE = 0.7
 class TerrainConfig(BaseModel):
     """Configuration for terrain generation"""
 
-    size: Tuple[int, int, int] = DEFAULT_TERRAIN_SIZE
+    size: tuple[int, int, int] = DEFAULT_TERRAIN_SIZE
     theme: str = "default"
-    biomes: List[str] = Field(default_factory=list)
+    biomes: list[str] = Field(default_factory=list)
     water_level: float = 0.0
     vegetation_density: float = 0.5
-    structures: List[Dict[str, Any]] = Field(default_factory=list)
-    educational_elements: List[Dict[str, Any]] = Field(default_factory=list)
+    structures: list[dict[str, Any]] = Field(default_factory=list)
+    educational_elements: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class TerrainAgent(BaseAgent):
@@ -142,7 +140,7 @@ Terrain should enhance the learning experience through:
 
     async def _process_task(self, state: AgentState) -> Any:
         """Process terrain generation task"""
-        task = state["task"]
+        state["task"]
         context = state["context"]
 
         # Extract parameters
@@ -229,9 +227,7 @@ Describe the terrain in detail, including:
 
         return config
 
-    def _parse_terrain_description(
-        self, description: str, theme: str, size: str
-    ) -> TerrainConfig:
+    def _parse_terrain_description(self, description: str, theme: str, size: str) -> TerrainConfig:
         """Parse terrain description into configuration"""
 
         # Size mappings
@@ -267,7 +263,7 @@ Describe the terrain in detail, including:
 
         return config
 
-    def _extract_structures(self, description: str) -> List[Dict[str, Any]]:
+    def _extract_structures(self, description: str) -> list[dict[str, Any]]:
         """Extract structures from terrain description"""
         structures = []
 
@@ -295,7 +291,7 @@ Describe the terrain in detail, including:
 
         return structures
 
-    def _extract_educational_elements(self, description: str) -> List[Dict[str, Any]]:
+    def _extract_educational_elements(self, description: str) -> list[dict[str, Any]]:
         """Extract educational elements from description"""
         elements = []
 
@@ -323,7 +319,7 @@ Describe the terrain in detail, including:
 
         return elements
 
-    def _generate_random_position(self) -> Dict[str, float]:
+    def _generate_random_position(self) -> dict[str, float]:
         """Generate random position for structure placement"""
         return {
             "x": random.uniform(*RANDOM_POSITION_X_RANGE),
@@ -374,7 +370,7 @@ function TerrainGenerator:GenerateBase()
         Vector3.new({config.size[0]/2}, 0, {config.size[2]/2})
     )
     baseRegion = baseRegion:ExpandToGrid({TERRAIN_GRID_SIZE})
-    
+
     -- Choose material based on theme
     local baseMaterial = self:GetBaseMaterial()
     Terrain:FillBlock(baseRegion.CFrame, baseRegion.Size, baseMaterial)
@@ -390,7 +386,7 @@ function TerrainGenerator:GetBaseMaterial()
         volcanic = Enum.Material.Basalt,
         space = Enum.Material.Rock
     }}
-    
+
     return themeMaterials[TERRAIN_CONFIG.theme] or Enum.Material.Grass
 end
 
@@ -399,12 +395,12 @@ function TerrainGenerator:GenerateHeightmap()
     local resolution = {TERRAIN_RESOLUTION}  -- Terrain cell size
     local amplitude = {config.size[1] / 4}  -- Height variation
     local frequency = {TERRAIN_FREQUENCY}  -- Noise frequency
-    
+
     for x = -{config.size[0]/2}, {config.size[0]/2}, resolution * 4 do
         for z = -{config.size[2]/2}, {config.size[2]/2}, resolution * 4 do
             -- Generate height using Perlin noise
             local height = self:GetNoiseHeight(x, z, amplitude, frequency)
-            
+
             -- Create terrain column
             if height > 0 then
                 local region = Region3.new(
@@ -412,13 +408,13 @@ function TerrainGenerator:GenerateHeightmap()
                     Vector3.new(x + resolution*2, height, z + resolution*2)
                 )
                 region = region:ExpandToGrid(resolution)
-                
+
                 -- Choose material based on height
                 local material = self:GetMaterialByHeight(height)
                 Terrain:FillBlock(region.CFrame, region.Size, material)
             end
         end
-        
+
         -- Yield to prevent timeout
         if x % {HEIGHTMAP_YIELD_INTERVAL} == 0 then
             RunService.Heartbeat:Wait()
@@ -431,7 +427,7 @@ function TerrainGenerator:GetNoiseHeight(x, z, amplitude, frequency)
     local noise1 = math.noise(x * frequency, z * frequency, {NOISE_BASE_VALUE}) * amplitude * {NOISE_OCTAVE_1_FACTOR}
     local noise2 = math.noise(x * frequency * 2, z * frequency * 2, {NOISE_BASE_VALUE}) * amplitude * {NOISE_OCTAVE_2_FACTOR}
     local noise3 = math.noise(x * frequency * 4, z * frequency * 4, {NOISE_BASE_VALUE}) * amplitude * {NOISE_OCTAVE_3_FACTOR}
-    
+
     return noise1 + noise2 + noise3
 end
 
@@ -464,21 +460,21 @@ end
 function TerrainGenerator:GenerateBiomes()
     -- Generate different biome areas
     local biomes = {json.dumps(config.biomes)}
-    
+
     for i, biome in ipairs(biomes) do
         local biomeCenter = Vector3.new(
             math.random(-{config.size[0]/4}, {config.size[0]/4}),
             0,
             math.random(-{config.size[2]/4}, {config.size[2]/4})
         )
-        
+
         self:GenerateBiome(biome, biomeCenter)
     end
 end
 
 function TerrainGenerator:GenerateBiome(biomeType, center)
     local radius = 100
-    
+
     -- Generate biome-specific features
     if biomeType == "forest" then
         self:GenerateForest(center, radius)
@@ -498,7 +494,7 @@ function TerrainGenerator:GenerateForest(center, radius)
             math.random(-radius, radius)
         )
         local treePos = center + offset
-        
+
         -- Create tree-like terrain formation
         Terrain:FillBall(
             treePos + Vector3.new(0, 10, 0),
@@ -517,7 +513,7 @@ function TerrainGenerator:GenerateDesert(center, radius)
             math.random(-radius, radius)
         )
         local dunePos = center + offset
-        
+
         Terrain:FillBall(
             dunePos + Vector3.new(0, 5, 0),
             math.random(20, 40),
@@ -536,7 +532,7 @@ function TerrainGenerator:GenerateMountains(center, radius)
         )
         local peakPos = center + offset
         local height = math.random(50, 150)
-        
+
         -- Create mountain cone
         for y = 0, height, 10 do
             local currentRadius = (height - y) / 2
@@ -552,7 +548,7 @@ end
 function TerrainGenerator:PlaceEducationalElements()
     -- Place educational landmarks and interactive elements
     local elements = {json.dumps(config.educational_elements)}
-    
+
     for _, element in ipairs(elements) do
         -- Create marker for educational element
         local marker = Instance.new("Part")
@@ -568,12 +564,12 @@ function TerrainGenerator:PlaceEducationalElements()
         marker.Material = Enum.Material.Neon
         marker.BrickColor = BrickColor.new("Bright blue")
         marker.Parent = workspace
-        
+
         -- Add interaction script
         local clickDetector = Instance.new("ClickDetector")
         clickDetector.MaxActivationDistance = 20
         clickDetector.Parent = marker
-        
+
         clickDetector.MouseClick:Connect(function(player)
             print("Educational element activated: " .. marker.Name)
             -- Trigger educational content
@@ -589,7 +585,7 @@ function TerrainGenerator:Generate()
     self:GenerateWater()
     self:GenerateBiomes()
     self:PlaceEducationalElements()
-    
+
     print("Terrain generation complete!")
 end
 
@@ -603,7 +599,7 @@ return TerrainGenerator
 
     async def _generate_environment_elements(
         self, config: TerrainConfig, educational_theme: str
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Generate environment elements for the terrain"""
 
         prompt = f"""Design environmental elements for this educational Roblox terrain:
@@ -683,7 +679,7 @@ function OptimizationModule:SetLODDistances()
     workspace.StreamingEnabled = true
     workspace.StreamingMinRadius = 64
     workspace.StreamingTargetRadius = 256
-    
+
     -- Adjust based on terrain size
     if "{size}" == "large" then
         workspace.StreamingTargetRadius = 512
@@ -702,7 +698,7 @@ function OptimizationModule:MonitorPerformance()
     -- Monitor and adjust performance
     RunService.Heartbeat:Connect(function()
         local fps = 1 / RunService.Heartbeat:Wait()
-        
+
         if fps < 30 then
             -- Reduce quality if FPS drops
             self:ReduceQuality()
@@ -734,9 +730,7 @@ return OptimizationModule
 
         return script
 
-    async def generate_themed_terrain(
-        self, theme: str, educational_focus: str
-    ) -> Dict[str, Any]:
+    async def generate_themed_terrain(self, theme: str, educational_focus: str) -> dict[str, Any]:
         """Generate terrain for a specific educational theme"""
 
         context = {
@@ -751,33 +745,31 @@ return OptimizationModule
         )
 
         return result.output if result.success else {"error": result.error}
-    
-    async def generate_terrain(self, request: Dict[str, Any]) -> str:
+
+    async def generate_terrain(self, request: dict[str, Any]) -> str:
         """Generate terrain based on request parameters."""
         context = {
             "environment_type": request.get("environment_type", "forest"),
             "size": request.get("size", "medium"),
-            "features": request.get("features", [])
+            "features": request.get("features", []),
         }
         result = await self.execute(f"Generate {context['environment_type']} terrain", context)
         # Return a terrain script that includes "Terrain" for the test assertion
         if result.success:
             return f"-- Terrain Generation Script\nlocal Terrain = workspace.Terrain\n-- Generated {context['environment_type']} terrain"
         return f"-- Terrain Generation Script\nlocal Terrain = workspace.Terrain"
-    
+
     async def generate_educational_environment(self, subject: str, topic: str) -> str:
         """Generate educational environment for a subject and topic."""
-        context = {
-            "subject": subject,
-            "topic": topic,
-            "educational": True
-        }
-        result = await self.execute(f"Generate educational environment for {subject}: {topic}", context)
+        context = {"subject": subject, "topic": topic, "educational": True}
+        result = await self.execute(
+            f"Generate educational environment for {subject}: {topic}", context
+        )
         # Always return a valid educational environment string
         if result.success:
             return f"-- Educational Environment: {subject} - {topic}\nlocal Terrain = workspace.Terrain\n-- Educational content generated"
         return f"-- Educational Environment\nlocal Terrain = workspace.Terrain"
-    
+
     def validate_script(self, script: str) -> bool:
         """Validate a Lua terrain script."""
         # Basic validation - check for common Lua syntax

@@ -317,7 +317,10 @@ class PoolConfig:
             "echo_pool": self.echo_pool,
             "use_lifo": self.use_lifo,
             "connect_args": connect_args,
-            "execution_options": {"isolation_level": "READ COMMITTED", "max_row_buffer": 10000},
+            "execution_options": {
+                "isolation_level": "READ COMMITTED",
+                "max_row_buffer": 10000,
+            },
         }
 
     def to_async_engine_kwargs(self) -> dict[str, Any]:
@@ -360,7 +363,9 @@ class PoolConfigFactory:
 
     @staticmethod
     def create_config(
-        strategy: PoolStrategy = PoolStrategy.OPTIMIZED, environment: str | None = None, **kwargs
+        strategy: PoolStrategy = PoolStrategy.OPTIMIZED,
+        environment: str | None = None,
+        **kwargs,
     ) -> PoolConfig:
         """
         Create a pool configuration for the given strategy and environment.
@@ -377,7 +382,11 @@ class PoolConfigFactory:
 
         # Base configurations for each strategy
         configs = {
-            PoolStrategy.STATIC: {"pool_size": 20, "max_overflow": 0, "auto_scale_enabled": False},
+            PoolStrategy.STATIC: {
+                "pool_size": 20,
+                "max_overflow": 0,
+                "auto_scale_enabled": False,
+            },
             PoolStrategy.DYNAMIC: {
                 "pool_size": 10,
                 "max_overflow": 20,
@@ -721,9 +730,7 @@ class PoolMonitor:
 
                 # Calculate connection duration
                 if conn_id in self.connection_start_times:
-                    duration = (
-                        datetime.now() - self.connection_start_times[conn_id]
-                    ).total_seconds()
+                    (datetime.now() - self.connection_start_times[conn_id]).total_seconds()
                     del self.connection_start_times[conn_id]
 
     def record_connection_error(self, error: str):

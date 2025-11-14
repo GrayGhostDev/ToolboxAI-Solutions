@@ -5,26 +5,22 @@ Comprehensive monitoring agent for tracking GPT-4.1 API migration progress,
 performance metrics, costs, and alerting for the July 14, 2025 deadline.
 """
 
-import asyncio
 import json
 import logging
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
-from apps.backend.core.metrics.metrics import (
-    GPT41_REQUESTS, GPT41_TOKENS, GPT41_COST, GPT41_LATENCY,
-    track_gpt41_request
-)
+from core.agents.base_agent import AgentConfig, AgentState, BaseAgent, TaskResult
 
 logger = logging.getLogger(__name__)
 
 
 class MigrationPhase(Enum):
     """Migration phases for tracking progress"""
+
     PREPARATION = "preparation"
     TESTING = "testing"
     GRADUAL_ROLLOUT = "gradual_rollout"
@@ -34,6 +30,7 @@ class MigrationPhase(Enum):
 
 class AlertLevel(Enum):
     """Alert severity levels"""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -43,6 +40,7 @@ class AlertLevel(Enum):
 @dataclass
 class MigrationMetrics:
     """Container for migration metrics"""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -60,24 +58,26 @@ class MigrationMetrics:
 @dataclass
 class ModelPerformance:
     """Performance metrics for specific models"""
+
     model_name: str
     requests: int = 0
     success_rate: float = 0.0
     avg_latency: float = 0.0
     cost_efficiency: float = 0.0  # Cost per successful token
-    quality_score: float = 0.0    # Based on output quality metrics
+    quality_score: float = 0.0  # Based on output quality metrics
 
 
 @dataclass
 class MigrationAlert:
     """Alert for migration issues"""
+
     level: AlertLevel
     message: str
     timestamp: datetime
     metric_name: str
     current_value: float
     threshold: float
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 class GPT4MigrationMonitor(BaseAgent):
@@ -97,14 +97,14 @@ class GPT4MigrationMonitor(BaseAgent):
 
     # Default thresholds
     DEFAULT_THRESHOLDS = {
-        "error_rate_warning": 5.0,      # 5% error rate
-        "error_rate_critical": 10.0,    # 10% error rate
-        "latency_warning": 5.0,         # 5 seconds
-        "latency_critical": 10.0,       # 10 seconds
-        "daily_cost_warning": 100.0,    # $100/day
-        "daily_cost_critical": 200.0,   # $200/day
-        "monthly_budget": 3000.0,       # $3000/month
-        "token_efficiency_min": 0.8     # 80% token efficiency
+        "error_rate_warning": 5.0,  # 5% error rate
+        "error_rate_critical": 10.0,  # 10% error rate
+        "latency_warning": 5.0,  # 5 seconds
+        "latency_critical": 10.0,  # 10 seconds
+        "daily_cost_warning": 100.0,  # $100/day
+        "daily_cost_critical": 200.0,  # $200/day
+        "monthly_budget": 3000.0,  # $3000/month
+        "token_efficiency_min": 0.8,  # 80% token efficiency
     }
 
     def __init__(self, config: Optional[AgentConfig] = None):
@@ -112,8 +112,8 @@ class GPT4MigrationMonitor(BaseAgent):
             config = AgentConfig(
                 name="GPT4MigrationMonitor",
                 model="gpt-4o-mini",  # Use efficient model for monitoring
-                temperature=0.1,      # Low temperature for consistent analysis
-                system_prompt=self._get_system_prompt()
+                temperature=0.1,  # Low temperature for consistent analysis
+                system_prompt=self._get_system_prompt(),
             )
 
         super().__init__(config)
@@ -124,12 +124,12 @@ class GPT4MigrationMonitor(BaseAgent):
         self.thresholds = self.DEFAULT_THRESHOLDS.copy()
 
         # Metrics storage
-        self.metrics_history: List[Tuple[datetime, MigrationMetrics]] = []
-        self.model_performance: Dict[str, ModelPerformance] = {}
-        self.active_alerts: List[MigrationAlert] = []
+        self.metrics_history: list[tuple[datetime, MigrationMetrics]] = []
+        self.model_performance: dict[str, ModelPerformance] = {}
+        self.active_alerts: list[MigrationAlert] = []
 
         # Cost tracking
-        self.daily_costs: Dict[str, float] = {}  # date -> cost
+        self.daily_costs: dict[str, float] = {}  # date -> cost
         self.monthly_budget_used = 0.0
 
         # Performance baselines
@@ -163,7 +163,7 @@ Always provide specific, actionable recommendations based on data analysis.
     async def _process_task(self, state: AgentState) -> Any:
         """Process migration monitoring tasks"""
         task = state["task"].lower()
-        context = state.get("context", {})
+        state.get("context", {})
 
         try:
             if "collect" in task and "metrics" in task:
@@ -234,7 +234,8 @@ Always provide specific, actionable recommendations based on data analysis.
             # Weekly cost (last 7 days)
             week_ago = current_time - timedelta(days=7)
             current_metrics.weekly_cost = sum(
-                cost for date, cost in self.daily_costs.items()
+                cost
+                for date, cost in self.daily_costs.items()
                 if datetime.fromisoformat(date).date() >= week_ago.date()
             )
 
@@ -249,8 +250,7 @@ Always provide specific, actionable recommendations based on data analysis.
             # Keep only last 30 days of history
             cutoff_date = current_time - timedelta(days=30)
             self.metrics_history = [
-                (ts, metrics) for ts, metrics in self.metrics_history
-                if ts >= cutoff_date
+                (ts, metrics) for ts, metrics in self.metrics_history if ts >= cutoff_date
             ]
 
             logger.info(f"Collected metrics: {current_metrics}")
@@ -260,10 +260,13 @@ Always provide specific, actionable recommendations based on data analysis.
             logger.error(f"Failed to collect metrics: {e}")
             raise
 
-    async def _analyze_performance_trends(self) -> Dict[str, Any]:
+    async def _analyze_performance_trends(self) -> dict[str, Any]:
         """Analyze performance trends over time"""
         if len(self.metrics_history) < 2:
-            return {"status": "insufficient_data", "message": "Need more data points for trend analysis"}
+            return {
+                "status": "insufficient_data",
+                "message": "Need more data points for trend analysis",
+            }
 
         # Get recent metrics for comparison
         recent_metrics = [metrics for _, metrics in self.metrics_history[-7:]]  # Last week
@@ -289,7 +292,7 @@ Always provide specific, actionable recommendations based on data analysis.
                 ),
                 "efficiency_trend": self._calculate_trend_percentage(
                     older_avg.cost_per_request, recent_avg.cost_per_request
-                )
+                ),
             }
 
             # Generate trend analysis
@@ -300,12 +303,12 @@ Always provide specific, actionable recommendations based on data analysis.
                 "recent_metrics": recent_avg,
                 "previous_metrics": older_avg,
                 "analysis": analysis,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
         return {"status": "insufficient_data"}
 
-    def _calculate_average_metrics(self, metrics_list: List[MigrationMetrics]) -> MigrationMetrics:
+    def _calculate_average_metrics(self, metrics_list: list[MigrationMetrics]) -> MigrationMetrics:
         """Calculate average metrics from a list"""
         if not metrics_list:
             return MigrationMetrics()
@@ -345,9 +348,9 @@ Always provide specific, actionable recommendations based on data analysis.
 
     async def _generate_trend_analysis(
         self,
-        trends: Dict[str, float],
+        trends: dict[str, float],
         recent: MigrationMetrics,
-        previous: MigrationMetrics
+        previous: MigrationMetrics,
     ) -> str:
         """Generate AI-powered trend analysis"""
         analysis_prompt = f"""Analyze the following GPT-4.1 migration performance trends:
@@ -380,7 +383,7 @@ Provide a concise analysis focusing on:
         response = await self.llm.ainvoke(analysis_prompt)
         return response.content
 
-    async def _check_thresholds_and_alert(self) -> List[MigrationAlert]:
+    async def _check_thresholds_and_alert(self) -> list[MigrationAlert]:
         """Check current metrics against thresholds and generate alerts"""
         current_metrics = await self._collect_current_metrics()
         new_alerts = []
@@ -398,8 +401,8 @@ Provide a concise analysis focusing on:
                     "Investigate failed requests immediately",
                     "Consider rolling back recent changes",
                     "Check API key and authentication",
-                    "Review error logs for patterns"
-                ]
+                    "Review error logs for patterns",
+                ],
             )
             new_alerts.append(alert)
         elif current_metrics.error_rate >= self.thresholds["error_rate_warning"]:
@@ -413,8 +416,8 @@ Provide a concise analysis focusing on:
                 recommendations=[
                     "Monitor error patterns closely",
                     "Review recent API changes",
-                    "Check rate limiting settings"
-                ]
+                    "Check rate limiting settings",
+                ],
             )
             new_alerts.append(alert)
 
@@ -431,8 +434,8 @@ Provide a concise analysis focusing on:
                     "Check API endpoint health",
                     "Review request complexity",
                     "Consider request optimization",
-                    "Check network connectivity"
-                ]
+                    "Check network connectivity",
+                ],
             )
             new_alerts.append(alert)
         elif current_metrics.avg_latency >= self.thresholds["latency_warning"]:
@@ -446,8 +449,8 @@ Provide a concise analysis focusing on:
                 recommendations=[
                     "Monitor latency trends",
                     "Optimize request parameters",
-                    "Review prompt complexity"
-                ]
+                    "Review prompt complexity",
+                ],
             )
             new_alerts.append(alert)
 
@@ -464,8 +467,8 @@ Provide a concise analysis focusing on:
                     "Implement immediate cost controls",
                     "Review high-cost operations",
                     "Consider model downgrade for non-critical tasks",
-                    "Implement request throttling"
-                ]
+                    "Implement request throttling",
+                ],
             )
             new_alerts.append(alert)
         elif current_metrics.daily_cost >= self.thresholds["daily_cost_warning"]:
@@ -479,8 +482,8 @@ Provide a concise analysis focusing on:
                 recommendations=[
                     "Monitor cost trends closely",
                     "Optimize token usage",
-                    "Review request efficiency"
-                ]
+                    "Review request efficiency",
+                ],
             )
             new_alerts.append(alert)
 
@@ -497,8 +500,8 @@ Provide a concise analysis focusing on:
                     "Implement emergency cost controls",
                     "Temporarily pause non-essential operations",
                     "Review budget allocation",
-                    "Escalate to management"
-                ]
+                    "Escalate to management",
+                ],
             )
             new_alerts.append(alert)
 
@@ -508,8 +511,7 @@ Provide a concise analysis focusing on:
         # Clean up old alerts (older than 24 hours)
         cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
         self.active_alerts = [
-            alert for alert in self.active_alerts
-            if alert.timestamp >= cutoff_time
+            alert for alert in self.active_alerts if alert.timestamp >= cutoff_time
         ]
 
         if new_alerts:
@@ -519,7 +521,7 @@ Provide a concise analysis focusing on:
 
         return new_alerts
 
-    async def _generate_migration_report(self) -> Dict[str, Any]:
+    async def _generate_migration_report(self) -> dict[str, Any]:
         """Generate comprehensive migration progress report"""
         current_metrics = await self._collect_current_metrics()
         trends = await self._analyze_performance_trends()
@@ -570,20 +572,20 @@ Provide a structured report with:
                     "metric": alert.metric_name,
                     "value": alert.current_value,
                     "threshold": alert.threshold,
-                    "recommendations": alert.recommendations
+                    "recommendations": alert.recommendations,
                 }
                 for alert in alerts
             ],
             "ai_analysis": ai_analysis.content,
             "model_performance": {
                 name: perf.__dict__ for name, perf in self.model_performance.items()
-            }
+            },
         }
 
         logger.info(f"Generated migration report: {report['report_id']}")
         return report
 
-    async def _generate_optimization_recommendations(self) -> List[Dict[str, Any]]:
+    async def _generate_optimization_recommendations(self) -> list[dict[str, Any]]:
         """Generate AI-powered optimization recommendations"""
         current_metrics = await self._collect_current_metrics()
 
@@ -623,14 +625,14 @@ Provide 5-10 specific, actionable recommendations with:
                 "expected_impact": "15-25% cost reduction",
                 "complexity": "Medium",
                 "timeline": "1-2 weeks",
-                "ai_reasoning": response.content
+                "ai_reasoning": response.content,
             }
             # Additional recommendations would be parsed from AI response
         ]
 
         return recommendations
 
-    async def _project_costs(self) -> Dict[str, Any]:
+    async def _project_costs(self) -> dict[str, Any]:
         """Project costs for migration timeline"""
         current_metrics = await self._collect_current_metrics()
 
@@ -652,14 +654,16 @@ Provide 5-10 specific, actionable recommendations with:
             "budget_utilization": {
                 "monthly_budget": self.thresholds["monthly_budget"],
                 "current_utilization": (monthly_cost / self.thresholds["monthly_budget"]) * 100,
-                "remaining_budget": self.thresholds["monthly_budget"] - monthly_cost
+                "remaining_budget": self.thresholds["monthly_budget"] - monthly_cost,
             },
             "cost_trends": {
-                "tokens_per_dollar": current_metrics.total_tokens / max(0.01, current_metrics.total_cost),
-                "requests_per_dollar": current_metrics.total_requests / max(0.01, current_metrics.total_cost),
-                "efficiency_score": self._calculate_cost_efficiency_score(current_metrics)
+                "tokens_per_dollar": current_metrics.total_tokens
+                / max(0.01, current_metrics.total_cost),
+                "requests_per_dollar": current_metrics.total_requests
+                / max(0.01, current_metrics.total_cost),
+                "efficiency_score": self._calculate_cost_efficiency_score(current_metrics),
             },
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return projections
@@ -682,11 +686,14 @@ Provide 5-10 specific, actionable recommendations with:
             # Assume target of 500 tokens per request
             target_tokens = 500
             if metrics.tokens_per_request <= target_tokens:
-                score += min(20, (target_tokens - metrics.tokens_per_request) / target_tokens * 20)
+                score += min(
+                    20,
+                    (target_tokens - metrics.tokens_per_request) / target_tokens * 20,
+                )
 
         return max(0, min(100, score))
 
-    async def _check_deadline_progress(self) -> Dict[str, Any]:
+    async def _check_deadline_progress(self) -> dict[str, Any]:
         """Check progress toward migration deadline"""
         now = datetime.now(timezone.utc)
         time_remaining = self.MIGRATION_DEADLINE - now
@@ -697,7 +704,7 @@ Provide 5-10 specific, actionable recommendations with:
             MigrationPhase.TESTING: 40,
             MigrationPhase.GRADUAL_ROLLOUT: 70,
             MigrationPhase.FULL_MIGRATION: 90,
-            MigrationPhase.COMPLETED: 100
+            MigrationPhase.COMPLETED: 100,
         }
 
         current_progress = phase_progress.get(self.current_phase, 0)
@@ -710,7 +717,7 @@ Provide 5-10 specific, actionable recommendations with:
             "current_phase": self.current_phase.value,
             "progress_percentage": current_progress,
             "on_track": time_remaining.days > 0 and current_progress >= 50,
-            "urgency_level": self._calculate_urgency_level(time_remaining.days, current_progress)
+            "urgency_level": self._calculate_urgency_level(time_remaining.days, current_progress),
         }
 
         return progress_info
@@ -726,7 +733,7 @@ Provide 5-10 specific, actionable recommendations with:
         else:
             return "low"
 
-    async def _establish_baseline(self) -> Dict[str, Any]:
+    async def _establish_baseline(self) -> dict[str, Any]:
         """Establish performance baseline for comparison"""
         current_metrics = await self._collect_current_metrics()
         self.baseline_metrics = current_metrics
@@ -738,14 +745,14 @@ Provide 5-10 specific, actionable recommendations with:
                 "error_rate_target": "< 2%",
                 "latency_target": "< 3s",
                 "cost_efficiency_target": "> 80%",
-                "success_rate_target": "> 98%"
-            }
+                "success_rate_target": "> 98%",
+            },
         }
 
         logger.info("Established migration baseline metrics")
         return baseline_info
 
-    async def _compare_model_performance(self) -> Dict[str, Any]:
+    async def _compare_model_performance(self) -> dict[str, Any]:
         """Compare performance across different models"""
         # This would integrate with actual model performance tracking
         # For now, we'll simulate model comparison
@@ -761,7 +768,7 @@ Provide 5-10 specific, actionable recommendations with:
                 success_rate=95.0 + (hash(model) % 5),  # Simulate variations
                 avg_latency=2.0 + (hash(model) % 10) / 10,
                 cost_efficiency=0.8 + (hash(model) % 20) / 100,
-                quality_score=85.0 + (hash(model) % 15)
+                quality_score=85.0 + (hash(model) % 15),
             )
 
             self.model_performance[model] = perf
@@ -786,10 +793,10 @@ Provide analysis on:
             "model_comparison": comparison,
             "ai_analysis": analysis.content,
             "recommendation": "gpt-4o-mini",  # Based on analysis
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _comprehensive_monitoring_cycle(self) -> Dict[str, Any]:
+    async def _comprehensive_monitoring_cycle(self) -> dict[str, Any]:
         """Run a complete monitoring cycle"""
         logger.info("Starting comprehensive monitoring cycle")
 
@@ -809,7 +816,10 @@ Provide analysis on:
             results["deadline_progress"] = await self._check_deadline_progress()
 
             # Generate recommendations if needed
-            if results["alerts"] or results["deadline_progress"].get("urgency_level") in ["high", "critical"]:
+            if results["alerts"] or results["deadline_progress"].get("urgency_level") in [
+                "high",
+                "critical",
+            ]:
                 results["recommendations"] = await self._generate_optimization_recommendations()
 
             # Project costs
@@ -827,7 +837,9 @@ Provide analysis on:
 
     # Public API methods
 
-    async def start_monitoring(self, phase: MigrationPhase = MigrationPhase.PREPARATION) -> TaskResult:
+    async def start_monitoring(
+        self, phase: MigrationPhase = MigrationPhase.PREPARATION
+    ) -> TaskResult:
         """Start migration monitoring for a specific phase"""
         self.current_phase = phase
         logger.info(f"Started migration monitoring in {phase.value} phase")
@@ -837,18 +849,17 @@ Provide analysis on:
             await self._establish_baseline()
 
         result = await self.execute(
-            "Start comprehensive migration monitoring",
-            {"phase": phase.value}
+            "Start comprehensive migration monitoring", {"phase": phase.value}
         )
 
         return result
 
-    async def update_thresholds(self, new_thresholds: Dict[str, float]) -> None:
+    async def update_thresholds(self, new_thresholds: dict[str, float]) -> None:
         """Update alert thresholds"""
         self.thresholds.update(new_thresholds)
         logger.info(f"Updated thresholds: {new_thresholds}")
 
-    async def advance_phase(self, new_phase: MigrationPhase) -> Dict[str, Any]:
+    async def advance_phase(self, new_phase: MigrationPhase) -> dict[str, Any]:
         """Advance to next migration phase"""
         old_phase = self.current_phase
         self.current_phase = new_phase
@@ -860,12 +871,12 @@ Provide analysis on:
         transition_report["phase_transition"] = {
             "from": old_phase.value,
             "to": new_phase.value,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return transition_report
 
-    async def get_dashboard_data(self) -> Dict[str, Any]:
+    async def get_dashboard_data(self) -> dict[str, Any]:
         """Get current data for dashboard display"""
         current_metrics = await self._collect_current_metrics()
         deadline_progress = await self._check_deadline_progress()
@@ -873,7 +884,7 @@ Provide analysis on:
             {
                 "level": alert.level.value,
                 "message": alert.message,
-                "timestamp": alert.timestamp.isoformat()
+                "timestamp": alert.timestamp.isoformat(),
             }
             for alert in self.active_alerts[-10:]  # Last 10 alerts
         ]
@@ -887,5 +898,5 @@ Provide analysis on:
                 name: perf.__dict__ for name, perf in self.model_performance.items()
             },
             "cost_efficiency_score": self._calculate_cost_efficiency_score(current_metrics),
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }

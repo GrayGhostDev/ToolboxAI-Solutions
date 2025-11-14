@@ -13,14 +13,16 @@ Issues Fixed:
 Date: 2025-09-11
 """
 
-import sys
 import json
-import requests
+import sys
 from datetime import datetime
+
+import requests
 
 # Configuration
 BACKEND_URL = "http://localhost:8008"
 DASHBOARD_ORIGIN = "http://localhost:5179"
+
 
 def test_health():
     """Test basic health endpoint."""
@@ -30,6 +32,7 @@ def test_health():
     except:
         return False
 
+
 def test_cors_preflight():
     """Test CORS preflight for /auth/verify."""
     try:
@@ -38,23 +41,25 @@ def test_cors_preflight():
             headers={
                 "Origin": DASHBOARD_ORIGIN,
                 "Access-Control-Request-Method": "POST",
-                "Access-Control-Request-Headers": "Content-Type, Authorization"
-            }
+                "Access-Control-Request-Headers": "Content-Type, Authorization",
+            },
         )
         return response.status_code == 200
     except:
         return False
+
 
 def test_socketio_endpoint():
     """Test Socket.IO endpoint availability."""
     try:
         response = requests.get(
             f"{BACKEND_URL}/socket.io/?EIO=4&transport=polling",
-            headers={"Origin": DASHBOARD_ORIGIN}
+            headers={"Origin": DASHBOARD_ORIGIN},
         )
-        return response.status_code == 200 and response.text.startswith('0')
+        return response.status_code == 200 and response.text.startswith("0")
     except:
         return False
+
 
 def test_auth_verify():
     """Test auth verification endpoint."""
@@ -64,21 +69,25 @@ def test_auth_verify():
             headers={
                 "Origin": DASHBOARD_ORIGIN,
                 "Content-Type": "application/json",
-                "Authorization": "Bearer test-token"
-            }
+                "Authorization": "Bearer test-token",
+            },
         )
         # 401 is expected without valid token
         return response.status_code in [200, 401]
     except:
         return False
 
+
 def test_api_status():
     """Test API status endpoint."""
     try:
-        response = requests.get(f"{BACKEND_URL}/api/v1/status", headers={"Origin": DASHBOARD_ORIGIN})
+        response = requests.get(
+            f"{BACKEND_URL}/api/v1/status", headers={"Origin": DASHBOARD_ORIGIN}
+        )
         return response.status_code == 200
     except:
         return False
+
 
 def main():
     """Run all tests and report results."""
@@ -89,7 +98,7 @@ def main():
     print(f"Backend URL: {BACKEND_URL}")
     print(f"Dashboard Origin: {DASHBOARD_ORIGIN}")
     print()
-    
+
     tests = [
         ("Health Endpoint", test_health),
         ("CORS Preflight", test_cors_preflight),
@@ -97,10 +106,10 @@ def main():
         ("Auth Verify", test_auth_verify),
         ("API Status", test_api_status),
     ]
-    
+
     results = {}
     all_passed = True
-    
+
     for test_name, test_func in tests:
         print(f"Testing {test_name}...", end=" ")
         try:
@@ -115,12 +124,13 @@ def main():
             print(f"❌ ERROR: {e}")
             results[test_name] = False
             all_passed = False
-    
+
     print()
     print("=" * 60)
     print("SUMMARY OF FIXES APPLIED:")
     print("=" * 60)
-    print("""
+    print(
+        """
 1. CORS Configuration (server/main.py):
    - Added port 5179 to allowed origins
    - Configured proper CORS headers
@@ -140,26 +150,32 @@ def main():
 5. Socket.IO CORS (server/socketio_server.py):
    - Ensured port 5179 is in Socket.IO allowed origins
    - Configured proper Socket.IO path
-""")
-    
+"""
+    )
+
     print("=" * 60)
     if all_passed:
         print("✅ ALL TESTS PASSED - Integration Fixed!")
     else:
         print("⚠️  Some tests failed - Review needed")
     print("=" * 60)
-    
+
     # Save results to file
     results_file = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/fixes/terminal1_test_results.json"
-    with open(results_file, 'w') as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "all_passed": all_passed,
-            "results": results
-        }, f, indent=2)
+    with open(results_file, "w") as f:
+        json.dump(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "all_passed": all_passed,
+                "results": results,
+            },
+            f,
+            indent=2,
+        )
     print(f"\nResults saved to: {results_file}")
-    
+
     return 0 if all_passed else 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

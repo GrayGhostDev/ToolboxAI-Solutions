@@ -222,7 +222,10 @@ class CDNManager:
                 resize_mode=ResizeMode.FIT,
             ),
             "mobile_optimized": ImageTransformation(
-                width=480, quality=70, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+                width=480,
+                quality=70,
+                format=ImageFormat.WEBP,
+                resize_mode=ResizeMode.FIT,
             ),
         }
 
@@ -344,18 +347,24 @@ class CDNManager:
             organization_id: Organization context
 
         Returns:
-            Dict[str, str]: Breakpoint name to URL mapping
+            dict[str, str]: Breakpoint name to URL mapping
         """
         breakpoints = breakpoints or [480, 768, 1024, 1920]
         responsive_urls = {}
 
         for width in breakpoints:
             transformation = ImageTransformation(
-                width=width, quality=80, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+                width=width,
+                quality=80,
+                format=ImageFormat.WEBP,
+                resize_mode=ResizeMode.FIT,
             )
 
             url = await self.get_optimized_url(
-                storage_path, transformation, cache_level, organization_id=organization_id
+                storage_path,
+                transformation,
+                cache_level,
+                organization_id=organization_id,
             )
 
             breakpoint_name = f"{width}w"
@@ -436,12 +445,15 @@ class CDNManager:
             return CDNStats()
 
     async def optimize_delivery(
-        self, storage_path: str, user_context: dict[str, Any], organization_id: str | None = None
+        self,
+        storage_path: str,
+        user_context: dict[str, Any],
+        organization_id: str | None = None,
     ) -> str:
         """
         Optimize content delivery based on user context.
 
-        Args:
+        Args:  # noqa: F841 - Reserved for geo-location data
             storage_path: File storage path
             user_context: User context (device, location, connection)
             organization_id: Organization context
@@ -453,7 +465,7 @@ class CDNManager:
             # Analyze user context
             device_type = user_context.get("device_type", "desktop")
             connection_speed = user_context.get("connection_speed", "fast")
-            country = user_context.get("country", "US")
+            user_context.get("country", "US")
 
             # Choose optimization strategy
             transformation = None
@@ -472,18 +484,27 @@ class CDNManager:
             elif device_type == "tablet":
                 # Tablet optimization
                 transformation = ImageTransformation(
-                    width=768, quality=80, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+                    width=768,
+                    quality=80,
+                    format=ImageFormat.WEBP,
+                    resize_mode=ResizeMode.FIT,
                 )
 
             elif connection_speed == "slow":
                 # Low bandwidth optimization
                 transformation = ImageTransformation(
-                    width=800, quality=60, format=ImageFormat.WEBP, resize_mode=ResizeMode.FIT
+                    width=800,
+                    quality=60,
+                    format=ImageFormat.WEBP,
+                    resize_mode=ResizeMode.FIT,
                 )
 
             # Get optimized URL
             return await self.get_optimized_url(
-                storage_path, transformation, cache_level, organization_id=organization_id
+                storage_path,
+                transformation,
+                cache_level,
+                organization_id=organization_id,
             )
 
         except Exception as e:
@@ -574,7 +595,7 @@ class CDNManager:
             # This would integrate with your CDN provider's API
             # For example, CloudFlare, AWS CloudFront, etc.
 
-            invalidation_data = {
+            {
                 "files": storage_paths,
                 "organization_id": organization_id,
                 "timestamp": time.time(),
@@ -639,7 +660,16 @@ class CDNManager:
 
     def is_image_file(self, storage_path: str) -> bool:
         """Check if file is an image that can be transformed"""
-        image_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff", ".svg"}
+        image_extensions = {
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".webp",
+            ".bmp",
+            ".tiff",
+            ".svg",
+        }
         file_ext = storage_path.lower().split(".")[-1] if "." in storage_path else ""
         return f".{file_ext}" in image_extensions
 

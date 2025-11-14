@@ -106,7 +106,9 @@ def test_content_generation():
         data = response.json()
         success = response.status_code == 200 and "content" in data
         print_result(
-            "Content Generation", success, f"Generated {data.get('type', 'unknown')} content"
+            "Content Generation",
+            success,
+            f"Generated {data.get('type', 'unknown')} content",
         )
         return success, data
     except Exception as e:
@@ -168,7 +170,9 @@ def test_plugin_polling():
         data = response.json()
         success = response.status_code == 200
         print_result(
-            "Plugin Polling", success, f"Updates available: {data.get('has_updates', False)}"
+            "Plugin Polling",
+            success,
+            f"Updates available: {data.get('has_updates', False)}",
         )
         return success
     except Exception as e:
@@ -213,7 +217,9 @@ def test_error_handling():
                 else response.status_code == 200
             )
             print_result(
-                f"Error Handling - {test['name']}", success, f"Status code: {response.status_code}"
+                f"Error Handling - {test['name']}",
+                success,
+                f"Status code: {response.status_code}",
             )
             all_passed = all_passed and success
         except Exception as e:
@@ -229,7 +235,7 @@ def test_network_resilience():
 
     # Test timeout handling
     try:
-        response = requests.get(f"{FLASK_URL}/health", timeout=0.001)
+        requests.get(f"{FLASK_URL}/health", timeout=0.001)
         print_result("Timeout Handling", False, "Should have timed out")
         return False
     except requests.Timeout:
@@ -250,11 +256,18 @@ def test_integration_with_fastapi():
             return False
 
         # Test content generation through Flask that calls FastAPI
-        payload = {"type": "quiz", "subject": "Science", "grade": 7, "topic": "Solar System"}
+        payload = {
+            "type": "quiz",
+            "subject": "Science",
+            "grade": 7,
+            "topic": "Solar System",
+        }
         response = requests.post(f"{FLASK_URL}/plugin/content/generate", json=payload)
         success = response.status_code == 200
         print_result(
-            "FastAPI Integration", success, "Content generation through Flask->FastAPI chain"
+            "FastAPI Integration",
+            success,
+            "Content generation through Flask->FastAPI chain",
         )
         return success
     except Exception as e:

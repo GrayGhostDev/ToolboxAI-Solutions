@@ -211,7 +211,7 @@ class BulkShareResponse(BaseModel):
 class ExportRequest(BaseModel):
     """Request model for file metadata export"""
 
-    format: str = Field(default="json", regex="^(json|csv|xlsx)$")
+    format: str = Field(default="json", pattern="^(json|csv|xlsx)$")
     include_deleted: bool = False
     include_shares: bool = True
     include_access_logs: bool = False

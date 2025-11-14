@@ -9,21 +9,18 @@ Intelligently routes database queries to read replicas or primary based on:
 """
 
 import asyncio
+import logging
 import random
 import time
-from enum import Enum
-from typing import Dict, List, Optional, Any, Callable, TypeVar, Generic
-from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
-import logging
-
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text, event, pool
-from sqlalchemy.sql import ClauseElement
-from sqlalchemy.engine import Engine
-import psycopg2
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Callable, Optional, TypeVar
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +74,7 @@ class ReplicaRouter:
     def __init__(
         self,
         primary_url: str,
-        replica_urls: List[str],
+        replica_urls: list[str],
         max_replica_lag_seconds: float = 5.0,
         health_check_interval: int = 30,
         strategy: LoadBalancingStrategy = LoadBalancingStrategy.WEIGHTED_RESPONSE_TIME,
@@ -100,14 +97,14 @@ class ReplicaRouter:
         }
 
         # Health tracking
-        self.replica_health: Dict[str, ReplicaHealth] = {
+        self.replica_health: dict[str, ReplicaHealth] = {
             url: ReplicaHealth(hostname=self._extract_hostname(url))
             for url in replica_urls
         }
 
         # Session tracking for consistency
-        self.session_affinity: Dict[str, str] = {}
-        self.write_timestamps: Dict[str, datetime] = {}
+        self.session_affinity: dict[str, str] = {}
+        self.write_timestamps: dict[str, datetime] = {}
 
         # Metrics
         self.metrics = QueryMetrics()
@@ -285,7 +282,7 @@ class ReplicaRouter:
 
     def _apply_strategy(
         self,
-        replicas: List[str],
+        replicas: list[str],
         session_id: Optional[str]
     ) -> str:
         """Apply load balancing strategy to select replica"""
@@ -421,7 +418,7 @@ _router_instance: Optional[ReplicaRouter] = None
 
 def init_replica_router(
     primary_url: str,
-    replica_urls: List[str],
+    replica_urls: list[str],
     **kwargs
 ) -> ReplicaRouter:
     """Initialize the global replica router instance"""

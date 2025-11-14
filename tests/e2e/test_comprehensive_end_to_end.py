@@ -64,9 +64,21 @@ class TestComprehensiveEndToEnd:
 
         # Test user credentials
         self.test_users = {
-            "admin": {"email": "admin@test.com", "password": "admin123", "role": "admin"},
-            "teacher": {"email": "teacher@test.com", "password": "teacher123", "role": "teacher"},
-            "student": {"email": "student@test.com", "password": "student123", "role": "student"},
+            "admin": {
+                "email": "admin@test.com",
+                "password": "admin123",
+                "role": "admin",
+            },
+            "teacher": {
+                "email": "teacher@test.com",
+                "password": "teacher123",
+                "role": "teacher",
+            },
+            "student": {
+                "email": "student@test.com",
+                "password": "student123",
+                "role": "student",
+            },
         }
 
         # Test data
@@ -337,7 +349,8 @@ class TestComprehensiveEndToEnd:
                                     # Verify lesson creation
                                     try:
                                         await page.wait_for_selector(
-                                            f"text={self.test_lesson_name}", timeout=10000
+                                            f"text={self.test_lesson_name}",
+                                            timeout=10000,
                                         )
                                         assert True, "Lesson created successfully"
                                     except Exception:
@@ -432,7 +445,6 @@ class TestComprehensiveEndToEnd:
             await page.wait_for_load_state("networkidle")
 
             # Set up message listener for real-time events
-            realtime_messages = []
 
             await page.evaluate(
                 """
@@ -598,7 +610,8 @@ class TestComprehensiveEndToEnd:
                                             # Verify assessment creation
                                             try:
                                                 await page.wait_for_selector(
-                                                    f"text={test_assessment_name}", timeout=10000
+                                                    f"text={test_assessment_name}",
+                                                    timeout=10000,
                                                 )
                                                 assert True, "Assessment created successfully"
                                             except Exception:

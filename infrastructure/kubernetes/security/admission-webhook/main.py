@@ -6,9 +6,9 @@ Validates and mutates pods to enforce security standards
 import base64
 import json
 import logging
-from typing import Dict, List, Any, Optional
-from flask import Flask, request, jsonify
-import jsonpatch
+from typing import Any
+
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -21,45 +21,37 @@ REQUIRED_SECURITY_CONTEXT = {
     "fsGroup": 1000,
     "readOnlyRootFilesystem": True,
     "allowPrivilegeEscalation": False,
-    "capabilities": {
-        "drop": ["ALL"]
-    }
+    "capabilities": {"drop": ["ALL"]},
 }
 
 # Prohibited environment variable patterns
-PROHIBITED_ENV_PATTERNS = [
-    "PASSWORD",
-    "SECRET",
-    "KEY",
-    "TOKEN",
-    "CREDENTIAL"
-]
+PROHIBITED_ENV_PATTERNS = ["PASSWORD", "SECRET", "KEY", "TOKEN", "CREDENTIAL"]
 
 # Required labels for compliance
 REQUIRED_LABELS = {
     "compliance": ["coppa", "ferpa", "gdpr"],
-    "data-classification": ["public", "internal", "confidential", "restricted"]
+    "data-classification": ["public", "internal", "confidential", "restricted"],
 }
 
 # Safe image registries
 ALLOWED_REGISTRIES = [
     "registry.toolboxai.solutions",
     "public.ecr.aws/toolboxai",
-    "ghcr.io/toolboxai-solutions"
+    "ghcr.io/toolboxai-solutions",
 ]
 
 
 class AdmissionReview:
     """Process Kubernetes admission reviews"""
 
-    def __init__(self, review_request: Dict[str, Any]):
+    def __init__(self, review_request: dict[str, Any]):
         self.request = review_request
         self.uid = review_request["uid"]
         self.object = review_request.get("object", {})
         self.namespace = review_request.get("namespace", "default")
         self.operation = review_request.get("operation", "CREATE")
 
-    def validate_pod(self) -> tuple[bool, List[str]]:
+    def validate_pod(self) -> tuple[bool, list[str]]:
         """Validate pod against security policies"""
         errors = []
 
@@ -103,13 +95,16 @@ class AdmissionReview:
 
         return len(errors) == 0, errors
 
-    def _validate_security_context(self, context: Dict, context_type: str) -> bool:
+    def _validate_security_context(self, context: dict, context_type: str) -> bool:
         """Validate security context settings"""
         if context_type == "pod":
             required_fields = ["runAsNonRoot", "fsGroup"]
         else:  # container
-            required_fields = ["runAsNonRoot", "readOnlyRootFilesystem",
-                             "allowPrivilegeEscalation"]
+            required_fields = [
+                "runAsNonRoot",
+                "readOnlyRootFilesystem",
+                "allowPrivilegeEscalation",
+            ]
 
         for field in required_fields:
             if field not in context:
@@ -129,7 +124,7 @@ class AdmissionReview:
 
         return True
 
-    def _has_exposed_secrets(self, env_vars: List[Dict]) -> bool:
+    def _has_exposed_secrets(self, env_vars: list[dict]) -> bool:
         """Check for exposed secrets in environment variables"""
         for env in env_vars:
             name = env.get("name", "")
@@ -167,16 +162,15 @@ class AdmissionReview:
         logger.warning(f"Untrusted image: {image}")
         return False
 
-    def _has_resource_limits(self, container: Dict) -> bool:
+    def _has_resource_limits(self, container: dict) -> bool:
         """Check if container has resource limits"""
         resources = container.get("resources", {})
         limits = resources.get("limits", {})
         requests = resources.get("requests", {})
 
-        return "cpu" in limits and "memory" in limits and \
-               "cpu" in requests and "memory" in requests
+        return "cpu" in limits and "memory" in limits and "cpu" in requests and "memory" in requests
 
-    def _validate_labels(self, labels: Dict) -> bool:
+    def _validate_labels(self, labels: dict) -> bool:
         """Validate required compliance labels"""
         for label_key, valid_values in REQUIRED_LABELS.items():
             if label_key not in labels:
@@ -189,11 +183,15 @@ class AdmissionReview:
 
         return True
 
-    def _validate_volumes(self, volumes: List[Dict]) -> bool:
+    def _validate_volumes(self, volumes: list[dict]) -> bool:
         """Validate volume types"""
         allowed_types = {
-            "configMap", "secret", "emptyDir", "persistentVolumeClaim",
-            "downwardAPI", "projected"
+            "configMap",
+            "secret",
+            "emptyDir",
+            "persistentVolumeClaim",
+            "downwardAPI",
+            "projected",
         }
 
         for volume in volumes:
@@ -209,95 +207,83 @@ class AdmissionReview:
 
         return True
 
-    def mutate_pod(self) -> List[Dict]:
+    def mutate_pod(self) -> list[dict]:
         """Generate mutations to make pod compliant"""
         patches = []
         spec = self.object.get("spec", {})
 
         # Add pod security context if missing
         if "securityContext" not in spec:
-            patches.append({
-                "op": "add",
-                "path": "/spec/securityContext",
-                "value": {
-                    "runAsNonRoot": True,
-                    "runAsUser": 1000,
-                    "fsGroup": 1000
+            patches.append(
+                {
+                    "op": "add",
+                    "path": "/spec/securityContext",
+                    "value": {"runAsNonRoot": True, "runAsUser": 1000, "fsGroup": 1000},
                 }
-            })
+            )
 
         # Add container security contexts
         containers = spec.get("containers", [])
         for idx, container in enumerate(containers):
             if "securityContext" not in container:
-                patches.append({
-                    "op": "add",
-                    "path": f"/spec/containers/{idx}/securityContext",
-                    "value": REQUIRED_SECURITY_CONTEXT.copy()
-                })
+                patches.append(
+                    {
+                        "op": "add",
+                        "path": f"/spec/containers/{idx}/securityContext",
+                        "value": REQUIRED_SECURITY_CONTEXT.copy(),
+                    }
+                )
 
             # Add resource limits if missing
             if "resources" not in container:
-                patches.append({
-                    "op": "add",
-                    "path": f"/spec/containers/{idx}/resources",
-                    "value": {
-                        "limits": {
-                            "cpu": "1000m",
-                            "memory": "1Gi"
+                patches.append(
+                    {
+                        "op": "add",
+                        "path": f"/spec/containers/{idx}/resources",
+                        "value": {
+                            "limits": {"cpu": "1000m", "memory": "1Gi"},
+                            "requests": {"cpu": "100m", "memory": "128Mi"},
                         },
-                        "requests": {
-                            "cpu": "100m",
-                            "memory": "128Mi"
-                        }
                     }
-                })
+                )
 
         # Add required labels
         metadata = self.object.get("metadata", {})
         if "labels" not in metadata:
-            patches.append({
-                "op": "add",
-                "path": "/metadata/labels",
-                "value": {}
-            })
+            patches.append({"op": "add", "path": "/metadata/labels", "value": {}})
 
         labels = metadata.get("labels", {})
         if "compliance" not in labels:
-            patches.append({
-                "op": "add",
-                "path": "/metadata/labels/compliance",
-                "value": "coppa"
-            })
+            patches.append({"op": "add", "path": "/metadata/labels/compliance", "value": "coppa"})
 
         if "data-classification" not in labels:
-            patches.append({
-                "op": "add",
-                "path": "/metadata/labels/data-classification",
-                "value": "internal"
-            })
+            patches.append(
+                {
+                    "op": "add",
+                    "path": "/metadata/labels/data-classification",
+                    "value": "internal",
+                }
+            )
 
         # Add security annotations
         if "annotations" not in metadata:
-            patches.append({
-                "op": "add",
-                "path": "/metadata/annotations",
-                "value": {}
-            })
+            patches.append({"op": "add", "path": "/metadata/annotations", "value": {}})
 
         annotations = metadata.get("annotations", {})
         security_annotations = {
             "security.toolboxai.solutions/scan-status": "pending",
-            "security.toolboxai.solutions/compliance": "enforced"
+            "security.toolboxai.solutions/compliance": "enforced",
         }
 
         for key, value in security_annotations.items():
             if key not in annotations:
-                patches.append({
-                    "op": "add",
-                    "path": f"/metadata/annotations/{key.replace('/', '~1')}",
-                    "value": value
-                })
+                patches.append(
+                    {
+                        "op": "add",
+                        "path": f"/metadata/annotations/{key.replace('/', '~1')}",
+                        "value": value,
+                    }
+                )
 
         return patches
 
@@ -316,16 +302,13 @@ def validate():
     response = {
         "apiVersion": "admission.k8s.io/v1",
         "kind": "AdmissionReview",
-        "response": {
-            "uid": review.uid,
-            "allowed": allowed
-        }
+        "response": {"uid": review.uid, "allowed": allowed},
     }
 
     if not allowed:
         response["response"]["status"] = {
             "code": 403,
-            "message": f"Pod validation failed: {'; '.join(errors)}"
+            "message": f"Pod validation failed: {'; '.join(errors)}",
         }
         logger.warning(f"Rejected pod in namespace {review.namespace}: {errors}")
     else:
@@ -348,10 +331,7 @@ def mutate():
     response = {
         "apiVersion": "admission.k8s.io/v1",
         "kind": "AdmissionReview",
-        "response": {
-            "uid": review.uid,
-            "allowed": True
-        }
+        "response": {"uid": review.uid, "allowed": True},
     }
 
     if patches:
@@ -374,8 +354,4 @@ def health():
 
 if __name__ == "__main__":
     # Run with TLS in production
-    app.invoke(
-        host="0.0.0.0",
-        port=443,
-        ssl_context=("/tls/cert.pem", "/tls/key.pem")
-    )
+    app.invoke(host="0.0.0.0", port=443, ssl_context=("/tls/cert.pem", "/tls/key.pem"))

@@ -567,7 +567,7 @@ class SupabaseService:
 
         try:
             # Simple query to test connection
-            result = self.client.table("agent_instances").select("count").execute()
+            self.client.table("agent_instances").select("count").execute()
 
             return {
                 "healthy": True,

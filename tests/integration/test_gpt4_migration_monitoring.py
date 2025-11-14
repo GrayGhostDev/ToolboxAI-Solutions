@@ -242,7 +242,9 @@ class TestPerformanceAnalyzer:
 
         # Add anomalous data point
         performance_analyzer.record_performance_data(
-            PerformanceMetric.LATENCY, 10.0, "gpt-4o"  # Very high latency
+            PerformanceMetric.LATENCY,
+            10.0,
+            "gpt-4o",  # Very high latency
         )
 
         anomalies = performance_analyzer.detect_anomalies("gpt-4o")
@@ -256,7 +258,9 @@ class TestPerformanceAnalyzer:
         # Add trending data
         for i in range(20):
             performance_analyzer.record_performance_data(
-                PerformanceMetric.LATENCY, 1.0 + i * 0.1, "gpt-4o"  # Increasing latency trend
+                PerformanceMetric.LATENCY,
+                1.0 + i * 0.1,
+                "gpt-4o",  # Increasing latency trend
             )
 
         trends = performance_analyzer.analyze_performance_trends("gpt-4o")
@@ -304,7 +308,10 @@ class TestAlertManager:
     async def test_trigger_alert(self, alert_manager):
         """Test alert triggering"""
         alert = await alert_manager.trigger_alert(
-            "error_rate_high", "Error rate is elevated", 0.08, {"model": "gpt-4"}  # 8% error rate
+            "error_rate_high",
+            "Error rate is elevated",
+            0.08,
+            {"model": "gpt-4"},  # 8% error rate
         )
 
         assert alert is not None
@@ -544,7 +551,7 @@ class TestPerformanceBenchmarks:
                     success=True,
                 )
 
-        result = benchmark(track_requests)
+        benchmark(track_requests)
         assert len(cost_tracker.cost_entries) == 1000
 
     def test_performance_data_recording(self, benchmark):
@@ -557,7 +564,7 @@ class TestPerformanceBenchmarks:
                     PerformanceMetric.LATENCY, 2.0 + i * 0.001, "gpt-4o"
                 )
 
-        result = benchmark(record_data)
+        benchmark(record_data)
         assert len(analyzer.data_points) == 1000
 
 

@@ -7,12 +7,12 @@ in the swarm, including request-response, broadcast, and streaming patterns.
 import asyncio
 import json
 import uuid
-from typing import Dict, List, Any, Optional, Union, Callable
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Callable, Optional
 
-from .event_types import EventType, EventPriority, EventCategory, EventMetadata
+from .event_types import EventMetadata, EventPriority, EventType
 
 
 class MessageStatus(Enum):
@@ -60,7 +60,7 @@ class MessageHeader:
     # Routing information
     source_agent: Optional[str] = None
     target_agent: Optional[str] = None
-    target_group: Optional[List[str]] = None
+    target_group: Optional[list[str]] = None
     topic: Optional[str] = None
 
     # Tracing
@@ -72,12 +72,12 @@ class MessageHeader:
     auth_token: Optional[str] = None
     encrypted: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert header to dictionary."""
         data = asdict(self)
-        data['timestamp'] = self.timestamp.isoformat()
-        data['priority'] = self.priority.value
-        data['pattern'] = self.pattern.value
+        data["timestamp"] = self.timestamp.isoformat()
+        data["priority"] = self.priority.value
+        data["pattern"] = self.pattern.value
         return data
 
 
@@ -86,14 +86,14 @@ class MessagePayload:
     """Payload container for agent messages."""
 
     event_type: EventType
-    data: Dict[str, Any]
+    data: dict[str, Any]
     metadata: Optional[EventMetadata] = None
-    attachments: List[Dict[str, Any]] = field(default_factory=list)
+    attachments: list[dict[str, Any]] = field(default_factory=list)
     encoding: str = "json"
     compressed: bool = False
     checksum: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert payload to dictionary."""
         return {
             "event_type": self.event_type.value,
@@ -102,7 +102,7 @@ class MessagePayload:
             "attachments": self.attachments,
             "encoding": self.encoding,
             "compressed": self.compressed,
-            "checksum": self.checksum
+            "checksum": self.checksum,
         }
 
     def validate_checksum(self) -> bool:
@@ -112,6 +112,7 @@ class MessagePayload:
 
         # Calculate checksum of data
         import hashlib
+
         data_str = json.dumps(self.data, sort_keys=True)
         calculated = hashlib.sha256(data_str.encode()).hexdigest()
         return calculated == self.checksum
@@ -144,7 +145,7 @@ class AgentMessage:
     error_handler: Optional[Callable] = field(default=None, compare=False)
     timeout_handler: Optional[Callable] = field(default=None, compare=False)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert message to dictionary format for serialization."""
         return {
             "header": self.header.to_dict(),
@@ -156,11 +157,11 @@ class AgentMessage:
             "created_at": self.created_at.isoformat(),
             "sent_at": self.sent_at.isoformat() if self.sent_at else None,
             "delivered_at": self.delivered_at.isoformat() if self.delivered_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AgentMessage":
+    def from_dict(cls, data: dict[str, Any]) -> "AgentMessage":
         """Create message from dictionary."""
         # Parse header
         header_data = data.get("header", {})
@@ -170,7 +171,7 @@ class AgentMessage:
             priority=EventPriority(header_data.get("priority", 3)),
             pattern=MessagePattern(header_data.get("pattern", "request_response")),
             source_agent=header_data.get("source_agent"),
-            target_agent=header_data.get("target_agent")
+            target_agent=header_data.get("target_agent"),
         )
 
         # Parse payload
@@ -178,7 +179,7 @@ class AgentMessage:
         payload = MessagePayload(
             event_type=EventType(payload_data.get("event_type")),
             data=payload_data.get("data", {}),
-            attachments=payload_data.get("attachments", [])
+            attachments=payload_data.get("attachments", []),
         )
 
         # Create message
@@ -188,7 +189,7 @@ class AgentMessage:
             status=MessageStatus(data.get("status", "created")),
             error=data.get("error"),
             retry_count=data.get("retry_count", 0),
-            max_retries=data.get("max_retries", 3)
+            max_retries=data.get("max_retries", 3),
         )
 
     def to_json(self) -> str:
@@ -253,7 +254,11 @@ class AgentMessage:
         """
         start_time = asyncio.get_event_loop().time()
 
-        while self.status not in [MessageStatus.COMPLETED, MessageStatus.FAILED, MessageStatus.CANCELLED]:
+        while self.status not in [
+            MessageStatus.COMPLETED,
+            MessageStatus.FAILED,
+            MessageStatus.CANCELLED,
+        ]:
             if asyncio.get_event_loop().time() - start_time > timeout:
                 if self.timeout_handler:
                     self.timeout_handler()
@@ -280,7 +285,7 @@ class MessageBuilder:
         self._event_type = event_type
         return self
 
-    def with_data(self, data: Dict[str, Any]) -> "MessageBuilder":
+    def with_data(self, data: dict[str, Any]) -> "MessageBuilder":
         """Set payload data."""
         self._payload_data = data
         return self
@@ -296,7 +301,7 @@ class MessageBuilder:
         self._header.pattern = MessagePattern.UNICAST
         return self
 
-    def to_agents(self, agent_ids: List[str]) -> "MessageBuilder":
+    def to_agents(self, agent_ids: list[str]) -> "MessageBuilder":
         """Set multiple target agents."""
         self._header.target_group = agent_ids
         self._header.pattern = MessagePattern.MULTICAST
@@ -330,14 +335,13 @@ class MessageBuilder:
         self._header.ttl = seconds
         return self
 
-    def with_attachment(self, name: str, data: Any, mime_type: str = "application/octet-stream") -> "MessageBuilder":
+    def with_attachment(
+        self, name: str, data: Any, mime_type: str = "application/octet-stream"
+    ) -> "MessageBuilder":
         """Add attachment."""
-        self._attachments.append({
-            "name": name,
-            "data": data,
-            "mime_type": mime_type,
-            "size": len(str(data))
-        })
+        self._attachments.append(
+            {"name": name, "data": data, "mime_type": mime_type, "size": len(str(data))}
+        )
         return self
 
     def with_metadata(self, metadata: EventMetadata) -> "MessageBuilder":
@@ -354,16 +358,13 @@ class MessageBuilder:
             event_type=self._event_type,
             data=self._payload_data,
             metadata=self._metadata,
-            attachments=self._attachments
+            attachments=self._attachments,
         )
 
-        return AgentMessage(
-            header=self._header,
-            payload=payload
-        )
+        return AgentMessage(header=self._header, payload=payload)
 
 
-def create_request(event_type: EventType, data: Dict[str, Any], **kwargs) -> AgentMessage:
+def create_request(event_type: EventType, data: dict[str, Any], **kwargs) -> AgentMessage:
     """Helper function to create a request message."""
     builder = MessageBuilder()
     builder.with_event(event_type).with_data(data)
@@ -383,23 +384,23 @@ def create_request(event_type: EventType, data: Dict[str, Any], **kwargs) -> Age
     return builder.build()
 
 
-def create_response(request: AgentMessage, data: Dict[str, Any], success: bool = True) -> AgentMessage:
+def create_response(
+    request: AgentMessage, data: dict[str, Any], success: bool = True
+) -> AgentMessage:
     """Helper function to create a response message."""
     event_type = EventType.AGENT_RESPONSE if success else EventType.AGENT_ERROR
 
-    return (MessageBuilder()
-            .with_event(event_type)
-            .with_data(data)
-            .reply_to(request)
-            .build())
+    return MessageBuilder().with_event(event_type).with_data(data).reply_to(request).build()
 
 
-def create_broadcast(event_type: EventType, data: Dict[str, Any], **kwargs) -> AgentMessage:
+def create_broadcast(event_type: EventType, data: dict[str, Any], **kwargs) -> AgentMessage:
     """Helper function to create a broadcast message."""
-    return (MessageBuilder()
-            .with_event(event_type)
-            .with_data(data)
-            .broadcast()
-            .with_priority(kwargs.get("priority", EventPriority.NORMAL))
-            .from_agent(kwargs.get("from_agent", "system"))
-            .build())
+    return (
+        MessageBuilder()
+        .with_event(event_type)
+        .with_data(data)
+        .broadcast()
+        .with_priority(kwargs.get("priority", EventPriority.NORMAL))
+        .from_agent(kwargs.get("from_agent", "system"))
+        .build()
+    )

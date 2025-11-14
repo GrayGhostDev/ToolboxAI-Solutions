@@ -182,9 +182,8 @@ class IntegrationTestRunner:
 
         # Check WebSocket
         try:
-
-            uri = f"{self.config['websocket']['base_url']}/ws"
-            async with async_mock_pusher_context() as pusher:
+            f"{self.config['websocket']['base_url']}/ws"
+            async with async_mock_pusher_context():
                 # Connect using Pusheruri, timeout=5) as ws:
                 await ws.close()
             services["websocket"] = True
@@ -319,7 +318,12 @@ class IntegrationTestRunner:
 
         except Exception as e:
             duration = time.time() - start_time
-            return {"suite": suite_name, "status": "error", "error": str(e), "duration": duration}
+            return {
+                "suite": suite_name,
+                "status": "error",
+                "error": str(e),
+                "duration": duration,
+            }
         finally:
             os.chdir(original_cwd)
 
@@ -346,7 +350,12 @@ class IntegrationTestRunner:
             results[suite_name] = suite_result
 
             # Print immediate results
-            status_emoji = {"passed": "✅", "failed": "❌", "error": "💥", "skipped": "⏭️"}
+            status_emoji = {
+                "passed": "✅",
+                "failed": "❌",
+                "error": "💥",
+                "skipped": "⏭️",
+            }
 
             emoji = status_emoji.get(suite_result["status"], "❓")
             duration = suite_result["duration"]
@@ -388,7 +397,12 @@ class IntegrationTestRunner:
         print(f"📊 Suite Results:")
 
         for suite_name, result in summary["suites"].items():
-            status_emoji = {"passed": "✅", "failed": "❌", "error": "💥", "skipped": "⏭️"}
+            status_emoji = {
+                "passed": "✅",
+                "failed": "❌",
+                "error": "💥",
+                "skipped": "⏭️",
+            }
             emoji = status_emoji.get(result["status"], "❓")
             duration = result["duration"]
             print(f"   {emoji} {suite_name:<20} {result['status']:<10} ({duration:.2f}s)")

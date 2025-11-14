@@ -94,7 +94,8 @@ async def verify_ip_whitelist(request: Request) -> bool:
             f"Rejected request from non-whitelisted IP: {sanitize_for_logging(client_ip)}"
         )
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f"IP {client_ip} not whitelisted"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"IP {client_ip} not whitelisted",
         )
 
     return True
@@ -128,7 +129,8 @@ async def check_rate_limit(request: Request) -> bool:
 
 
 async def verify_request_signature(
-    request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(security)
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> bool:
     """Verify HMAC signature for request integrity"""
     # Skip in development if not configured
@@ -147,7 +149,8 @@ async def verify_request_signature(
     if not secret:
         logger.error("Failed to get client secret for signature verification")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Configuration error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Configuration error",
         )
 
     # Calculate expected signature
@@ -256,7 +259,8 @@ async def oauth_callback(
         if state not in oauth2_states:
             logger.warning(f"Invalid OAuth2 state: {sanitize_for_logging(state)}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid state parameter"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid state parameter",
             )
 
         state_data = oauth2_states[state]
@@ -265,7 +269,8 @@ async def oauth_callback(
         if (datetime.now(timezone.utc) - state_data["created_at"]).total_seconds() > 300:
             del oauth2_states[state]
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="State parameter expired"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="State parameter expired",
             )
 
         # Get credentials
@@ -274,7 +279,8 @@ async def oauth_callback(
 
         if not client_secret:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Configuration error"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Configuration error",
             )
 
         # Exchange code for token
@@ -295,7 +301,8 @@ async def oauth_callback(
         if response.status_code != 200:
             logger.error(f"Token exchange failed: {response.text}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Failed to exchange code for token"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Failed to exchange code for token",
             )
 
         token_data = response.json()
@@ -308,7 +315,9 @@ async def oauth_callback(
         # Send Pusher notification for successful auth
         user_id = state_data.get("user_id", "unknown")
         pusher_service.notify_auth_success(
-            user_id=user_id, session_id=state, expires_in=token_data.get("expires_in", 3600)
+            user_id=user_id,
+            session_id=state,
+            expires_in=token_data.get("expires_in", 3600),
         )
 
         logger.info(f"OAuth2 callback successful for IP {req.client.host}")
@@ -320,7 +329,8 @@ async def oauth_callback(
     except Exception as e:
         logger.error(f"OAuth2 callback failed: {sanitize_for_logging(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="OAuth2 callback failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OAuth2 callback failed",
         )
 
 
@@ -349,7 +359,8 @@ async def refresh_token(
 
         if response.status_code != 200:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Failed to refresh token"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Failed to refresh token",
             )
 
         return OAuth2TokenResponse(**response.json())
@@ -357,7 +368,8 @@ async def refresh_token(
     except Exception as e:
         logger.error(f"Token refresh failed: {sanitize_for_logging(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Token refresh failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token refresh failed",
         )
 
 
@@ -392,7 +404,8 @@ async def revoke_token(
     except Exception as e:
         logger.error(f"Token revocation failed: {sanitize_for_logging(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Token revocation failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token revocation failed",
         )
 
 
@@ -469,13 +482,16 @@ async def start_conversation(
     except Exception as e:
         logger.error(f"Failed to start conversation: {sanitize_for_logging(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to start conversation"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to start conversation",
         )
 
 
 @router.post("/conversation/input", response_model=ConversationResponse)
 async def conversation_input(
-    request: ConversationInputRequest, req: Request, _security: bool = Depends(verify_security)
+    request: ConversationInputRequest,
+    req: Request,
+    _security: bool = Depends(verify_security),
 ) -> ConversationResponse:
     """Process user input in conversation"""
     if request.session_id not in conversation_sessions:
@@ -572,7 +588,9 @@ async def authenticate_pusher_channel(
 
         # Authenticate with Pusher
         auth_response = pusher_service.authenticate_channel(
-            channel_name=request.channel_name, socket_id=request.socket_id, user_data=user_data
+            channel_name=request.channel_name,
+            socket_id=request.socket_id,
+            user_data=user_data,
         )
 
         return PusherAuthResponse(
@@ -604,7 +622,7 @@ async def generate_content(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
     try:
-        session = conversation_sessions[request.session_id]
+        conversation_sessions[request.session_id]
 
         # Send generation started notification
         pusher_service.notify_generation_progress(
@@ -662,7 +680,8 @@ async def generate_content(
 
         logger.error(f"Content generation failed: {sanitize_for_logging(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Content generation failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Content generation failed",
         )
 
 

@@ -5,15 +5,14 @@ This endpoint provides robust JWT-based authentication for Pusher channels,
 supporting both private and presence channels with proper user validation.
 """
 
-import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 
-from apps.backend.api.auth.auth import AuthenticationError, JWTManager, get_current_user
+from apps.backend.api.auth.auth import JWTManager, get_current_user
 from apps.backend.core.config import settings
 from apps.backend.models.schemas import User
 from apps.backend.services.pusher import PusherUnavailable, authenticate_channel
@@ -50,7 +49,7 @@ class TriggerEventRequest(BaseModel):
 
     channel: str
     event: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
 
 
 async def _get_user_from_auth_header(request: Request) -> User | None:
@@ -70,7 +69,10 @@ async def _get_user_from_auth_header(request: Request) -> User | None:
         if token.startswith("dev-token-") and settings.DEBUG:
             logger.info("Using development token for Pusher auth")
             return User(
-                id="dev-user-001", username="dev_user", email="dev@toolboxai.com", role="teacher"
+                id="dev-user-001",
+                username="dev_user",
+                email="dev@toolboxai.com",
+                role="teacher",
             )
 
         # Validate JWT token
@@ -148,8 +150,8 @@ def _can_access_channel(user: User | None, channel_name: str) -> bool:
     return False
 
 
-@router.post("/auth", response_model=Dict[str, Any])
-async def pusher_auth(request: Request) -> Dict[str, Any]:
+@router.post("/auth", response_model=dict[str, Any])
+async def pusher_auth(request: Request) -> dict[str, Any]:
     """
     Authenticate Pusher channel subscription.
 
@@ -191,7 +193,8 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
 
         if not socket_id or not channel_name:
             raise HTTPException(
-                status_code=400, detail="Missing required fields: socket_id and channel_name"
+                status_code=400,
+                detail="Missing required fields: socket_id and channel_name",
             )
 
         logger.info(f"Pusher auth request for channel: {channel_name}")
@@ -219,7 +222,10 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
 
         # Authenticate the channel with Pusher
         auth_response = authenticate_channel(
-            socket_id=socket_id, channel_name=channel_name, user_id=user_id, user_info=user_info
+            socket_id=socket_id,
+            channel_name=channel_name,
+            user_id=user_id,
+            user_info=user_info,
         )
 
         logger.info(
@@ -240,7 +246,7 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
 @router.post("/trigger")
 async def trigger_pusher_event(
     request: TriggerEventRequest, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Trigger a Pusher event on a specified channel.
 
@@ -353,7 +359,12 @@ def _can_trigger_event(user: User, channel: str, event: str) -> bool:
             return True
 
     # Common events that all authenticated users can trigger
-    common_events = ["user-status-updated", "typing-indicator", "user-joined", "user-left"]
+    common_events = [
+        "user-status-updated",
+        "typing-indicator",
+        "user-joined",
+        "user-left",
+    ]
     if event in common_events:
         return True
 
@@ -399,7 +410,11 @@ async def pusher_webhook(request: Request):
             logger.info(f"Processing webhook event: {event_name} on {channel}")
             processed.append({"event": event_name, "channel": channel, "processed": True})
 
-        return {"status": "success", "events_processed": len(processed), "events": processed}
+        return {
+            "status": "success",
+            "events_processed": len(processed),
+            "events": processed,
+        }
 
     except HTTPException:
         raise
@@ -412,7 +427,7 @@ async def pusher_webhook(request: Request):
 @realtime_router.post("/trigger")
 async def realtime_trigger_event(
     request: TriggerEventRequest, current_user: User = Depends(get_current_user)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Trigger a realtime event via Pusher.
 
@@ -482,7 +497,9 @@ async def realtime_trigger_event(
 
 
 @realtime_router.get("/status")
-async def realtime_status(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def realtime_status(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get the status of the realtime system (Pusher).
 
@@ -501,7 +518,7 @@ async def realtime_status(current_user: User = Depends(get_current_user)) -> Dic
             }
 
         # Get Pusher service status for admin users
-        pusher_service = get_pusher_service()
+        _pusher_service = get_pusher_service()  # noqa: F841 - Reserved for status monitoring
 
         return {
             "status": "success",

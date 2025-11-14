@@ -11,24 +11,32 @@ Version: 1.0.0
 """
 
 import asyncio
-import logging
-from typing import Dict, Any, Optional, List, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime
 import json
-
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentCapability
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
-from sqlalchemy.pool import NullPool
-import redis.asyncio as redis
+import logging
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+
+import redis.asyncio as redis
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
+
+from core.agents.base_agent import (
+    AgentCapability,
+    AgentConfig,
+    AgentState,
+    BaseAgent,
+    TaskResult,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseOperation(Enum):
     """Types of database operations."""
+
     QUERY = "query"
     MIGRATION = "migration"
     BACKUP = "backup"
@@ -43,6 +51,7 @@ class DatabaseOperation(Enum):
 
 class DatabaseHealth(Enum):
     """Database health status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     CRITICAL = "critical"
@@ -52,6 +61,7 @@ class DatabaseHealth(Enum):
 @dataclass
 class DatabaseMetrics:
     """Database performance metrics."""
+
     query_count: int = 0
     avg_query_time: float = 0.0
     connection_pool_size: int = 0
@@ -67,6 +77,7 @@ class DatabaseMetrics:
 @dataclass
 class DatabaseAgentConfig(AgentConfig):
     """Configuration for database agents."""
+
     database_url: str = ""
     redis_url: str = ""
     max_connections: int = 20
@@ -99,8 +110,7 @@ class BaseDatabaseAgent(BaseAgent):
         """Initialize the base database agent."""
         if not config:
             config = DatabaseAgentConfig(
-                name="BaseDatabaseAgent",
-                capability=AgentCapability.ANALYSIS
+                name="BaseDatabaseAgent", capability=AgentCapability.ANALYSIS
             )
 
         super().__init__(config)
@@ -122,16 +132,14 @@ class BaseDatabaseAgent(BaseAgent):
                     max_overflow=10,
                     pool_timeout=self.db_config.connection_timeout,
                     pool_pre_ping=True,
-                    poolclass=NullPool if "sqlite" in self.db_config.database_url else None
+                    poolclass=NullPool if "sqlite" in self.db_config.database_url else None,
                 )
                 logger.info(f"{self.config.name}: Database engine initialized")
 
             # Initialize Redis client
             if self.db_config.redis_url:
                 self.redis_client = await redis.from_url(
-                    self.db_config.redis_url,
-                    encoding="utf-8",
-                    decode_responses=True
+                    self.db_config.redis_url, encoding="utf-8", decode_responses=True
                 )
                 await self.redis_client.ping()
                 logger.info(f"{self.config.name}: Redis connection established")
@@ -187,7 +195,7 @@ class BaseDatabaseAgent(BaseAgent):
             finally:
                 await session.close()
 
-    async def execute_query(self, query: str, params: Optional[Dict] = None) -> List[Dict]:
+    async def execute_query(self, query: str, params: Optional[dict] = None) -> list[dict]:
         """
         Execute a database query with monitoring.
 
@@ -209,9 +217,8 @@ class BaseDatabaseAgent(BaseAgent):
                 query_time = asyncio.get_event_loop().time() - start_time
                 self.metrics.query_count += 1
                 self.metrics.avg_query_time = (
-                    (self.metrics.avg_query_time * (self.metrics.query_count - 1) + query_time)
-                    / self.metrics.query_count
-                )
+                    self.metrics.avg_query_time * (self.metrics.query_count - 1) + query_time
+                ) / self.metrics.query_count
 
                 # Convert to dictionaries
                 return [dict(row) for row in rows]
@@ -242,11 +249,7 @@ class BaseDatabaseAgent(BaseAgent):
             return False
 
         try:
-            await self.redis_client.setex(
-                key,
-                ttl,
-                json.dumps(value, default=str)
-            )
+            await self.redis_client.setex(key, ttl, json.dumps(value, default=str))
             return True
         except Exception as e:
             logger.error(f"{self.config.name}: Cache set failed: {e}")
@@ -270,7 +273,7 @@ class BaseDatabaseAgent(BaseAgent):
             logger.error(f"{self.config.name}: Cache invalidation failed: {e}")
             return 0
 
-    async def publish_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+    async def publish_event(self, event_type: str, data: dict[str, Any]) -> bool:
         """
         Publish an event to Redis pub/sub.
 
@@ -289,12 +292,11 @@ class BaseDatabaseAgent(BaseAgent):
                 "type": event_type,
                 "agent": self.config.name,
                 "timestamp": datetime.utcnow().isoformat(),
-                "data": data
+                "data": data,
             }
 
             await self.redis_client.publish(
-                f"db:events:{event_type}",
-                json.dumps(event, default=str)
+                f"db:events:{event_type}", json.dumps(event, default=str)
             )
 
             return True
@@ -350,17 +352,20 @@ class BaseDatabaseAgent(BaseAgent):
                     self.metrics.active_connections = pool.checked_out()
 
                 # Publish metrics
-                await self.publish_event("metrics", {
-                    "health": self.health_status.value,
-                    "metrics": {
-                        "query_count": self.metrics.query_count,
-                        "avg_query_time": self.metrics.avg_query_time,
-                        "connection_pool_size": self.metrics.connection_pool_size,
-                        "active_connections": self.metrics.active_connections,
-                        "cache_hit_ratio": self.metrics.cache_hit_ratio,
-                        "error_rate": self.metrics.error_rate
-                    }
-                })
+                await self.publish_event(
+                    "metrics",
+                    {
+                        "health": self.health_status.value,
+                        "metrics": {
+                            "query_count": self.metrics.query_count,
+                            "avg_query_time": self.metrics.avg_query_time,
+                            "connection_pool_size": self.metrics.connection_pool_size,
+                            "active_connections": self.metrics.active_connections,
+                            "cache_hit_ratio": self.metrics.cache_hit_ratio,
+                            "error_rate": self.metrics.error_rate,
+                        },
+                    },
+                )
 
             except asyncio.CancelledError:
                 break
@@ -391,15 +396,15 @@ class BaseDatabaseAgent(BaseAgent):
                 "agent": self.config.name,
                 "task": task,
                 "operation": operation.value,
-                "status": "completed"
+                "status": "completed",
             },
             metadata={
                 "timestamp": datetime.utcnow().isoformat(),
-                "health": self.health_status.value
-            }
+                "health": self.health_status.value,
+            },
         )
 
-    async def analyze_performance(self) -> Dict[str, Any]:
+    async def analyze_performance(self) -> dict[str, Any]:
         """
         Analyze database performance.
 
@@ -412,25 +417,24 @@ class BaseDatabaseAgent(BaseAgent):
             "metrics": {
                 "query_performance": {
                     "total_queries": self.metrics.query_count,
-                    "avg_time_ms": self.metrics.avg_query_time * 1000
+                    "avg_time_ms": self.metrics.avg_query_time * 1000,
                 },
                 "connection_pool": {
                     "size": self.metrics.connection_pool_size,
                     "active": self.metrics.active_connections,
                     "utilization": (
                         self.metrics.active_connections / self.metrics.connection_pool_size * 100
-                        if self.metrics.connection_pool_size > 0 else 0
-                    )
+                        if self.metrics.connection_pool_size > 0
+                        else 0
+                    ),
                 },
-                "cache": {
-                    "hit_ratio": self.metrics.cache_hit_ratio
-                },
+                "cache": {"hit_ratio": self.metrics.cache_hit_ratio},
                 "reliability": {
                     "error_rate": self.metrics.error_rate,
-                    "uptime": "99.9%"  # Placeholder
-                }
+                    "uptime": "99.9%",  # Placeholder
+                },
             },
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Add recommendations based on metrics

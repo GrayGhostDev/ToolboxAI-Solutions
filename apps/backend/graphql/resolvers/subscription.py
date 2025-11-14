@@ -41,7 +41,7 @@ async def generate_content_updates(
     if channel_key not in event_channels:
         event_channels[channel_key] = asyncio.Queue()
 
-    queue = event_channels[channel_key]
+    event_channels[channel_key]
 
     try:
         # Send initial status
@@ -152,7 +152,7 @@ async def generate_lesson_progress(
     if channel_key not in event_channels:
         event_channels[channel_key] = asyncio.Queue()
 
-    queue = event_channels[channel_key]
+    event_channels[channel_key]
 
     try:
         # Simulate progress updates

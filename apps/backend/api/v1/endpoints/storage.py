@@ -20,7 +20,6 @@ Version: 1.0.0
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import (
@@ -77,7 +76,7 @@ class FileUploadRequest(BaseModel):
     title: str | None = None
     description: str | None = None
     category: str = "media_resource"
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     virus_scan: bool = True
     generate_thumbnails: bool = True
     optimize_images: bool = True
@@ -114,7 +113,7 @@ class FileUploadResponse(BaseModel):
     cdn_url: str | None = None
     thumbnail_url: str | None = None
     progress_percentage: float = 0.0
-    warnings: List[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
 
 class FileDetailsResponse(BaseModel):
@@ -129,7 +128,7 @@ class FileDetailsResponse(BaseModel):
     category: str
     title: str | None = None
     description: str | None = None
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     cdn_url: str | None = None
     thumbnail_url: str | None = None
     created_at: datetime
@@ -147,7 +146,7 @@ class FileDetailsResponse(BaseModel):
 class FileListResponse(BaseModel):
     """Response model for file listing"""
 
-    files: List[FileDetailsResponse]
+    files: list[FileDetailsResponse]
     total_count: int
     total_size: int
     quota_info: dict
@@ -162,7 +161,7 @@ class ShareLinkRequest(BaseModel):
     can_download: bool = True
     can_view_only: bool = False
     max_downloads: int | None = None
-    shared_with_users: List[UUID] = Field(default_factory=list)
+    shared_with_users: list[UUID] = Field(default_factory=list)
     shared_with_class: UUID | None = None
 
     @validator("share_type")
@@ -419,7 +418,7 @@ async def list_files(
     limit: int = Query(100, ge=1, le=1000, description="Number of files to return"),
     offset: int = Query(0, ge=0, description="Number of files to skip"),
     sort_by: str = Query("created_at", description="Sort field"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
     include_metadata: bool = Query(False, description="Include detailed metadata"),
     storage_service: StorageService = Depends(get_storage_service),
     user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
@@ -564,7 +563,7 @@ async def get_file_details(
 async def download_file(
     file_id: UUID,
     request: Request,
-    download_type: str = Query("direct", regex="^(direct|signed_url|stream)$"),
+    download_type: str = Query("direct", pattern="^(direct|signed_url|stream)$"),
     expires_in: int = Query(3600, ge=60, le=86400, description="URL expiration in seconds"),
     storage_service: StorageService = Depends(get_storage_service),
     user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
@@ -712,7 +711,7 @@ async def access_shared_file(
     share_token: str,
     request: Request,
     password: str | None = Query(None, description="Password for protected shares"),
-    action: str = Query("download", regex="^(download|view|info)$"),
+    action: str = Query("download", pattern="^(download|view|info)$"),
 ):
     """
     Access a shared file via share token.

@@ -91,7 +91,11 @@ def virus_scan_file(
             send_security_alert.delay(
                 organization_id,
                 "virus_detected",
-                {"file_id": file_id, "threats": scan_result["threats_found"], "quarantined": True},
+                {
+                    "file_id": file_id,
+                    "threats": scan_result["threats_found"],
+                    "quarantined": True,
+                },
             )
 
         else:
@@ -139,7 +143,6 @@ def bulk_virus_scan(
         logger.info(f"Starting bulk virus scan: {len(file_ids)} files, org_id={organization_id}")
 
         scan_results = []
-        threats_found = 0
 
         # Process files in batches to avoid overwhelming the scanner
         batch_size = 10 if scan_priority == "high" else 5
@@ -343,7 +346,11 @@ def process_bulk_upload(
 
     except Exception as exc:
         logger.error(f"Bulk upload processing failed: org_id={organization_id}, error={exc}")
-        return {"organization_id": organization_id, "status": "failed", "error_message": str(exc)}
+        return {
+            "organization_id": organization_id,
+            "status": "failed",
+            "error_message": str(exc),
+        }
 
 
 # === STORAGE USAGE CALCULATION ===
@@ -452,7 +459,11 @@ def calculate_storage_usage(
 
 @celery_app.task(bind=True)
 def cleanup_expired_files(
-    self: Task, organization_id: str, cleanup_type: str, older_than_days: int, dry_run: bool = False
+    self: Task,
+    organization_id: str,
+    cleanup_type: str,
+    older_than_days: int,
+    dry_run: bool = False,
 ) -> dict[str, Any]:
     """
     Clean up expired files and storage artifacts.

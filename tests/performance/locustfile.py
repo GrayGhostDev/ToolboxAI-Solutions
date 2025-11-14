@@ -19,7 +19,8 @@ class PusherMigrationLoadTest(HttpUser):
 
         # Authenticate
         response = self.client.post(
-            "/api/v1/auth/login", json={"username": username, "password": "test_password"}
+            "/api/v1/auth/login",
+            json={"username": username, "password": "test_password"},
         )
 
         if response.status_code == 200:
@@ -73,7 +74,7 @@ class PusherMigrationLoadTest(HttpUser):
         )
 
         if response.status_code == 200:
-            content_id = response.json().get("content_id")
+            response.json().get("content_id")
             # Would normally subscribe to pusher channel for updates
             # channel: f"content-generation-{content_id}"
 
@@ -103,7 +104,7 @@ class PusherMigrationLoadTest(HttpUser):
         ]
 
         endpoint = random.choice(endpoints)
-        response = self.client.get(endpoint)
+        self.client.get(endpoint)
 
         # These endpoints should work even without proper auth
         # They might return 401 but should not fail completely
@@ -117,7 +118,7 @@ class RobloxIntegrationLoadTest(HttpUser):
     @task
     def test_roblox_environment_sync(self):
         """Test Roblox environment synchronization via Pusher"""
-        response = self.client.post(
+        self.client.post(
             "/api/v1/roblox-integration/sync",
             json={
                 "environment_id": "math_world_123",
@@ -134,7 +135,7 @@ class RobloxIntegrationLoadTest(HttpUser):
     def test_plugin_communication(self):
         """Test Roblox plugin communication via Pusher"""
         plugin_id = f"plugin_{random.randint(1000, 9999)}"
-        response = self.client.post(
+        self.client.post(
             f"/api/v1/roblox-integration/plugin/{plugin_id}/message",
             json={
                 "event": "script_update",
@@ -164,13 +165,13 @@ class AgentSystemLoadTest(HttpUser):
         )
 
         if response.status_code == 200:
-            task_id = response.json().get("task_id")
+            response.json().get("task_id")
             # Would subscribe to agent-status-{task_id} channel
 
     @task
     def test_quiz_generation(self):
         """Test quiz generation with real-time progress updates"""
-        response = self.client.post(
+        self.client.post(
             "/api/v1/quizzes/generate",
             json={"topic": "Basic Mathematics", "questions": 5, "difficulty": "easy"},
         )
@@ -192,7 +193,7 @@ class ComprehensiveSystemTest(HttpUser):
     @task(8)
     def test_pusher_webhook(self):
         """Test Pusher webhook processing"""
-        response = self.client.post(
+        self.client.post(
             "/pusher/webhook",
             json={
                 "time_ms": int(time.time() * 1000),
@@ -203,10 +204,10 @@ class ComprehensiveSystemTest(HttpUser):
     @task(3)
     def test_analytics_realtime(self):
         """Test real-time analytics updates"""
-        response = self.client.get("/api/v1/analytics/realtime")
+        self.client.get("/api/v1/analytics/realtime")
         # Should connect to analytics-realtime Pusher channel
 
     @task(1)
     def test_system_monitoring(self):
         """Test system monitoring endpoints"""
-        response = self.client.get("/api/v1/monitoring/metrics")
+        self.client.get("/api/v1/monitoring/metrics")

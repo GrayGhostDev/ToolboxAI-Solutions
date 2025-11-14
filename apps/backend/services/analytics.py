@@ -11,17 +11,17 @@ from enum import Enum
 from typing import Any
 
 import pandas as pd
-from apps.backend.analytics_advanced import (
-    AdvancedAnalytics,
-    generate_analytics_report,
-)
-from apps.backend.cache import cache_result
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.backend.analytics_advanced import (
+    AdvancedAnalytics,
+    generate_analytics_report,
+)
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.cache import cache_result
 from database.connection import get_db
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
@@ -197,7 +197,9 @@ async def get_prediction(
 
     try:
         result = await analytics.get_predictive_analytics(
-            user_id=user_id, course_id=request.course_id, metric_type=request.metric_type.value
+            user_id=user_id,
+            course_id=request.course_id,
+            metric_type=request.metric_type.value,
         )
 
         return {
@@ -228,7 +230,10 @@ async def get_ml_insights(
     - user: User-specific insights
     """
     # Check permissions
-    if request.scope == InsightScope.PLATFORM and current_user["role"] not in ["admin", "teacher"]:
+    if request.scope == InsightScope.PLATFORM and current_user["role"] not in [
+        "admin",
+        "teacher",
+    ]:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
     if request.scope == InsightScope.USER and request.entity_id != current_user["id"]:
@@ -373,7 +378,7 @@ async def get_report(
 
 @router.get("/anomalies")
 async def detect_anomalies(
-    scope: str = Query(default="activity", regex="^(activity|performance|engagement)$"),
+    scope: str = Query(default="activity", pattern="^(activity|performance|engagement)$"),
     days: int = Query(default=7, ge=1, le=30),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
@@ -585,9 +590,9 @@ async def get_subject_mastery(
 @router.get("/trends/{metric}")
 @cache_result(expire=600)  # Cache for 10 minutes
 async def get_metric_trends(
-    metric: str = Path(..., regex="^(users|content|engagement|performance)$"),
+    metric: str = Path(..., pattern="^(users|content|engagement|performance)$"),
     days: int = Query(default=30, ge=7, le=365),
-    granularity: str = Query(default="daily", regex="^(hourly|daily|weekly|monthly)$"),
+    granularity: str = Query(default="daily", pattern="^(hourly|daily|weekly|monthly)$"),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):

@@ -8,23 +8,22 @@ This module provides agents for frontend/dashboard integration including:
 - State management coordination
 """
 
-from .ui_sync_agent import (
-    UISyncAgent,
-    UIComponent,
-    ComponentType,
-    UIUpdateStrategy,
-    UIStateSnapshot,
-    UIUpdateBatch
-)
-
 from .realtime_update_agent import (
-    RealtimeUpdateAgent,
     Channel,
     ChannelType,
-    ConnectionState,
-    RealtimeMessage,
     ConnectionMetrics,
-    MessageQueue
+    ConnectionState,
+    MessageQueue,
+    RealtimeMessage,
+    RealtimeUpdateAgent,
+)
+from .ui_sync_agent import (
+    ComponentType,
+    UIComponent,
+    UIStateSnapshot,
+    UISyncAgent,
+    UIUpdateBatch,
+    UIUpdateStrategy,
 )
 
 # Track available exports dynamically
@@ -36,7 +35,6 @@ _available_exports = [
     "UIUpdateStrategy",
     "UIStateSnapshot",
     "UIUpdateBatch",
-
     # Realtime Updates
     "RealtimeUpdateAgent",
     "Channel",
@@ -44,18 +42,20 @@ _available_exports = [
     "ConnectionState",
     "RealtimeMessage",
     "ConnectionMetrics",
-    "MessageQueue"
+    "MessageQueue",
 ]
 
 # Import other agents when available
 try:
     from .component_generator_agent import ComponentGeneratorAgent
+
     _available_exports.append("ComponentGeneratorAgent")
 except ImportError:
     pass
 
 try:
     from .state_management_agent import StateManagementAgent
+
     _available_exports.append("StateManagementAgent")
 except ImportError:
     pass

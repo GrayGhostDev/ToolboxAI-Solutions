@@ -6,13 +6,12 @@ This module provides compatibility adapters to resolve Pydantic v2
 conflicts with LangChain 0.3.x components.
 """
 
-import sys
-from typing import Any, Dict, Type
 import warnings
 
 # Suppress deprecation warnings during compatibility phase
 warnings.filterwarnings("ignore", message=".*__init_subclass__.*")
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="langchain.*")
+
 
 def patch_llmchain_init_subclass():
     """
@@ -24,15 +23,21 @@ def patch_llmchain_init_subclass():
         from langchain.chains.llm import LLMChain
 
         # Store original method if it exists
-        original_init_subclass = getattr(LLMChain, '__init_subclass__', None)
+        original_init_subclass = getattr(LLMChain, "__init_subclass__", None)
 
         @classmethod
         def patched_init_subclass(cls, **kwargs):
             """Patched __init_subclass__ that filters Pydantic v2 kwargs"""
             # Remove Pydantic v2 specific kwargs that cause issues
             filtered_kwargs = {
-                k: v for k, v in kwargs.items()
-                if k not in ['__pydantic_extra__', '__pydantic_fields_set__', '__pydantic_private__']
+                k: v
+                for k, v in kwargs.items()
+                if k
+                not in [
+                    "__pydantic_extra__",
+                    "__pydantic_fields_set__",
+                    "__pydantic_private__",
+                ]
             }
 
             # Call original if it exists, otherwise call super
@@ -62,6 +67,7 @@ def patch_llmchain_init_subclass():
         print(f"Warning: Failed to patch LLMChain: {e}")
         return False
 
+
 def patch_pydantic_metaclass():
     """
     Patch Pydantic metaclass issues with LangChain inheritance.
@@ -77,15 +83,13 @@ def patch_pydantic_metaclass():
 
             # Check if this is a LangChain class
             is_langchain_class = any(
-                'langchain' in getattr(base, '__module__', '')
-                for base in bases
+                "langchain" in getattr(base, "__module__", "") for base in bases
             )
 
             if is_langchain_class:
                 # Filter out problematic kwargs for LangChain classes
                 safe_kwargs = {
-                    k: v for k, v in kwargs.items()
-                    if k not in ['output_key', '__config__']
+                    k: v for k, v in kwargs.items() if k not in ["output_key", "__config__"]
                 }
                 kwargs = safe_kwargs
 
@@ -103,6 +107,7 @@ def patch_pydantic_metaclass():
     except Exception as e:
         print(f"Warning: Failed to patch Pydantic metaclass: {e}")
         return False
+
 
 def apply_compatibility_patches():
     """
@@ -135,6 +140,7 @@ def apply_compatibility_patches():
         print("⚠️  Some patches failed - functionality may be limited")
 
     return success
+
 
 # Auto-apply patches when module is imported
 if __name__ != "__main__":

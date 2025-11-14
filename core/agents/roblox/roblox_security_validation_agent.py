@@ -5,64 +5,92 @@ This agent performs comprehensive security validation of Roblox scripts,
 detecting vulnerabilities, malicious patterns, and policy violations.
 """
 
-import re
 import hashlib
-import json
 import logging
-from typing import Dict, List, Any, Optional, Tuple, Set
+import re
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 # LangChain imports with compatibility handling
 try:
-    from langchain_core.messages import SystemMessage, HumanMessage
+    from langchain_core.messages import HumanMessage, SystemMessage
     from langchain_openai import ChatOpenAI
+
     LANGCHAIN_CORE_AVAILABLE = True
 except ImportError:
     LANGCHAIN_CORE_AVAILABLE = False
+
     # Create mock classes
     class SystemMessage:
-        def __init__(self, content): self.content = content
+        def __init__(self, content):
+            self.content = content
+
     class HumanMessage:
-        def __init__(self, content): self.content = content
+        def __init__(self, content):
+            self.content = content
+
     class Tool:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
     class StructuredTool:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
     class ChatOpenAI:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
 
 # Use LangChain 0.3.26+ LCEL compatibility layer
 try:
     from core.langchain_lcel_compat import (
-        LLMChain, AgentExecutor, create_lcel_chain, create_chat_chain, 
-        get_compatible_llm, LANGCHAIN_CORE_AVAILABLE
+        LANGCHAIN_CORE_AVAILABLE,
+        AgentExecutor,
+        LLMChain,
+        create_chat_chain,
+        create_lcel_chain,
+        get_compatible_llm,
     )
+
     LANGCHAIN_AGENTS_AVAILABLE = True
     logger.info("LangChain LCEL compatibility layer imported successfully")
 except ImportError as e:
     logger.error(f"LCEL compatibility layer import failed: {e}")
     LANGCHAIN_AGENTS_AVAILABLE = False
-    
+
     # Fallback mock classes
     class LLMChain:
-        def __init__(self, **kwargs): pass
-        def run(self, *args, **kwargs): return "Mock security validation result"
-        async def arun(self, *args, **kwargs): return "Mock security validation result"
-    
-    class AgentExecutor:
-        def __init__(self, **kwargs): pass
-        def run(self, *args, **kwargs): return "Mock agent result"
-        async def arun(self, *args, **kwargs): return "Mock agent result"
+        def __init__(self, **kwargs):
+            pass
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+        def run(self, *args, **kwargs):
+            return "Mock security validation result"
+
+        async def arun(self, *args, **kwargs):
+            return "Mock security validation result"
+
+    class AgentExecutor:
+        def __init__(self, **kwargs):
+            pass
+
+        def run(self, *args, **kwargs):
+            return "Mock agent result"
+
+        async def arun(self, *args, **kwargs):
+            return "Mock agent result"
+
+
+from core.agents.base_agent import AgentConfig, AgentState, BaseAgent, TaskResult
 
 
 class ThreatLevel(Enum):
     """Security threat levels"""
+
     CRITICAL = "critical"  # Immediate exploitation risk
     HIGH = "high"  # Significant security concern
     MEDIUM = "medium"  # Potential security issue
@@ -72,6 +100,7 @@ class ThreatLevel(Enum):
 
 class VulnerabilityType(Enum):
     """Types of security vulnerabilities"""
+
     CODE_INJECTION = "code_injection"
     DATA_EXPOSURE = "data_exposure"
     AUTH_BYPASS = "authentication_bypass"
@@ -87,6 +116,7 @@ class VulnerabilityType(Enum):
 @dataclass
 class SecurityVulnerability:
     """Represents a security vulnerability"""
+
     threat_level: ThreatLevel
     vulnerability_type: VulnerabilityType
     location: str  # File path or line number
@@ -102,15 +132,16 @@ class SecurityVulnerability:
 @dataclass
 class SecurityReport:
     """Comprehensive security validation report"""
+
     scan_id: str
     timestamp: datetime
-    vulnerabilities: List[SecurityVulnerability]
+    vulnerabilities: list[SecurityVulnerability]
     risk_score: float  # 0-10 scale
-    compliance_status: Dict[str, bool]
-    recommendations: List[str]
-    blocked_patterns: List[str]
-    safe_patterns: List[str]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    compliance_status: dict[str, bool]
+    recommendations: list[str]
+    blocked_patterns: list[str]
+    safe_patterns: list[str]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class RobloxSecurityValidationAgent(BaseAgent):
@@ -120,7 +151,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
         self,
         config: Optional[AgentConfig] = None,
         llm: Optional[Any] = None,
-        strict_mode: bool = True
+        strict_mode: bool = True,
     ):
         # Create default config if not provided
         if not config:
@@ -132,24 +163,21 @@ class RobloxSecurityValidationAgent(BaseAgent):
                 You identify vulnerabilities, malicious patterns, and policy violations in Luau scripts.
                 Provide clear security assessments with risk scores and remediation guidance.""",
                 verbose=True,
-                memory_enabled=True
+                memory_enabled=True,
             )
         super().__init__(config)
         # Override llm if provided
         if llm is not None:
             self.llm = llm
-        elif not hasattr(self, 'llm') or not self.llm:
+        elif not hasattr(self, "llm") or not self.llm:
             # Use the new LCEL compatibility layer
-            self.llm = get_compatible_llm(
-                model_name="gpt-4",
-                temperature=0
-            )
+            self.llm = get_compatible_llm(model_name="gpt-4", temperature=0)
         self.strict_mode = strict_mode
         self.vulnerability_database = self._load_vulnerability_database()
         self.blocked_patterns = self._load_blocked_patterns()
         self.compliance_rules = self._load_compliance_rules()
 
-    def _load_vulnerability_database(self) -> Dict[str, Any]:
+    def _load_vulnerability_database(self) -> dict[str, Any]:
         """Load database of known vulnerabilities and patterns"""
         return {
             "dangerous_functions": {
@@ -157,38 +185,38 @@ class RobloxSecurityValidationAgent(BaseAgent):
                     "threat_level": ThreatLevel.CRITICAL,
                     "type": VulnerabilityType.CODE_INJECTION,
                     "description": "Allows arbitrary code execution",
-                    "cvss_score": 9.8
+                    "cvss_score": 9.8,
                 },
                 "getfenv": {
                     "threat_level": ThreatLevel.HIGH,
                     "type": VulnerabilityType.DATA_EXPOSURE,
                     "description": "Can expose environment variables",
-                    "cvss_score": 7.5
+                    "cvss_score": 7.5,
                 },
                 "setfenv": {
                     "threat_level": ThreatLevel.HIGH,
                     "type": VulnerabilityType.CODE_INJECTION,
                     "description": "Can modify function environment",
-                    "cvss_score": 7.5
+                    "cvss_score": 7.5,
                 },
                 "rawset": {
                     "threat_level": ThreatLevel.MEDIUM,
                     "type": VulnerabilityType.DATA_EXPOSURE,
                     "description": "Bypasses metatables",
-                    "cvss_score": 5.3
+                    "cvss_score": 5.3,
                 },
                 "rawget": {
                     "threat_level": ThreatLevel.MEDIUM,
                     "type": VulnerabilityType.DATA_EXPOSURE,
                     "description": "Bypasses metatables",
-                    "cvss_score": 5.3
+                    "cvss_score": 5.3,
                 },
                 "debug.": {
                     "threat_level": ThreatLevel.HIGH,
                     "type": VulnerabilityType.DATA_EXPOSURE,
                     "description": "Debug library access",
-                    "cvss_score": 7.0
-                }
+                    "cvss_score": 7.0,
+                },
             },
             "suspicious_patterns": {
                 r"_G\[": "Global table manipulation",
@@ -200,7 +228,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
                 r"game\.Players\..*\.AccountAge": "Account age checking",
                 r"string\.char\(": "Obfuscated strings",
                 r"\\x[0-9a-fA-F]{2}": "Hex encoded strings",
-                r"require\([\d]+\)": "Module by ID (potential backdoor)"
+                r"require\([\d]+\)": "Module by ID (potential backdoor)",
             },
             "authentication_patterns": {
                 r"[\"']password[\"']": "Hardcoded password string",
@@ -211,17 +239,17 @@ class RobloxSecurityValidationAgent(BaseAgent):
                 r"\btoken\s*=\s*[\"']": "Hardcoded token variable",
                 r"[\"']secret[\"']": "Hardcoded secret string",
                 r"\bsecret\s*=\s*[\"']": "Hardcoded secret variable",
-                r"Bearer\s+[\w-]+": "Bearer token exposure"
+                r"Bearer\s+[\w-]+": "Bearer token exposure",
             },
             "data_exposure_patterns": {
                 r"print\(.*UserId": "User ID logging",
                 r"warn\(.*password": "Password logging",
                 r"tostring\(.*private": "Private data conversion",
-                r"JSONEncode.*sensitive": "Sensitive data serialization"
-            }
+                r"JSONEncode.*sensitive": "Sensitive data serialization",
+            },
         }
 
-    def _load_blocked_patterns(self) -> Set[str]:
+    def _load_blocked_patterns(self) -> set[str]:
         """Load patterns that should be completely blocked"""
         return {
             "loadstring",
@@ -240,150 +268,181 @@ class RobloxSecurityValidationAgent(BaseAgent):
             "getnamecallmethod",
             "newcclosure",
             "islclosure",
-            "checkcaller"
+            "checkcaller",
         }
 
-    def _load_compliance_rules(self) -> Dict[str, Any]:
+    def _load_compliance_rules(self) -> dict[str, Any]:
         """Load Roblox compliance and policy rules"""
         return {
             "content_moderation": {
                 "no_profanity": True,
                 "no_personal_info": True,
                 "no_external_links": True,
-                "age_appropriate": True
+                "age_appropriate": True,
             },
             "data_protection": {
                 "no_pii_storage": True,
                 "encrypted_transmission": True,
                 "secure_storage": True,
-                "data_minimization": True
+                "data_minimization": True,
             },
             "monetization": {
                 "transparent_purchases": True,
                 "no_scam_patterns": True,
-                "proper_disclaimers": True
+                "proper_disclaimers": True,
             },
             "performance": {
                 "rate_limiting": True,
                 "memory_management": True,
-                "network_optimization": True
-            }
+                "network_optimization": True,
+            },
         }
 
-    def _scan_for_dangerous_functions(self, code: str) -> List[SecurityVulnerability]:
+    def _scan_for_dangerous_functions(self, code: str) -> list[SecurityVulnerability]:
         """Scan code for dangerous function usage"""
         vulnerabilities = []
-        lines = code.split('\n')
+        lines = code.split("\n")
 
         for func_name, details in self.vulnerability_database["dangerous_functions"].items():
-            pattern = re.compile(r'\b' + re.escape(func_name) + r'\b', re.IGNORECASE)
+            pattern = re.compile(r"\b" + re.escape(func_name) + r"\b", re.IGNORECASE)
 
             for i, line in enumerate(lines, 1):
                 if pattern.search(line):
-                    vulnerabilities.append(SecurityVulnerability(
-                        threat_level=details["threat_level"],
-                        vulnerability_type=details["type"],
-                        location=f"Line {i}",
-                        description=f"Use of dangerous function '{func_name}': {details['description']}",
-                        impact=f"CVSS Score: {details.get('cvss_score', 'N/A')}",
-                        remediation=f"Remove or replace '{func_name}' with a safe alternative",
-                        cvss_score=details.get("cvss_score"),
-                        exploitable=True
-                    ))
+                    vulnerabilities.append(
+                        SecurityVulnerability(
+                            threat_level=details["threat_level"],
+                            vulnerability_type=details["type"],
+                            location=f"Line {i}",
+                            description=f"Use of dangerous function '{func_name}': {details['description']}",
+                            impact=f"CVSS Score: {details.get('cvss_score', 'N/A')}",
+                            remediation=f"Remove or replace '{func_name}' with a safe alternative",
+                            cvss_score=details.get("cvss_score"),
+                            exploitable=True,
+                        )
+                    )
 
         return vulnerabilities
 
-    def _scan_for_suspicious_patterns(self, code: str) -> List[SecurityVulnerability]:
+    def _scan_for_suspicious_patterns(self, code: str) -> list[SecurityVulnerability]:
         """Scan for suspicious code patterns"""
         vulnerabilities = []
 
         for pattern, description in self.vulnerability_database["suspicious_patterns"].items():
             matches = re.finditer(pattern, code, re.MULTILINE | re.IGNORECASE)
             for match in matches:
-                line_num = code[:match.start()].count('\n') + 1
-                vulnerabilities.append(SecurityVulnerability(
-                    threat_level=ThreatLevel.MEDIUM,
-                    vulnerability_type=VulnerabilityType.POLICY_VIOLATION,
-                    location=f"Line {line_num}",
-                    description=f"Suspicious pattern detected: {description}",
-                    impact="Potential security or policy violation",
-                    remediation="Review and validate this code pattern",
-                    exploitable=False,
-                    false_positive_likelihood=0.3
-                ))
+                line_num = code[: match.start()].count("\n") + 1
+                vulnerabilities.append(
+                    SecurityVulnerability(
+                        threat_level=ThreatLevel.MEDIUM,
+                        vulnerability_type=VulnerabilityType.POLICY_VIOLATION,
+                        location=f"Line {line_num}",
+                        description=f"Suspicious pattern detected: {description}",
+                        impact="Potential security or policy violation",
+                        remediation="Review and validate this code pattern",
+                        exploitable=False,
+                        false_positive_likelihood=0.3,
+                    )
+                )
 
         return vulnerabilities
 
-    def _scan_for_authentication_issues(self, code: str) -> List[SecurityVulnerability]:
+    def _scan_for_authentication_issues(self, code: str) -> list[SecurityVulnerability]:
         """Scan for authentication and credential issues"""
         vulnerabilities = []
 
         for pattern, description in self.vulnerability_database["authentication_patterns"].items():
             matches = re.finditer(pattern, code, re.IGNORECASE)
             for match in matches:
-                line_num = code[:match.start()].count('\n') + 1
-                vulnerabilities.append(SecurityVulnerability(
-                    threat_level=ThreatLevel.HIGH,
-                    vulnerability_type=VulnerabilityType.DATA_EXPOSURE,
-                    location=f"Line {line_num}",
-                    description=description,
-                    impact="Credentials could be exposed in code",
-                    remediation="Use secure configuration management instead of hardcoding",
-                    exploitable=True
-                ))
+                line_num = code[: match.start()].count("\n") + 1
+                vulnerabilities.append(
+                    SecurityVulnerability(
+                        threat_level=ThreatLevel.HIGH,
+                        vulnerability_type=VulnerabilityType.DATA_EXPOSURE,
+                        location=f"Line {line_num}",
+                        description=description,
+                        impact="Credentials could be exposed in code",
+                        remediation="Use secure configuration management instead of hardcoding",
+                        exploitable=True,
+                    )
+                )
 
         return vulnerabilities
 
-    def _scan_for_input_validation(self, code: str) -> List[SecurityVulnerability]:
+    def _scan_for_input_validation(self, code: str) -> list[SecurityVulnerability]:
         """Scan for input validation issues"""
         vulnerabilities = []
 
         # Check for RemoteEvent/RemoteFunction without validation
-        remote_pattern = r"(RemoteEvent|RemoteFunction)\.OnServerEvent:Connect\(function\([^)]*\)(.*?)end\)"
+        remote_pattern = (
+            r"(RemoteEvent|RemoteFunction)\.OnServerEvent:Connect\(function\([^)]*\)(.*?)end\)"
+        )
         matches = re.finditer(remote_pattern, code, re.DOTALL)
 
         for match in matches:
             func_body = match.group(2)
             # Check if there's any validation
-            if not any(keyword in func_body for keyword in ["if ", "assert", "type(", "typeof(", "tonumber", "tostring"]):
-                line_num = code[:match.start()].count('\n') + 1
-                vulnerabilities.append(SecurityVulnerability(
-                    threat_level=ThreatLevel.HIGH,
-                    vulnerability_type=VulnerabilityType.INPUT_VALIDATION,
-                    location=f"Line {line_num}",
-                    description="RemoteEvent/Function handler without input validation",
-                    impact="Unvalidated input could lead to exploits",
-                    remediation="Add input validation for all remote event parameters",
-                    exploitable=True
-                ))
+            if not any(
+                keyword in func_body
+                for keyword in [
+                    "if ",
+                    "assert",
+                    "type(",
+                    "typeof(",
+                    "tonumber",
+                    "tostring",
+                ]
+            ):
+                line_num = code[: match.start()].count("\n") + 1
+                vulnerabilities.append(
+                    SecurityVulnerability(
+                        threat_level=ThreatLevel.HIGH,
+                        vulnerability_type=VulnerabilityType.INPUT_VALIDATION,
+                        location=f"Line {line_num}",
+                        description="RemoteEvent/Function handler without input validation",
+                        impact="Unvalidated input could lead to exploits",
+                        remediation="Add input validation for all remote event parameters",
+                        exploitable=True,
+                    )
+                )
 
         return vulnerabilities
 
-    def _scan_for_rate_limiting(self, code: str) -> List[SecurityVulnerability]:
+    def _scan_for_rate_limiting(self, code: str) -> list[SecurityVulnerability]:
         """Check for rate limiting implementation"""
         vulnerabilities = []
 
         # Check for RemoteEvents without rate limiting
         if "RemoteEvent" in code or "RemoteFunction" in code:
-            has_rate_limiting = any(pattern in code for pattern in [
-                "debounce", "cooldown", "lastCall", "rateLimiter",
-                "throttle", "os.clock()", "tick()", "time()"
-            ])
+            has_rate_limiting = any(
+                pattern in code
+                for pattern in [
+                    "debounce",
+                    "cooldown",
+                    "lastCall",
+                    "rateLimiter",
+                    "throttle",
+                    "os.clock()",
+                    "tick()",
+                    "time()",
+                ]
+            )
 
             if not has_rate_limiting:
-                vulnerabilities.append(SecurityVulnerability(
-                    threat_level=ThreatLevel.MEDIUM,
-                    vulnerability_type=VulnerabilityType.RATE_LIMITING,
-                    location="Global",
-                    description="No rate limiting detected for remote events",
-                    impact="Service could be overwhelmed by rapid requests",
-                    remediation="Implement rate limiting for all remote endpoints",
-                    exploitable=True
-                ))
+                vulnerabilities.append(
+                    SecurityVulnerability(
+                        threat_level=ThreatLevel.MEDIUM,
+                        vulnerability_type=VulnerabilityType.RATE_LIMITING,
+                        location="Global",
+                        description="No rate limiting detected for remote events",
+                        impact="Service could be overwhelmed by rapid requests",
+                        remediation="Implement rate limiting for all remote endpoints",
+                        exploitable=True,
+                    )
+                )
 
         return vulnerabilities
 
-    def _calculate_risk_score(self, vulnerabilities: List[SecurityVulnerability]) -> float:
+    def _calculate_risk_score(self, vulnerabilities: list[SecurityVulnerability]) -> float:
         """Calculate overall risk score (0-10)"""
         if not vulnerabilities:
             return 0.0
@@ -394,7 +453,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
             ThreatLevel.HIGH: 7.0,
             ThreatLevel.MEDIUM: 4.0,
             ThreatLevel.LOW: 2.0,
-            ThreatLevel.INFO: 0.5
+            ThreatLevel.INFO: 0.5,
         }
 
         for vuln in vulnerabilities:
@@ -412,7 +471,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
         self,
         code: str,
         script_type: str = "ServerScript",
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[dict[str, Any]] = None,
     ) -> SecurityReport:
         """
         Perform comprehensive security validation on a Roblox script
@@ -440,30 +499,56 @@ class RobloxSecurityValidationAgent(BaseAgent):
         for pattern in self.blocked_patterns:
             if pattern.lower() in code.lower():
                 blocked_found.append(pattern)
-                vulnerabilities.append(SecurityVulnerability(
-                    threat_level=ThreatLevel.CRITICAL,
-                    vulnerability_type=VulnerabilityType.POLICY_VIOLATION,
-                    location="Global",
-                    description=f"Blocked pattern detected: {pattern}",
-                    impact="This pattern is completely prohibited",
-                    remediation=f"Remove all usage of {pattern}",
-                    exploitable=True
-                ))
+                vulnerabilities.append(
+                    SecurityVulnerability(
+                        threat_level=ThreatLevel.CRITICAL,
+                        vulnerability_type=VulnerabilityType.POLICY_VIOLATION,
+                        location="Global",
+                        description=f"Blocked pattern detected: {pattern}",
+                        impact="This pattern is completely prohibited",
+                        remediation=f"Remove all usage of {pattern}",
+                        exploitable=True,
+                    )
+                )
 
         # Calculate risk score
         risk_score = self._calculate_risk_score(vulnerabilities)
 
         # Check compliance
         compliance_status = {
-            "no_dangerous_functions": len([v for v in vulnerabilities
-                if v.vulnerability_type == VulnerabilityType.CODE_INJECTION]) == 0,
-            "input_validation": len([v for v in vulnerabilities
-                if v.vulnerability_type == VulnerabilityType.INPUT_VALIDATION]) == 0,
-            "no_hardcoded_credentials": len([v for v in vulnerabilities
-                if "password" in v.description.lower() or "key" in v.description.lower()]) == 0,
-            "rate_limiting": len([v for v in vulnerabilities
-                if v.vulnerability_type == VulnerabilityType.RATE_LIMITING]) == 0,
-            "roblox_tos_compliant": len(blocked_found) == 0
+            "no_dangerous_functions": len(
+                [
+                    v
+                    for v in vulnerabilities
+                    if v.vulnerability_type == VulnerabilityType.CODE_INJECTION
+                ]
+            )
+            == 0,
+            "input_validation": len(
+                [
+                    v
+                    for v in vulnerabilities
+                    if v.vulnerability_type == VulnerabilityType.INPUT_VALIDATION
+                ]
+            )
+            == 0,
+            "no_hardcoded_credentials": len(
+                [
+                    v
+                    for v in vulnerabilities
+                    if "password" in v.description.lower() or "key" in v.description.lower()
+                ]
+            )
+            == 0,
+            "rate_limiting": len(
+                [
+                    v
+                    for v in vulnerabilities
+                    if v.vulnerability_type == VulnerabilityType.RATE_LIMITING
+                ]
+            )
+            == 0,
+            "roblox_tos_compliant": len(blocked_found) == 0,
         }
 
         # Generate recommendations
@@ -483,24 +568,24 @@ class RobloxSecurityValidationAgent(BaseAgent):
             safe_patterns=safe_patterns,
             metadata={
                 "script_type": script_type,
-                "line_count": len(code.split('\n')),
+                "line_count": len(code.split("\n")),
                 "scan_duration": "< 1s",
-                "validator_version": "1.0.0"
-            }
+                "validator_version": "1.0.0",
+            },
         )
 
     def _generate_recommendations(
-        self,
-        vulnerabilities: List[SecurityVulnerability],
-        script_type: str
-    ) -> List[str]:
+        self, vulnerabilities: list[SecurityVulnerability], script_type: str
+    ) -> list[str]:
         """Generate actionable security recommendations"""
         recommendations = []
 
         # Priority recommendations based on critical issues
         critical_vulns = [v for v in vulnerabilities if v.threat_level == ThreatLevel.CRITICAL]
         if critical_vulns:
-            recommendations.append("🔴 CRITICAL: Address critical security vulnerabilities immediately")
+            recommendations.append(
+                "🔴 CRITICAL: Address critical security vulnerabilities immediately"
+            )
             for vuln in critical_vulns[:3]:  # Top 3 critical
                 recommendations.append(f"  - {vuln.remediation}")
 
@@ -524,7 +609,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
 
         return recommendations
 
-    def _identify_safe_patterns(self, code: str) -> List[str]:
+    def _identify_safe_patterns(self, code: str) -> list[str]:
         """Identify security best practices being used"""
         safe_patterns = []
 
@@ -538,7 +623,7 @@ class RobloxSecurityValidationAgent(BaseAgent):
             "secure random": r"Random\.new\(\)",
             "parameter validation": r"if\s+not\s+.*then\s+return",
             "connection cleanup": r":Disconnect\(\)",
-            "secure configuration": r"SecureConfiguration|ServerStorage:GetAttribute"
+            "secure configuration": r"SecureConfiguration|ServerStorage:GetAttribute",
         }
 
         for practice, pattern in security_checks.items():
@@ -569,7 +654,12 @@ class RobloxSecurityValidationAgent(BaseAgent):
 
 """
         # Group vulnerabilities by threat level
-        for level in [ThreatLevel.CRITICAL, ThreatLevel.HIGH, ThreatLevel.MEDIUM, ThreatLevel.LOW]:
+        for level in [
+            ThreatLevel.CRITICAL,
+            ThreatLevel.HIGH,
+            ThreatLevel.MEDIUM,
+            ThreatLevel.LOW,
+        ]:
             level_vulns = [v for v in report.vulnerabilities if v.threat_level == level]
             if level_vulns:
                 md += f"### {level.value.upper()} Priority\n\n"
@@ -645,10 +735,13 @@ end)
 local SecureConfig = require(game.ServerScriptService.SecureConfigurationManager)
 local apiKey = SecureConfig:getSecureValue("API_KEY")
 -- Never hardcode sensitive values
-"""
+""",
         }
 
-        return fixes.get(vulnerability.vulnerability_type, "Review and fix based on security best practices")
+        return fixes.get(
+            vulnerability.vulnerability_type,
+            "Review and fix based on security best practices",
+        )
 
     def execute(self, task: str) -> str:
         """Execute security validation task"""
@@ -675,13 +768,13 @@ local apiKey = SecureConfig:getSecureValue("API_KEY")
         context = state.get("context", {})
         script_code = context.get("script_code", "")
         script_type = context.get("script_type", "ServerScript")
-        strict_mode = context.get("strict_mode", True)
+        context.get("strict_mode", True)
 
         if not script_code:
             return TaskResult(
                 success=False,
                 error="No script provided for validation",
-                message="Script code is required"
+                message="Script code is required",
             )
 
         try:
@@ -705,7 +798,7 @@ local apiKey = SecureConfig:getSecureValue("API_KEY")
                             "impact": vuln.impact,
                             "remediation": vuln.remediation,
                             "cvss_score": vuln.cvss_score,
-                            "exploitable": vuln.exploitable
+                            "exploitable": vuln.exploitable,
                         }
                         for vuln in report.vulnerabilities
                     ],
@@ -713,16 +806,12 @@ local apiKey = SecureConfig:getSecureValue("API_KEY")
                     "recommendations": report.recommendations,
                     "blocked_patterns": list(report.blocked_patterns),
                     "safe_patterns": list(report.safe_patterns),
-                    "report_markdown": report_markdown
+                    "report_markdown": report_markdown,
                 },
-                message=f"Security validation complete: Risk score {report.risk_score}/10"
+                message=f"Security validation complete: Risk score {report.risk_score}/10",
             )
         except Exception as e:
-            return TaskResult(
-                success=False,
-                error=str(e),
-                message="Security validation failed"
-            )
+            return TaskResult(success=False, error=str(e), message="Security validation failed")
 
 
 # Example usage

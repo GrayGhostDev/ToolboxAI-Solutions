@@ -12,7 +12,7 @@ Reference: https://docs.sqlalchemy.org/en/20/
 
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from sqlalchemy import (
@@ -160,20 +160,20 @@ class EducationalContent(TenantBaseModel):
     )
 
     # Metadata and Settings
-    content_metadata: Mapped[Dict[str, Any]] = mapped_column(
+    content_metadata: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
     )
 
-    settings: Mapped[Dict[str, Any]] = mapped_column(
+    settings: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,
     )
 
     # Tags and Categories
-    tags: Mapped[List[str]] = mapped_column(
+    tags: Mapped[list[str]] = mapped_column(
         ARRAY(String(50)),
         nullable=False,
         default=list,
@@ -202,14 +202,14 @@ class EducationalContent(TenantBaseModel):
         nullable=True,
     )
 
-    prerequisites: Mapped[List[str]] = mapped_column(
+    prerequisites: Mapped[list[str]] = mapped_column(
         ARRAY(String(100)),
         nullable=False,
         default=list,
     )
 
     # Learning Objectives
-    learning_objectives: Mapped[List[str]] = mapped_column(
+    learning_objectives: Mapped[list[str]] = mapped_column(
         ARRAY(Text),
         nullable=False,
         default=list,
@@ -228,19 +228,19 @@ class EducationalContent(TenantBaseModel):
     )
 
     # Relationships
-    attachments: Mapped[List["ContentAttachment"]] = relationship(
+    attachments: Mapped[list["ContentAttachment"]] = relationship(
         back_populates="content",
         cascade="all, delete-orphan",
         lazy="select",
     )
 
-    comments: Mapped[List["ContentComment"]] = relationship(
+    comments: Mapped[list["ContentComment"]] = relationship(
         back_populates="content",
         cascade="all, delete-orphan",
         lazy="select",
     )
 
-    ratings: Mapped[List["ContentRating"]] = relationship(
+    ratings: Mapped[list["ContentRating"]] = relationship(
         back_populates="content",
         cascade="all, delete-orphan",
         lazy="select",
@@ -370,7 +370,7 @@ class ContentAttachment(TenantBaseModel):
         nullable=True,
     )
 
-    attachment_metadata: Mapped[Dict[str, Any]] = mapped_column(
+    attachment_metadata: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
         default=dict,

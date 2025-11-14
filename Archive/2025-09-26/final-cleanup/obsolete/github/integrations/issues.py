@@ -27,18 +27,17 @@ Environment Variables:
     STALE_ISSUE_DAYS - Days before marking issues as stale (default: 30)
 """
 
-import os
-import sys
 import argparse
+import os
 import re
-import json
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Set
+from typing import Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github import GitHubHelper, EducationalPlatformHelper, setup_logging, load_config
+from github import EducationalPlatformHelper, GitHubHelper, load_config, setup_logging
 
 logger = setup_logging()
 
@@ -82,14 +81,14 @@ class IssueAutomation:
             'priority-low': {'color': '0e8a16', 'description': 'Low priority issue'},
         }
     
-    def _load_code_owners(self) -> Dict[str, List[str]]:
+    def _load_code_owners(self) -> dict[str, list[str]]:
         """Load CODEOWNERS file for assignment mapping"""
         codeowners_file = self.repo_root / '.github' / 'CODEOWNERS'
         owners = {}
         
         if codeowners_file.exists():
             try:
-                with open(codeowners_file, 'r') as f:
+                with open(codeowners_file) as f:
                     for line in f:
                         line = line.strip()
                         if line and not line.startswith('#'):
@@ -273,7 +272,7 @@ class IssueAutomation:
         logger.info(f"No suitable assignee found for issue #{issue_number}")
         return True
     
-    def _determine_assignees(self, content: str) -> List[str]:
+    def _determine_assignees(self, content: str) -> list[str]:
         """Determine assignees based on issue content"""
         assignees = []
         
@@ -762,7 +761,7 @@ I found these potentially related issues:
         logger.info(f"No related issues found for #{issue_number}")
         return True
     
-    def _find_related_issues(self, title: str, body: str, labels: List[str], exclude_issue: int) -> List[Tuple[int, str]]:
+    def _find_related_issues(self, title: str, body: str, labels: list[str], exclude_issue: int) -> list[tuple[int, str]]:
         """Find issues related to the given issue"""
         # Get all open issues
         issues_data = self.github_helper.send_github_api_request('issues?state=open&per_page=100')
@@ -812,7 +811,7 @@ I found these potentially related issues:
         # Sort by relevance and return top 5
         return sorted(related_issues, key=lambda x: x[1])[:5]
     
-    def _ensure_labels_exist(self, labels: Set[str]):
+    def _ensure_labels_exist(self, labels: set[str]):
         """Ensure labels exist in the repository"""
         for label_name in labels:
             if label_name in self.educational_labels:

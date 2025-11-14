@@ -5,13 +5,17 @@ This module provides agents for orchestrating complex integration workflows,
 error recovery, performance monitoring, and deployment pipelines.
 """
 
-from typing import Dict, Any, Optional, List, Callable
-from datetime import datetime
 import asyncio
 import logging
+from datetime import datetime
 from enum import Enum
+from typing import Any, Callable, Optional
 
-from .base_integration_agent import BaseIntegrationAgent, IntegrationPlatform, IntegrationEvent
+from .base_integration_agent import (
+    BaseIntegrationAgent,
+    IntegrationEvent,
+    IntegrationPlatform,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +36,11 @@ class IntegrationCoordinator(BaseIntegrationAgent):
 
     def __init__(self, name: str = "IntegrationCoordinator"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.registered_agents: Dict[str, Any] = {}
-        self.workflows: Dict[str, Any] = {}
-        self.workflow_executions: Dict[str, Any] = {}
+        self.registered_agents: dict[str, Any] = {}
+        self.workflows: dict[str, Any] = {}
+        self.workflow_executions: dict[str, Any] = {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on coordinator"""
         active_workflows = sum(1 for exec in self.workflow_executions.values()
                              if exec.get("status") == WorkflowStatus.RUNNING.value)
@@ -69,7 +73,7 @@ class IntegrationCoordinator(BaseIntegrationAgent):
 
     async def create_workflow(self, name: str, description: str,
                             template: Optional[str] = None,
-                            custom_tasks: Optional[List[Dict[str, Any]]] = None) -> Any:
+                            custom_tasks: Optional[list[dict[str, Any]]] = None) -> Any:
         """Create a new integration workflow"""
         workflow_id = f"workflow_{len(self.workflows)}"
 
@@ -101,7 +105,7 @@ class IntegrationCoordinator(BaseIntegrationAgent):
         return Workflow(workflow_id)
 
     async def execute_workflow(self, workflow_id: str,
-                              parameters: Optional[Dict[str, Any]] = None) -> Any:
+                              parameters: Optional[dict[str, Any]] = None) -> Any:
         """Execute a workflow"""
         if workflow_id not in self.workflows:
             raise ValueError(f"Workflow {workflow_id} not found")
@@ -159,11 +163,11 @@ class ErrorRecoveryAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "ErrorRecoveryAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.error_handlers: Dict[str, Callable] = {}
-        self.error_history: List[Dict[str, Any]] = []
-        self.recovery_strategies: Dict[str, Any] = {}
+        self.error_handlers: dict[str, Callable] = {}
+        self.error_history: list[dict[str, Any]] = []
+        self.recovery_strategies: dict[str, Any] = {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on error recovery"""
         return {
             "status": "healthy",
@@ -180,7 +184,7 @@ class ErrorRecoveryAgent(BaseIntegrationAgent):
         self.error_handlers[error_type] = handler
         logger.info(f"Error handler registered for: {error_type}")
 
-    async def handle_error(self, error_type: str, error_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_error(self, error_type: str, error_data: dict[str, Any]) -> dict[str, Any]:
         """Handle an error and attempt recovery"""
         error_record = {
             "error_type": error_type,
@@ -227,11 +231,11 @@ class PerformanceMonitorAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "PerformanceMonitorAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.metrics: Dict[str, List[float]] = {}
-        self.thresholds: Dict[str, float] = {}
-        self.alerts: List[Dict[str, Any]] = []
+        self.metrics: dict[str, list[float]] = {}
+        self.thresholds: dict[str, float] = {}
+        self.alerts: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on performance monitoring"""
         return {
             "status": "healthy",
@@ -283,7 +287,7 @@ class PerformanceMonitorAgent(BaseIntegrationAgent):
 
         logger.warning(f"Performance alert: {metric_name} = {value} (threshold: {threshold})")
 
-    async def get_metrics_summary(self) -> Dict[str, Any]:
+    async def get_metrics_summary(self) -> dict[str, Any]:
         """Get summary of performance metrics"""
         summary = {}
         for metric_name, values in self.metrics.items():
@@ -312,10 +316,10 @@ class DeploymentPipelineAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "DeploymentPipelineAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.pipelines: Dict[str, Any] = {}
-        self.deployments: List[Dict[str, Any]] = []
+        self.pipelines: dict[str, Any] = {}
+        self.deployments: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on deployment pipelines"""
         active_deployments = sum(1 for d in self.deployments
                                if d.get("status") == "deploying")
@@ -330,7 +334,7 @@ class DeploymentPipelineAgent(BaseIntegrationAgent):
             "timestamp": datetime.utcnow().isoformat()
         }
 
-    async def create_pipeline(self, pipeline_name: str, stages: List[str]) -> str:
+    async def create_pipeline(self, pipeline_name: str, stages: list[str]) -> str:
         """Create a deployment pipeline"""
         pipeline_id = f"pipeline_{len(self.pipelines)}"
 
@@ -354,7 +358,7 @@ class DeploymentPipelineAgent(BaseIntegrationAgent):
 
         return pipeline_id
 
-    async def deploy(self, pipeline_id: str, deployment_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def deploy(self, pipeline_id: str, deployment_config: dict[str, Any]) -> dict[str, Any]:
         """Execute a deployment through a pipeline"""
         if pipeline_id not in self.pipelines:
             raise ValueError(f"Pipeline {pipeline_id} not found")

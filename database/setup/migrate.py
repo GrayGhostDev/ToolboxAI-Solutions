@@ -8,7 +8,7 @@ Provides commands for managing database migrations using Alembic.
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -37,7 +37,7 @@ class MigrationManager:
             else:
                 cmd.extend(["-m", message])
 
-            result = subprocess.run(cmd, cwd=self.database_dir, check=True)
+            subprocess.run(cmd, cwd=self.database_dir, check=True)
             print("✅ Migration created successfully")
             return True
 
@@ -50,9 +50,7 @@ class MigrationManager:
         print(f"⬆️  Upgrading database to {revision}")
 
         try:
-            result = subprocess.run(
-                ["alembic", "upgrade", revision], cwd=self.database_dir, check=True
-            )
+            subprocess.run(["alembic", "upgrade", revision], cwd=self.database_dir, check=True)
             print(f"✅ Database upgraded to {revision}")
             return True
 
@@ -65,9 +63,7 @@ class MigrationManager:
         print(f"⬇️  Downgrading database to {revision}")
 
         try:
-            result = subprocess.run(
-                ["alembic", "downgrade", revision], cwd=self.database_dir, check=True
-            )
+            subprocess.run(["alembic", "downgrade", revision], cwd=self.database_dir, check=True)
             print(f"✅ Database downgraded to {revision}")
             return True
 
@@ -99,9 +95,7 @@ class MigrationManager:
         print("📚 Migration history:")
 
         try:
-            result = subprocess.run(
-                ["alembic", "history", "--verbose"], cwd=self.database_dir, check=True
-            )
+            subprocess.run(["alembic", "history", "--verbose"], cwd=self.database_dir, check=True)
             return True
 
         except subprocess.CalledProcessError as e:
@@ -113,9 +107,7 @@ class MigrationManager:
         print(f"🔍 Showing migration: {revision}")
 
         try:
-            result = subprocess.run(
-                ["alembic", "show", revision], cwd=self.database_dir, check=True
-            )
+            subprocess.run(["alembic", "show", revision], cwd=self.database_dir, check=True)
             return True
 
         except subprocess.CalledProcessError as e:
@@ -127,9 +119,7 @@ class MigrationManager:
         print(f"🏷️  Stamping database with {revision}")
 
         try:
-            result = subprocess.run(
-                ["alembic", "stamp", revision], cwd=self.database_dir, check=True
-            )
+            subprocess.run(["alembic", "stamp", revision], cwd=self.database_dir, check=True)
             print(f"✅ Database stamped with {revision}")
             return True
 
@@ -137,13 +127,13 @@ class MigrationManager:
             print(f"❌ Failed to stamp database: {e}")
             return False
 
-    def merge(self, revisions: List[str], message: str) -> bool:
+    def merge(self, revisions: list[str], message: str) -> bool:
         """Merge multiple revisions."""
         print(f"🔀 Merging revisions: {', '.join(revisions)}")
 
         try:
             cmd = ["alembic", "merge"] + revisions + ["-m", message]
-            result = subprocess.run(cmd, cwd=self.database_dir, check=True)
+            subprocess.run(cmd, cwd=self.database_dir, check=True)
             print("✅ Revisions merged successfully")
             return True
 

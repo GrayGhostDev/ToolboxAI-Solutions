@@ -2,12 +2,9 @@
 Repository Health Monitor Agent for tracking repository metrics.
 """
 
-import asyncio
 import json
-import os
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Optional
 
 from .base_github_agent import BaseGitHubAgent
 
@@ -18,16 +15,16 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the repository health monitor agent."""
         super().__init__(config_path)
-        self.health_config = self.config.get('monitoring', {}).get('health_checks', {})
+        self.health_config = self.config.get("monitoring", {}).get("health_checks", {})
         self.thresholds = {
-            'repo_size_warning_gb': self.health_config.get('repo_size_warning_gb', 1),
-            'repo_size_critical_gb': self.health_config.get('repo_size_critical_gb', 5),
-            'file_count_warning': self.health_config.get('file_count_warning', 50000),
-            'file_count_critical': self.health_config.get('file_count_critical', 100000),
-            'max_file_depth': self.health_config.get('max_file_depth', 20)
+            "repo_size_warning_gb": self.health_config.get("repo_size_warning_gb", 1),
+            "repo_size_critical_gb": self.health_config.get("repo_size_critical_gb", 5),
+            "file_count_warning": self.health_config.get("file_count_warning", 50000),
+            "file_count_critical": self.health_config.get("file_count_critical", 100000),
+            "max_file_depth": self.health_config.get("max_file_depth", 20),
         }
 
-    async def analyze(self, detailed: bool = True) -> Dict[str, Any]:
+    async def analyze(self, detailed: bool = True) -> dict[str, Any]:
         """Analyze repository health.
 
         Args:
@@ -46,7 +43,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
             "metrics": {},
             "issues": [],
             "recommendations": [],
-            "overall_status": "healthy"
+            "overall_status": "healthy",
         }
 
         # Collect metrics
@@ -65,14 +62,17 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
         # Generate recommendations
         health_data["recommendations"] = self._generate_health_recommendations(health_data)
 
-        await self.log_operation("health_check", {
-            "status": health_data["overall_status"],
-            "issues_count": len(health_data["issues"])
-        })
+        await self.log_operation(
+            "health_check",
+            {
+                "status": health_data["overall_status"],
+                "issues_count": len(health_data["issues"]),
+            },
+        )
 
         return health_data
 
-    async def _analyze_repository_size(self) -> Dict[str, Any]:
+    async def _analyze_repository_size(self) -> dict[str, Any]:
         """Analyze repository size metrics.
 
         Returns:
@@ -81,7 +81,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
         metrics = {
             "total_size_bytes": 0,
             "git_size_bytes": 0,
-            "working_tree_size_bytes": 0
+            "working_tree_size_bytes": 0,
         }
 
         repo_root = self.get_repository_root()
@@ -111,11 +111,13 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
                 logger.error(f"Error calculating .git size: {e}")
 
         metrics["working_tree_size_bytes"] = metrics["total_size_bytes"] - metrics["git_size_bytes"]
-        metrics["working_tree_size_formatted"] = self.format_size(metrics["working_tree_size_bytes"])
+        metrics["working_tree_size_formatted"] = self.format_size(
+            metrics["working_tree_size_bytes"]
+        )
 
         return metrics
 
-    async def _analyze_file_metrics(self) -> Dict[str, Any]:
+    async def _analyze_file_metrics(self) -> dict[str, Any]:
         """Analyze file-related metrics.
 
         Returns:
@@ -126,7 +128,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
             "total_directories": 0,
             "max_depth": 0,
             "file_types": {},
-            "largest_files": []
+            "largest_files": [],
         }
 
         repo_root = self.get_repository_root()
@@ -157,14 +159,16 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
         # Get largest files
         file_sizes.sort(key=lambda x: x[1], reverse=True)
         for path, size in file_sizes[:10]:
-            metrics["largest_files"].append({
-                "path": str(path.relative_to(repo_root)),
-                "size": self.format_size(size)
-            })
+            metrics["largest_files"].append(
+                {
+                    "path": str(path.relative_to(repo_root)),
+                    "size": self.format_size(size),
+                }
+            )
 
         return metrics
 
-    async def _analyze_git_metrics(self) -> Dict[str, Any]:
+    async def _analyze_git_metrics(self) -> dict[str, Any]:
         """Analyze git-related metrics.
 
         Returns:
@@ -177,7 +181,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
             "contributors": 0,
             "last_commit": None,
             "uncommitted_changes": False,
-            "stash_count": 0
+            "stash_count": 0,
         }
 
         # Get current branch
@@ -210,7 +214,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
                     "author": parts[1],
                     "email": parts[2],
                     "timestamp": datetime.fromtimestamp(int(parts[3])).isoformat(),
-                    "message": parts[4]
+                    "message": parts[4],
                 }
 
         # Check for uncommitted changes
@@ -225,23 +229,20 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
 
         return metrics
 
-    async def _analyze_dependencies(self) -> Dict[str, Any]:
+    async def _analyze_dependencies(self) -> dict[str, Any]:
         """Analyze project dependencies.
 
         Returns:
             Dependency metrics
         """
-        metrics = {
-            "python": {},
-            "node": {}
-        }
+        metrics = {"python": {}, "node": {}}
 
         repo_root = self.get_repository_root()
 
         # Check Python dependencies
         requirements_file = repo_root / "requirements.txt"
         if requirements_file.exists():
-            with open(requirements_file, 'r') as f:
+            with open(requirements_file) as f:
                 lines = f.readlines()
                 metrics["python"]["dependency_count"] = len(
                     [l for l in lines if l.strip() and not l.startswith("#")]
@@ -253,7 +254,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
         # Check Node dependencies
         package_json = repo_root / "package.json"
         if package_json.exists():
-            with open(package_json, 'r') as f:
+            with open(package_json) as f:
                 package_data = json.load(f)
                 deps = package_data.get("dependencies", {})
                 dev_deps = package_data.get("devDependencies", {})
@@ -274,17 +275,13 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
 
         return metrics
 
-    async def _analyze_performance(self) -> Dict[str, Any]:
+    async def _analyze_performance(self) -> dict[str, Any]:
         """Analyze repository performance metrics.
 
         Returns:
             Performance metrics
         """
-        metrics = {
-            "git_gc_needed": False,
-            "large_pack_files": [],
-            "index_size": 0
-        }
+        metrics = {"git_gc_needed": False, "large_pack_files": [], "index_size": 0}
 
         repo_root = self.get_repository_root()
 
@@ -301,10 +298,9 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
             for pack_file in pack_dir.glob("*.pack"):
                 size = pack_file.stat().st_size
                 if size > 100 * 1024 * 1024:  # > 100MB
-                    metrics["large_pack_files"].append({
-                        "file": pack_file.name,
-                        "size": self.format_size(size)
-                    })
+                    metrics["large_pack_files"].append(
+                        {"file": pack_file.name, "size": self.format_size(size)}
+                    )
 
         # Check index size
         index_file = repo_root / ".git/index"
@@ -313,37 +309,31 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
 
         return metrics
 
-    async def _analyze_security(self) -> Dict[str, Any]:
+    async def _analyze_security(self) -> dict[str, Any]:
         """Analyze security-related metrics.
 
         Returns:
             Security metrics
         """
-        metrics = {
-            "secrets_found": [],
-            "vulnerable_patterns": []
-        }
+        metrics = {"secrets_found": [], "vulnerable_patterns": []}
 
         # Common secret patterns to check
-        secret_patterns = [
-            ("AWS Key", r"AKIA[0-9A-Z]{16}"),
-            ("API Key", r"api[_-]?key[_-]?=[\'\"][a-zA-Z0-9]{20,}[\'\"]"),
-            ("Private Key", r"-----BEGIN (RSA|DSA|EC|OPENSSH) PRIVATE KEY-----")
-        ]
 
         # Check for potential secrets in tracked files
         # (simplified check - real implementation would be more thorough)
         result = await self.execute_git_command("grep -l 'password\\|secret\\|key' --cached")
         if result["success"] and result["stdout"]:
             for file_path in result["stdout"].splitlines():
-                metrics["secrets_found"].append({
-                    "file": file_path,
-                    "type": "Potential secret in file name or content"
-                })
+                metrics["secrets_found"].append(
+                    {
+                        "file": file_path,
+                        "type": "Potential secret in file name or content",
+                    }
+                )
 
         return metrics
 
-    def _evaluate_health_status(self, health_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _evaluate_health_status(self, health_data: dict[str, Any]) -> dict[str, Any]:
         """Evaluate overall health status based on metrics.
 
         Args:
@@ -356,7 +346,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
         severity = "healthy"
 
         # Check repository size
-        size_gb = health_data["metrics"]["size"]["total_size_bytes"] / (1024 ** 3)
+        size_gb = health_data["metrics"]["size"]["total_size_bytes"] / (1024**3)
         if size_gb > self.thresholds["repo_size_critical_gb"]:
             issues.append(f"Critical: Repository size ({size_gb:.2f}GB) exceeds critical threshold")
             severity = "critical"
@@ -384,7 +374,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
 
         return health_data
 
-    def _generate_health_recommendations(self, health_data: Dict[str, Any]) -> List[str]:
+    def _generate_health_recommendations(self, health_data: dict[str, Any]) -> list[str]:
         """Generate health recommendations.
 
         Args:
@@ -396,7 +386,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
         recommendations = []
 
         # Size recommendations
-        size_gb = health_data["metrics"]["size"]["total_size_bytes"] / (1024 ** 3)
+        size_gb = health_data["metrics"]["size"]["total_size_bytes"] / (1024**3)
         if size_gb > 1:
             recommendations.append("Consider using Git LFS for large files")
             recommendations.append("Run 'git gc' to optimize repository")
@@ -412,11 +402,13 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
 
         # Git recommendations
         if health_data["metrics"]["git"]["stash_count"] > 5:
-            recommendations.append(f"Clean up git stashes ({health_data['metrics']['git']['stash_count']} found)")
+            recommendations.append(
+                f"Clean up git stashes ({health_data['metrics']['git']['stash_count']} found)"
+            )
 
         return recommendations
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute a specific action.
 
         Args:
@@ -434,7 +426,9 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
             gc_result = await self.execute_git_command("gc --aggressive")
             return {
                 "success": gc_result["success"],
-                "message": "Repository optimized" if gc_result["success"] else "Optimization failed"
+                "message": (
+                    "Repository optimized" if gc_result["success"] else "Optimization failed"
+                ),
             }
 
         elif action == "clean":
@@ -442,16 +436,13 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
             commands = [
                 "clean -fd",  # Remove untracked files
                 "gc",  # Garbage collection
-                "prune"  # Prune unreachable objects
+                "prune",  # Prune unreachable objects
             ]
 
             results = []
             for cmd in commands:
                 result = await self.execute_git_command(cmd)
-                results.append({
-                    "command": cmd,
-                    "success": result["success"]
-                })
+                results.append({"command": cmd, "success": result["success"]})
 
             return {"success": True, "actions": results}
 
@@ -497,7 +488,7 @@ class RepoHealthMonitorAgent(BaseGitHubAgent):
                 f"- Commit Count: {health_data['metrics']['git']['commit_count']}",
                 f"- Contributors: {health_data['metrics']['git']['contributors']}",
                 f"- Uncommitted Changes: {health_data['metrics']['git']['uncommitted_changes']}",
-                ""
+                "",
             ]
 
             if health_data["issues"]:

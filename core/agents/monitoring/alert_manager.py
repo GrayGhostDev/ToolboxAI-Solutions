@@ -6,18 +6,18 @@ Integrates with multiple notification channels and provides intelligent alerting
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional, Set, Callable
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -26,6 +26,7 @@ class AlertSeverity(Enum):
 
 class AlertCategory(Enum):
     """Alert categories"""
+
     COST = "cost"
     PERFORMANCE = "performance"
     ERROR_RATE = "error_rate"
@@ -37,6 +38,7 @@ class AlertCategory(Enum):
 
 class NotificationChannel(Enum):
     """Available notification channels"""
+
     EMAIL = "email"
     SLACK = "slack"
     DISCORD = "discord"
@@ -49,6 +51,7 @@ class NotificationChannel(Enum):
 @dataclass
 class Alert:
     """Alert data structure"""
+
     id: str
     timestamp: datetime
     severity: AlertSeverity
@@ -56,7 +59,7 @@ class Alert:
     title: str
     message: str
     source: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     acknowledged: bool = False
     resolved: bool = False
     acknowledged_by: Optional[str] = None
@@ -68,6 +71,7 @@ class Alert:
 @dataclass
 class AlertRule:
     """Alert rule configuration"""
+
     id: str
     name: str
     category: AlertCategory
@@ -75,7 +79,7 @@ class AlertRule:
     condition: str  # Description of trigger condition
     threshold: float
     enabled: bool = True
-    channels: List[NotificationChannel] = field(default_factory=list)
+    channels: list[NotificationChannel] = field(default_factory=list)
     escalation_time: int = 3600  # seconds before escalation
     suppression_time: int = 300  # seconds to suppress duplicate alerts
     custom_handler: Optional[Callable] = None
@@ -84,11 +88,12 @@ class AlertRule:
 @dataclass
 class NotificationConfig:
     """Notification channel configuration"""
+
     channel: NotificationChannel
     enabled: bool = True
-    config: Dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
     rate_limit: int = 60  # max notifications per hour
-    priority_filter: List[AlertSeverity] = field(default_factory=list)
+    priority_filter: list[AlertSeverity] = field(default_factory=list)
 
 
 class AlertManager:
@@ -104,19 +109,19 @@ class AlertManager:
     """
 
     def __init__(self):
-        self.active_alerts: Dict[str, Alert] = {}
-        self.alert_history: List[Alert] = []
-        self.alert_rules: Dict[str, AlertRule] = {}
-        self.notification_configs: Dict[NotificationChannel, NotificationConfig] = {}
+        self.active_alerts: dict[str, Alert] = {}
+        self.alert_history: list[Alert] = []
+        self.alert_rules: dict[str, AlertRule] = {}
+        self.notification_configs: dict[NotificationChannel, NotificationConfig] = {}
 
         # Alert suppression tracking
-        self.suppressed_alerts: Dict[str, datetime] = {}  # rule_id -> last_sent
+        self.suppressed_alerts: dict[str, datetime] = {}  # rule_id -> last_sent
 
         # Rate limiting tracking
-        self.notification_counts: Dict[NotificationChannel, List[datetime]] = {}
+        self.notification_counts: dict[NotificationChannel, list[datetime]] = {}
 
         # Custom handlers
-        self.custom_handlers: Dict[str, Callable] = {}
+        self.custom_handlers: dict[str, Callable] = {}
 
         # Initialize default alert rules
         self._initialize_default_rules()
@@ -138,7 +143,7 @@ class AlertManager:
                 condition="Daily cost exceeds budget limit",
                 threshold=100.0,  # $100
                 channels=[NotificationChannel.EMAIL, NotificationChannel.DASHBOARD],
-                escalation_time=1800  # 30 minutes
+                escalation_time=1800,  # 30 minutes
             ),
             AlertRule(
                 id="error_rate_high",
@@ -148,7 +153,7 @@ class AlertManager:
                 condition="Error rate exceeds 5%",
                 threshold=0.05,
                 channels=[NotificationChannel.SLACK, NotificationChannel.DASHBOARD],
-                escalation_time=3600  # 1 hour
+                escalation_time=3600,  # 1 hour
             ),
             AlertRule(
                 id="error_rate_critical",
@@ -157,8 +162,12 @@ class AlertManager:
                 severity=AlertSeverity.CRITICAL,
                 condition="Error rate exceeds 10%",
                 threshold=0.10,
-                channels=[NotificationChannel.EMAIL, NotificationChannel.SLACK, NotificationChannel.DASHBOARD],
-                escalation_time=900  # 15 minutes
+                channels=[
+                    NotificationChannel.EMAIL,
+                    NotificationChannel.SLACK,
+                    NotificationChannel.DASHBOARD,
+                ],
+                escalation_time=900,  # 15 minutes
             ),
             AlertRule(
                 id="latency_high",
@@ -168,7 +177,7 @@ class AlertManager:
                 condition="Average latency exceeds 5 seconds",
                 threshold=5.0,
                 channels=[NotificationChannel.DASHBOARD],
-                escalation_time=3600
+                escalation_time=3600,
             ),
             AlertRule(
                 id="latency_critical",
@@ -178,7 +187,7 @@ class AlertManager:
                 condition="Average latency exceeds 10 seconds",
                 threshold=10.0,
                 channels=[NotificationChannel.EMAIL, NotificationChannel.DASHBOARD],
-                escalation_time=1800
+                escalation_time=1800,
             ),
             AlertRule(
                 id="deadline_approaching",
@@ -188,7 +197,7 @@ class AlertManager:
                 condition="Less than 30 days to migration deadline",
                 threshold=30.0,  # days
                 channels=[NotificationChannel.EMAIL, NotificationChannel.SLACK],
-                escalation_time=86400  # 24 hours
+                escalation_time=86400,  # 24 hours
             ),
             AlertRule(
                 id="deadline_critical",
@@ -197,8 +206,12 @@ class AlertManager:
                 severity=AlertSeverity.EMERGENCY,
                 condition="Less than 7 days to migration deadline",
                 threshold=7.0,  # days
-                channels=[NotificationChannel.EMAIL, NotificationChannel.SLACK, NotificationChannel.SMS],
-                escalation_time=3600
+                channels=[
+                    NotificationChannel.EMAIL,
+                    NotificationChannel.SLACK,
+                    NotificationChannel.SMS,
+                ],
+                escalation_time=3600,
             ),
             AlertRule(
                 id="monthly_budget_approaching",
@@ -208,7 +221,7 @@ class AlertManager:
                 condition="Monthly spending at 80% of budget",
                 threshold=0.80,  # 80%
                 channels=[NotificationChannel.EMAIL, NotificationChannel.DASHBOARD],
-                escalation_time=86400
+                escalation_time=86400,
             ),
             AlertRule(
                 id="quality_degradation",
@@ -218,8 +231,8 @@ class AlertManager:
                 condition="Output quality score below 80%",
                 threshold=0.80,
                 channels=[NotificationChannel.DASHBOARD],
-                escalation_time=7200  # 2 hours
-            )
+                escalation_time=7200,  # 2 hours
+            ),
         ]
 
         for rule in default_rules:
@@ -236,10 +249,10 @@ class AlertManager:
                     "smtp_server": "smtp.gmail.com",
                     "smtp_port": 587,
                     "recipients": ["admin@toolboxai.com"],
-                    "sender": "alerts@toolboxai.com"
+                    "sender": "alerts@toolboxai.com",
                 },
                 rate_limit=20,  # 20 emails per hour
-                priority_filter=[AlertSeverity.CRITICAL, AlertSeverity.EMERGENCY]
+                priority_filter=[AlertSeverity.CRITICAL, AlertSeverity.EMERGENCY],
             ),
             NotificationChannel.SLACK: NotificationConfig(
                 channel=NotificationChannel.SLACK,
@@ -247,28 +260,28 @@ class AlertManager:
                 config={
                     "webhook_url": "",
                     "channel": "#gpt-migration-alerts",
-                    "username": "GPT Migration Monitor"
+                    "username": "GPT Migration Monitor",
                 },
-                rate_limit=100
+                rate_limit=100,
             ),
             NotificationChannel.DASHBOARD: NotificationConfig(
                 channel=NotificationChannel.DASHBOARD,
                 enabled=True,
                 config={},
-                rate_limit=1000  # High limit for dashboard
+                rate_limit=1000,  # High limit for dashboard
             ),
             NotificationChannel.LOG: NotificationConfig(
                 channel=NotificationChannel.LOG,
                 enabled=True,
                 config={"log_level": "WARNING"},
-                rate_limit=1000
+                rate_limit=1000,
             ),
             NotificationChannel.WEBHOOK: NotificationConfig(
                 channel=NotificationChannel.WEBHOOK,
                 enabled=False,
                 config={"url": "", "headers": {}},
-                rate_limit=200
-            )
+                rate_limit=200,
+            ),
         }
 
     async def trigger_alert(
@@ -276,7 +289,7 @@ class AlertManager:
         rule_id: str,
         message: str,
         value: float,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ) -> Optional[Alert]:
         """Trigger an alert based on a rule"""
 
@@ -305,7 +318,7 @@ class AlertManager:
             title=rule.name,
             message=f"{message} (Value: {value}, Threshold: {rule.threshold})",
             source=f"AlertRule:{rule_id}",
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Store alert
@@ -384,8 +397,7 @@ class AlertManager:
 
         # Remove old entries
         self.notification_counts[channel] = [
-            timestamp for timestamp in self.notification_counts[channel]
-            if timestamp > hour_ago
+            timestamp for timestamp in self.notification_counts[channel] if timestamp > hour_ago
         ]
 
         return len(self.notification_counts[channel]) >= config.rate_limit
@@ -399,10 +411,7 @@ class AlertManager:
         self.notification_counts[channel].append(datetime.now(timezone.utc))
 
     async def _send_notification(
-        self,
-        alert: Alert,
-        channel: NotificationChannel,
-        config: NotificationConfig
+        self, alert: Alert, channel: NotificationChannel, config: NotificationConfig
     ) -> None:
         """Send notification to specific channel"""
 
@@ -433,7 +442,9 @@ class AlertManager:
         """Send dashboard notification via Pusher"""
         try:
             # Try to send via Pusher for real-time dashboard updates
-            from apps.backend.services.pusher import trigger_event as pusher_trigger_event
+            from apps.backend.services.pusher import (
+                trigger_event as pusher_trigger_event,
+            )
 
             await pusher_trigger_event(
                 "gpt-migration-alerts",
@@ -447,9 +458,9 @@ class AlertManager:
                         "category": alert.category.value,
                         "title": alert.title,
                         "message": alert.message,
-                        "metadata": alert.metadata
-                    }
-                }
+                        "metadata": alert.metadata,
+                    },
+                },
             )
         except Exception as e:
             logger.warning(f"Failed to send dashboard notification via Pusher: {e}")
@@ -484,13 +495,17 @@ class AlertManager:
             escalated_alert = Alert(
                 id=f"{alert.id}_escalated_{alert.escalation_level}",
                 timestamp=datetime.now(timezone.utc),
-                severity=AlertSeverity.CRITICAL if alert.severity != AlertSeverity.EMERGENCY else AlertSeverity.EMERGENCY,
+                severity=(
+                    AlertSeverity.CRITICAL
+                    if alert.severity != AlertSeverity.EMERGENCY
+                    else AlertSeverity.EMERGENCY
+                ),
                 category=alert.category,
                 title=f"ESCALATED: {alert.title}",
                 message=f"Alert not acknowledged after {rule.escalation_time} seconds. Original: {alert.message}",
                 source=alert.source,
                 metadata=alert.metadata,
-                escalation_level=alert.escalation_level
+                escalation_level=alert.escalation_level,
             )
 
             # Send escalated notifications (usually to higher priority channels)
@@ -501,7 +516,10 @@ class AlertManager:
                 severity=escalated_alert.severity,
                 condition=rule.condition,
                 threshold=rule.threshold,
-                channels=[NotificationChannel.EMAIL, NotificationChannel.SMS]  # Escalate to high-priority channels
+                channels=[
+                    NotificationChannel.EMAIL,
+                    NotificationChannel.SMS,
+                ],  # Escalate to high-priority channels
             )
 
             await self._send_notifications(escalated_alert, escalated_rule)
@@ -539,9 +557,9 @@ class AlertManager:
 
     def get_active_alerts(
         self,
-        severity_filter: Optional[List[AlertSeverity]] = None,
-        category_filter: Optional[List[AlertCategory]] = None
-    ) -> List[Alert]:
+        severity_filter: Optional[list[AlertSeverity]] = None,
+        category_filter: Optional[list[AlertCategory]] = None,
+    ) -> list[Alert]:
         """Get currently active alerts with optional filtering"""
 
         alerts = list(self.active_alerts.values())
@@ -557,22 +575,21 @@ class AlertManager:
             AlertSeverity.EMERGENCY: 4,
             AlertSeverity.CRITICAL: 3,
             AlertSeverity.WARNING: 2,
-            AlertSeverity.INFO: 1
+            AlertSeverity.INFO: 1,
         }
 
         alerts.sort(key=lambda a: (severity_order[a.severity], a.timestamp), reverse=True)
 
         return alerts
 
-    def get_alert_statistics(self, days_back: int = 7) -> Dict[str, Any]:
+    def get_alert_statistics(self, days_back: int = 7) -> dict[str, Any]:
         """Get alert statistics for the specified period"""
 
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=days_back)
 
         period_alerts = [
-            alert for alert in self.alert_history
-            if start_time <= alert.timestamp <= end_time
+            alert for alert in self.alert_history if start_time <= alert.timestamp <= end_time
         ]
 
         # Count by severity
@@ -604,11 +621,13 @@ class AlertManager:
             "acknowledgment_rate": acknowledgment_rate,
             "severity_breakdown": severity_counts,
             "category_breakdown": category_counts,
-            "most_frequent_category": max(category_counts, key=category_counts.get) if category_counts else None,
-            "avg_alerts_per_day": total_alerts / days_back if days_back > 0 else 0
+            "most_frequent_category": (
+                max(category_counts, key=category_counts.get) if category_counts else None
+            ),
+            "avg_alerts_per_day": total_alerts / days_back if days_back > 0 else 0,
         }
 
-    def update_alert_rule(self, rule_id: str, updates: Dict[str, Any]) -> bool:
+    def update_alert_rule(self, rule_id: str, updates: dict[str, Any]) -> bool:
         """Update an existing alert rule"""
 
         if rule_id not in self.alert_rules:
@@ -617,7 +636,13 @@ class AlertManager:
         rule = self.alert_rules[rule_id]
 
         # Update allowed fields
-        allowed_fields = ["enabled", "threshold", "channels", "escalation_time", "suppression_time"]
+        allowed_fields = [
+            "enabled",
+            "threshold",
+            "channels",
+            "escalation_time",
+            "suppression_time",
+        ]
 
         for field, value in updates.items():
             if field in allowed_fields and hasattr(rule, field):
@@ -638,16 +663,14 @@ class AlertManager:
         return True
 
     def configure_notification_channel(
-        self,
-        channel: NotificationChannel,
-        config: NotificationConfig
+        self, channel: NotificationChannel, config: NotificationConfig
     ) -> None:
         """Configure a notification channel"""
 
         self.notification_configs[channel] = config
         logger.info(f"Configured notification channel: {channel.value}")
 
-    def get_dashboard_data(self) -> Dict[str, Any]:
+    def get_dashboard_data(self) -> dict[str, Any]:
         """Get alert data for dashboard display"""
 
         active_alerts = self.get_active_alerts()
@@ -663,7 +686,7 @@ class AlertManager:
                     "title": alert.title,
                     "message": alert.message,
                     "acknowledged": alert.acknowledged,
-                    "escalation_level": alert.escalation_level
+                    "escalation_level": alert.escalation_level,
                 }
                 for alert in active_alerts[:10]  # Last 10 alerts
             ],
@@ -671,12 +694,14 @@ class AlertManager:
                 "critical": len([a for a in active_alerts if a.severity == AlertSeverity.CRITICAL]),
                 "warning": len([a for a in active_alerts if a.severity == AlertSeverity.WARNING]),
                 "info": len([a for a in active_alerts if a.severity == AlertSeverity.INFO]),
-                "emergency": len([a for a in active_alerts if a.severity == AlertSeverity.EMERGENCY])
+                "emergency": len(
+                    [a for a in active_alerts if a.severity == AlertSeverity.EMERGENCY]
+                ),
             },
             "statistics": stats,
             "notification_status": {
                 channel.value: config.enabled
                 for channel, config in self.notification_configs.items()
             },
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }

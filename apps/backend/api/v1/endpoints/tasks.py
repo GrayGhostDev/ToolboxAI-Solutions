@@ -73,7 +73,7 @@ async def get_tasks_status():
 
         # Get active workers
         active_workers = inspector.active()
-        registered_tasks = inspector.registered()
+        inspector.registered()
         stats = inspector.stats()
 
         # Count total active tasks
@@ -188,7 +188,11 @@ async def cancel_task(task_id: str, current_user: dict = Depends(get_current_use
     try:
         celery_app.control.revoke(task_id, terminate=True)
 
-        return {"task_id": task_id, "status": "cancelled", "message": "Task cancellation requested"}
+        return {
+            "task_id": task_id,
+            "status": "cancelled",
+            "message": "Task cancellation requested",
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to cancel task: {str(e)}")

@@ -9,25 +9,25 @@ Created: 2025-09-17
 Version: 1.0.0
 """
 
-import asyncio
 import json
 import logging
 import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
 
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
-# from core.agents.github_agents.worktree_orchestrator_agent import WorktreeOrchestratorAgent  # Archived - now in orchestration module
-from core.agents.github_agents.session_manager_agent import SessionManagerAgent
 # Import only the enums to avoid circular dependency
 from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
+
+# from core.agents.github_agents.worktree_orchestrator_agent import WorktreeOrchestratorAgent  # Archived - now in orchestration module
+from core.agents.github_agents.session_manager_agent import SessionManagerAgent
+
 
 class AgentSystemType(Enum):
     """Types of agent systems available."""
+
     EDUCATIONAL = "educational"
     CONTENT = "content"
     DATABASE = "database"
@@ -39,19 +39,23 @@ class AgentSystemType(Enum):
     TESTING = "testing"
     REVIEW = "review"
 
+
 class TaskPriority(Enum):
     """Priority levels for task execution."""
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
     LOW = 4
     DEFERRED = 5
 
+
 logger = logging.getLogger(__name__)
 
 
 class TaskDistributionStrategy(Enum):
     """Strategies for distributing tasks across worktrees."""
+
     ROUND_ROBIN = "round_robin"
     LEAST_LOADED = "least_loaded"
     CAPABILITY_BASED = "capability_based"
@@ -61,6 +65,7 @@ class TaskDistributionStrategy(Enum):
 
 class WorktreeTaskType(Enum):
     """Types of tasks that can be assigned to worktrees."""
+
     FEATURE_DEVELOPMENT = "feature_development"
     BUG_FIX = "bug_fix"
     REFACTORING = "refactoring"
@@ -76,12 +81,13 @@ class WorktreeTaskType(Enum):
 @dataclass
 class WorktreeTask:
     """Represents a task to be executed in a worktree."""
+
     task_id: str
     task_type: WorktreeTaskType
     branch_name: str
     description: str
-    requirements: List[str] = field(default_factory=list)
-    dependencies: List[str] = field(default_factory=list)  # Other task IDs
+    requirements: list[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)  # Other task IDs
     priority: TaskPriority = TaskPriority.MEDIUM
     estimated_hours: float = 2.0
     assigned_worktree: Optional[str] = None
@@ -90,17 +96,18 @@ class WorktreeTask:
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     status: str = "pending"
-    result: Optional[Dict[str, Any]] = None
-    context: Dict[str, Any] = field(default_factory=dict)
+    result: Optional[dict[str, Any]] = None
+    context: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class WorktreeCapabilities:
     """Capabilities of a worktree session."""
+
     worktree_id: str
     branch_name: str
     session_id: Optional[str]
-    available_agents: List[str] = field(default_factory=list)
+    available_agents: list[str] = field(default_factory=list)
     specialization: Optional[WorktreeTaskType] = None
     current_load: int = 0
     max_load: int = 3
@@ -128,14 +135,14 @@ class WorktreeAgentCoordinator:
         self.session_manager = SessionManagerAgent()
 
         # Task management
-        self.task_queue: List[WorktreeTask] = []
-        self.active_tasks: Dict[str, WorktreeTask] = {}
-        self.completed_tasks: List[WorktreeTask] = []
-        self.task_dependencies: Dict[str, Set[str]] = defaultdict(set)
+        self.task_queue: list[WorktreeTask] = []
+        self.active_tasks: dict[str, WorktreeTask] = {}
+        self.completed_tasks: list[WorktreeTask] = []
+        self.task_dependencies: dict[str, set[str]] = defaultdict(set)
 
         # Worktree tracking
-        self.worktree_capabilities: Dict[str, WorktreeCapabilities] = {}
-        self.worktree_affinity: Dict[str, Dict[WorktreeTaskType, float]] = defaultdict(dict)
+        self.worktree_capabilities: dict[str, WorktreeCapabilities] = {}
+        self.worktree_affinity: dict[str, dict[WorktreeTaskType, float]] = defaultdict(dict)
 
         # Configuration
         self.distribution_strategy = TaskDistributionStrategy.CAPABILITY_BASED
@@ -149,7 +156,7 @@ class WorktreeAgentCoordinator:
             "tasks_completed": 0,
             "average_completion_time": 0.0,
             "worktree_efficiency": {},
-            "task_success_rate": 0.0
+            "task_success_rate": 0.0,
         }
 
         logger.info("Worktree-Agent Coordinator initialized")
@@ -158,10 +165,10 @@ class WorktreeAgentCoordinator:
         self,
         task_type: WorktreeTaskType,
         description: str,
-        requirements: List[str],
+        requirements: list[str],
         priority: TaskPriority = TaskPriority.MEDIUM,
-        dependencies: Optional[List[str]] = None,
-        context: Optional[Dict[str, Any]] = None
+        dependencies: Optional[list[str]] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> str:
         """Distribute a task to an appropriate worktree.
 
@@ -185,7 +192,7 @@ class WorktreeAgentCoordinator:
             requirements=requirements,
             dependencies=dependencies or [],
             priority=priority,
-            context=context or {}
+            context=context or {},
         )
 
         # Add to queue
@@ -243,8 +250,9 @@ class WorktreeAgentCoordinator:
 
         for dep_id in task.dependencies:
             # Check if dependency is completed
-            completed = any(t.task_id == dep_id and t.status == "completed"
-                          for t in self.completed_tasks)
+            completed = any(
+                t.task_id == dep_id and t.status == "completed" for t in self.completed_tasks
+            )
             if not completed:
                 return False
 
@@ -281,22 +289,18 @@ class WorktreeAgentCoordinator:
         # Apply distribution strategy
         if self.distribution_strategy == TaskDistributionStrategy.LEAST_LOADED:
             # Sort by load
-            suitable_worktrees.sort(
-                key=lambda x: self.worktree_capabilities[x[0]].current_load
-            )
+            suitable_worktrees.sort(key=lambda x: self.worktree_capabilities[x[0]].current_load)
         elif self.distribution_strategy == TaskDistributionStrategy.CAPABILITY_BASED:
             # Sort by score and performance
             suitable_worktrees.sort(
-                key=lambda x: (
-                    x[1] * self.worktree_capabilities[x[0]].performance_score
-                ),
-                reverse=True
+                key=lambda x: (x[1] * self.worktree_capabilities[x[0]].performance_score),
+                reverse=True,
             )
         elif self.distribution_strategy == TaskDistributionStrategy.AFFINITY_BASED:
             # Sort by affinity
             suitable_worktrees.sort(
                 key=lambda x: self.worktree_affinity[x[0]].get(task.task_type, 0.5),
-                reverse=True
+                reverse=True,
             )
 
         return suitable_worktrees[0][0] if suitable_worktrees else None
@@ -312,14 +316,16 @@ class WorktreeAgentCoordinator:
         """
         try:
             # Create worktree via orchestrator
-            result = await self.worktree_orchestrator.execute({
-                "action": "create",
-                "branch_name": task.branch_name,
-                "launch_claude": True
-            })
+            result = await self.worktree_orchestrator.execute(
+                {
+                    "action": "create",
+                    "branch_name": task.branch_name,
+                    "launch_claude": True,
+                }
+            )
 
             if result.get("success"):
-                worktree_path = result.get("worktree", {}).get("path")
+                result.get("worktree", {}).get("path")
                 worktree_id = task.branch_name
 
                 # Register capabilities
@@ -327,7 +333,7 @@ class WorktreeAgentCoordinator:
                     worktree_id=worktree_id,
                     branch_name=task.branch_name,
                     specialization=task.task_type,
-                    last_activity=datetime.now()
+                    last_activity=datetime.now(),
                 )
                 self.worktree_capabilities[worktree_id] = capabilities
 
@@ -361,11 +367,13 @@ class WorktreeAgentCoordinator:
         # Start Claude session if needed
         capabilities = self.worktree_capabilities.get(worktree_id)
         if capabilities and not capabilities.session_id:
-            session_result = await self.session_manager.execute({
-                "action": "start",
-                "worktree_branch": task.branch_name,
-                "worktree_path": f"/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees/{task.branch_name}"
-            })
+            session_result = await self.session_manager.execute(
+                {
+                    "action": "start",
+                    "worktree_branch": task.branch_name,
+                    "worktree_path": f"/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees/{task.branch_name}",
+                }
+            )
 
             if session_result.get("success"):
                 capabilities.session_id = session_result.get("session_id")
@@ -423,7 +431,9 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
 """
 
         # Save to worktree
-        task_file_path = Path(f"/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees/{worktree_id}/.claude-task-{task.task_id}.md")
+        task_file_path = Path(
+            f"/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees/{worktree_id}/.claude-task-{task.task_id}.md"
+        )
 
         try:
             task_file_path.write_text(task_content)
@@ -445,20 +455,20 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
             WorktreeTaskType.FEATURE_DEVELOPMENT: [
                 (AgentSystemType.INTEGRATION, "backend"),
                 (AgentSystemType.INTEGRATION, "frontend"),
-                (AgentSystemType.QUALITY, "code_review")
+                (AgentSystemType.QUALITY, "code_review"),
             ],
             WorktreeTaskType.BUG_FIX: [
                 (AgentSystemType.QUALITY, "debugging"),
-                (AgentSystemType.TESTING, "regression")
+                (AgentSystemType.TESTING, "regression"),
             ],
             WorktreeTaskType.DOCUMENTATION: [
                 (AgentSystemType.DOCUMENTATION, "generate"),
-                (AgentSystemType.REVIEW, "content")
+                (AgentSystemType.REVIEW, "content"),
             ],
             WorktreeTaskType.TESTING: [
                 (AgentSystemType.TESTING, "unit"),
-                (AgentSystemType.TESTING, "integration")
-            ]
+                (AgentSystemType.TESTING, "integration"),
+            ],
         }
 
         agent_tasks = task_mapping.get(task.task_type, [])
@@ -470,19 +480,17 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
                     "worktree_task_id": task.task_id,
                     "worktree_id": task.assigned_worktree,
                     "sub_task": sub_task,
-                    "context": task.context
+                    "context": task.context,
                 },
                 priority=task.priority,
-                context={"worktree_task": task.task_id}
+                context={"worktree_task": task.task_id},
             )
 
     async def _update_worktree_capabilities(self):
         """Update capabilities of all worktrees."""
         try:
             # Get worktree status from orchestrator
-            status_result = await self.worktree_orchestrator.execute({
-                "action": "list"
-            })
+            status_result = await self.worktree_orchestrator.execute({"action": "list"})
 
             if status_result.get("success"):
                 worktrees = status_result.get("worktrees", [])
@@ -496,7 +504,7 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
                             worktree_id=worktree_id,
                             branch_name=worktree.get("branch"),
                             session_id=None,
-                            last_activity=datetime.now()
+                            last_activity=datetime.now(),
                         )
 
                     # Update activity status
@@ -525,14 +533,14 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
             WorktreeTaskType.PERFORMANCE_OPTIMIZATION: "perf",
             WorktreeTaskType.SECURITY_AUDIT: "security",
             WorktreeTaskType.DEPENDENCY_UPDATE: "deps",
-            WorktreeTaskType.EXPERIMENTATION: "experiment"
+            WorktreeTaskType.EXPERIMENTATION: "experiment",
         }
 
         prefix = prefix_map.get(task_type, "task")
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         return f"{prefix}-{timestamp}"
 
-    async def complete_task(self, task_id: str, result: Optional[Dict[str, Any]] = None):
+    async def complete_task(self, task_id: str, result: Optional[dict[str, Any]] = None):
         """Mark a task as complete.
 
         Args:
@@ -552,24 +560,23 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
         completion_time = (task.completed_at - task.started_at).total_seconds() / 3600
         self.metrics["tasks_completed"] += 1
         self.metrics["average_completion_time"] = (
-            (self.metrics["average_completion_time"] * (self.metrics["tasks_completed"] - 1) +
-             completion_time) / self.metrics["tasks_completed"]
-        )
+            self.metrics["average_completion_time"] * (self.metrics["tasks_completed"] - 1)
+            + completion_time
+        ) / self.metrics["tasks_completed"]
 
         # Update worktree metrics
         if task.assigned_worktree:
             if task.assigned_worktree not in self.metrics["worktree_efficiency"]:
                 self.metrics["worktree_efficiency"][task.assigned_worktree] = {
                     "tasks_completed": 0,
-                    "average_time": 0.0
+                    "average_time": 0.0,
                 }
 
             efficiency = self.metrics["worktree_efficiency"][task.assigned_worktree]
             efficiency["tasks_completed"] += 1
             efficiency["average_time"] = (
-                (efficiency["average_time"] * (efficiency["tasks_completed"] - 1) +
-                 completion_time) / efficiency["tasks_completed"]
-            )
+                efficiency["average_time"] * (efficiency["tasks_completed"] - 1) + completion_time
+            ) / efficiency["tasks_completed"]
 
             # Update worktree load
             if task.assigned_worktree in self.worktree_capabilities:
@@ -591,7 +598,7 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
 
         logger.info(f"Task {task_id} completed")
 
-    async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, task_id: str) -> Optional[dict[str, Any]]:
         """Get status of a specific task.
 
         Args:
@@ -617,7 +624,7 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
 
         return None
 
-    def _task_to_dict(self, task: WorktreeTask) -> Dict[str, Any]:
+    def _task_to_dict(self, task: WorktreeTask) -> dict[str, Any]:
         """Convert task to dictionary.
 
         Args:
@@ -639,7 +646,7 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
             "started_at": task.started_at.isoformat() if task.started_at else None,
             "completed_at": task.completed_at.isoformat() if task.completed_at else None,
             "estimated_hours": task.estimated_hours,
-            "result": task.result
+            "result": task.result,
         }
 
     async def optimize_distribution(self):
@@ -675,7 +682,9 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
 
             # Calculate affinity based on completion rate and time
             if efficiency["tasks_completed"] > 0:
-                performance_score = 1.0 / efficiency["average_time"] if efficiency["average_time"] > 0 else 1.0
+                performance_score = (
+                    1.0 / efficiency["average_time"] if efficiency["average_time"] > 0 else 1.0
+                )
 
                 # Update capabilities
                 if worktree_id in self.worktree_capabilities:
@@ -691,15 +700,14 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
                 idle_time = now - capabilities.last_activity
                 if idle_time > idle_threshold:
                     # Remove idle worktree
-                    await self.worktree_orchestrator.execute({
-                        "action": "remove",
-                        "branch_name": capabilities.branch_name
-                    })
+                    await self.worktree_orchestrator.execute(
+                        {"action": "remove", "branch_name": capabilities.branch_name}
+                    )
 
                     del self.worktree_capabilities[worktree_id]
                     logger.info(f"Cleaned up idle worktree: {worktree_id}")
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get coordinator statistics.
 
         Returns:
@@ -709,12 +717,12 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
             "tasks": {
                 "queued": len(self.task_queue),
                 "active": len(self.active_tasks),
-                "completed": len(self.completed_tasks)
+                "completed": len(self.completed_tasks),
             },
             "worktrees": {
                 "total": len(self.worktree_capabilities),
-                "active": sum(1 for c in self.worktree_capabilities.values() if c.current_load > 0)
+                "active": sum(1 for c in self.worktree_capabilities.values() if c.current_load > 0),
             },
             "metrics": self.metrics,
-            "distribution_strategy": self.distribution_strategy.value
+            "distribution_strategy": self.distribution_strategy.value,
         }

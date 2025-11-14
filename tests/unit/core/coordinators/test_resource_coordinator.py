@@ -51,7 +51,7 @@ async def initialized_coordinator(resource_coordinator):
                 mock_memory.return_value.total = 16 * 1024 * 1024 * 1024  # 16GB
                 mock_memory.return_value.available = 8 * 1024 * 1024 * 1024  # 8GB
 
-                with patch("asyncio.create_task") as mock_create_task:
+                with patch("asyncio.create_task"):
                     await resource_coordinator.initialize()
                     resource_coordinator.is_initialized = True
                     yield resource_coordinator
@@ -149,7 +149,9 @@ class TestResourceAllocation:
         }
 
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -176,7 +178,9 @@ class TestResourceAllocation:
         requirements = {"cpu_cores": 10, "memory_mb": 1024}  # More than available
 
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -195,7 +199,9 @@ class TestResourceAllocation:
         requirements = {"cpu_cores": 2, "memory_mb": 20000}  # More than available
 
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -214,7 +220,9 @@ class TestResourceAllocation:
         requirements = {"cpu_cores": 1, "memory_mb": 512}
 
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -238,7 +246,9 @@ class TestResourceAllocation:
         requirements = {"cpu_cores": 1, "memory_mb": 512, "ttl_seconds": 1800}
 
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -467,7 +477,9 @@ class TestSystemResourceMonitoring:
     async def test_get_utilization(self, initialized_coordinator):
         """Test resource utilization calculation"""
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -487,7 +499,9 @@ class TestSystemResourceMonitoring:
     async def test_update_system_resources(self, initialized_coordinator):
         """Test updating system resources"""
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             mock_resources.return_value = SystemResources(
                 total_cpu_cores=8,
@@ -499,7 +513,9 @@ class TestSystemResourceMonitoring:
             )
 
             with patch.object(
-                initialized_coordinator, "_check_resource_alerts", new_callable=AsyncMock
+                initialized_coordinator,
+                "_check_resource_alerts",
+                new_callable=AsyncMock,
             ):
                 await initialized_coordinator._update_system_resources()
 
@@ -584,13 +600,19 @@ class TestOptimization:
     async def test_optimize_resource_allocation(self, initialized_coordinator):
         """Test optimization recommendations"""
         with patch.object(
-            initialized_coordinator, "_analyze_allocation_patterns", new_callable=AsyncMock
+            initialized_coordinator,
+            "_analyze_allocation_patterns",
+            new_callable=AsyncMock,
         ) as mock_analyze:
             with patch.object(
-                initialized_coordinator, "_analyze_api_efficiency", new_callable=AsyncMock
+                initialized_coordinator,
+                "_analyze_api_efficiency",
+                new_callable=AsyncMock,
             ) as mock_api:
                 with patch.object(
-                    initialized_coordinator, "_analyze_cost_efficiency", new_callable=AsyncMock
+                    initialized_coordinator,
+                    "_analyze_cost_efficiency",
+                    new_callable=AsyncMock,
                 ) as mock_cost:
                     mock_analyze.return_value = {
                         "avg_cpu_utilization": 40.0,
@@ -645,7 +667,9 @@ class TestOptimization:
             initialized_coordinator, "_analyze_api_efficiency", new_callable=AsyncMock
         ) as mock_api:
             with patch.object(
-                initialized_coordinator, "_analyze_allocation_patterns", new_callable=AsyncMock
+                initialized_coordinator,
+                "_analyze_allocation_patterns",
+                new_callable=AsyncMock,
             ) as mock_alloc:
                 mock_api.return_value = {"wasted_quota": 20.0}
                 mock_alloc.return_value = {
@@ -669,13 +693,17 @@ class TestResourceStatus:
     async def test_get_resource_status(self, initialized_coordinator):
         """Test comprehensive resource status"""
         with patch.object(
-            initialized_coordinator, "_get_current_system_resources", new_callable=AsyncMock
+            initialized_coordinator,
+            "_get_current_system_resources",
+            new_callable=AsyncMock,
         ) as mock_resources:
             with patch.object(
                 initialized_coordinator, "get_utilization", new_callable=AsyncMock
             ) as mock_util:
                 with patch.object(
-                    initialized_coordinator, "_get_current_alerts", new_callable=AsyncMock
+                    initialized_coordinator,
+                    "_get_current_alerts",
+                    new_callable=AsyncMock,
                 ) as mock_alerts:
                     mock_resources.return_value = SystemResources(
                         total_cpu_cores=8,
@@ -730,10 +758,12 @@ class TestBackgroundTasks:
 
         with patch.object(
             initialized_coordinator, "_update_system_resources", new_callable=AsyncMock
-        ) as mock_update:
+        ):
             with patch.object(
-                initialized_coordinator, "_update_usage_tracking", new_callable=AsyncMock
-            ) as mock_usage:
+                initialized_coordinator,
+                "_update_usage_tracking",
+                new_callable=AsyncMock,
+            ):
                 with patch("asyncio.sleep", new_callable=AsyncMock):
                     task = asyncio.create_task(initialized_coordinator._resource_monitor())
 
@@ -785,9 +815,7 @@ class TestBackgroundTasks:
         """Test quota reset scheduler"""
         initialized_coordinator.is_initialized = True
 
-        with patch.object(
-            initialized_coordinator, "_reset_quota_counters", new_callable=AsyncMock
-        ) as mock_reset:
+        with patch.object(initialized_coordinator, "_reset_quota_counters", new_callable=AsyncMock):
             with patch("asyncio.sleep", new_callable=AsyncMock):
                 task = asyncio.create_task(initialized_coordinator._quota_reset_scheduler())
 
@@ -1018,7 +1046,9 @@ class TestMetrics:
             initialized_coordinator, "get_utilization", new_callable=AsyncMock
         ) as mock_util:
             with patch.object(
-                initialized_coordinator, "optimize_resource_allocation", new_callable=AsyncMock
+                initialized_coordinator,
+                "optimize_resource_allocation",
+                new_callable=AsyncMock,
             ) as mock_opt:
                 mock_util.return_value = {
                     "cpu_utilization": 50.0,

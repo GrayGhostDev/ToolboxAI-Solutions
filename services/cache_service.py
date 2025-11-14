@@ -12,12 +12,11 @@ Features:
 - Metrics tracking for cache hits/misses
 """
 
-import json
 import hashlib
 import inspect
-from typing import Any, Optional, Callable, Union
+import json
 from functools import wraps
-from datetime import timedelta
+from typing import Any, Callable, Optional, Union
 
 import redis.asyncio as aioredis
 from pydantic import BaseModel
@@ -30,6 +29,7 @@ logger = logging_manager.get_logger(__name__)
 
 class CacheConfig(BaseModel):
     """Configuration for cache settings"""
+
     ttl: int = 300  # Default 5 minutes
     namespace: str = "default"
     serialize: bool = True
@@ -40,12 +40,7 @@ class CacheService:
     Redis-based caching service with automatic serialization and TTL management
     """
 
-    def __init__(
-        self,
-        redis_url: str = None,
-        default_ttl: int = 300,
-        prefix: str = "cache"
-    ):
+    def __init__(self, redis_url: str = None, default_ttl: int = 300, prefix: str = "cache"):
         self.redis_url = redis_url or settings.REDIS_URL or "redis://localhost:6379/1"
         self.default_ttl = default_ttl
         self.prefix = prefix
@@ -53,13 +48,13 @@ class CacheService:
 
         # Cache type configurations
         self.cache_configs = {
-            "dashboard": CacheConfig(ttl=300, namespace="dashboard"),      # 5 min
-            "metrics": CacheConfig(ttl=60, namespace="metrics"),           # 1 min
-            "analytics": CacheConfig(ttl=600, namespace="analytics"),      # 10 min
-            "user_profile": CacheConfig(ttl=1800, namespace="user"),       # 30 min
-            "organization": CacheConfig(ttl=3600, namespace="org"),        # 1 hour
-            "content": CacheConfig(ttl=900, namespace="content"),          # 15 min
-            "session": CacheConfig(ttl=86400, namespace="session"),        # 24 hours
+            "dashboard": CacheConfig(ttl=300, namespace="dashboard"),  # 5 min
+            "metrics": CacheConfig(ttl=60, namespace="metrics"),  # 1 min
+            "analytics": CacheConfig(ttl=600, namespace="analytics"),  # 10 min
+            "user_profile": CacheConfig(ttl=1800, namespace="user"),  # 30 min
+            "organization": CacheConfig(ttl=3600, namespace="org"),  # 1 hour
+            "content": CacheConfig(ttl=900, namespace="content"),  # 15 min
+            "session": CacheConfig(ttl=86400, namespace="session"),  # 24 hours
         }
 
         # Metrics
@@ -72,7 +67,7 @@ class CacheService:
             self.redis = await aioredis.from_url(
                 self.redis_url,
                 encoding="utf-8",
-                decode_responses=False  # We'll handle encoding ourselves
+                decode_responses=False,  # We'll handle encoding ourselves
             )
             logger.info("Cache service connected to Redis")
 
@@ -86,7 +81,7 @@ class CacheService:
         self,
         namespace: str,
         key: Union[str, dict],
-        organization_id: Optional[str] = None
+        organization_id: Optional[str] = None,
     ) -> str:
         """
         Generate cache key with namespace and optional organization isolation
@@ -123,7 +118,7 @@ class CacheService:
         self,
         key: Union[str, dict],
         namespace: str = "default",
-        organization_id: Optional[str] = None
+        organization_id: Optional[str] = None,
     ) -> Optional[Any]:
         """
         Get value from cache
@@ -161,7 +156,7 @@ class CacheService:
         value: Any,
         namespace: str = "default",
         ttl: Optional[int] = None,
-        organization_id: Optional[str] = None
+        organization_id: Optional[str] = None,
     ) -> bool:
         """
         Set value in cache
@@ -199,7 +194,7 @@ class CacheService:
         self,
         key: Union[str, dict],
         namespace: str = "default",
-        organization_id: Optional[str] = None
+        organization_id: Optional[str] = None,
     ) -> bool:
         """Delete value from cache"""
         if not self.redis:
@@ -215,11 +210,7 @@ class CacheService:
             logger.error(f"Cache delete error for {cache_key}: {e}")
             return False
 
-    async def delete_pattern(
-        self,
-        pattern: str,
-        namespace: str = "default"
-    ) -> int:
+    async def delete_pattern(self, pattern: str, namespace: str = "default") -> int:
         """
         Delete all keys matching pattern
 
@@ -264,7 +255,7 @@ class CacheService:
             "cache_misses": self.cache_misses,
             "total_requests": total_requests,
             "hit_rate_percent": round(hit_rate, 2),
-            "connected": self.redis is not None
+            "connected": self.redis is not None,
         }
 
 
@@ -275,7 +266,7 @@ cache_service = CacheService()
 def cached(
     namespace: str = "default",
     ttl: Optional[int] = None,
-    key_builder: Optional[Callable] = None
+    key_builder: Optional[Callable] = None,
 ):
     """
     Decorator to cache function results
@@ -300,6 +291,7 @@ def cached(
         async def get_analytics(org_id: str, date_range: str):
             return analytics
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -316,13 +308,15 @@ def cached(
             # Extract organization_id from bound arguments safely
             bound = inspect.signature(func).bind_partial(*args, **kwargs)
             bound.apply_defaults()
-            organization_id = bound.arguments.get("organization_id") or bound.arguments.get("org_id")
+            organization_id = bound.arguments.get("organization_id") or bound.arguments.get(
+                "org_id"
+            )
 
             # Try to get from cache
             cached_value = await cache_service.get(
                 cache_key,
                 namespace=namespace,
-                organization_id=str(organization_id) if organization_id else None
+                organization_id=str(organization_id) if organization_id else None,
             )
 
             if cached_value is not None:
@@ -338,11 +332,13 @@ def cached(
                 result,
                 namespace=namespace,
                 ttl=ttl,
-                organization_id=str(organization_id) if organization_id else None
+                organization_id=str(organization_id) if organization_id else None,
             )
 
             return result
+
         return wrapper
+
     return decorator
 
 

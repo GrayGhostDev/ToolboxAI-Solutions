@@ -11,10 +11,10 @@ import json
 import logging
 import secrets
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional, Tuple
 
 import redis.asyncio as redis
 from pydantic import BaseModel, Field, validator
@@ -60,10 +60,10 @@ class APIKeyMetadata:
     description: Optional[str] = None
     organization: Optional[str] = None
     contact_email: Optional[str] = None
-    ip_whitelist: Optional[List[str]] = None
-    allowed_origins: Optional[List[str]] = None
+    ip_whitelist: Optional[list[str]] = None
+    allowed_origins: Optional[list[str]] = None
     rate_limit_override: Optional[int] = None
-    custom_data: Optional[Dict[str, Any]] = None
+    custom_data: Optional[dict[str, Any]] = None
 
 
 class APIKeyModel(BaseModel):
@@ -74,14 +74,14 @@ class APIKeyModel(BaseModel):
     prefix: str  # First 8 chars for identification
     name: str
     description: Optional[str] = None
-    scopes: List[str] = Field(default_factory=list)
+    scopes: list[str] = Field(default_factory=list)
     status: APIKeyStatus = APIKeyStatus.ACTIVE
 
     # Metadata
     organization: Optional[str] = None
     contact_email: Optional[str] = None
-    ip_whitelist: Optional[List[str]] = None
-    allowed_origins: Optional[List[str]] = None
+    ip_whitelist: Optional[list[str]] = None
+    allowed_origins: Optional[list[str]] = None
 
     # Rate limiting
     rate_limit_per_minute: int = 60
@@ -150,7 +150,7 @@ class APIKeyManager:
         self.failed_validations = 0
 
         # In-memory cache for frequently used keys
-        self._memory_cache: Dict[str, Tuple[APIKeyModel, float]] = {}
+        self._memory_cache: dict[str, Tuple[APIKeyModel, float]] = {}
         self._memory_cache_max_size = 100
 
     @classmethod
@@ -189,7 +189,7 @@ class APIKeyManager:
             logger.warning(f"Failed to connect to Redis for API keys: {e}")
             return False
 
-    def generate_api_key(self) -> Tuple[str, str]:
+    def generate_api_key(self) -> tuple[str, str]:
         """
         Generate a new API key.
 
@@ -229,10 +229,10 @@ class APIKeyManager:
     async def create_api_key(
         self,
         name: str,
-        scopes: List[str],
+        scopes: list[str],
         metadata: Optional[APIKeyMetadata] = None,
         expires_in_days: Optional[int] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a new API key.
 
@@ -310,10 +310,10 @@ class APIKeyManager:
     async def validate_api_key(
         self,
         api_key: str,
-        required_scopes: Optional[List[str]] = None,
+        required_scopes: Optional[list[str]] = None,
         request_ip: Optional[str] = None,
         origin: Optional[str] = None,
-    ) -> Tuple[bool, Optional[APIKeyModel]]:
+    ) -> tuple[bool, Optional[APIKeyModel]]:
         """
         Validate an API key.
 
@@ -403,10 +403,10 @@ class APIKeyManager:
     async def _validate_key_model(
         self,
         api_key: APIKeyModel,
-        required_scopes: Optional[List[str]],
+        required_scopes: Optional[list[str]],
         request_ip: Optional[str],
         origin: Optional[str],
-    ) -> Tuple[bool, Optional[APIKeyModel]]:
+    ) -> tuple[bool, Optional[APIKeyModel]]:
         """
         Validate an API key model against requirements.
 
@@ -510,13 +510,18 @@ class APIKeyManager:
         """Sync usage statistics to database."""
         if self.supabase:
             try:
-                await self.supabase.table("api_keys").update(
-                    {
-                        "total_requests": api_key.total_requests,
-                        "last_used_at": api_key.last_used_at.isoformat(),
-                        "last_used_ip": api_key.last_used_ip,
-                    }
-                ).eq("key_id", api_key.key_id).execute()
+                await (
+                    self.supabase.table("api_keys")
+                    .update(
+                        {
+                            "total_requests": api_key.total_requests,
+                            "last_used_at": api_key.last_used_at.isoformat(),
+                            "last_used_ip": api_key.last_used_ip,
+                        }
+                    )
+                    .eq("key_id", api_key.key_id)
+                    .execute()
+                )
             except Exception as e:
                 logger.error(f"Failed to sync usage to database: {e}")
 
@@ -524,9 +529,12 @@ class APIKeyManager:
         """Update key status in database."""
         if self.supabase:
             try:
-                await self.supabase.table("api_keys").update({"status": api_key.status.value}).eq(
-                    "key_id", api_key.key_id
-                ).execute()
+                await (
+                    self.supabase.table("api_keys")
+                    .update({"status": api_key.status.value})
+                    .eq("key_id", api_key.key_id)
+                    .execute()
+                )
             except Exception as e:
                 logger.error(f"Failed to update key status: {e}")
 
@@ -544,13 +552,18 @@ class APIKeyManager:
         try:
             # Update in database
             if self.supabase:
-                await self.supabase.table("api_keys").update(
-                    {
-                        "status": APIKeyStatus.REVOKED.value,
-                        "revoked_at": datetime.now(timezone.utc).isoformat(),
-                        "revoked_reason": reason,
-                    }
-                ).eq("key_id", key_id).execute()
+                await (
+                    self.supabase.table("api_keys")
+                    .update(
+                        {
+                            "status": APIKeyStatus.REVOKED.value,
+                            "revoked_at": datetime.now(timezone.utc).isoformat(),
+                            "revoked_reason": reason,
+                        }
+                    )
+                    .eq("key_id", key_id)
+                    .execute()
+                )
 
             # Clear from caches
             if self.redis_client:
@@ -638,7 +651,7 @@ class APIKeyManager:
 
     async def check_rate_limit(
         self, api_key: APIKeyModel, source: str = "api"
-    ) -> Tuple[bool, Optional[int]]:
+    ) -> tuple[bool, Optional[int]]:
         """
         Check rate limit for an API key.
 
@@ -686,7 +699,7 @@ class APIKeyManager:
 
     async def list_api_keys(
         self, organization: Optional[str] = None, status: Optional[APIKeyStatus] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[Dict[str, Any]]:
         """
         List API keys with optional filters.
 
@@ -740,7 +753,7 @@ class APIKeyManager:
             logger.error(f"Failed to list API keys: {e}")
             return []
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get API key manager metrics."""
         cache_hit_rate = self.cache_hits / max(self.total_validations, 1)
         validation_failure_rate = self.failed_validations / max(self.total_validations, 1)

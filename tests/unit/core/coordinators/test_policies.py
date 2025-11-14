@@ -312,7 +312,8 @@ class TestCheckTests:
             mock_run.return_value = Mock(returncode=0)
 
             with patch(
-                "builtins.open", mock_open(read_data='{"summary":{"passed":10,"total":10}}')
+                "builtins.open",
+                mock_open(read_data='{"summary":{"passed":10,"total":10}}'),
             ):
                 policies.check_tests()
 
@@ -333,7 +334,6 @@ class TestCheckCoverage:
 
     def test_check_coverage_passes_with_good_coverage(self):
         """Test check_coverage passes with good coverage"""
-        xml_content = '<?xml version="1.0"?><coverage line-rate="0.85"></coverage>'
 
         with patch("xml.etree.ElementTree.parse") as mock_parse:
             mock_tree = MagicMock()
@@ -536,7 +536,8 @@ class TestEdgeCasesAndIntegration:
             mock_run.return_value = Mock(returncode=0, stdout="", stderr="")
 
             with patch(
-                "builtins.open", mock_open(read_data='{"summary":{"passed":10,"total":10}}')
+                "builtins.open",
+                mock_open(read_data='{"summary":{"passed":10,"total":10}}'),
             ):
                 with patch("xml.etree.ElementTree.parse") as mock_parse:
                     mock_tree = MagicMock()

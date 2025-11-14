@@ -228,7 +228,10 @@ class TestAgentModelsIsolation:
 
         # Create system health record (no organization_id)
         health = SystemHealth(
-            id=uuid4(), service_name="test-service", status="healthy", response_time=100.0
+            id=uuid4(),
+            service_name="test-service",
+            status="healthy",
+            response_time=100.0,
         )
         db_session.add(health)
         db_session.commit()
@@ -262,10 +265,16 @@ class TestRobloxModelsIsolation:
 
         # Create environments in different organizations
         env1 = RobloxEnvironment(
-            user_id=user1.id, name="Org1 Environment", place_id="123456", organization_id=org1.id
+            user_id=user1.id,
+            name="Org1 Environment",
+            place_id="123456",
+            organization_id=org1.id,
         )
         env2 = RobloxEnvironment(
-            user_id=user2.id, name="Org2 Environment", place_id="789012", organization_id=org2.id
+            user_id=user2.id,
+            name="Org2 Environment",
+            place_id="789012",
+            organization_id=org2.id,
         )
 
         db_session.add_all([env1, env2])
@@ -292,10 +301,16 @@ class TestRobloxModelsIsolation:
 
         # Create environments
         env1 = RobloxEnvironment(
-            user_id=user1.id, name="Shared Env Org1", place_id="111", organization_id=org1.id
+            user_id=user1.id,
+            name="Shared Env Org1",
+            place_id="111",
+            organization_id=org1.id,
         )
         env2 = RobloxEnvironment(
-            user_id=user2.id, name="Shared Env Org2", place_id="222", organization_id=org2.id
+            user_id=user2.id,
+            name="Shared Env Org2",
+            place_id="222",
+            organization_id=org2.id,
         )
         db_session.add_all([env1, env2])
         db_session.flush()
@@ -378,7 +393,9 @@ class TestPaymentModelsIsolation:
 
         # Create platform-wide coupon (NULL organization_id)
         platform_coupon = Coupon(
-            code="PLATFORM20", discount_percent=20.0, organization_id=None  # Platform-wide
+            code="PLATFORM20",
+            discount_percent=20.0,
+            organization_id=None,  # Platform-wide
         )
 
         # Create org-specific coupons
@@ -457,7 +474,10 @@ class TestContentPipelineIsolation:
 
         # Create cache entry (no organization_id)
         cache = ContentCache(
-            id=uuid4(), cache_key="test-key", cached_data={"result": "test"}, ttl_seconds=3600
+            id=uuid4(),
+            cache_key="test-key",
+            cached_data={"result": "test"},
+            ttl_seconds=3600,
         )
         db_session.add(cache)
         db_session.commit()
@@ -522,7 +542,7 @@ class TestCascadeDelete:
         assert db_session.query(AgentExecution).filter_by(id=exec_id).first() is None
 
         # Verify org2 data still exists
-        org2_agents = db_session.query(AgentInstance).filter_by(organization_id=org2.id).count()
+        db_session.query(AgentInstance).filter_by(organization_id=org2.id).count()
         # (may be 0 if no data created for org2 in this test)
 
 
@@ -548,7 +568,7 @@ class TestQueryUtilities:
             return session.query(AgentInstance).filter_by(agent_type=agent_type)
 
         # Function should automatically add organization filter
-        query = get_agents(db_session, organization_id=org1.id, agent_type="CONTENT_GENERATOR")
+        get_agents(db_session, organization_id=org1.id, agent_type="CONTENT_GENERATOR")
         # Query should have organization filter applied
 
     def test_tenant_session_context(
@@ -560,7 +580,7 @@ class TestQueryUtilities:
         # Set organization context
         with tenant_session(db_session, org1.id) as scoped_session:
             # RLS should be enforced within this context
-            agents = scoped_session.query(AgentInstance).all()
+            scoped_session.query(AgentInstance).all()
             # All agents should belong to org1
 
     def test_verify_tenant_isolation(
@@ -599,7 +619,8 @@ class TestRLSPolicies:
     """Test PostgreSQL Row Level Security policies"""
 
     @pytest.mark.skipif(
-        not hasattr(pytest, "rls_enabled"), reason="RLS policies not enabled in test environment"
+        not hasattr(pytest, "rls_enabled"),
+        reason="RLS policies not enabled in test environment",
     )
     def test_rls_policy_enforcement(
         self, db_session: Session, test_organizations: tuple[Organization, Organization]
@@ -637,7 +658,7 @@ class TestQueryPerformance:
 
         # Check query plan uses index
         # (Use EXPLAIN in actual database)
-        agents = query.all()
+        query.all()
         # Performance should be good with idx_agent_org_type_status index
 
 

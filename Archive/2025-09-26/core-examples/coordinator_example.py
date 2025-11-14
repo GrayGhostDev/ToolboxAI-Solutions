@@ -7,7 +7,6 @@ educational content generation in the ToolboxAI Roblox Environment.
 
 import asyncio
 import logging
-from typing import Dict, Any
 from datetime import datetime
 
 # Setup logging
@@ -23,7 +22,7 @@ async def example_educational_content_generation():
     """
     try:
         # Import coordinator system
-        from . import initialize_coordinators, get_coordinator_system
+        from . import initialize_coordinators
         
         # Configuration for the coordinator system
         config = {
@@ -509,7 +508,7 @@ async def example_educational_scenarios():
     logger.info("=== Educational Scenarios Example ===")
     
     try:
-        from . import generate_educational_content, create_learning_workflow
+        from . import create_learning_workflow, generate_educational_content
         
         # Scenario 1: Elementary science lesson
         logger.info("Generating elementary science content...")

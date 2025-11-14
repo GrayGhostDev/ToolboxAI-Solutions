@@ -7,11 +7,22 @@ Updated: 2025-10-10 (Added multi-tenant support)
 """
 
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
-from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 # Import tenant-aware base models
@@ -110,7 +121,7 @@ class RobloxEnvironment(TenantBaseModel):
         UniqueConstraint("organization_id", "user_id", "name", name="uq_org_user_environment_name"),
     )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert environment to dictionary."""
         return {
             "id": self.id,
@@ -191,7 +202,12 @@ class RobloxSession(TenantBaseModel):
 
     # Constraints and indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
-        Index("idx_roblox_session_org_env_user", "organization_id", "environment_id", "user_id"),
+        Index(
+            "idx_roblox_session_org_env_user",
+            "organization_id",
+            "environment_id",
+            "user_id",
+        ),
         Index("idx_roblox_session_org_created", "organization_id", "created_at"),
     )
 
@@ -239,7 +255,10 @@ class EnvironmentShare(TenantBaseModel):
         Index("idx_env_share_org_user", "organization_id", "shared_with_user_id"),
         Index("idx_env_share_org_class", "organization_id", "shared_with_class_id"),
         UniqueConstraint(
-            "organization_id", "environment_id", "shared_with_user_id", name="uq_org_env_user_share"
+            "organization_id",
+            "environment_id",
+            "shared_with_user_id",
+            name="uq_org_env_user_share",
         ),
     )
 
@@ -294,7 +313,12 @@ class EnvironmentTemplate(TenantBaseModel):
     # Constraints and indexes (organization_id index auto-created by TenantMixin)
     __table_args__ = (
         Index("idx_template_org_category", "organization_id", "category"),
-        Index("idx_template_org_public_featured", "organization_id", "is_public", "is_featured"),
+        Index(
+            "idx_template_org_public_featured",
+            "organization_id",
+            "is_public",
+            "is_featured",
+        ),
     )
 
 

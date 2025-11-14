@@ -2,11 +2,10 @@
 GitHub Agent Orchestrator using LangGraph for workflow management.
 """
 
-import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, TypedDict
+from typing import Any, Literal, Optional, TypedDict
 
 from langgraph.graph import END, StateGraph
 
@@ -31,14 +30,14 @@ class OperationType(Enum):
 class GitHubAgentState(TypedDict):
     """State schema for GitHub agent workflow."""
     operation_type: Literal["pre_commit", "pre_push", "health_check", "optimization", "deployment", "full_scan"]
-    files_to_process: List[str]
-    large_files_detected: List[Dict[str, Any]]
-    lfs_migrations: List[Dict[str, Any]]
-    optimizations_applied: List[Dict[str, Any]]
-    health_status: Dict[str, Any]
-    deployment_readiness: Dict[str, Any]
-    errors: List[str]
-    recommendations: List[str]
+    files_to_process: list[str]
+    large_files_detected: list[dict[str, Any]]
+    lfs_migrations: list[dict[str, Any]]
+    optimizations_applied: list[dict[str, Any]]
+    health_status: dict[str, Any]
+    deployment_readiness: dict[str, Any]
+    errors: list[str]
+    recommendations: list[str]
     current_agent: str
     timestamp: str
     auto_fix: bool
@@ -319,8 +318,8 @@ class GitHubAgentOrchestrator:
         self,
         operation: OperationType,
         auto_fix: bool = False,
-        files: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        files: Optional[list[str]] = None
+    ) -> dict[str, Any]:
         """Run the orchestrator workflow.
 
         Args:
@@ -369,7 +368,7 @@ class GitHubAgentOrchestrator:
                 "state": initial_state
             }
 
-    def _generate_summary(self, state: GitHubAgentState) -> Dict[str, Any]:
+    def _generate_summary(self, state: GitHubAgentState) -> dict[str, Any]:
         """Generate a summary of the workflow execution.
 
         Args:

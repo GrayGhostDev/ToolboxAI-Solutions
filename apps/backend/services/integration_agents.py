@@ -22,12 +22,11 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 try:
-    from core.agents.integration.orchestration import IntegrationCoordinator
-
     from core.agents.integration import IntegrationEvent, IntegrationPlatform
     from core.agents.integration.backend import APIGatewayAgent, DatabaseSyncAgent
     from core.agents.integration.data_flow import SchemaValidatorAgent
     from core.agents.integration.frontend import RealtimeUpdateAgent, UISyncAgent
+    from core.agents.integration.orchestration import IntegrationCoordinator
     from core.agents.integration.roblox import StudioBridgeAgent
 
     INTEGRATION_AVAILABLE = True
@@ -331,7 +330,10 @@ class IntegrationAgentsManager:
                     "description": {"type": "string"},
                     "grade_level": {"type": "integer", "minimum": 1, "maximum": 12},
                     "subject": {"type": "string"},
-                    "learning_objectives": {"type": "array", "items": {"type": "string"}},
+                    "learning_objectives": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
                     "created_at": {"type": "string", "format": "date-time"},
                     "updated_at": {"type": "string", "format": "date-time"},
                 },

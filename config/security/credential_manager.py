@@ -3,16 +3,13 @@ Secure Credential Management System
 Handles all credential operations with encryption and validation
 """
 
-import os
 import json
-import hashlib
+import os
 import secrets
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Optional
+
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-import base64
 
 
 class CredentialManager:
@@ -24,46 +21,40 @@ class CredentialManager:
             "DATABASE_URL": {
                 "description": "PostgreSQL connection string",
                 "pattern": r"^postgresql://.*",
-                "encrypted": True
+                "encrypted": True,
             },
             "PGPASSWORD": {
                 "description": "PostgreSQL password",
                 "encrypted": True,
-                "sensitive": True
+                "sensitive": True,
             },
             "JWT_SECRET_KEY": {
                 "description": "JWT signing secret (min 32 chars)",
                 "min_length": 32,
                 "encrypted": True,
-                "generate_if_missing": True
+                "generate_if_missing": True,
             },
             "PUSHER_SECRET": {
                 "description": "Pusher secret key",
                 "encrypted": True,
-                "sensitive": True
+                "sensitive": True,
             },
-            "PUSHER_KEY": {
-                "description": "Pusher application key",
-                "encrypted": False
-            },
+            "PUSHER_KEY": {"description": "Pusher application key", "encrypted": False},
             "PUSHER_APP_ID": {
                 "description": "Pusher application ID",
-                "encrypted": False
+                "encrypted": False,
             },
-            "PUSHER_CLUSTER": {
-                "description": "Pusher cluster",
-                "encrypted": False
-            },
+            "PUSHER_CLUSTER": {"description": "Pusher cluster", "encrypted": False},
             "GITHUB_TOKEN": {
                 "description": "GitHub personal access token",
                 "encrypted": True,
-                "optional": True
+                "optional": True,
             },
             "REDIS_URL": {
                 "description": "Redis connection string",
                 "default": "redis://localhost:6379",
-                "encrypted": False
-            }
+                "encrypted": False,
+            },
         }
 
         # Initialize encryption key
@@ -75,14 +66,14 @@ class CredentialManager:
         key_file.parent.mkdir(parents=True, exist_ok=True)
 
         if key_file.exists():
-            with open(key_file, 'rb') as f:
+            with open(key_file, "rb") as f:
                 self.encryption_key = f.read()
         else:
             # Generate new encryption key
             self.encryption_key = Fernet.generate_key()
             # Save with restricted permissions
             key_file.touch(mode=0o600)
-            with open(key_file, 'wb') as f:
+            with open(key_file, "wb") as f:
                 f.write(self.encryption_key)
 
         self.cipher = Fernet(self.encryption_key)
@@ -99,14 +90,9 @@ class CredentialManager:
         """Decrypt a credential value"""
         return self.cipher.decrypt(encrypted_value.encode()).decode()
 
-    def validate_credentials(self) -> Dict[str, Any]:
+    def validate_credentials(self) -> dict[str, Any]:
         """Validate all required credentials are present and secure"""
-        validation_results = {
-            "valid": True,
-            "missing": [],
-            "weak": [],
-            "exposed": []
-        }
+        validation_results = {"valid": True, "missing": [], "weak": [], "exposed": []}
 
         for cred_name, config in self.required_credentials.items():
             value = os.getenv(cred_name)
@@ -140,7 +126,7 @@ class CredentialManager:
         if cred_name not in self.required_credentials:
             raise ValueError(f"Unknown credential: {cred_name}")
 
-        config = self.required_credentials[cred_name]
+        self.required_credentials[cred_name]
 
         # Generate new credential
         if cred_name == "JWT_SECRET_KEY":
@@ -199,7 +185,7 @@ class CredentialManager:
             "",
             "# Rate Limiting",
             "RATE_LIMIT_PER_MINUTE=100",
-            "WS_RATE_LIMIT_PER_MINUTE=60"
+            "WS_RATE_LIMIT_PER_MINUTE=60",
         ]
 
         return "\n".join(template_lines)
@@ -213,7 +199,7 @@ class CredentialManager:
             "45e89fd91f50fe615235",  # Known exposed Pusher secret
             "postgresql://.*:.*@",  # Database URLs with passwords
             "JWT_SECRET_KEY=.*",
-            "PUSHER_SECRET=.*"
+            "PUSHER_SECRET=.*",
         ]
 
         exposed = False
@@ -223,7 +209,7 @@ class CredentialManager:
                     ["git", "log", "-p", "-S", pattern],
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=5,
                 )
                 if pattern in result.stdout:
                     print(f"⚠️ WARNING: Pattern '{pattern[:20]}...' found in git history!")
@@ -233,7 +219,7 @@ class CredentialManager:
 
         return exposed
 
-    def generate_mcp_config_secure(self) -> Dict[str, Any]:
+    def generate_mcp_config_secure(self) -> dict[str, Any]:
         """Generate secure MCP configuration without hardcoded credentials"""
         return {
             "mcpServers": {
@@ -246,10 +232,10 @@ class CredentialManager:
                         "PGPASSWORD": "${PGPASSWORD}",
                         "PGHOST": "${PGHOST:-localhost}",
                         "PGPORT": "${PGPORT:-5432}",
-                        "PGDATABASE": "${PGDATABASE}"
+                        "PGDATABASE": "${PGDATABASE}",
                     },
                     "description": "PostgreSQL access - credentials from environment",
-                    "scope": "project"
+                    "scope": "project",
                 },
                 "toolboxai-orchestrator": {
                     "command": "python",
@@ -261,11 +247,11 @@ class CredentialManager:
                         "PUSHER_APP_ID": "${PUSHER_APP_ID}",
                         "PUSHER_KEY": "${PUSHER_KEY}",
                         "PUSHER_SECRET": "${PUSHER_SECRET}",
-                        "PUSHER_CLUSTER": "${PUSHER_CLUSTER}"
+                        "PUSHER_CLUSTER": "${PUSHER_CLUSTER}",
                     },
                     "description": "ToolBoxAI MCP orchestrator - secure configuration",
-                    "scope": "project"
-                }
+                    "scope": "project",
+                },
             }
         }
 

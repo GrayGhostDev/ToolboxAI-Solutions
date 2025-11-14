@@ -3,14 +3,11 @@ Security Audit Agent - Performs comprehensive security audits
 Scans for vulnerabilities, misconfigurations, and compliance issues
 """
 
-import json
 import logging
-import hashlib
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-import subprocess
+from typing import Any
 
 from core.agents.base_agent import BaseAgent
 
@@ -54,7 +51,7 @@ class SecurityAuditAgent(BaseAgent):
         # Audit history
         self.audit_history = []
 
-    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, task: dict[str, Any]) -> dict[str, Any]:
         """
         Execute security audit using SPARC framework
 
@@ -84,7 +81,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return result
 
-    def _analyze_situation(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_situation(self, task: dict[str, Any]) -> dict[str, Any]:
         """Analyze audit scope and requirements"""
         audit_type = task.get('audit_type', 'comprehensive')
         target = task.get('target', 'full_application')
@@ -102,7 +99,7 @@ class SecurityAuditAgent(BaseAgent):
         logger.info(f"Starting security audit: {audit_type} for {target}")
         return situation
 
-    def _identify_problem(self, situation: Dict[str, Any]) -> Dict[str, Any]:
+    def _identify_problem(self, situation: dict[str, Any]) -> dict[str, Any]:
         """Identify potential security problems to check"""
         problems = []
 
@@ -124,7 +121,7 @@ class SecurityAuditAgent(BaseAgent):
             'risk_level': 'high' if situation['environment'] == 'production' else 'medium'
         }
 
-    def _evaluate_alternatives(self, problem: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _evaluate_alternatives(self, problem: dict[str, Any]) -> list[dict[str, Any]]:
         """Evaluate audit approaches"""
         alternatives = []
 
@@ -151,7 +148,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return alternatives
 
-    def _make_recommendation(self, alternatives: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _make_recommendation(self, alternatives: list[dict[str, Any]]) -> dict[str, Any]:
         """Recommend audit strategy"""
         return {
             'strategy': 'multi-layered_audit',
@@ -159,7 +156,7 @@ class SecurityAuditAgent(BaseAgent):
             'execution_order': sorted(alternatives, key=lambda x: x['priority'])
         }
 
-    async def _execute_recommendation(self, recommendation: Dict[str, Any], task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_recommendation(self, recommendation: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
         """Execute the security audit"""
         action = task.get('action', 'full_audit')
 
@@ -190,7 +187,7 @@ class SecurityAuditAgent(BaseAgent):
                 'message': str(e)
             }
 
-    async def _perform_full_audit(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _perform_full_audit(self, task: dict[str, Any]) -> dict[str, Any]:
         """Perform comprehensive security audit"""
         audit_results = {
             'timestamp': datetime.utcnow().isoformat(),
@@ -275,7 +272,7 @@ class SecurityAuditAgent(BaseAgent):
             'audit_results': audit_results
         }
 
-    async def _scan_for_secrets(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _scan_for_secrets(self, task: dict[str, Any]) -> dict[str, Any]:
         """Scan for exposed secrets in code and configuration"""
         target_path = task.get('target_path', '.')
         exclude_paths = task.get('exclude_paths', ['.git', 'node_modules', '__pycache__', 'venv'])
@@ -296,7 +293,7 @@ class SecurityAuditAgent(BaseAgent):
 
                 try:
                     # Read file content
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    with open(file_path, encoding='utf-8', errors='ignore') as f:
                         content = f.read()
 
                     # Check each sensitive pattern
@@ -315,7 +312,7 @@ class SecurityAuditAgent(BaseAgent):
                                 'severity': 'critical' if pattern_name in ['aws_secret_key', 'private_key'] else 'high'
                             })
 
-                except Exception as e:
+                except Exception:
                     # Skip files that can't be read
                     continue
 
@@ -330,7 +327,7 @@ class SecurityAuditAgent(BaseAgent):
             'total_secrets': len(secrets_found)
         }
 
-    def _find_high_entropy_strings(self, target_path: str, exclude_paths: List[str]) -> List[Dict[str, Any]]:
+    def _find_high_entropy_strings(self, target_path: str, exclude_paths: list[str]) -> list[dict[str, Any]]:
         """Find strings with high entropy that might be secrets"""
         high_entropy_findings = []
 
@@ -351,7 +348,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return high_entropy_findings
 
-    async def _check_configurations(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _check_configurations(self, task: dict[str, Any]) -> dict[str, Any]:
         """Check for security misconfigurations"""
         issues = []
 
@@ -381,7 +378,7 @@ class SecurityAuditAgent(BaseAgent):
             'total_issues': len(issues)
         }
 
-    def _check_cors_configuration(self, task: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_cors_configuration(self, task: dict[str, Any]) -> list[dict[str, Any]]:
         """Check CORS configuration for security issues"""
         issues = []
 
@@ -396,7 +393,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return issues
 
-    def _check_authentication_config(self, task: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_authentication_config(self, task: dict[str, Any]) -> list[dict[str, Any]]:
         """Check authentication configuration"""
         issues = []
 
@@ -421,7 +418,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return issues
 
-    def _check_database_config(self, task: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_database_config(self, task: dict[str, Any]) -> list[dict[str, Any]]:
         """Check database configuration"""
         issues = []
 
@@ -445,7 +442,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return issues
 
-    def _check_tls_config(self, task: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_tls_config(self, task: dict[str, Any]) -> list[dict[str, Any]]:
         """Check TLS/SSL configuration"""
         issues = []
 
@@ -461,7 +458,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return issues
 
-    async def _scan_vulnerabilities(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _scan_vulnerabilities(self, task: dict[str, Any]) -> dict[str, Any]:
         """Scan for known vulnerabilities in dependencies"""
         vulnerabilities = []
 
@@ -486,7 +483,7 @@ class SecurityAuditAgent(BaseAgent):
             'total_vulnerabilities': len(vulnerabilities)
         }
 
-    def _scan_python_dependencies(self) -> List[Dict[str, Any]]:
+    def _scan_python_dependencies(self) -> list[dict[str, Any]]:
         """Scan Python dependencies for vulnerabilities"""
         vulnerabilities = []
 
@@ -504,7 +501,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return vulnerabilities
 
-    def _scan_nodejs_dependencies(self) -> List[Dict[str, Any]]:
+    def _scan_nodejs_dependencies(self) -> list[dict[str, Any]]:
         """Scan Node.js dependencies for vulnerabilities"""
         vulnerabilities = []
 
@@ -520,7 +517,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return vulnerabilities
 
-    def _scan_docker_images(self) -> List[Dict[str, Any]]:
+    def _scan_docker_images(self) -> list[dict[str, Any]]:
         """Scan Docker images for vulnerabilities"""
         vulnerabilities = []
 
@@ -529,7 +526,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return vulnerabilities
 
-    async def _check_security_headers(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _check_security_headers(self, task: dict[str, Any]) -> dict[str, Any]:
         """Check for required security headers"""
         missing_headers = []
 
@@ -546,7 +543,7 @@ class SecurityAuditAgent(BaseAgent):
             'compliance': len(missing_headers) == 0
         }
 
-    async def _audit_permissions(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _audit_permissions(self, task: dict[str, Any]) -> dict[str, Any]:
         """Audit file and access permissions"""
         permission_issues = []
 
@@ -569,7 +566,7 @@ class SecurityAuditAgent(BaseAgent):
             'permission_issues': permission_issues
         }
 
-    async def _generate_audit_report(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def _generate_audit_report(self, task: dict[str, Any]) -> dict[str, Any]:
         """Generate comprehensive audit report"""
         audit_result = await self._perform_full_audit(task)
 
@@ -594,7 +591,7 @@ class SecurityAuditAgent(BaseAgent):
             'report': report
         }
 
-    def _generate_recommendations(self, audit_results: Dict[str, Any]) -> List[str]:
+    def _generate_recommendations(self, audit_results: dict[str, Any]) -> list[str]:
         """Generate security recommendations based on findings"""
         recommendations = []
 
@@ -628,7 +625,7 @@ class SecurityAuditAgent(BaseAgent):
 
         return recommendations
 
-    def _calculate_risk_score(self, audit_results: Dict[str, Any]) -> int:
+    def _calculate_risk_score(self, audit_results: dict[str, Any]) -> int:
         """Calculate overall risk score (0-100)"""
         score = 0
 
@@ -642,7 +639,7 @@ class SecurityAuditAgent(BaseAgent):
         # Cap at 100
         return min(score, 100)
 
-    def _generate_executive_summary(self, audit_data: Dict[str, Any]) -> str:
+    def _generate_executive_summary(self, audit_data: dict[str, Any]) -> str:
         """Generate executive summary for audit report"""
         risk_score = audit_data['risk_score']
 
@@ -655,7 +652,7 @@ class SecurityAuditAgent(BaseAgent):
         else:
             return f"LOW RISK: The audit found {audit_data['summary']['total_findings']} minor issues with a risk score of {risk_score}/100. Good security posture overall."
 
-    def _generate_remediation_timeline(self, audit_data: Dict[str, Any]) -> Dict[str, str]:
+    def _generate_remediation_timeline(self, audit_data: dict[str, Any]) -> dict[str, str]:
         """Generate recommended remediation timeline"""
         return {
             'critical': 'Immediately',
@@ -665,7 +662,7 @@ class SecurityAuditAgent(BaseAgent):
             'info': 'Next maintenance window'
         }
 
-    def _determine_priority(self, situation: Dict[str, Any]) -> str:
+    def _determine_priority(self, situation: dict[str, Any]) -> str:
         """Determine audit priority"""
         if situation['environment'] == 'production':
             return 'critical'
@@ -674,7 +671,7 @@ class SecurityAuditAgent(BaseAgent):
         else:
             return 'medium'
 
-    def _store_audit_result(self, result: Dict[str, Any]):
+    def _store_audit_result(self, result: dict[str, Any]):
         """Store audit result in history"""
         self.audit_history.append({
             'timestamp': datetime.utcnow().isoformat(),

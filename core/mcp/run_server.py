@@ -3,8 +3,8 @@
 
 import asyncio
 import logging
-import sys
 import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -12,16 +12,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from core.mcp.server import MCPServer
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 async def main():
     """Run the MCP server."""
     server = MCPServer(
-        host=os.getenv('MCP_HOST', '0.0.0.0'),
-        port=int(os.getenv('MCP_PORT', '9877'))
+        host=os.getenv("MCP_HOST", "0.0.0.0"), port=int(os.getenv("MCP_PORT", "9877"))
     )
 
     logger.info("Starting MCP Server on port 9877...")
@@ -32,6 +31,7 @@ async def main():
     except Exception as e:
         logger.error(f"MCP Server error: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

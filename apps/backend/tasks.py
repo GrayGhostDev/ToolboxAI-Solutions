@@ -122,7 +122,10 @@ def cleanup_old_files(self, directory: str = "/tmp", days_old: int = 7) -> dict[
 
 
 @shared_task(
-    bind=True, base=BaseTaskWithRetry, name="tasks.cleanup.expired_sessions", queue="low_priority"
+    bind=True,
+    base=BaseTaskWithRetry,
+    name="tasks.cleanup.expired_sessions",
+    queue="low_priority",
 )
 def cleanup_expired_sessions(self) -> dict[str, Any]:
     """Clean up expired user sessions from Redis."""
@@ -141,7 +144,11 @@ def cleanup_expired_sessions(self) -> dict[str, Any]:
 
         logger.info(f"Cleaned up {expired_count} expired sessions")
 
-        return {"status": "success", "sessions_removed": expired_count, "task_id": self.request.id}
+        return {
+            "status": "success",
+            "sessions_removed": expired_count,
+            "task_id": self.request.id,
+        }
 
     except Exception as exc:
         logger.error(f"Error cleaning expired sessions: {exc}")
@@ -156,7 +163,8 @@ def cleanup_temp_storage(self) -> dict[str, Any]:
 
     for temp_dir in temp_dirs:
         result = cleanup_old_files.apply_async(
-            args=[temp_dir, 1], queue="low_priority"  # Clean files older than 1 day
+            args=[temp_dir, 1],
+            queue="low_priority",  # Clean files older than 1 day
         ).get(timeout=60)
 
         if result.get("status") == "success":
@@ -239,16 +247,26 @@ def generate_educational_content(
         quiz = None
         if request_data.get("metadata", {}).get("include_quiz"):
             quiz = process_quiz_generation.apply_async(
-                args=[content["content"], request_data.get("metadata", {}).get("quiz_questions", 5)]
+                args=[
+                    content["content"],
+                    request_data.get("metadata", {}).get("quiz_questions", 5),
+                ]
             ).get(timeout=30)
 
         # Send completion update
         if callback_channel and pusher_service:
             pusher_service.trigger(
-                callback_channel, "complete", {"task_id": self.request.id, "result": content}
+                callback_channel,
+                "complete",
+                {"task_id": self.request.id, "result": content},
             )
 
-        return {"status": "success", "content": content, "quiz": quiz, "task_id": self.request.id}
+        return {
+            "status": "success",
+            "content": content,
+            "quiz": quiz,
+            "task_id": self.request.id,
+        }
 
     except SoftTimeLimitExceeded:
         logger.error("Content generation exceeded time limit")
@@ -274,7 +292,11 @@ def process_quiz_generation(self, content: str, num_questions: int = 5) -> dict[
                 }
             )
 
-        return {"status": "success", "questions": questions, "num_questions": num_questions}
+        return {
+            "status": "success",
+            "questions": questions,
+            "num_questions": num_questions,
+        }
 
     except Exception as exc:
         logger.error(f"Error generating quiz: {exc}")
@@ -291,7 +313,10 @@ def analyze_content_quality(self, content_id: str) -> dict[str, Any]:
             "engagement_score": 72,
             "completeness": 90,
             "accuracy": 95,
-            "suggestions": ["Add more interactive elements", "Include real-world examples"],
+            "suggestions": [
+                "Add more interactive elements",
+                "Include real-world examples",
+            ],
         }
 
         return {
@@ -467,7 +492,10 @@ def handle_payment_failure(data: dict) -> dict:
 # ANALYTICS TASKS
 # ============================================
 @shared_task(
-    bind=True, name="tasks.analytics.aggregate_metrics", queue="low_priority", time_limit=600
+    bind=True,
+    name="tasks.analytics.aggregate_metrics",
+    queue="low_priority",
+    time_limit=600,
 )
 def aggregate_usage_metrics(self, period: str = "daily", date: str | None = None) -> dict[str, Any]:
     """Aggregate usage metrics for analytics."""
@@ -510,7 +538,7 @@ def generate_reports(
         # Mock report generation
         report_path = f"/tmp/reports/{report_id}.json"
 
-        report_data = {
+        {
             "report_id": report_id,
             "type": report_type,
             "period": {"start": start_date, "end": end_date},

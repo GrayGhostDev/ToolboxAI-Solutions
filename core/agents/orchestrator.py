@@ -4,27 +4,25 @@ Orchestrator - Main entry point for the multi-agent system
 Coordinates all agents to generate complete Roblox educational environments.
 """
 
-import asyncio
 import logging
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
-import json
-from enum import Enum
 from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
 
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import AIMessage, HumanMessage
 
 # from langgraph.checkpoint import MemorySaver  # Not available in current version
 from langgraph.checkpoint.memory import MemorySaver  # Updated import path
+from langgraph.graph import END, StateGraph
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
-from .supervisor import SupervisorAgent
+from .base_agent import AgentState
 from .content_agent import ContentAgent
 from .quiz_agent import QuizAgent
-from .terrain_agent import TerrainAgent
-from .script_agent import ScriptAgent
 from .review_agent import ReviewAgent
+from .script_agent import ScriptAgent
+from .supervisor import SupervisorAgent
+from .terrain_agent import TerrainAgent
 from .testing_agent import TestingAgent
 
 logger = logging.getLogger(__name__)
@@ -50,11 +48,11 @@ class OrchestrationRequest:
     workflow_type: WorkflowType
     subject: str
     grade_level: str
-    learning_objectives: List[str]
+    learning_objectives: list[str]
     environment_theme: Optional[str] = None
     include_quiz: bool = True
     include_gamification: bool = True
-    custom_requirements: Optional[Dict[str, Any]] = None
+    custom_requirements: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -62,15 +60,15 @@ class OrchestrationResult:
     """Result from orchestration"""
 
     success: bool
-    content: Optional[Dict[str, Any]] = None
-    scripts: Optional[Dict[str, str]] = None
-    terrain: Optional[Dict[str, Any]] = None
-    quiz: Optional[Dict[str, Any]] = None
-    review: Optional[Dict[str, Any]] = None
-    testing: Optional[Dict[str, Any]] = None
-    errors: Optional[List[str]] = None
+    content: Optional[dict[str, Any]] = None
+    scripts: Optional[dict[str, str]] = None
+    terrain: Optional[dict[str, Any]] = None
+    quiz: Optional[dict[str, Any]] = None
+    review: Optional[dict[str, Any]] = None
+    testing: Optional[dict[str, Any]] = None
+    errors: Optional[list[str]] = None
     execution_time: float = 0.0
-    workflow_path: Optional[List[str]] = None
+    workflow_path: Optional[list[str]] = None
 
 
 class Orchestrator:
@@ -85,7 +83,7 @@ class Orchestrator:
     - Result aggregation
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Initialize supervisor
@@ -118,7 +116,7 @@ class Orchestrator:
 
         logger.info("Orchestrator initialized with all agents")
 
-    def _define_workflows(self) -> Dict[WorkflowType, StateGraph]:
+    def _define_workflows(self) -> dict[WorkflowType, StateGraph]:
         """Define orchestration workflows"""
         workflows = {}
 
@@ -146,9 +144,7 @@ class Orchestrator:
         full_workflow.add_edge("integrate", "finalize")
         full_workflow.add_edge("finalize", END)
 
-        workflows[WorkflowType.FULL_ENVIRONMENT] = full_workflow.compile(
-            checkpointer=self.memory
-        )
+        workflows[WorkflowType.FULL_ENVIRONMENT] = full_workflow.compile(checkpointer=self.memory)
 
         # Content-only workflow
         content_workflow = StateGraph(AgentState)
@@ -161,9 +157,7 @@ class Orchestrator:
         content_workflow.add_edge("generate_content", "finalize")
         content_workflow.add_edge("finalize", END)
 
-        workflows[WorkflowType.CONTENT_ONLY] = content_workflow.compile(
-            checkpointer=self.memory
-        )
+        workflows[WorkflowType.CONTENT_ONLY] = content_workflow.compile(checkpointer=self.memory)
 
         # Quiz-only workflow
         quiz_workflow = StateGraph(AgentState)
@@ -178,9 +172,7 @@ class Orchestrator:
         quiz_workflow.add_edge("develop_scripts", "finalize")
         quiz_workflow.add_edge("finalize", END)
 
-        workflows[WorkflowType.QUIZ_ONLY] = quiz_workflow.compile(
-            checkpointer=self.memory
-        )
+        workflows[WorkflowType.QUIZ_ONLY] = quiz_workflow.compile(checkpointer=self.memory)
 
         # Review workflow
         review_workflow = StateGraph(AgentState)
@@ -195,9 +187,7 @@ class Orchestrator:
         review_workflow.add_edge("optimize", "finalize")
         review_workflow.add_edge("finalize", END)
 
-        workflows[WorkflowType.REVIEW_OPTIMIZE] = review_workflow.compile(
-            checkpointer=self.memory
-        )
+        workflows[WorkflowType.REVIEW_OPTIMIZE] = review_workflow.compile(checkpointer=self.memory)
 
         # Testing validation workflow
         testing_workflow = StateGraph(AgentState)
@@ -245,9 +235,7 @@ class Orchestrator:
             )
 
             # Execute workflow
-            config = {
-                "configurable": {"thread_id": f"thread_{datetime.now().timestamp()}"}
-            }
+            config = {"configurable": {"thread_id": f"thread_{datetime.now().timestamp()}"}}
             final_state = await workflow.ainvoke(initial_state, config)
 
             # Extract results
@@ -337,9 +325,7 @@ class Orchestrator:
         state["metadata"]["workflow_path"].append("generate_content")
 
         content_agent = self.agents["content"]
-        result = await content_agent.execute(
-            "Generate educational content", state["context"]
-        )
+        result = await content_agent.execute("Generate educational content", state["context"])
 
         if result.success:
             state["metadata"]["content"] = result.output
@@ -365,15 +351,11 @@ class Orchestrator:
         quiz_context = state["context"].copy()
         quiz_context["content"] = state["metadata"].get("content", {})
 
-        result = await quiz_agent.execute(
-            "Create interactive quiz based on content", quiz_context
-        )
+        result = await quiz_agent.execute("Create interactive quiz based on content", quiz_context)
 
         if result.success:
             state["metadata"]["quiz"] = result.output
-            state["messages"].append(
-                AIMessage(content="Interactive quiz created successfully")
-            )
+            state["messages"].append(AIMessage(content="Interactive quiz created successfully"))
         else:
             state["error"] = f"Quiz creation failed: {result.error}"
 
@@ -391,20 +373,14 @@ class Orchestrator:
         terrain_context = {
             "theme": theme,
             "size": "medium",
-            "educational_elements": state["metadata"]
-            .get("content", {})
-            .get("key_concepts", []),
+            "educational_elements": state["metadata"].get("content", {}).get("key_concepts", []),
         }
 
-        result = await terrain_agent.execute(
-            f"Generate {theme} terrain", terrain_context
-        )
+        result = await terrain_agent.execute(f"Generate {theme} terrain", terrain_context)
 
         if result.success:
             state["metadata"]["terrain"] = result.output
-            state["messages"].append(
-                AIMessage(content="Terrain generated successfully")
-            )
+            state["messages"].append(AIMessage(content="Terrain generated successfully"))
         else:
             state["error"] = f"Terrain generation failed: {result.error}"
 
@@ -420,9 +396,7 @@ class Orchestrator:
         scripts_needed = []
 
         if state["metadata"].get("quiz"):
-            scripts_needed.append(
-                {"type": "quiz_system", "data": state["metadata"]["quiz"]}
-            )
+            scripts_needed.append({"type": "quiz_system", "data": state["metadata"]["quiz"]})
 
         if state["metadata"].get("terrain"):
             scripts_needed.append(
@@ -447,9 +421,7 @@ class Orchestrator:
                 all_scripts[script_need["type"]] = result.output
 
         state["metadata"]["scripts"] = all_scripts
-        state["messages"].append(
-            AIMessage(content=f"Generated {len(all_scripts)} script systems")
-        )
+        state["messages"].append(AIMessage(content=f"Generated {len(all_scripts)} script systems"))
 
         return state
 
@@ -468,9 +440,7 @@ class Orchestrator:
 
         if result.success:
             state["metadata"]["scripts"] = {"quiz_system": result.output}
-            state["messages"].append(
-                AIMessage(content="Quiz scripts generated successfully")
-            )
+            state["messages"].append(AIMessage(content="Quiz scripts generated successfully"))
         else:
             state["error"] = f"Script generation failed: {result.error}"
 
@@ -509,9 +479,7 @@ class Orchestrator:
         state["metadata"]["scripts"] = scripts  # Update with refactored versions
 
         state["messages"].append(
-            AIMessage(
-                content=f"Code review completed for {len(review_results)} components"
-            )
+            AIMessage(content=f"Code review completed for {len(review_results)} components")
         )
 
         return state
@@ -522,9 +490,7 @@ class Orchestrator:
 
         review_agent = self.agents["review"]
 
-        existing_code = (
-            state["context"].get("custom_requirements", {}).get("existing_code", "")
-        )
+        existing_code = state["context"].get("custom_requirements", {}).get("existing_code", "")
 
         if not existing_code:
             state["error"] = "No existing code provided for review"
@@ -551,9 +517,7 @@ class Orchestrator:
 
         if review.get("refactored_code"):
             state["metadata"]["optimized_code"] = review["refactored_code"]
-            state["messages"].append(
-                AIMessage(content="Code optimized based on review findings")
-            )
+            state["messages"].append(AIMessage(content="Code optimized based on review findings"))
         else:
             state["messages"].append(AIMessage(content="No optimization needed"))
 
@@ -595,9 +559,7 @@ class Orchestrator:
         integration["instructions"] = self._generate_integration_instructions(state)
 
         state["metadata"]["integration"] = integration
-        state["messages"].append(
-            AIMessage(content="Components integrated successfully")
-        )
+        state["messages"].append(AIMessage(content="Components integrated successfully"))
 
         return state
 
@@ -625,9 +587,7 @@ class Orchestrator:
             instructions.append("### Server Scripts")
             instructions.append("- Place server scripts in ServerScriptService")
             instructions.append("### Client Scripts")
-            instructions.append(
-                "- Place client scripts in StarterPlayer > StarterPlayerScripts"
-            )
+            instructions.append("- Place client scripts in StarterPlayer > StarterPlayerScripts")
             instructions.append("### Module Scripts")
             instructions.append("- Place modules in ReplicatedStorage\n")
 
@@ -648,85 +608,103 @@ class Orchestrator:
     async def _run_tests(self, state: AgentState) -> AgentState:
         """Run comprehensive test suite using TestingAgent"""
         state["metadata"]["workflow_path"].append("run_tests")
-        
+
         try:
             # Get testing context from previous steps
             testing_context = {
                 "test_type": "all",
                 "triggered_by": "orchestrator",
-                "validate_components": True
+                "validate_components": True,
             }
-            
+
             # Execute tests
-            result = await self.agents["testing"].execute("run comprehensive tests", testing_context)
-            
+            result = await self.agents["testing"].execute(
+                "run comprehensive tests", testing_context
+            )
+
             if result.success:
                 state["metadata"]["testing"] = result.output
                 state["messages"].append(AIMessage(content=f"Testing completed: {result.output}"))
             else:
                 state["error"] = f"Testing failed: {result.error}"
                 state["messages"].append(AIMessage(content=f"Testing failed: {result.error}"))
-            
+
         except Exception as e:
             logger.error(f"Error running tests: {e}")
             state["error"] = f"Testing error: {str(e)}"
             state["messages"].append(AIMessage(content=f"Testing error: {str(e)}"))
-            
+
         return state
 
     async def _generate_coverage_report(self, state: AgentState) -> AgentState:
         """Generate code coverage report using TestingAgent"""
         state["metadata"]["workflow_path"].append("generate_coverage")
-        
+
         try:
             # Generate coverage report
             result = await self.agents["testing"].execute("generate coverage report", {})
-            
+
             if result.success:
                 coverage_data = result.output
                 state["metadata"]["coverage"] = coverage_data
-                state["messages"].append(AIMessage(content=f"Coverage report generated: {coverage_data.get('coverage_percentage', 'N/A')}%"))
-                
+                state["messages"].append(
+                    AIMessage(
+                        content=f"Coverage report generated: {coverage_data.get('coverage_percentage', 'N/A')}%"
+                    )
+                )
+
                 # Check if coverage meets threshold
-                if coverage_data.get('meets_threshold', False):
-                    state["messages"].append(AIMessage(content="Code coverage meets quality threshold"))
+                if coverage_data.get("meets_threshold", False):
+                    state["messages"].append(
+                        AIMessage(content="Code coverage meets quality threshold")
+                    )
                 else:
-                    state["messages"].append(AIMessage(content="Code coverage below threshold - review needed"))
+                    state["messages"].append(
+                        AIMessage(content="Code coverage below threshold - review needed")
+                    )
             else:
                 state["error"] = f"Coverage generation failed: {result.error}"
-                state["messages"].append(AIMessage(content=f"Coverage generation failed: {result.error}"))
-                
+                state["messages"].append(
+                    AIMessage(content=f"Coverage generation failed: {result.error}")
+                )
+
         except Exception as e:
             logger.error(f"Error generating coverage: {e}")
             state["error"] = f"Coverage error: {str(e)}"
             state["messages"].append(AIMessage(content=f"Coverage error: {str(e)}"))
-            
+
         return state
 
     async def _analyze_test_failures(self, state: AgentState) -> AgentState:
         """Analyze test failures and provide recommendations using TestingAgent"""
         state["metadata"]["workflow_path"].append("analyze_failures")
-        
+
         try:
             # Analyze any test failures
             result = await self.agents["testing"].execute("analyze test failures", {})
-            
+
             if result.success:
                 failure_analysis = result.output
                 state["metadata"]["failure_analysis"] = failure_analysis
-                
+
                 if failure_analysis.get("recent_failures_count", 0) > 0:
-                    state["messages"].append(AIMessage(content=f"Test failures analyzed: {failure_analysis}"))
+                    state["messages"].append(
+                        AIMessage(content=f"Test failures analyzed: {failure_analysis}")
+                    )
                 else:
-                    state["messages"].append(AIMessage(content="No recent test failures to analyze"))
+                    state["messages"].append(
+                        AIMessage(content="No recent test failures to analyze")
+                    )
             else:
                 # Not critical if failure analysis fails
-                state["messages"].append(AIMessage(content=f"Failure analysis unavailable: {result.error}"))
-                
+                state["messages"].append(
+                    AIMessage(content=f"Failure analysis unavailable: {result.error}")
+                )
+
         except Exception as e:
             logger.warning(f"Error analyzing test failures: {e}")
             state["messages"].append(AIMessage(content=f"Failure analysis error: {str(e)}"))
-            
+
         return state
 
     async def _finalize_environment(self, state: AgentState) -> AgentState:
@@ -749,9 +727,7 @@ class Orchestrator:
                 "integration": state["metadata"].get("integration"),
             },
             "errors": [state["error"]] if state["error"] else [],
-            "messages": [
-                msg.content for msg in state["messages"][-5:]
-            ],  # Last 5 messages
+            "messages": [msg.content for msg in state["messages"][-5:]],  # Last 5 messages
         }
 
         state["result"] = final_result
@@ -763,12 +739,12 @@ class Orchestrator:
         """Extract results from final state"""
 
         raw_result = final_state.get("result")
-        result_data: Dict[str, Any] = raw_result if isinstance(raw_result, dict) else {}
+        result_data: dict[str, Any] = raw_result if isinstance(raw_result, dict) else {}
         raw_components = result_data.get("components") if isinstance(result_data, dict) else None
-        components: Dict[str, Any] = raw_components if isinstance(raw_components, dict) else {}
+        components: dict[str, Any] = raw_components if isinstance(raw_components, dict) else {}
 
         # Combine testing data
-        testing_data: Dict[str, Any] = {}
+        testing_data: dict[str, Any] = {}
         comp_testing = components.get("testing")
         if isinstance(comp_testing, dict):
             testing_data.update(comp_testing)
@@ -831,9 +807,7 @@ class Orchestrator:
 
         return await self.orchestrate(request)
 
-    async def review_code(
-        self, code: str, language: str = "lua"
-    ) -> OrchestrationResult:
+    async def review_code(self, code: str, language: str = "lua") -> OrchestrationResult:
         """
         Convenience method to review existing code.
 
@@ -854,17 +828,15 @@ class Orchestrator:
 
         return await self.orchestrate(request)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get orchestrator metrics"""
         return {
             **self.metrics,
-            "agent_statuses": {
-                name: agent.get_status() for name, agent in self.agents.items()
-            },
+            "agent_statuses": {name: agent.get_status() for name, agent in self.agents.items()},
             "supervisor_status": self.supervisor.get_status(),
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on all components"""
         health = {"orchestrator": "healthy", "agents": {}, "workflows": {}}
 
@@ -872,9 +844,7 @@ class Orchestrator:
         for name, agent in self.agents.items():
             try:
                 status = agent.get_status()
-                health["agents"][name] = (
-                    "healthy" if status["status"] != "error" else "unhealthy"
-                )
+                health["agents"][name] = "healthy" if status["status"] != "error" else "unhealthy"
             except (AttributeError, KeyError, TypeError) as e:
                 logger.debug(f"Agent {name} health check failed: {e}")
                 health["agents"][name] = "unhealthy"

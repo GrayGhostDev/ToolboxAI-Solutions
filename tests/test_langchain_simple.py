@@ -54,7 +54,8 @@ def test_langchain_setup():
         from langsmith import Client
 
         client = Client(
-            api_key=os.getenv("LANGCHAIN_API_KEY"), api_url="https://api.smith.langchain.com"
+            api_key=os.getenv("LANGCHAIN_API_KEY"),
+            api_url="https://api.smith.langchain.com",
         )
         print("   ✅ LangSmith client initialized successfully")
 
@@ -73,7 +74,7 @@ def test_langchain_setup():
         from langchain.callbacks.tracers import LangChainTracer
         from langsmith import Client as LangSmithClient
 
-        tracer = LangChainTracer(project_name="ToolboxAI-Test")
+        LangChainTracer(project_name="ToolboxAI-Test")
         print("   ✅ LangChain tracer created successfully")
 
     except ImportError as e:

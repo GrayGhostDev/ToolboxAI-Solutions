@@ -191,7 +191,7 @@ class TestSupabaseCompleteIntegration:
                 "execution_time_seconds": 2.5,
             }
 
-            update_result = await service.update_task_execution(self.test_task_id, updates)
+            await service.update_task_execution(self.test_task_id, updates)
             # May return empty dict if task not found, which is OK in test environment
 
             logger.info("Task execution tracking test passed")
@@ -279,7 +279,7 @@ class TestSupabaseCompleteIntegration:
         from toolboxai_settings.settings import settings
 
         # Test settings integration
-        settings_config = settings.get_supabase_config()
+        settings.get_supabase_config()
         core_config = get_supabase_config()
 
         # Both should have the same URL (if configured)
@@ -426,7 +426,7 @@ class TestSupabasePerformanceIntegration:
 
         # Test connection timing
         start_time = time.time()
-        health = await service.health_check()
+        await service.health_check()
         end_time = time.time()
 
         response_time = (end_time - start_time) * 1000  # Convert to milliseconds

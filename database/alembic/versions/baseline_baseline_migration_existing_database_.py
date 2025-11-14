@@ -1,13 +1,13 @@
 """Baseline migration - existing database schema
 
 Revision ID: baseline
-Revises: 
+Revises:
 Create Date: 2025-09-20 05:40:56.117257
 
 """
 
-from typing import Sequence, Union
-
+from collections.abc import Sequence
+from typing import Union
 
 # revision identifiers, used by Alembic.
 revision: str = "baseline"

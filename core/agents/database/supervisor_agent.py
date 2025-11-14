@@ -11,32 +11,35 @@ Version: 1.0.0
 """
 
 import asyncio
-import logging
-from typing import Dict, Any, List, Optional, Set, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime, timedelta
 import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentCapability
+from core.agents.base_agent import (
+    AgentCapability,
+    AgentState,
+    TaskResult,
+)
+from core.agents.database.advanced_agents import (
+    BackupRecoveryAgent,
+    DataIntegrityAgent,
+    EventSourcingAgent,
+    MonitoringAgent,
+)
 from core.agents.database.base_database_agent import (
     BaseDatabaseAgent,
     DatabaseAgentConfig,
-    DatabaseOperation,
     DatabaseHealth,
-    DatabaseMetrics
+    DatabaseOperation,
 )
 from core.agents.database.database_agents import (
-    SchemaManagementAgent,
+    CacheManagementAgent,
     DataSynchronizationAgent,
     QueryOptimizationAgent,
-    CacheManagementAgent
-)
-from core.agents.database.advanced_agents import (
-    EventSourcingAgent,
-    DataIntegrityAgent,
-    BackupRecoveryAgent,
-    MonitoringAgent
+    SchemaManagementAgent,
 )
 
 # Temporarily disable LangChain imports due to Pydantic v2 compatibility
@@ -47,42 +50,52 @@ from core.agents.database.advanced_agents import (
 # from langchain_community.tools import Tool
 # from langchain_openai import ChatOpenAI
 
+
 # Placeholder classes for LangChain compatibility
 class AgentExecutor:
     pass
 
+
 class ConversationBufferMemory:
     pass
+
 
 class ChatPromptTemplate:
     pass
 
+
 class MessagesPlaceholder:
     pass
+
 
 class AgentAction:
     pass
 
+
 class AgentFinish:
     pass
 
+
 class Tool:
     pass
+
 
 logger = logging.getLogger(__name__)
 
 
 class WorkflowPriority(Enum):
     """Priority levels for database workflows."""
-    CRITICAL = "critical"    # System down or data loss risk
-    HIGH = "high"           # Performance degradation
-    MEDIUM = "medium"       # Optimization opportunities
-    LOW = "low"            # Routine maintenance
+
+    CRITICAL = "critical"  # System down or data loss risk
+    HIGH = "high"  # Performance degradation
+    MEDIUM = "medium"  # Optimization opportunities
+    LOW = "low"  # Routine maintenance
     BACKGROUND = "background"  # Non-urgent tasks
 
 
 class WorkflowStatus(Enum):
     """Status of a workflow execution."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -94,12 +107,13 @@ class WorkflowStatus(Enum):
 @dataclass
 class WorkflowTask:
     """Represents a task in the workflow."""
+
     task_id: str
     operation: DatabaseOperation
     agent_type: str
     priority: WorkflowPriority
-    params: Dict[str, Any]
-    dependencies: List[str] = field(default_factory=list)
+    params: dict[str, Any]
+    dependencies: list[str] = field(default_factory=list)
     status: WorkflowStatus = WorkflowStatus.PENDING
     result: Optional[TaskResult] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
@@ -112,8 +126,9 @@ class WorkflowTask:
 @dataclass
 class WorkflowPlan:
     """Execution plan for database operations."""
+
     plan_id: str
-    tasks: List[WorkflowTask]
+    tasks: list[WorkflowTask]
     priority: WorkflowPriority
     created_at: datetime = field(default_factory=datetime.utcnow)
     total_tasks: int = 0
@@ -141,20 +156,19 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
         """Initialize the database supervisor agent."""
         if not config:
             config = DatabaseAgentConfig(
-                name="DatabaseSupervisor",
-                capability=AgentCapability.ORCHESTRATION
+                name="DatabaseSupervisor", capability=AgentCapability.ORCHESTRATION
             )
 
         super().__init__(config)
 
         # Specialized agents registry
-        self.agents: Dict[str, BaseDatabaseAgent] = {}
-        self.agent_status: Dict[str, DatabaseHealth] = {}
+        self.agents: dict[str, BaseDatabaseAgent] = {}
+        self.agent_status: dict[str, DatabaseHealth] = {}
 
         # Workflow management
-        self.active_workflows: Dict[str, WorkflowPlan] = {}
+        self.active_workflows: dict[str, WorkflowPlan] = {}
         self.task_queue: asyncio.Queue = asyncio.Queue()
-        self.running_tasks: Set[str] = set()
+        self.running_tasks: set[str] = set()
 
         # LangChain components for intelligent decision-making
         self.llm = None
@@ -162,12 +176,12 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
         self.agent_executor = None
 
         # Performance tracking
-        self.workflow_metrics: Dict[str, Any] = {
+        self.workflow_metrics: dict[str, Any] = {
             "total_workflows": 0,
             "successful_workflows": 0,
             "failed_workflows": 0,
             "avg_completion_time": 0.0,
-            "agent_utilization": {}
+            "agent_utilization": {},
         }
 
     async def initialize(self):
@@ -183,7 +197,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="SchemaAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -191,7 +205,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="SyncAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -199,7 +213,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="QueryAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -207,7 +221,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="CacheAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -216,7 +230,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="EventAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -224,7 +238,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="IntegrityAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -232,7 +246,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="BackupAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -240,7 +254,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 DatabaseAgentConfig(
                     name="MonitorAgent",
                     database_url=self.db_config.database_url,
-                    redis_url=self.db_config.redis_url
+                    redis_url=self.db_config.redis_url,
                 )
             )
 
@@ -282,13 +296,16 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                     description=f"Delegate task to {agent_type} agent: {agent.__class__.__name__}",
                     func=lambda task, agent=agent: asyncio.run(
                         self._delegate_to_agent(agent, task)
-                    )
+                    ),
                 )
                 tools.append(tool)
 
             # Create prompt template
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", """You are a database supervisor agent orchestrating specialized database agents.
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    (
+                        "system",
+                        """You are a database supervisor agent orchestrating specialized database agents.
 
                 Available agents:
                 - schema: Manages database schema and migrations
@@ -302,17 +319,21 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
 
                 Analyze the request and create an optimal execution plan.
                 Consider dependencies, priorities, and agent capabilities.
-                """),
-                MessagesPlaceholder(variable_name="chat_history", optional=True),
-                ("human", "{input}")
-            ])
+                """,
+                    ),
+                    MessagesPlaceholder(variable_name="chat_history", optional=True),
+                    ("human", "{input}"),
+                ]
+            )
 
             # Create agent executor
             # Apply compatibility patches before LangChain imports
             from core.agents.langchain_compat import apply_compatibility_patches
+
             apply_compatibility_patches()
 
             from langchain.agents import create_openai_tools_agent
+
             agent = create_openai_tools_agent(self.llm, tools, prompt)
 
             self.agent_executor = AgentExecutor(
@@ -321,7 +342,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 memory=self.memory,
                 verbose=True,
                 max_iterations=5,
-                early_stopping_method="generate"
+                early_stopping_method="generate",
             )
 
             logger.info("LangChain components initialized")
@@ -332,7 +353,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
             self.llm = None
             self.agent_executor = None
 
-    async def analyze_request(self, request: Dict[str, Any]) -> WorkflowPlan:
+    async def analyze_request(self, request: dict[str, Any]) -> WorkflowPlan:
         """
         Analyze a database request and create an execution plan.
 
@@ -354,9 +375,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
         if self.agent_executor:
             try:
                 result = await asyncio.get_event_loop().run_in_executor(
-                    None,
-                    self.agent_executor.invoke,
-                    {"input": json.dumps(request)}
+                    None, self.agent_executor.invoke, {"input": json.dumps(request)}
                 )
 
                 # Parse LLM response into tasks
@@ -371,115 +390,123 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
         # Rule-based planning fallback
         if operation == DatabaseOperation.MIGRATION:
             # Schema migration workflow
-            tasks.extend([
-                WorkflowTask(
-                    task_id=f"{plan_id}_backup",
-                    operation=DatabaseOperation.BACKUP,
-                    agent_type="backup",
-                    priority=WorkflowPriority.CRITICAL,
-                    params={"type": "pre_migration"}
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_migrate",
-                    operation=DatabaseOperation.MIGRATION,
-                    agent_type="schema",
-                    priority=priority,
-                    params=params,
-                    dependencies=[f"{plan_id}_backup"]
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_validate",
-                    operation=DatabaseOperation.VALIDATE,
-                    agent_type="integrity",
-                    priority=priority,
-                    params={"scope": "schema"},
-                    dependencies=[f"{plan_id}_migrate"]
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_cache_clear",
-                    operation=DatabaseOperation.CACHE,
-                    agent_type="cache",
-                    priority=priority,
-                    params={"action": "invalidate_all"},
-                    dependencies=[f"{plan_id}_migrate"]
-                )
-            ])
+            tasks.extend(
+                [
+                    WorkflowTask(
+                        task_id=f"{plan_id}_backup",
+                        operation=DatabaseOperation.BACKUP,
+                        agent_type="backup",
+                        priority=WorkflowPriority.CRITICAL,
+                        params={"type": "pre_migration"},
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_migrate",
+                        operation=DatabaseOperation.MIGRATION,
+                        agent_type="schema",
+                        priority=priority,
+                        params=params,
+                        dependencies=[f"{plan_id}_backup"],
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_validate",
+                        operation=DatabaseOperation.VALIDATE,
+                        agent_type="integrity",
+                        priority=priority,
+                        params={"scope": "schema"},
+                        dependencies=[f"{plan_id}_migrate"],
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_cache_clear",
+                        operation=DatabaseOperation.CACHE,
+                        agent_type="cache",
+                        priority=priority,
+                        params={"action": "invalidate_all"},
+                        dependencies=[f"{plan_id}_migrate"],
+                    ),
+                ]
+            )
 
         elif operation == DatabaseOperation.SYNC:
             # Data synchronization workflow
-            tasks.extend([
-                WorkflowTask(
-                    task_id=f"{plan_id}_integrity_check",
-                    operation=DatabaseOperation.VALIDATE,
-                    agent_type="integrity",
-                    priority=priority,
-                    params={"scope": "sync_targets"}
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_sync",
-                    operation=DatabaseOperation.SYNC,
-                    agent_type="sync",
-                    priority=priority,
-                    params=params,
-                    dependencies=[f"{plan_id}_integrity_check"]
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_cache_refresh",
-                    operation=DatabaseOperation.CACHE,
-                    agent_type="cache",
-                    priority=priority,
-                    params={"action": "refresh_synced"},
-                    dependencies=[f"{plan_id}_sync"]
-                )
-            ])
+            tasks.extend(
+                [
+                    WorkflowTask(
+                        task_id=f"{plan_id}_integrity_check",
+                        operation=DatabaseOperation.VALIDATE,
+                        agent_type="integrity",
+                        priority=priority,
+                        params={"scope": "sync_targets"},
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_sync",
+                        operation=DatabaseOperation.SYNC,
+                        agent_type="sync",
+                        priority=priority,
+                        params=params,
+                        dependencies=[f"{plan_id}_integrity_check"],
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_cache_refresh",
+                        operation=DatabaseOperation.CACHE,
+                        agent_type="cache",
+                        priority=priority,
+                        params={"action": "refresh_synced"},
+                        dependencies=[f"{plan_id}_sync"],
+                    ),
+                ]
+            )
 
         elif operation == DatabaseOperation.OPTIMIZE:
             # Performance optimization workflow
-            tasks.extend([
-                WorkflowTask(
-                    task_id=f"{plan_id}_analyze",
-                    operation=DatabaseOperation.MONITOR,
-                    agent_type="monitor",
-                    priority=priority,
-                    params={"type": "performance_analysis"}
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_optimize_queries",
-                    operation=DatabaseOperation.OPTIMIZE,
-                    agent_type="query",
-                    priority=priority,
-                    params=params,
-                    dependencies=[f"{plan_id}_analyze"]
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_optimize_cache",
-                    operation=DatabaseOperation.CACHE,
-                    agent_type="cache",
-                    priority=priority,
-                    params={"action": "optimize"},
-                    dependencies=[f"{plan_id}_analyze"]
-                )
-            ])
+            tasks.extend(
+                [
+                    WorkflowTask(
+                        task_id=f"{plan_id}_analyze",
+                        operation=DatabaseOperation.MONITOR,
+                        agent_type="monitor",
+                        priority=priority,
+                        params={"type": "performance_analysis"},
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_optimize_queries",
+                        operation=DatabaseOperation.OPTIMIZE,
+                        agent_type="query",
+                        priority=priority,
+                        params=params,
+                        dependencies=[f"{plan_id}_analyze"],
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_optimize_cache",
+                        operation=DatabaseOperation.CACHE,
+                        agent_type="cache",
+                        priority=priority,
+                        params={"action": "optimize"},
+                        dependencies=[f"{plan_id}_analyze"],
+                    ),
+                ]
+            )
 
         elif operation == DatabaseOperation.BACKUP:
             # Backup workflow
-            tasks.extend([
-                WorkflowTask(
-                    task_id=f"{plan_id}_integrity_verify",
-                    operation=DatabaseOperation.VALIDATE,
-                    agent_type="integrity",
-                    priority=WorkflowPriority.HIGH,
-                    params={"scope": "full"}
-                ),
-                WorkflowTask(
-                    task_id=f"{plan_id}_backup",
-                    operation=DatabaseOperation.BACKUP,
-                    agent_type="backup",
-                    priority=priority,
-                    params=params,
-                    dependencies=[f"{plan_id}_integrity_verify"]
-                )
-            ])
+            tasks.extend(
+                [
+                    WorkflowTask(
+                        task_id=f"{plan_id}_integrity_verify",
+                        operation=DatabaseOperation.VALIDATE,
+                        agent_type="integrity",
+                        priority=WorkflowPriority.HIGH,
+                        params={"scope": "full"},
+                    ),
+                    WorkflowTask(
+                        task_id=f"{plan_id}_backup",
+                        operation=DatabaseOperation.BACKUP,
+                        agent_type="backup",
+                        priority=priority,
+                        params=params,
+                        dependencies=[f"{plan_id}_integrity_verify"],
+                    ),
+                ]
+            )
 
         else:
             # Single task for simple operations
@@ -490,15 +517,11 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                     operation=operation,
                     agent_type=agent_type,
                     priority=priority,
-                    params=params
+                    params=params,
                 )
             )
 
-        return WorkflowPlan(
-            plan_id=plan_id,
-            tasks=tasks,
-            priority=priority
-        )
+        return WorkflowPlan(plan_id=plan_id, tasks=tasks, priority=priority)
 
     def _select_agent_for_operation(self, operation: DatabaseOperation) -> str:
         """Select the appropriate agent for an operation."""
@@ -512,7 +535,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
             DatabaseOperation.SYNC: "sync",
             DatabaseOperation.VALIDATE: "integrity",
             DatabaseOperation.REPAIR: "integrity",
-            DatabaseOperation.CACHE: "cache"
+            DatabaseOperation.CACHE: "cache",
         }
         return mapping.get(operation, "monitor")
 
@@ -544,7 +567,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                     return TaskResult(
                         success=False,
                         data={"plan_id": plan.plan_id},
-                        error="Workflow execution timed out"
+                        error="Workflow execution timed out",
                     )
 
                 await asyncio.sleep(1)
@@ -571,20 +594,15 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                     "total_tasks": plan.total_tasks,
                     "completed_tasks": plan.completed_tasks,
                     "failed_tasks": plan.failed_tasks,
-                    "execution_time": completion_time
+                    "execution_time": completion_time,
                 },
-                metadata={
-                    "workflow_metrics": self.workflow_metrics
-                }
+                metadata={"workflow_metrics": self.workflow_metrics},
             )
 
         except Exception as e:
             logger.error(f"Workflow execution failed: {e}")
             self.workflow_metrics["failed_workflows"] += 1
-            return TaskResult(
-                success=False,
-                error=str(e)
-            )
+            return TaskResult(success=False, error=str(e))
 
     async def _schedule_tasks(self, plan: WorkflowPlan):
         """Schedule tasks based on dependencies."""
@@ -643,7 +661,9 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                     result = await self._delegate_to_agent(agent, task)
 
                     # Update task status
-                    task.status = WorkflowStatus.COMPLETED if result.success else WorkflowStatus.FAILED
+                    task.status = (
+                        WorkflowStatus.COMPLETED if result.success else WorkflowStatus.FAILED
+                    )
                     task.result = result
                     task.completed_at = datetime.utcnow()
 
@@ -657,7 +677,9 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                             task.retry_count += 1
                             task.status = WorkflowStatus.PENDING
                             await self.task_queue.put((plan_id, task))
-                            logger.info(f"Retrying task {task.task_id} (attempt {task.retry_count})")
+                            logger.info(
+                                f"Retrying task {task.task_id} (attempt {task.retry_count})"
+                            )
 
                     # Update agent utilization metrics
                     if task.agent_type not in self.workflow_metrics["agent_utilization"]:
@@ -692,13 +714,15 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
         """
         try:
             # Create state for agent
-            state = AgentState({
-                "task": task.task_id,
-                "operation": task.operation,
-                "params": task.params,
-                "priority": task.priority.value,
-                "supervisor": self.config.name
-            })
+            state = AgentState(
+                {
+                    "task": task.task_id,
+                    "operation": task.operation,
+                    "params": task.params,
+                    "priority": task.priority.value,
+                    "supervisor": self.config.name,
+                }
+            )
 
             # Execute task
             result = await agent.process(state)
@@ -710,18 +734,18 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
 
         except Exception as e:
             logger.error(f"Failed to delegate task {task.task_id}: {e}")
-            return TaskResult(
-                success=False,
-                error=str(e)
-            )
+            return TaskResult(success=False, error=str(e))
 
     def _update_workflow_metrics(self, completion_time: float):
         """Update workflow metrics."""
-        count = self.workflow_metrics["successful_workflows"] + self.workflow_metrics["failed_workflows"]
+        count = (
+            self.workflow_metrics["successful_workflows"]
+            + self.workflow_metrics["failed_workflows"]
+        )
         if count > 0:
             self.workflow_metrics["avg_completion_time"] = (
-                (self.workflow_metrics["avg_completion_time"] * (count - 1) + completion_time) / count
-            )
+                self.workflow_metrics["avg_completion_time"] * (count - 1) + completion_time
+            ) / count
 
     async def _process_task(self, state: AgentState) -> Any:
         """
@@ -747,12 +771,9 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
 
         except Exception as e:
             logger.error(f"Supervisor task processing failed: {e}")
-            return TaskResult(
-                success=False,
-                error=str(e)
-            )
+            return TaskResult(success=False, error=str(e))
 
-    async def get_agent_status(self) -> Dict[str, Any]:
+    async def get_agent_status(self) -> dict[str, Any]:
         """Get status of all managed agents."""
         status = {
             "supervisor": {
@@ -760,9 +781,9 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
                 "active_workflows": len(self.active_workflows),
                 "running_tasks": len(self.running_tasks),
                 "queued_tasks": self.task_queue.qsize(),
-                "metrics": self.workflow_metrics
+                "metrics": self.workflow_metrics,
             },
-            "agents": {}
+            "agents": {},
         }
 
         for agent_type, agent in self.agents.items():
@@ -770,7 +791,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
             status["agents"][agent_type] = {
                 "name": agent.config.name,
                 "health": health.value,
-                "capability": agent.config.capability.value
+                "capability": agent.config.capability.value,
             }
 
         return status
@@ -779,7 +800,7 @@ class DatabaseSupervisorAgent(BaseDatabaseAgent):
         """Cleanup supervisor and all agents."""
         try:
             # Cancel workflow processor
-            if hasattr(self, '_workflow_processor_task'):
+            if hasattr(self, "_workflow_processor_task"):
                 self._workflow_processor_task.cancel()
                 try:
                     await self._workflow_processor_task

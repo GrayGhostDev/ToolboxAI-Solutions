@@ -4,15 +4,15 @@ Fix test files with invalid numeric module imports
 Phase 3 - Test Suite Stabilization
 """
 
-import os
 import re
 import sys
 from pathlib import Path
 
+
 def fix_numeric_imports(filepath):
     """Fix imports that start with numbers in test files"""
 
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         content = f.read()
 
     original_content = content
@@ -84,7 +84,7 @@ def main():
 
     for test_file in project_root.glob('tests/**/*.py'):
         if test_file.is_file():
-            with open(test_file, 'r') as f:
+            with open(test_file) as f:
                 content = f.read()
                 if re.search(r'(from|import)\s+.*\.\d{3}_', content):
                     rel_path = test_file.relative_to(project_root)
@@ -99,7 +99,7 @@ def main():
     env_file = project_root / 'core/database/migrations/env.py'
     if env_file.exists():
         print("\nFixing alembic context issue in env.py...")
-        with open(env_file, 'r') as f:
+        with open(env_file) as f:
             content = f.read()
 
         # Fix the context.config issue

@@ -410,7 +410,9 @@ class TestSecureUserManager:
         with patch.object(self.user_manager, "_record_failed_attempt") as mock_record:
             with pytest.raises(AuthenticationError, match="Invalid credentials"):
                 await self.user_manager.authenticate(
-                    username_or_email="nonexistent", password="password", ip_address="192.168.1.1"
+                    username_or_email="nonexistent",
+                    password="password",
+                    ip_address="192.168.1.1",
                 )
 
             mock_record.assert_called_once()
@@ -431,7 +433,9 @@ class TestSecureUserManager:
         with patch.object(self.user_manager, "_record_failed_attempt") as mock_record:
             with pytest.raises(AuthenticationError, match="Invalid credentials"):
                 await self.user_manager.authenticate(
-                    username_or_email="testuser", password="WrongPass123!", ip_address="192.168.1.1"
+                    username_or_email="testuser",
+                    password="WrongPass123!",
+                    ip_address="192.168.1.1",
                 )
 
             mock_record.assert_called_once()
@@ -448,7 +452,9 @@ class TestSecureUserManager:
 
         with pytest.raises(AuthenticationError, match="deactivated"):
             await self.user_manager.authenticate(
-                username_or_email="testuser", password="password", ip_address="192.168.1.1"
+                username_or_email="testuser",
+                password="password",
+                ip_address="192.168.1.1",
             )
 
     @pytest.mark.asyncio
@@ -466,7 +472,9 @@ class TestSecureUserManager:
 
         with pytest.raises(AuthenticationError, match="expired"):
             await self.user_manager.authenticate(
-                username_or_email="testuser", password="TestPass123!", ip_address="192.168.1.1"
+                username_or_email="testuser",
+                password="TestPass123!",
+                ip_address="192.168.1.1",
             )
 
     @pytest.mark.asyncio
@@ -476,7 +484,9 @@ class TestSecureUserManager:
 
         with pytest.raises(AuthenticationError, match="temporarily locked"):
             await self.user_manager.authenticate(
-                username_or_email="testuser", password="password", ip_address="192.168.1.1"
+                username_or_email="testuser",
+                password="password",
+                ip_address="192.168.1.1",
             )
 
     @pytest.mark.asyncio
@@ -499,7 +509,9 @@ class TestSecureUserManager:
                         self.user_manager, "_invalidate_user_sessions"
                     ) as mock_invalidate:
                         result = await self.user_manager.change_password(
-                            user_id=1, current_password="OldPass123!", new_password="NewPass123!"
+                            user_id=1,
+                            current_password="OldPass123!",
+                            new_password="NewPass123!",
                         )
 
         assert result is True
@@ -534,7 +546,9 @@ class TestSecureUserManager:
         with patch.object(self.user_manager, "_is_password_reused", return_value=True):
             with pytest.raises(AuthenticationError, match="used recently"):
                 await self.user_manager.change_password(
-                    user_id=1, current_password="OldPass123!", new_password="ReusedPass123!"
+                    user_id=1,
+                    current_password="OldPass123!",
+                    new_password="ReusedPass123!",
                 )
 
     @pytest.mark.asyncio
@@ -582,7 +596,9 @@ class TestSecureUserManager:
         self.mock_db.commit = Mock()
 
         with patch.object(
-            self.user_manager, "_encrypt_sensitive_data", return_value="encrypted_secret"
+            self.user_manager,
+            "_encrypt_sensitive_data",
+            return_value="encrypted_secret",
         ):
             with patch.object(self.user_manager, "_audit_log") as mock_audit:
                 secret = await self.user_manager.enable_mfa(user_id=1)
@@ -861,7 +877,9 @@ class TestSecureUserManagerIntegration:
 
             with pytest.raises(AuthenticationError, match="Invalid credentials"):
                 await manager.authenticate(
-                    username_or_email="testuser", password="WrongPass123!", ip_address="192.168.1.1"
+                    username_or_email="testuser",
+                    password="WrongPass123!",
+                    ip_address="192.168.1.1",
                 )
 
             # Verify lockout was set
@@ -993,7 +1011,7 @@ class TestErrorHandling:
         manager = SecureUserManager(db_session=mock_db)
 
         # Should handle database errors gracefully
-        result = manager._user_exists("testuser", "test@example.com")
+        manager._user_exists("testuser", "test@example.com")
         # Implementation might return False on error or re-raise
 
     def test_redis_error_handling(self):
@@ -1001,7 +1019,7 @@ class TestErrorHandling:
         mock_redis = Mock()
         mock_redis.get.side_effect = Exception("Redis connection failed")
 
-        manager = SecureUserManager(db_session=Mock(), redis_client=mock_redis)
+        SecureUserManager(db_session=Mock(), redis_client=mock_redis)
 
         # Should handle Redis errors gracefully
         # Implementation should not crash when Redis is unavailable

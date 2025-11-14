@@ -5,15 +5,13 @@ This agent manages individual Claude Code sessions, tracks their progress,
 and provides insights into session activity and productivity.
 """
 
-import asyncio
 import json
 import logging
-import os
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 from .base_github_agent import BaseGitHubAgent
 
@@ -23,15 +21,16 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ClaudeSession:
     """Represents a Claude Code session."""
+
     session_id: str
     worktree_branch: str
     worktree_path: Path
     started_at: datetime
     last_activity: datetime
     status: str  # active, idle, completed, error
-    tasks_completed: List[str] = field(default_factory=list)
-    files_modified: Set[str] = field(default_factory=set)
-    commits_made: List[str] = field(default_factory=list)
+    tasks_completed: list[str] = field(default_factory=list)
+    files_modified: set[str] = field(default_factory=set)
+    commits_made: list[str] = field(default_factory=list)
     context_switches: int = 0
     total_tokens: int = 0
     error_count: int = 0
@@ -41,6 +40,7 @@ class ClaudeSession:
 @dataclass
 class SessionMetrics:
     """Aggregated metrics for all sessions."""
+
     total_sessions: int = 0
     active_sessions: int = 0
     completed_sessions: int = 0
@@ -63,10 +63,12 @@ class SessionManagerAgent(BaseGitHubAgent):
             config_path: Path to configuration file
         """
         super().__init__(config_path)
-        self.sessions: Dict[str, ClaudeSession] = {}
-        self.session_history: List[ClaudeSession] = []
+        self.sessions: dict[str, ClaudeSession] = {}
+        self.session_history: list[ClaudeSession] = []
         self.metrics = SessionMetrics()
-        self.session_log_path = Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees/.claude-sessions.json")
+        self.session_log_path = Path(
+            "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees/.claude-sessions.json"
+        )
 
         # Load existing session data
         self._load_session_history()
@@ -75,13 +77,17 @@ class SessionManagerAgent(BaseGitHubAgent):
         """Load session history from disk."""
         if self.session_log_path.exists():
             try:
-                with open(self.session_log_path, 'r') as f:
+                with open(self.session_log_path) as f:
                     data = json.load(f)
                     # Reconstruct sessions from saved data
                     for session_data in data.get("sessions", []):
                         # Convert datetime strings back to datetime objects
-                        session_data["started_at"] = datetime.fromisoformat(session_data["started_at"])
-                        session_data["last_activity"] = datetime.fromisoformat(session_data["last_activity"])
+                        session_data["started_at"] = datetime.fromisoformat(
+                            session_data["started_at"]
+                        )
+                        session_data["last_activity"] = datetime.fromisoformat(
+                            session_data["last_activity"]
+                        )
                         session_data["worktree_path"] = Path(session_data["worktree_path"])
                         session_data["files_modified"] = set(session_data.get("files_modified", []))
 
@@ -115,31 +121,35 @@ class SessionManagerAgent(BaseGitHubAgent):
                     "context_switches": session.context_switches,
                     "total_tokens": session.total_tokens,
                     "error_count": session.error_count,
-                    "productivity_score": session.productivity_score
+                    "productivity_score": session.productivity_score,
                 }
                 sessions_data.append(session_dict)
 
             # Save to file
             self.session_log_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.session_log_path, 'w') as f:
-                json.dump({
-                    "sessions": sessions_data,
-                    "metrics": {
-                        "total_sessions": self.metrics.total_sessions,
-                        "completed_sessions": self.metrics.completed_sessions,
-                        "average_session_duration": self.metrics.average_session_duration,
-                        "average_productivity": self.metrics.average_productivity,
-                        "total_tasks_completed": self.metrics.total_tasks_completed,
-                        "total_files_modified": self.metrics.total_files_modified,
-                        "total_commits": self.metrics.total_commits,
-                        "peak_concurrent_sessions": self.metrics.peak_concurrent_sessions,
-                        "error_rate": self.metrics.error_rate
-                    }
-                }, f, indent=2)
+            with open(self.session_log_path, "w") as f:
+                json.dump(
+                    {
+                        "sessions": sessions_data,
+                        "metrics": {
+                            "total_sessions": self.metrics.total_sessions,
+                            "completed_sessions": self.metrics.completed_sessions,
+                            "average_session_duration": self.metrics.average_session_duration,
+                            "average_productivity": self.metrics.average_productivity,
+                            "total_tasks_completed": self.metrics.total_tasks_completed,
+                            "total_files_modified": self.metrics.total_files_modified,
+                            "total_commits": self.metrics.total_commits,
+                            "peak_concurrent_sessions": self.metrics.peak_concurrent_sessions,
+                            "error_rate": self.metrics.error_rate,
+                        },
+                    },
+                    f,
+                    indent=2,
+                )
         except Exception as e:
             logger.error(f"Could not save session data: {e}")
 
-    async def analyze(self, files: List[str]) -> Dict[str, Any]:
+    async def analyze(self, files: list[str]) -> dict[str, Any]:
         """Analyze files (required by BaseGitHubAgent).
 
         Args:
@@ -151,7 +161,7 @@ class SessionManagerAgent(BaseGitHubAgent):
         # Not needed for session management
         return {"message": "Session manager doesn't analyze files"}
 
-    async def execute_action(self, action: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_action(self, action: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute an action (required by BaseGitHubAgent).
 
         Args:
@@ -166,7 +176,7 @@ class SessionManagerAgent(BaseGitHubAgent):
         task["action"] = action
         return await self.execute(task)
 
-    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, task: dict[str, Any]) -> dict[str, Any]:
         """Execute session management task.
 
         Args:
@@ -181,45 +191,29 @@ class SessionManagerAgent(BaseGitHubAgent):
             if action == "start":
                 return await self.start_session(
                     worktree_branch=task.get("worktree_branch"),
-                    worktree_path=task.get("worktree_path")
+                    worktree_path=task.get("worktree_path"),
                 )
             elif action == "stop":
-                return await self.stop_session(
-                    session_id=task.get("session_id")
-                )
+                return await self.stop_session(session_id=task.get("session_id"))
             elif action == "monitor":
                 return await self.monitor_sessions()
             elif action == "status":
-                return await self.get_session_status(
-                    session_id=task.get("session_id")
-                )
+                return await self.get_session_status(session_id=task.get("session_id"))
             elif action == "list":
                 return await self.list_sessions()
             elif action == "analyze":
                 return await self.analyze_productivity()
             elif action == "summary":
-                return await self.generate_summary(
-                    session_id=task.get("session_id")
-                )
+                return await self.generate_summary(session_id=task.get("session_id"))
             elif action == "optimize":
                 return await self.optimize_sessions()
             else:
-                return {
-                    "success": False,
-                    "error": f"Unknown action: {action}"
-                }
+                return {"success": False, "error": f"Unknown action: {action}"}
         except Exception as e:
             logger.error(f"Error executing session task: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def start_session(
-        self,
-        worktree_branch: str,
-        worktree_path: str
-    ) -> Dict[str, Any]:
+    async def start_session(self, worktree_branch: str, worktree_path: str) -> dict[str, Any]:
         """Start tracking a new Claude Code session.
 
         Args:
@@ -237,7 +231,7 @@ class SessionManagerAgent(BaseGitHubAgent):
             worktree_path=Path(worktree_path),
             started_at=datetime.now(),
             last_activity=datetime.now(),
-            status="active"
+            status="active",
         )
 
         self.sessions[session_id] = session
@@ -246,8 +240,7 @@ class SessionManagerAgent(BaseGitHubAgent):
         self.metrics.total_sessions += 1
         self.metrics.active_sessions = len(self.sessions)
         self.metrics.peak_concurrent_sessions = max(
-            self.metrics.peak_concurrent_sessions,
-            self.metrics.active_sessions
+            self.metrics.peak_concurrent_sessions, self.metrics.active_sessions
         )
 
         # Save session data
@@ -258,10 +251,10 @@ class SessionManagerAgent(BaseGitHubAgent):
         return {
             "success": True,
             "session_id": session_id,
-            "message": f"Session {session_id} started successfully"
+            "message": f"Session {session_id} started successfully",
         }
 
-    async def stop_session(self, session_id: str) -> Dict[str, Any]:
+    async def stop_session(self, session_id: str) -> dict[str, Any]:
         """Stop tracking a Claude Code session.
 
         Args:
@@ -271,10 +264,7 @@ class SessionManagerAgent(BaseGitHubAgent):
             Session stop result
         """
         if session_id not in self.sessions:
-            return {
-                "success": False,
-                "error": f"Session not found: {session_id}"
-            }
+            return {"success": False, "error": f"Session not found: {session_id}"}
 
         session = self.sessions[session_id]
         session.status = "completed"
@@ -303,10 +293,10 @@ class SessionManagerAgent(BaseGitHubAgent):
             "success": True,
             "session_id": session_id,
             "productivity_score": session.productivity_score,
-            "message": f"Session {session_id} completed"
+            "message": f"Session {session_id} completed",
         }
 
-    async def monitor_sessions(self) -> Dict[str, Any]:
+    async def monitor_sessions(self) -> dict[str, Any]:
         """Monitor all active sessions.
 
         Returns:
@@ -332,14 +322,16 @@ class SessionManagerAgent(BaseGitHubAgent):
             else:
                 session.status = "inactive"
 
-            monitoring_results.append({
-                "session_id": session_id,
-                "status": session.status,
-                "worktree": session.worktree_branch,
-                "duration": (datetime.now() - session.started_at).total_seconds() / 3600,
-                "files_modified": len(session.files_modified),
-                "last_activity": session.last_activity.isoformat()
-            })
+            monitoring_results.append(
+                {
+                    "session_id": session_id,
+                    "status": session.status,
+                    "worktree": session.worktree_branch,
+                    "duration": (datetime.now() - session.started_at).total_seconds() / 3600,
+                    "files_modified": len(session.files_modified),
+                    "last_activity": session.last_activity.isoformat(),
+                }
+            )
 
         # Save updated data
         self._save_session_data()
@@ -347,10 +339,10 @@ class SessionManagerAgent(BaseGitHubAgent):
         return {
             "success": True,
             "active_sessions": len(self.sessions),
-            "results": monitoring_results
+            "results": monitoring_results,
         }
 
-    async def get_session_status(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+    async def get_session_status(self, session_id: Optional[str] = None) -> dict[str, Any]:
         """Get status of a specific session or all sessions.
 
         Args:
@@ -366,29 +358,20 @@ class SessionManagerAgent(BaseGitHubAgent):
                     if session.session_id == session_id:
                         return {
                             "success": True,
-                            "session": self._session_to_dict(session)
+                            "session": self._session_to_dict(session),
                         }
-                return {
-                    "success": False,
-                    "error": f"Session not found: {session_id}"
-                }
+                return {"success": False, "error": f"Session not found: {session_id}"}
 
             session = self.sessions[session_id]
-            return {
-                "success": True,
-                "session": self._session_to_dict(session)
-            }
+            return {"success": True, "session": self._session_to_dict(session)}
 
         # Return all active sessions
         return {
             "success": True,
-            "sessions": [
-                self._session_to_dict(session)
-                for session in self.sessions.values()
-            ]
+            "sessions": [self._session_to_dict(session) for session in self.sessions.values()],
         }
 
-    async def list_sessions(self) -> Dict[str, Any]:
+    async def list_sessions(self) -> dict[str, Any]:
         """List all sessions (active and historical).
 
         Returns:
@@ -413,10 +396,10 @@ class SessionManagerAgent(BaseGitHubAgent):
             "total": len(all_sessions),
             "active": len(self.sessions),
             "completed": len(self.session_history),
-            "sessions": all_sessions
+            "sessions": all_sessions,
         }
 
-    async def analyze_productivity(self) -> Dict[str, Any]:
+    async def analyze_productivity(self) -> dict[str, Any]:
         """Analyze productivity across all sessions.
 
         Returns:
@@ -426,25 +409,29 @@ class SessionManagerAgent(BaseGitHubAgent):
         active_analysis = []
         for session in self.sessions.values():
             productivity = await self._calculate_productivity(session)
-            active_analysis.append({
-                "session_id": session.session_id,
-                "productivity_score": productivity,
-                "duration_hours": (datetime.now() - session.started_at).total_seconds() / 3600,
-                "files_modified": len(session.files_modified),
-                "commits": len(session.commits_made),
-                "tasks": len(session.tasks_completed)
-            })
+            active_analysis.append(
+                {
+                    "session_id": session.session_id,
+                    "productivity_score": productivity,
+                    "duration_hours": (datetime.now() - session.started_at).total_seconds() / 3600,
+                    "files_modified": len(session.files_modified),
+                    "commits": len(session.commits_made),
+                    "tasks": len(session.tasks_completed),
+                }
+            )
 
         # Calculate trends
         recent_sessions = self.session_history[-20:] if self.session_history else []
         productivity_trend = []
 
         for session in recent_sessions:
-            productivity_trend.append({
-                "date": session.started_at.date().isoformat(),
-                "productivity": session.productivity_score,
-                "duration": (session.last_activity - session.started_at).total_seconds() / 3600
-            })
+            productivity_trend.append(
+                {
+                    "date": session.started_at.date().isoformat(),
+                    "productivity": session.productivity_score,
+                    "duration": (session.last_activity - session.started_at).total_seconds() / 3600,
+                }
+            )
 
         # Identify patterns
         patterns = await self._identify_productivity_patterns()
@@ -454,10 +441,10 @@ class SessionManagerAgent(BaseGitHubAgent):
             "active_sessions": active_analysis,
             "productivity_trend": productivity_trend,
             "patterns": patterns,
-            "recommendations": await self._generate_recommendations()
+            "recommendations": await self._generate_recommendations(),
         }
 
-    async def generate_summary(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+    async def generate_summary(self, session_id: Optional[str] = None) -> dict[str, Any]:
         """Generate a summary for a session or all sessions.
 
         Args:
@@ -476,17 +463,11 @@ class SessionManagerAgent(BaseGitHubAgent):
                         break
 
             if not session:
-                return {
-                    "success": False,
-                    "error": f"Session not found: {session_id}"
-                }
+                return {"success": False, "error": f"Session not found: {session_id}"}
 
             # Generate individual summary
             summary = await self._generate_session_summary(session)
-            return {
-                "success": True,
-                "summary": summary
-            }
+            return {"success": True, "summary": summary}
 
         # Generate overall summary
         total_duration = sum(
@@ -495,13 +476,11 @@ class SessionManagerAgent(BaseGitHubAgent):
         )
 
         total_files = sum(
-            len(s.files_modified)
-            for s in self.session_history + list(self.sessions.values())
+            len(s.files_modified) for s in self.session_history + list(self.sessions.values())
         )
 
         total_commits = sum(
-            len(s.commits_made)
-            for s in self.session_history + list(self.sessions.values())
+            len(s.commits_made) for s in self.session_history + list(self.sessions.values())
         )
 
         return {
@@ -514,11 +493,11 @@ class SessionManagerAgent(BaseGitHubAgent):
                 "total_files_modified": total_files,
                 "total_commits": total_commits,
                 "average_productivity": self.metrics.average_productivity,
-                "peak_concurrent": self.metrics.peak_concurrent_sessions
-            }
+                "peak_concurrent": self.metrics.peak_concurrent_sessions,
+            },
         }
 
-    async def optimize_sessions(self) -> Dict[str, Any]:
+    async def optimize_sessions(self) -> dict[str, Any]:
         """Optimize active sessions for better performance.
 
         Returns:
@@ -531,35 +510,41 @@ class SessionManagerAgent(BaseGitHubAgent):
             idle_time = (datetime.now() - session.last_activity).total_seconds() / 60
 
             if idle_time > 30:  # 30 minutes idle
-                optimizations.append({
-                    "session_id": session_id,
-                    "type": "idle_session",
-                    "recommendation": "Consider pausing or closing idle session",
-                    "idle_minutes": idle_time
-                })
+                optimizations.append(
+                    {
+                        "session_id": session_id,
+                        "type": "idle_session",
+                        "recommendation": "Consider pausing or closing idle session",
+                        "idle_minutes": idle_time,
+                    }
+                )
 
             # Check for high error rate
             if session.error_count > 5:
-                optimizations.append({
-                    "session_id": session_id,
-                    "type": "high_errors",
-                    "recommendation": "Review errors and consider restarting session",
-                    "error_count": session.error_count
-                })
+                optimizations.append(
+                    {
+                        "session_id": session_id,
+                        "type": "high_errors",
+                        "recommendation": "Review errors and consider restarting session",
+                        "error_count": session.error_count,
+                    }
+                )
 
             # Check for context switching
             if session.context_switches > 10:
-                optimizations.append({
-                    "session_id": session_id,
-                    "type": "context_switching",
-                    "recommendation": "Too many context switches, consider focusing on single task",
-                    "switches": session.context_switches
-                })
+                optimizations.append(
+                    {
+                        "session_id": session_id,
+                        "type": "context_switching",
+                        "recommendation": "Too many context switches, consider focusing on single task",
+                        "switches": session.context_switches,
+                    }
+                )
 
         return {
             "success": True,
             "optimizations": optimizations,
-            "count": len(optimizations)
+            "count": len(optimizations),
         }
 
     async def _check_claude_process(self, worktree_path: Path) -> bool:
@@ -575,7 +560,7 @@ class SessionManagerAgent(BaseGitHubAgent):
         result = subprocess.run(cmd, shell=True, capture_output=True)
         return result.returncode == 0
 
-    async def _check_recent_changes(self, worktree_path: Path) -> List[str]:
+    async def _check_recent_changes(self, worktree_path: Path) -> list[str]:
         """Check for recent file changes in worktree.
 
         Args:
@@ -589,16 +574,11 @@ class SessionManagerAgent(BaseGitHubAgent):
 
         # Check git status for changes
         cmd = ["git", "status", "--porcelain"]
-        result = subprocess.run(
-            cmd,
-            cwd=str(worktree_path),
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(cmd, cwd=str(worktree_path), capture_output=True, text=True)
 
         if result.returncode == 0:
             changed_files = []
-            for line in result.stdout.strip().split('\n'):
+            for line in result.stdout.strip().split("\n"):
                 if line:
                     # Extract filename from git status output
                     parts = line.strip().split()
@@ -657,8 +637,7 @@ class SessionManagerAgent(BaseGitHubAgent):
         if all_sessions:
             # Average session duration
             total_duration = sum(
-                (s.last_activity - s.started_at).total_seconds() / 3600
-                for s in all_sessions
+                (s.last_activity - s.started_at).total_seconds() / 3600 for s in all_sessions
             )
             self.metrics.average_session_duration = total_duration / len(all_sessions)
 
@@ -675,7 +654,7 @@ class SessionManagerAgent(BaseGitHubAgent):
             total_errors = sum(s.error_count for s in all_sessions)
             self.metrics.error_rate = total_errors / len(all_sessions) if all_sessions else 0
 
-    async def _identify_productivity_patterns(self) -> List[Dict[str, Any]]:
+    async def _identify_productivity_patterns(self) -> list[dict[str, Any]]:
         """Identify productivity patterns from session history.
 
         Returns:
@@ -698,20 +677,24 @@ class SessionManagerAgent(BaseGitHubAgent):
         best_hours = sorted(
             [(hour, sum(scores) / len(scores)) for hour, scores in hour_productivity.items()],
             key=lambda x: x[1],
-            reverse=True
+            reverse=True,
         )[:3]
 
         if best_hours:
-            patterns.append({
-                "type": "time_of_day",
-                "description": "Most productive hours",
-                "data": best_hours
-            })
+            patterns.append(
+                {
+                    "type": "time_of_day",
+                    "description": "Most productive hours",
+                    "data": best_hours,
+                }
+            )
 
         # Session duration analysis
         duration_productivity = {}
         for session in self.session_history[-50:]:
-            duration_bucket = int((session.last_activity - session.started_at).total_seconds() / 3600)
+            duration_bucket = int(
+                (session.last_activity - session.started_at).total_seconds() / 3600
+            )
             if duration_bucket not in duration_productivity:
                 duration_productivity[duration_bucket] = []
             duration_productivity[duration_bucket].append(session.productivity_score)
@@ -720,17 +703,19 @@ class SessionManagerAgent(BaseGitHubAgent):
         if duration_productivity:
             optimal_duration = max(
                 duration_productivity.items(),
-                key=lambda x: sum(x[1]) / len(x[1]) if x[1] else 0
+                key=lambda x: sum(x[1]) / len(x[1]) if x[1] else 0,
             )
-            patterns.append({
-                "type": "session_duration",
-                "description": f"Optimal session duration: {optimal_duration[0]} hours",
-                "average_productivity": sum(optimal_duration[1]) / len(optimal_duration[1])
-            })
+            patterns.append(
+                {
+                    "type": "session_duration",
+                    "description": f"Optimal session duration: {optimal_duration[0]} hours",
+                    "average_productivity": sum(optimal_duration[1]) / len(optimal_duration[1]),
+                }
+            )
 
         return patterns
 
-    async def _generate_recommendations(self) -> List[str]:
+    async def _generate_recommendations(self) -> list[str]:
         """Generate productivity recommendations.
 
         Returns:
@@ -740,9 +725,7 @@ class SessionManagerAgent(BaseGitHubAgent):
 
         # Check for too many concurrent sessions
         if self.metrics.active_sessions > 5:
-            recommendations.append(
-                "Consider reducing concurrent sessions to maintain focus"
-            )
+            recommendations.append("Consider reducing concurrent sessions to maintain focus")
 
         # Check error rate
         if self.metrics.error_rate > 3:
@@ -764,7 +747,7 @@ class SessionManagerAgent(BaseGitHubAgent):
 
         return recommendations
 
-    async def _generate_session_summary(self, session: ClaudeSession) -> Dict[str, Any]:
+    async def _generate_session_summary(self, session: ClaudeSession) -> dict[str, Any]:
         """Generate summary for a single session.
 
         Args:
@@ -788,13 +771,13 @@ class SessionManagerAgent(BaseGitHubAgent):
                 "commits_made": len(session.commits_made),
                 "tasks_completed": len(session.tasks_completed),
                 "context_switches": session.context_switches,
-                "errors": session.error_count
+                "errors": session.error_count,
             },
             "files": list(session.files_modified)[:10],  # Top 10 files
-            "commits": session.commits_made[:5]  # Last 5 commits
+            "commits": session.commits_made[:5],  # Last 5 commits
         }
 
-    def _session_to_dict(self, session: ClaudeSession) -> Dict[str, Any]:
+    def _session_to_dict(self, session: ClaudeSession) -> dict[str, Any]:
         """Convert session to dictionary.
 
         Args:
@@ -813,10 +796,10 @@ class SessionManagerAgent(BaseGitHubAgent):
             "productivity_score": session.productivity_score,
             "files_modified": len(session.files_modified),
             "commits_made": len(session.commits_made),
-            "tasks_completed": len(session.tasks_completed)
+            "tasks_completed": len(session.tasks_completed),
         }
 
-    def get_report(self) -> Dict[str, Any]:
+    def get_report(self) -> dict[str, Any]:
         """Generate a report of session management activities.
 
         Returns:
@@ -828,17 +811,17 @@ class SessionManagerAgent(BaseGitHubAgent):
             "sessions": {
                 "active": self.metrics.active_sessions,
                 "completed": self.metrics.completed_sessions,
-                "total": self.metrics.total_sessions
+                "total": self.metrics.total_sessions,
             },
             "metrics": {
                 "average_duration_hours": self.metrics.average_session_duration,
                 "average_productivity": self.metrics.average_productivity,
                 "peak_concurrent": self.metrics.peak_concurrent_sessions,
-                "error_rate": self.metrics.error_rate
+                "error_rate": self.metrics.error_rate,
             },
             "productivity": {
                 "tasks_completed": self.metrics.total_tasks_completed,
                 "files_modified": self.metrics.total_files_modified,
-                "commits_made": self.metrics.total_commits
-            }
+                "commits_made": self.metrics.total_commits,
+            },
         }

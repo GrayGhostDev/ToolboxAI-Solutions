@@ -7,7 +7,6 @@ This script deploys all database schemas to the appropriate databases.
 
 import sys
 from pathlib import Path
-from typing import List
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -77,7 +76,7 @@ class SchemaDeployer:
             print(f"\n❌ Schema deployment failed: {e}")
             return False
 
-    def _deploy_schemas_to_database(self, database_name: str, schema_files: List[str]) -> bool:
+    def _deploy_schemas_to_database(self, database_name: str, schema_files: list[str]) -> bool:
         """Deploy schemas to a specific database."""
         try:
             with get_session(database_name) as session:

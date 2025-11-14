@@ -52,7 +52,7 @@ class TestDockerAgentSystem:
             pytest.skip("Docker configuration not available")
 
         docker_config = get_docker_config()
-        service_status = get_docker_service_status()
+        get_docker_service_status()
 
         # Validate Docker environment detection
         assert docker_config.is_docker_environment(), "Should detect Docker environment"
@@ -257,11 +257,17 @@ async def test_complete_docker_integration():
 
     # Define all Docker integration tests
     integration_tests = [
-        ("Docker Services Connectivity", test_instance.test_docker_services_connectivity),
+        (
+            "Docker Services Connectivity",
+            test_instance.test_docker_services_connectivity,
+        ),
         ("Agent Service in Docker", test_instance.test_agent_service_in_docker),
         ("Health Endpoints Docker", test_instance.test_health_endpoints_docker),
         ("Pusher Integration Docker", test_instance.test_pusher_integration_docker),
-        ("Docker Environment Variables", test_instance.test_docker_environment_variables),
+        (
+            "Docker Environment Variables",
+            test_instance.test_docker_environment_variables,
+        ),
         ("Docker Service Discovery", test_instance.test_docker_service_discovery),
     ]
 
@@ -272,7 +278,7 @@ async def test_complete_docker_integration():
     for test_name, test_func in integration_tests:
         try:
             print(f"\nRunning: {test_name}")
-            result = await test_func()
+            await test_func()
             test_results[test_name] = True
             successful_tests += 1
             print(f"✅ {test_name}: PASSED")

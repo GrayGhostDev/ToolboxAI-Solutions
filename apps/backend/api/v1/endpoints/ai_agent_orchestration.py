@@ -31,8 +31,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.services.websocket_handler import websocket_manager
-
     from apps.backend.api.auth.auth import (
         get_current_user,
         require_any_role,
@@ -40,6 +38,7 @@ try:
     )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
+    from apps.backend.services.websocket_handler import websocket_manager
 except ImportError:
     # Fallback for development
     def get_current_user():
@@ -390,7 +389,11 @@ async def notify_agent_update(event_type: str, data: dict[str, Any], user_id: st
         await trigger_event(
             "agent-updates",
             f"agent.{event_type}",
-            {"data": data, "user_id": user_id, "timestamp": datetime.now(timezone.utc).isoformat()},
+            {
+                "data": data,
+                "user_id": user_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
     except Exception as e:
         logger.warning(f"Failed to send agent update notification: {e}")
@@ -435,7 +438,10 @@ async def simulate_task_execution(task_id: str, agent_id: str):
             "status": "success",
             "output": f"Task {task.task_type} completed successfully",
             "generated_content": "Mock generated content",
-            "metadata": {"agent_id": agent_id, "execution_time": task.execution_time_seconds},
+            "metadata": {
+                "agent_id": agent_id,
+                "execution_time": task.execution_time_seconds,
+            },
         }
 
         # Update agent status
@@ -488,7 +494,11 @@ def initialize_mock_agents():
             agent_type=agent_type,
             status=AgentStatus.IDLE,
             configuration={"model": "gpt-4", "temperature": 0.7, "max_tokens": 2000},
-            performance_metrics={"uptime": 99.5, "throughput": 10.0, "error_rate": 0.05},
+            performance_metrics={
+                "uptime": 99.5,
+                "throughput": 10.0,
+                "error_rate": 0.05,
+            },
             resource_usage={"cpu_percent": 15.0, "memory_mb": 512, "gpu_percent": 0.0},
             last_activity=datetime.now(timezone.utc),
             created_at=datetime.now(timezone.utc) - timedelta(hours=1),
@@ -562,7 +572,8 @@ async def create_task(
     except Exception as e:
         logger.error(f"Error creating task: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create task"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create task",
         )
 
 
@@ -595,7 +606,8 @@ async def list_tasks(
     except Exception as e:
         logger.error(f"Error listing tasks: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve tasks"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve tasks",
         )
 
 
@@ -616,7 +628,8 @@ async def get_task(task_id: str, current_user: dict = Depends(get_current_user))
     except Exception as e:
         logger.error(f"Error retrieving task {task_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve task"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve task",
         )
 
 
@@ -648,7 +661,8 @@ async def list_agents(
     except Exception as e:
         logger.error(f"Error listing agents: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve agents"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve agents",
         )
 
 
@@ -675,7 +689,8 @@ async def get_agent(
     except Exception as e:
         logger.error(f"Error retrieving agent {agent_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve agent"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve agent",
         )
 
 
@@ -731,7 +746,8 @@ async def create_workflow(
     except Exception as e:
         logger.error(f"Error creating workflow: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create workflow"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create workflow",
         )
 
 
@@ -754,7 +770,8 @@ async def start_workflow(
 
         if workflow.status != WorkflowStatus.DRAFT:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Workflow is not in draft status"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Workflow is not in draft status",
             )
 
         # Start workflow
@@ -780,7 +797,8 @@ async def start_workflow(
     except Exception as e:
         logger.error(f"Error starting workflow {workflow_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to start workflow"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to start workflow",
         )
 
 
@@ -929,7 +947,8 @@ async def create_swarm(
     except Exception as e:
         logger.error(f"Error creating swarm: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create swarm"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create swarm",
         )
 
 
@@ -1022,7 +1041,10 @@ async def agent_realtime_updates(
         elif connection_type == "agents":
             agents = list(_mock_agents_db.values())
             await websocket.send_json(
-                {"type": "initial_data", "data": [agent.model_dump() for agent in agents]}
+                {
+                    "type": "initial_data",
+                    "data": [agent.model_dump() for agent in agents],
+                }
             )
 
         # Keep connection alive and handle messages
@@ -1057,7 +1079,8 @@ async def agent_realtime_updates(
 
 @router.get("/health", response_model=dict[str, Any])
 async def get_system_health(
-    current_user: dict = Depends(get_current_user), _: None = Depends(require_any_role(["admin"]))
+    current_user: dict = Depends(get_current_user),
+    _: None = Depends(require_any_role(["admin"])),
 ):
     """
     Get overall AI agent system health status.

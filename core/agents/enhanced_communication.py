@@ -16,20 +16,17 @@ Features:
 """
 
 import asyncio
-import logging
 import json
-import time
-from typing import Dict, List, Any, Optional, Set, Callable, Union
-from dataclasses import dataclass, field, asdict
+import logging
+from collections import defaultdict, deque
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Callable, Optional
 from uuid import uuid4
-from collections import deque, defaultdict
-import weakref
-from pathlib import Path
 
-from fastapi import WebSocket
 import aioredis
+from fastapi import WebSocket
 from redis.asyncio import Redis
 
 logger = logging.getLogger(__name__)
@@ -37,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 class MessageType(Enum):
     """Types of messages in the communication system"""
+
     # Task coordination
     TASK_ASSIGNMENT = "task_assignment"
     TASK_COMPLETION = "task_completion"
@@ -75,6 +73,7 @@ class MessageType(Enum):
 
 class MessagePriority(Enum):
     """Message priority levels"""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -84,6 +83,7 @@ class MessagePriority(Enum):
 
 class DeliveryMode(Enum):
     """Message delivery modes"""
+
     FIRE_AND_FORGET = "fire_and_forget"
     GUARANTEED = "guaranteed"
     REQUEST_RESPONSE = "request_response"
@@ -94,14 +94,15 @@ class DeliveryMode(Enum):
 @dataclass
 class Message:
     """Enhanced message structure for agent communication"""
+
     message_id: str = field(default_factory=lambda: str(uuid4()))
     message_type: MessageType = MessageType.AGENT_STATUS
     sender_id: str = ""
     recipient_id: Optional[str] = None  # None for broadcasts
 
     # Message content
-    payload: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Delivery settings
     priority: MessagePriority = MessagePriority.NORMAL
@@ -119,7 +120,7 @@ class Message:
     correlation_id: Optional[str] = None
 
     # Educational context
-    educational_context: Dict[str, Any] = field(default_factory=dict)
+    educational_context: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Set expiration time if TTL is specified"""
@@ -137,7 +138,7 @@ class Message:
             return False
         return datetime.now() > self.expires_at
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert message to dictionary for serialization"""
         data = asdict(self)
         data["message_type"] = self.message_type.value
@@ -153,7 +154,7 @@ class Message:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Message":
+    def from_dict(cls, data: dict[str, Any]) -> "Message":
         """Create message from dictionary"""
         message = cls()
 
@@ -179,10 +180,11 @@ class Message:
 @dataclass
 class AgentEndpoint:
     """Agent communication endpoint configuration"""
+
     agent_id: str
     endpoint_type: str  # "internal", "websocket", "webhook"
     address: str
-    capabilities: List[str] = field(default_factory=list)
+    capabilities: list[str] = field(default_factory=list)
 
     # Connection settings
     max_concurrent_messages: int = 100
@@ -204,25 +206,25 @@ class MessageBroker:
         self.redis: Optional[Redis] = None
 
         # Message routing
-        self.message_queues: Dict[str, asyncio.Queue] = {}
-        self.routing_table: Dict[str, str] = {}  # agent_id -> queue_name
-        self.subscription_table: Dict[str, Set[str]] = {}  # topic -> agent_ids
+        self.message_queues: dict[str, asyncio.Queue] = {}
+        self.routing_table: dict[str, str] = {}  # agent_id -> queue_name
+        self.subscription_table: dict[str, set[str]] = {}  # topic -> agent_ids
 
         # Endpoint management
-        self.agent_endpoints: Dict[str, AgentEndpoint] = {}
-        self.websocket_connections: Dict[str, WebSocket] = {}
+        self.agent_endpoints: dict[str, AgentEndpoint] = {}
+        self.websocket_connections: dict[str, WebSocket] = {}
 
         # Message handling
-        self.message_handlers: Dict[MessageType, List[Callable]] = defaultdict(list)
-        self.middleware_stack: List[Callable] = []
+        self.message_handlers: dict[MessageType, list[Callable]] = defaultdict(list)
+        self.middleware_stack: list[Callable] = []
 
         # Performance tracking
-        self.message_stats: Dict[str, int] = defaultdict(int)
+        self.message_stats: dict[str, int] = defaultdict(int)
         self.delivery_times: deque = deque(maxlen=1000)
         self.failed_deliveries: deque = deque(maxlen=100)
 
         # Background tasks
-        self.background_tasks: Set[asyncio.Task] = set()
+        self.background_tasks: set[asyncio.Task] = set()
         self.running = False
 
     async def initialize(self):
@@ -308,7 +310,9 @@ class MessageBroker:
             elif message.recipient_id:
                 success = await self._unicast_message(message)
             else:
-                logger.error(f"No recipient specified for non-broadcast message: {message.message_id}")
+                logger.error(
+                    f"No recipient specified for non-broadcast message: {message.message_id}"
+                )
                 return False
 
             # Update statistics
@@ -316,11 +320,13 @@ class MessageBroker:
                 self.message_stats["sent"] += 1
             else:
                 self.message_stats["failed"] += 1
-                self.failed_deliveries.append({
-                    "message_id": message.message_id,
-                    "timestamp": datetime.now(),
-                    "reason": "delivery_failed"
-                })
+                self.failed_deliveries.append(
+                    {
+                        "message_id": message.message_id,
+                        "timestamp": datetime.now(),
+                        "reason": "delivery_failed",
+                    }
+                )
 
             return success
 
@@ -411,9 +417,8 @@ class MessageBroker:
                 async with session.post(
                     endpoint.address,
                     json=message_data,
-                    timeout=aiohttp.ClientTimeout(total=endpoint.timeout)
+                    timeout=aiohttp.ClientTimeout(total=endpoint.timeout),
                 ) as response:
-
                     if response.status == 200:
                         message.delivered_at = datetime.now()
                         self._update_delivery_metrics(message)
@@ -610,12 +615,14 @@ class MessageBroker:
                 total_messages = sum(self.message_stats.values())
                 success_rate = (
                     self.message_stats["sent"] / max(1, total_messages)
-                    if total_messages > 0 else 1.0
+                    if total_messages > 0
+                    else 1.0
                 )
 
                 avg_delivery_time = (
                     sum(self.delivery_times) / len(self.delivery_times)
-                    if self.delivery_times else 0.0
+                    if self.delivery_times
+                    else 0.0
                 )
 
                 # Log performance alerts
@@ -632,14 +639,19 @@ class MessageBroker:
                         "total_messages": total_messages,
                         "success_rate": success_rate,
                         "avg_delivery_time": avg_delivery_time,
-                        "active_agents": len([e for e in self.agent_endpoints.values() if e.is_active]),
-                        "queue_sizes": {agent_id: queue.qsize() for agent_id, queue in self.message_queues.items()}
+                        "active_agents": len(
+                            [e for e in self.agent_endpoints.values() if e.is_active]
+                        ),
+                        "queue_sizes": {
+                            agent_id: queue.qsize()
+                            for agent_id, queue in self.message_queues.items()
+                        },
                     }
 
                     await self.redis.setex(
                         "message_broker:metrics",
                         300,  # 5 minutes TTL
-                        json.dumps(metrics)
+                        json.dumps(metrics),
                     )
 
             except Exception as e:
@@ -673,8 +685,8 @@ class MessageBroker:
                         delivery_mode=DeliveryMode.BROADCAST,
                         payload={
                             "inactive_agents": inactive_agents,
-                            "timestamp": now.isoformat()
-                        }
+                            "timestamp": now.isoformat(),
+                        },
                     )
                     await self.send_message(status_message)
 
@@ -682,7 +694,7 @@ class MessageBroker:
                 logger.error(f"Heartbeat processing error: {e}")
                 await asyncio.sleep(60)
 
-    async def get_statistics(self) -> Dict[str, Any]:
+    async def get_statistics(self) -> dict[str, Any]:
         """Get comprehensive message broker statistics"""
         now = datetime.now()
 
@@ -693,22 +705,21 @@ class MessageBroker:
             "websocket_connections": len(self.websocket_connections),
             "topic_subscriptions": len(self.subscription_table),
             "queue_stats": {
-                agent_id: {
-                    "size": queue.qsize(),
-                    "maxsize": queue.maxsize
-                } for agent_id, queue in self.message_queues.items()
+                agent_id: {"size": queue.qsize(), "maxsize": queue.maxsize}
+                for agent_id, queue in self.message_queues.items()
             },
             "performance": {
                 "avg_delivery_time": (
                     sum(self.delivery_times) / len(self.delivery_times)
-                    if self.delivery_times else 0.0
+                    if self.delivery_times
+                    else 0.0
                 ),
                 "recent_failures": len(self.failed_deliveries),
                 "success_rate": (
                     self.message_stats["sent"] / max(1, sum(self.message_stats.values()))
-                )
+                ),
             },
-            "timestamp": now.isoformat()
+            "timestamp": now.isoformat(),
         }
 
         return stats
@@ -739,11 +750,11 @@ class EducationalMessageRouter:
 
     def __init__(self, message_broker: MessageBroker):
         self.message_broker = message_broker
-        self.subject_specialists: Dict[str, List[str]] = {}
-        self.grade_level_experts: Dict[int, List[str]] = {}
-        self.content_type_specialists: Dict[str, List[str]] = {}
+        self.subject_specialists: dict[str, list[str]] = {}
+        self.grade_level_experts: dict[int, list[str]] = {}
+        self.content_type_specialists: dict[str, list[str]] = {}
 
-    async def route_educational_message(self, message: Message) -> List[str]:
+    async def route_educational_message(self, message: Message) -> list[str]:
         """Route message based on educational context"""
         recipients = []
 
@@ -771,7 +782,9 @@ class EducationalMessageRouter:
 
         return recipients
 
-    async def register_specialist(self, agent_id: str, specialization_type: str, specialization: str):
+    async def register_specialist(
+        self, agent_id: str, specialization_type: str, specialization: str
+    ):
         """Register an agent as a specialist"""
         if specialization_type == "subject":
             if specialization not in self.subject_specialists:
@@ -796,11 +809,12 @@ message_broker = MessageBroker()
 
 # Utility functions for easy message creation
 
+
 def create_task_assignment_message(
     sender_id: str,
     recipient_id: str,
-    task_data: Dict[str, Any],
-    educational_context: Dict[str, Any] = None
+    task_data: dict[str, Any],
+    educational_context: dict[str, Any] = None,
 ) -> Message:
     """Create a task assignment message"""
     return Message(
@@ -809,15 +823,15 @@ def create_task_assignment_message(
         recipient_id=recipient_id,
         payload=task_data,
         educational_context=educational_context or {},
-        priority=MessagePriority.HIGH
+        priority=MessagePriority.HIGH,
     )
 
 
 def create_quality_assessment_message(
     sender_id: str,
     recipient_id: str,
-    assessment_data: Dict[str, Any],
-    educational_context: Dict[str, Any] = None
+    assessment_data: dict[str, Any],
+    educational_context: dict[str, Any] = None,
 ) -> Message:
     """Create a quality assessment message"""
     return Message(
@@ -826,14 +840,14 @@ def create_quality_assessment_message(
         recipient_id=recipient_id,
         payload=assessment_data,
         educational_context=educational_context or {},
-        priority=MessagePriority.HIGH
+        priority=MessagePriority.HIGH,
     )
 
 
 def create_collaboration_message(
     sender_id: str,
-    collaboration_data: Dict[str, Any],
-    educational_context: Dict[str, Any] = None
+    collaboration_data: dict[str, Any],
+    educational_context: dict[str, Any] = None,
 ) -> Message:
     """Create a collaboration broadcast message"""
     return Message(
@@ -842,14 +856,12 @@ def create_collaboration_message(
         payload=collaboration_data,
         educational_context=educational_context or {},
         delivery_mode=DeliveryMode.BROADCAST,
-        priority=MessagePriority.NORMAL
+        priority=MessagePriority.NORMAL,
     )
 
 
 def create_live_update_message(
-    sender_id: str,
-    update_data: Dict[str, Any],
-    routing_key: str = "live_updates"
+    sender_id: str, update_data: dict[str, Any], routing_key: str = "live_updates"
 ) -> Message:
     """Create a live update message for WebSocket clients"""
     return Message(
@@ -858,11 +870,12 @@ def create_live_update_message(
         payload=update_data,
         delivery_mode=DeliveryMode.MULTICAST,
         routing_key=routing_key,
-        priority=MessagePriority.NORMAL
+        priority=MessagePriority.NORMAL,
     )
 
 
 # Middleware for educational message processing
+
 
 async def educational_context_middleware(message: Message) -> Message:
     """Middleware to enhance educational context"""
@@ -903,7 +916,10 @@ async def priority_adjustment_middleware(message: Message) -> Message:
 
     # Increase priority for complex subjects
     subject = educational_context.get("subject_area", "").lower()
-    if subject in ["physics", "chemistry", "calculus"] and message.priority == MessagePriority.NORMAL:
+    if (
+        subject in ["physics", "chemistry", "calculus"]
+        and message.priority == MessagePriority.NORMAL
+    ):
         message.priority = MessagePriority.HIGH
 
     return message

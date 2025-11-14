@@ -5,7 +5,7 @@ to use HTTP fallback instead of WebSocket for Roblox connection
 """
 
 import json
-import os
+
 
 def fix_terminal3_connection():
     """Update dashboard to use HTTP fallback for Terminal 3 Roblox connection"""

@@ -13,20 +13,18 @@ This component implements sophisticated educational AI policies that balance
 learning effectiveness, student engagement, and curriculum requirements.
 """
 
-import asyncio
-import json
 import logging
-import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, field, asdict
-from enum import Enum
 import secrets  # Use secrets for secure randomness (SonarQube: S2245)
 from collections import defaultdict, deque
-import json  # Use JSON instead of pickle for security (SonarQube: S5301)
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from enum import Enum
 from pathlib import Path
+from typing import Any, Optional
 
-from .state_manager import EnvironmentState, StateType, StateQuality
+import numpy as np
+
+from .state_manager import EnvironmentState, StateQuality, StateType
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +55,7 @@ class LearningObjective(Enum):
 
 class PolicyDefaults:
     """Provide sensible defaults for all policy attributes"""
-    
+
     DEFAULT_LEARNING_RATE = 0.01
     DEFAULT_EXPLORATION_RATE = 0.1
     DEFAULT_EPSILON = 0.2
@@ -70,9 +68,9 @@ class PolicyDefaults:
     DEFAULT_AGE_RANGE = (8, 18)
     DEFAULT_DIFFICULTY = 0.5
     DEFAULT_ENGAGEMENT = 0.6
-    
+
     @classmethod
-    def get_default_policy(cls) -> 'EducationalPolicy':
+    def get_default_policy(cls) -> "EducationalPolicy":
         """Return fully initialized default policy"""
         return EducationalPolicy(
             policy_id="default_policy",
@@ -84,9 +82,9 @@ class PolicyDefaults:
             exploration_weight=0.4,
             exploitation_weight=0.3,
             scaffolding_weight=0.2,
-            challenge_weight=0.1
+            challenge_weight=0.1,
         )
-    
+
     @classmethod
     def get_default_state(cls) -> EnvironmentState:
         """Return a safe default environment state"""
@@ -99,16 +97,13 @@ class PolicyDefaults:
                 "engagement": cls.DEFAULT_ENGAGEMENT,
                 "progress": 0.0,
                 "session_time": 0,
-                "attempts": 0
+                "attempts": 0,
             },
-            metadata={
-                "initialized": True,
-                "is_default": True
-            }
+            metadata={"initialized": True, "is_default": True},
         )
-    
+
     @classmethod
-    def get_default_decision(cls) -> 'PolicyDecision':
+    def get_default_decision(cls) -> "PolicyDecision":
         """Return a safe default policy decision"""
         return PolicyDecision(
             decision_id=f"default_{datetime.now().timestamp()}",
@@ -117,14 +112,14 @@ class PolicyDefaults:
             parameters={
                 "difficulty": cls.DEFAULT_DIFFICULTY,
                 "support_level": "medium",
-                "feedback_type": "encouraging"
+                "feedback_type": "encouraging",
             },
             confidence=cls.DEFAULT_CONFIDENCE,
             reasoning="Using default policy due to missing input",
             expected_outcome="Standard learning progression",
             learning_objectives=[cls.DEFAULT_LEARNING_OBJECTIVE],
             timestamp=datetime.now(),
-            metadata={"is_default": True}
+            metadata={"is_default": True},
         )
 
 
@@ -135,7 +130,7 @@ class PolicyDecision:
     # Core decision
     policy_type: PolicyType
     action_type: str
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
 
     # Priority and timing
     priority: float = 0.5  # 0-1 priority level
@@ -144,27 +139,29 @@ class PolicyDecision:
 
     # Educational context
     learning_objective: Optional[LearningObjective] = None
-    target_skills: List[str] = field(default_factory=list)
+    target_skills: list[str] = field(default_factory=list)
     difficulty_level: float = 0.5  # 0-1 difficulty
 
     # Decision rationale
     rationale: str = ""
     confidence: float = 0.5  # 0-1 confidence in decision
-    expected_outcomes: List[str] = field(default_factory=list)
+    expected_outcomes: list[str] = field(default_factory=list)
 
     # Follow-up actions
-    next_actions: List[str] = field(default_factory=list)
-    conditions_for_next: Dict[str, Any] = field(default_factory=dict)
+    next_actions: list[str] = field(default_factory=list)
+    conditions_for_next: dict[str, Any] = field(default_factory=dict)
 
     # Metadata
     timestamp: datetime = field(default_factory=datetime.now)
     decision_id: str = field(default_factory=lambda: f"decision_{datetime.now().timestamp()}")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
         result["policy_type"] = self.policy_type.value
-        result["learning_objective"] = self.learning_objective.value if self.learning_objective else None
+        result["learning_objective"] = (
+            self.learning_objective.value if self.learning_objective else None
+        )
         result["timestamp"] = self.timestamp.isoformat()
         return result
 
@@ -179,9 +176,9 @@ class EducationalPolicy:
     description: str
 
     # Educational parameters
-    learning_objectives: List[LearningObjective]
-    target_age_range: Tuple[int, int]  # (min_age, max_age)
-    subject_areas: List[str]
+    learning_objectives: list[LearningObjective]
+    target_age_range: tuple[int, int]  # (min_age, max_age)
+    subject_areas: list[str]
 
     # Policy weights (0-1 for each aspect)
     exploration_weight: float = 0.3
@@ -250,30 +247,33 @@ class PolicyEngine:
         self.update_frequency = update_frequency
 
         # Policy storage
-        self.policies: Dict[str, EducationalPolicy] = {}
+        self.policies: dict[str, EducationalPolicy] = {}
         self.policy_history: deque = deque(maxlen=1000)
         self.decision_history: deque = deque(maxlen=500)
 
         # Learning algorithms
-        self.q_table: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
-        self.state_action_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.q_table: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        self.state_action_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
         self.reward_history: deque = deque(maxlen=100)
 
         # Student models
-        self.student_models: Dict[str, Dict[str, Any]] = {}
-        self.learning_curves: Dict[str, List[float]] = defaultdict(list)
+        self.student_models: dict[str, dict[str, Any]] = {}
+        self.learning_curves: dict[str, list[float]] = defaultdict(list)
 
         # Educational objectives tracking
-        self.objective_progress: Dict[LearningObjective, float] = {obj: 0.0 for obj in LearningObjective}
+        self.objective_progress: dict[LearningObjective, float] = {
+            obj: 0.0 for obj in LearningObjective
+        }
 
         # Performance metrics
-        self.policy_performance: Dict[str, Dict[str, float]] = {}
-        self.adaptation_log: List[Dict[str, Any]] = []
+        self.policy_performance: dict[str, dict[str, float]] = {}
+        self.adaptation_log: list[dict[str, Any]] = []
         self.decision_count = 0
 
         # Persistence - use environment-aware path for Docker compatibility
         import os
-        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+
+        data_dir = os.environ.get("DATA_DIR", "/tmp" if os.path.exists("/tmp") else "data")
         self.persistence_path = Path(data_dir) / "policy_engine"
         try:
             self.persistence_path.mkdir(parents=True, exist_ok=True)
@@ -295,7 +295,10 @@ class PolicyEngine:
             policy_id="exploration_beginner",
             name="Beginner Exploration",
             description="Encourages exploration and discovery for new learners",
-            learning_objectives=[LearningObjective.KNOWLEDGE_ACQUISITION, LearningObjective.CREATIVE_EXPRESSION],
+            learning_objectives=[
+                LearningObjective.KNOWLEDGE_ACQUISITION,
+                LearningObjective.CREATIVE_EXPRESSION,
+            ],
             target_age_range=(6, 12),
             subject_areas=["general", "science", "math"],
             exploration_weight=0.6,
@@ -309,7 +312,10 @@ class PolicyEngine:
             policy_id="challenge_advanced",
             name="Advanced Challenge",
             description="Provides appropriate challenges for advanced learners",
-            learning_objectives=[LearningObjective.PROBLEM_SOLVING, LearningObjective.CRITICAL_THINKING],
+            learning_objectives=[
+                LearningObjective.PROBLEM_SOLVING,
+                LearningObjective.CRITICAL_THINKING,
+            ],
             target_age_range=(12, 18),
             subject_areas=["math", "science", "engineering"],
             exploration_weight=0.2,
@@ -323,7 +329,10 @@ class PolicyEngine:
             policy_id="collaboration_group",
             name="Collaborative Learning",
             description="Promotes group learning and communication",
-            learning_objectives=[LearningObjective.COLLABORATION, LearningObjective.COMMUNICATION],
+            learning_objectives=[
+                LearningObjective.COLLABORATION,
+                LearningObjective.COMMUNICATION,
+            ],
             target_age_range=(8, 18),
             subject_areas=["general"],
             exploration_weight=0.3,
@@ -339,12 +348,12 @@ class PolicyEngine:
         }
 
         logger.debug(f"Initialized {len(self.policies)} default policies")
-    
+
     def _get_default_state(self) -> EnvironmentState:
         """Get default state when none is provided"""
         return PolicyDefaults.get_default_state()
 
-    async def decide(self, policy_input: Optional[Dict[str, Any]] = None) -> PolicyDecision:
+    async def decide(self, policy_input: Optional[dict[str, Any]] = None) -> PolicyDecision:
         """
         Make a policy decision based on current state and context.
 
@@ -361,7 +370,7 @@ class PolicyEngine:
             # Handle null input
             if policy_input is None:
                 policy_input = {}
-            
+
             # Extract input components with defaults
             current_state = policy_input.get("state")
             user_context = policy_input.get("context", {})
@@ -379,7 +388,9 @@ class PolicyEngine:
             selected_policy = await self._select_policy(student_analysis, current_state)
 
             # Generate decision using selected policy
-            decision = await self._generate_decision(selected_policy, current_state, student_analysis, state_history)
+            decision = await self._generate_decision(
+                selected_policy, current_state, student_analysis, state_history
+            )
 
             # Add decision to history
             self.decision_history.append(decision)
@@ -397,18 +408,20 @@ class PolicyEngine:
             # Return safe default decision
             return await self._generate_safe_default_decision(policy_input)
 
-    async def _analyze_student_needs(self, state: EnvironmentState, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_student_needs(
+        self, state: EnvironmentState, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze student needs based on state and context"""
-        
+
         # Ensure context is not None
         if context is None:
             context = {}
 
         # Safe attribute access with defaults
         analysis = {
-            "student_id": getattr(state, 'student_id', None) or "unknown_student",
-            "current_subject": getattr(state, 'subject_area', None) or "general",
-            "current_grade": getattr(state, 'grade_level', None) or 7,
+            "student_id": getattr(state, "student_id", None) or "unknown_student",
+            "current_subject": getattr(state, "subject_area", None) or "general",
+            "current_grade": getattr(state, "grade_level", None) or 7,
             "engagement_level": 0.5,
             "difficulty_preference": 0.5,
             "learning_style": "unknown",
@@ -470,9 +483,11 @@ class PolicyEngine:
 
         return analysis
 
-    async def _select_policy(self, student_analysis: Dict[str, Any], state: EnvironmentState) -> EducationalPolicy:
+    async def _select_policy(
+        self, student_analysis: dict[str, Any], state: EnvironmentState
+    ) -> EducationalPolicy:
         """Select the most appropriate policy for the current situation"""
-        
+
         # Null safety check
         if not self.policies:
             logger.warning("No policies available, using default")
@@ -500,7 +515,10 @@ class PolicyEngine:
         return best_policy or self._create_default_policy()  # Safe fallback
 
     async def _score_policy(
-        self, policy: EducationalPolicy, student_analysis: Dict[str, Any], state: EnvironmentState
+        self,
+        policy: EducationalPolicy,
+        student_analysis: dict[str, Any],
+        state: EnvironmentState,
     ) -> float:
         """Score how well a policy matches the current situation"""
 
@@ -514,7 +532,10 @@ class PolicyEngine:
             score += 0.3
         else:
             # Penalty for age mismatch
-            age_diff = min(abs(student_age - policy.target_age_range[0]), abs(student_age - policy.target_age_range[1]))
+            age_diff = min(
+                abs(student_age - policy.target_age_range[0]),
+                abs(student_age - policy.target_age_range[1]),
+            )
             score -= age_diff * 0.05
 
         # Subject area match
@@ -541,7 +562,7 @@ class PolicyEngine:
             score += 0.2
 
         # Historical performance of policy
-        policy_success = getattr(policy, 'success_rate', 0.7)  # Default to 0.7 if not set
+        policy_success = getattr(policy, "success_rate", 0.7)  # Default to 0.7 if not set
         score += policy_success * 0.3
 
         # Learning objectives alignment
@@ -551,38 +572,59 @@ class PolicyEngine:
 
         return max(0, score)
 
-    def _infer_learning_objectives(self, state: EnvironmentState) -> List[LearningObjective]:
+    def _infer_learning_objectives(self, state: EnvironmentState) -> list[LearningObjective]:
         """Infer likely learning objectives from current state"""
-        
+
         # Null safety check
         if not state:
             return [LearningObjective.KNOWLEDGE_ACQUISITION]  # Default objective
 
         objectives = []
 
-        if hasattr(state, 'state_type') and state.state_type == StateType.QUIZ_SESSION:
-            objectives.extend([LearningObjective.KNOWLEDGE_ACQUISITION, LearningObjective.PROBLEM_SOLVING])
-        elif hasattr(state, 'state_type') and state.state_type == StateType.ROBLOX_GAME:
-            objectives.extend([LearningObjective.CREATIVE_EXPRESSION, LearningObjective.SKILL_DEVELOPMENT])
+        if hasattr(state, "state_type") and state.state_type == StateType.QUIZ_SESSION:
+            objectives.extend(
+                [
+                    LearningObjective.KNOWLEDGE_ACQUISITION,
+                    LearningObjective.PROBLEM_SOLVING,
+                ]
+            )
+        elif hasattr(state, "state_type") and state.state_type == StateType.ROBLOX_GAME:
+            objectives.extend(
+                [
+                    LearningObjective.CREATIVE_EXPRESSION,
+                    LearningObjective.SKILL_DEVELOPMENT,
+                ]
+            )
 
             # Check for collaborative elements with null safety
-            if hasattr(state, 'player_positions') and state.player_positions and len(state.player_positions) > 1:
+            if (
+                hasattr(state, "player_positions")
+                and state.player_positions
+                and len(state.player_positions) > 1
+            ):
                 objectives.append(LearningObjective.COLLABORATION)
 
-        elif hasattr(state, 'state_type') and state.state_type == StateType.EDUCATIONAL_CONTENT:
+        elif hasattr(state, "state_type") and state.state_type == StateType.EDUCATIONAL_CONTENT:
             objectives.append(LearningObjective.KNOWLEDGE_ACQUISITION)
 
         # Subject-specific objectives with null safety
-        if hasattr(state, 'subject_area') and state.subject_area:
+        if hasattr(state, "subject_area") and state.subject_area:
             subject = state.subject_area.lower()
             if subject in ["math", "mathematics"]:
                 objectives.append(LearningObjective.PROBLEM_SOLVING)
             elif subject in ["science", "physics", "chemistry"]:
-                objectives.extend([LearningObjective.CRITICAL_THINKING, LearningObjective.PROBLEM_SOLVING])
+                objectives.extend(
+                    [
+                        LearningObjective.CRITICAL_THINKING,
+                        LearningObjective.PROBLEM_SOLVING,
+                    ]
+                )
             elif subject in ["art", "creative", "design"]:
                 objectives.append(LearningObjective.CREATIVE_EXPRESSION)
 
-        return objectives if objectives else [LearningObjective.KNOWLEDGE_ACQUISITION]  # Ensure non-empty
+        return (
+            objectives if objectives else [LearningObjective.KNOWLEDGE_ACQUISITION]
+        )  # Ensure non-empty
 
     def _create_default_policy(self) -> EducationalPolicy:
         """Create a default educational policy for fallback scenarios"""
@@ -593,7 +635,7 @@ class PolicyEngine:
             learning_objectives=[
                 LearningObjective.KNOWLEDGE_ACQUISITION,
                 LearningObjective.SKILL_DEVELOPMENT,
-                LearningObjective.PROBLEM_SOLVING
+                LearningObjective.PROBLEM_SOLVING,
             ],
             target_age_range=(7, 18),  # Wide age range
             subject_areas=["general", "math", "science", "language"],
@@ -606,15 +648,15 @@ class PolicyEngine:
             difficulty_adjustment_rate=0.05,
             max_difficulty_increase=0.2,
             min_engagement_threshold=0.6,
-            success_rate=0.7  # Default success rate
+            success_rate=0.7,  # Default success rate
         )
 
     async def _generate_decision(
         self,
         policy: EducationalPolicy,
         state: EnvironmentState,
-        student_analysis: Dict[str, Any],
-        history: List[EnvironmentState],
+        student_analysis: dict[str, Any],
+        history: list[EnvironmentState],
     ) -> PolicyDecision:
         """Generate a specific decision based on policy and context"""
 
@@ -622,7 +664,9 @@ class PolicyEngine:
         action_type = await self._select_action_type(policy, state, student_analysis)
 
         # Generate parameters for the action
-        parameters = await self._generate_action_parameters(action_type, policy, state, student_analysis)
+        parameters = await self._generate_action_parameters(
+            action_type, policy, state, student_analysis
+        )
 
         # Calculate priority and urgency
         priority = await self._calculate_priority(action_type, state, student_analysis)
@@ -650,7 +694,9 @@ class PolicyEngine:
         difficulty = self._calculate_difficulty_level(policy, student_analysis, state)
 
         # Calculate confidence in decision
-        confidence = await self._calculate_decision_confidence(policy, action_type, student_analysis)
+        confidence = await self._calculate_decision_confidence(
+            policy, action_type, student_analysis
+        )
 
         decision = PolicyDecision(
             policy_type=self._map_action_to_policy_type(action_type),
@@ -671,7 +717,10 @@ class PolicyEngine:
         return decision
 
     async def _select_action_type(
-        self, policy: EducationalPolicy, state: EnvironmentState, analysis: Dict[str, Any]
+        self,
+        policy: EducationalPolicy,
+        state: EnvironmentState,
+        analysis: dict[str, Any],
     ) -> str:
         """Select the most appropriate action type"""
 
@@ -712,7 +761,7 @@ class PolicyEngine:
                 pass
 
         # State-specific adjustments with null safety
-        if state and hasattr(state, 'state_type'):
+        if state and hasattr(state, "state_type"):
             if state.state_type == StateType.QUIZ_SESSION:
                 action_weights["provide_feedback"] *= 1.5
                 action_weights["adapt_difficulty"] *= 1.3
@@ -729,8 +778,12 @@ class PolicyEngine:
         return selected_action
 
     async def _generate_action_parameters(
-        self, action_type: str, policy: EducationalPolicy, state: EnvironmentState, analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self,
+        action_type: str,
+        policy: EducationalPolicy,
+        state: EnvironmentState,
+        analysis: dict[str, Any],
+    ) -> dict[str, Any]:
         """Generate specific parameters for the selected action"""
 
         parameters = {}
@@ -738,7 +791,9 @@ class PolicyEngine:
         if action_type == "provide_hint":
             parameters.update(
                 {
-                    "hint_level": min(3, max(1, 3 - int(analysis.get("engagement_level", 0.5) * 3))),
+                    "hint_level": min(
+                        3, max(1, 3 - int(analysis.get("engagement_level", 0.5) * 3))
+                    ),
                     "context_specific": True,
                     "encourage_thinking": True,
                 }
@@ -760,14 +815,18 @@ class PolicyEngine:
                 {
                     "exploration_areas": self._suggest_exploration_areas(state, analysis),
                     "time_limit": 600,  # 10 minutes
-                    "guidance_level": "minimal" if analysis.get("engagement_level", 0) > 0.6 else "moderate",
+                    "guidance_level": (
+                        "minimal" if analysis.get("engagement_level", 0) > 0.6 else "moderate"
+                    ),
                 }
             )
 
         elif action_type == "create_quiz":
             parameters.update(
                 {
-                    "num_questions": min(10, max(3, int(analysis.get("engagement_level", 0.5) * 8) + 3)),
+                    "num_questions": min(
+                        10, max(3, int(analysis.get("engagement_level", 0.5) * 8) + 3)
+                    ),
                     "difficulty": analysis.get("difficulty_preference", 0.5),
                     "subject_area": state.subject_area or "general",
                     "question_types": ["multiple_choice", "true_false", "short_answer"],
@@ -816,12 +875,18 @@ class PolicyEngine:
 
         # Add common parameters
         parameters.update(
-            {"student_id": state.student_id, "timestamp": datetime.now().isoformat(), "policy_id": policy.policy_id}
+            {
+                "student_id": state.student_id,
+                "timestamp": datetime.now().isoformat(),
+                "policy_id": policy.policy_id,
+            }
         )
 
         return parameters
 
-    def _suggest_exploration_areas(self, state: EnvironmentState, analysis: Dict[str, Any]) -> List[str]:
+    def _suggest_exploration_areas(
+        self, state: EnvironmentState, analysis: dict[str, Any]
+    ) -> list[str]:
         """Suggest areas for student exploration"""
 
         areas = []
@@ -831,7 +896,12 @@ class PolicyEngine:
         if subject:
             subject_areas = {
                 "math": ["geometry", "algebra", "statistics", "problem_solving"],
-                "science": ["experiments", "observations", "hypothesis_testing", "research"],
+                "science": [
+                    "experiments",
+                    "observations",
+                    "hypothesis_testing",
+                    "research",
+                ],
                 "history": ["primary_sources", "timelines", "cultural_connections"],
                 "art": ["different_mediums", "styles", "techniques", "expression"],
             }
@@ -839,7 +909,14 @@ class PolicyEngine:
 
         # Roblox-specific areas
         if state.state_type == StateType.ROBLOX_GAME:
-            areas.extend(["building_mechanics", "scripting_basics", "collaborative_projects", "game_design_principles"])
+            areas.extend(
+                [
+                    "building_mechanics",
+                    "scripting_basics",
+                    "collaborative_projects",
+                    "game_design_principles",
+                ]
+            )
 
         # Based on weaknesses
         weaknesses = analysis.get("weaknesses", [])
@@ -848,7 +925,7 @@ class PolicyEngine:
 
         return areas[:5]  # Limit to 5 areas
 
-    def _determine_content_type(self, state: EnvironmentState, analysis: Dict[str, Any]) -> str:
+    def _determine_content_type(self, state: EnvironmentState, analysis: dict[str, Any]) -> str:
         """Determine appropriate content type to generate"""
 
         engagement = analysis.get("engagement_level", 0.5)
@@ -869,7 +946,9 @@ class PolicyEngine:
         else:
             return "mixed_media_lesson"
 
-    async def _calculate_priority(self, action_type: str, state: EnvironmentState, analysis: Dict[str, Any]) -> float:
+    async def _calculate_priority(
+        self, action_type: str, state: EnvironmentState, analysis: dict[str, Any]
+    ) -> float:
         """Calculate action priority (0-1)"""
 
         base_priorities = {
@@ -903,7 +982,9 @@ class PolicyEngine:
 
         return min(1.0, priority)
 
-    async def _calculate_urgency(self, action_type: str, state: EnvironmentState, analysis: Dict[str, Any]) -> float:
+    async def _calculate_urgency(
+        self, action_type: str, state: EnvironmentState, analysis: dict[str, Any]
+    ) -> float:
         """Calculate action urgency (0-1)"""
 
         urgency = 0.5  # Default urgency
@@ -931,7 +1012,9 @@ class PolicyEngine:
 
         return min(1.0, urgency)
 
-    async def _estimate_action_duration(self, action_type: str, parameters: Dict[str, Any]) -> float:
+    async def _estimate_action_duration(
+        self, action_type: str, parameters: dict[str, Any]
+    ) -> float:
         """Estimate action duration in seconds"""
 
         base_durations = {
@@ -962,7 +1045,11 @@ class PolicyEngine:
         return float(duration)
 
     async def _generate_rationale(
-        self, action_type: str, policy: EducationalPolicy, analysis: Dict[str, Any], state: EnvironmentState
+        self,
+        action_type: str,
+        policy: EducationalPolicy,
+        analysis: dict[str, Any],
+        state: EnvironmentState,
     ) -> str:
         """Generate human-readable rationale for the decision"""
 
@@ -982,12 +1069,13 @@ class PolicyEngine:
         }
 
         return rationales.get(
-            action_type, f"Action selected based on {policy.name} policy for optimal learning outcomes."
+            action_type,
+            f"Action selected based on {policy.name} policy for optimal learning outcomes.",
         )
 
     async def _predict_outcomes(
-        self, action_type: str, parameters: Dict[str, Any], analysis: Dict[str, Any]
-    ) -> List[str]:
+        self, action_type: str, parameters: dict[str, Any], analysis: dict[str, Any]
+    ) -> list[str]:
         """Predict likely outcomes of the action"""
 
         outcomes = []
@@ -1037,8 +1125,8 @@ class PolicyEngine:
         return outcomes
 
     async def _plan_next_actions(
-        self, current_action: str, policy: EducationalPolicy, analysis: Dict[str, Any]
-    ) -> List[str]:
+        self, current_action: str, policy: EducationalPolicy, analysis: dict[str, Any]
+    ) -> list[str]:
         """Plan logical next actions based on current action"""
 
         next_actions = []
@@ -1088,7 +1176,9 @@ class PolicyEngine:
 
         return LearningObjective.KNOWLEDGE_ACQUISITION  # Default
 
-    def _identify_target_skills(self, state: EnvironmentState, analysis: Dict[str, Any]) -> List[str]:
+    def _identify_target_skills(
+        self, state: EnvironmentState, analysis: dict[str, Any]
+    ) -> list[str]:
         """Identify skills to target with this action"""
 
         skills = []
@@ -1097,10 +1187,22 @@ class PolicyEngine:
         subject = state.subject_area
         if subject:
             subject_skills = {
-                "math": ["numerical_reasoning", "logical_thinking", "pattern_recognition"],
+                "math": [
+                    "numerical_reasoning",
+                    "logical_thinking",
+                    "pattern_recognition",
+                ],
                 "science": ["observation", "hypothesis_formation", "data_analysis"],
-                "language": ["reading_comprehension", "written_expression", "vocabulary"],
-                "history": ["chronological_thinking", "source_analysis", "contextual_understanding"],
+                "language": [
+                    "reading_comprehension",
+                    "written_expression",
+                    "vocabulary",
+                ],
+                "history": [
+                    "chronological_thinking",
+                    "source_analysis",
+                    "contextual_understanding",
+                ],
             }
             skills.extend(subject_skills.get(subject.lower(), ["general_reasoning"]))
 
@@ -1115,7 +1217,10 @@ class PolicyEngine:
         return skills[:5]  # Limit to 5 skills
 
     def _calculate_difficulty_level(
-        self, policy: EducationalPolicy, analysis: Dict[str, Any], state: EnvironmentState
+        self,
+        policy: EducationalPolicy,
+        analysis: dict[str, Any],
+        state: EnvironmentState,
     ) -> float:
         """Calculate appropriate difficulty level for the action"""
 
@@ -1139,7 +1244,7 @@ class PolicyEngine:
         return max(0.1, min(1.0, base_difficulty))
 
     async def _calculate_decision_confidence(
-        self, policy: EducationalPolicy, action_type: str, analysis: Dict[str, Any]
+        self, policy: EducationalPolicy, action_type: str, analysis: dict[str, Any]
     ) -> float:
         """Calculate confidence in the policy decision"""
 
@@ -1183,7 +1288,7 @@ class PolicyEngine:
 
         return mapping.get(action_type, PolicyType.ADAPTATION)
 
-    async def _generate_safe_default_decision(self, policy_input: Dict[str, Any]) -> PolicyDecision:
+    async def _generate_safe_default_decision(self, policy_input: dict[str, Any]) -> PolicyDecision:
         """Generate a safe default decision when normal processing fails"""
 
         return PolicyDecision(
@@ -1215,26 +1320,36 @@ class PolicyEngine:
         logger.debug(f"Updated Q-table entry: {state_sig} -> {action_sig}")
 
     async def update_policy(
-        self, state: EnvironmentState, action: Any, reward: float, next_state: Optional[EnvironmentState] = None
+        self,
+        state: EnvironmentState,
+        action: Any,
+        reward: float,
+        next_state: Optional[EnvironmentState] = None,
     ):
         """Update policy based on action results and rewards"""
 
         try:
             # Update Q-learning
-            state_sig = f"{state.state_type.value}_{state.quality.value}_{state.subject_area or 'none'}"
+            state_sig = (
+                f"{state.state_type.value}_{state.quality.value}_{state.subject_area or 'none'}"
+            )
             action_sig = getattr(action, "action_type", str(action))
 
             if next_state:
-                next_state_sig = (
-                    f"{next_state.state_type.value}_{next_state.quality.value}_{next_state.subject_area or 'none'}"
+                next_state_sig = f"{next_state.state_type.value}_{next_state.quality.value}_{next_state.subject_area or 'none'}"
+                max_next_q = (
+                    max(self.q_table[next_state_sig].values())
+                    if self.q_table[next_state_sig]
+                    else 0
                 )
-                max_next_q = max(self.q_table[next_state_sig].values()) if self.q_table[next_state_sig] else 0
             else:
                 max_next_q = 0
 
             # Q-learning update
             current_q = self.q_table[state_sig][action_sig]
-            updated_q = current_q + self.learning_rate * (reward + self.decay_factor * max_next_q - current_q)
+            updated_q = current_q + self.learning_rate * (
+                reward + self.decay_factor * max_next_q - current_q
+            )
             self.q_table[state_sig][action_sig] = updated_q
 
             # Update policy performance tracking
@@ -1268,12 +1383,16 @@ class PolicyEngine:
             if self.decision_count % self.update_frequency == 0:
                 await self._adapt_policies()
 
-            logger.debug(f"Policy updated: action={action_sig}, reward={reward:.3f}, q_value={updated_q:.3f}")
+            logger.debug(
+                f"Policy updated: action={action_sig}, reward={reward:.3f}, q_value={updated_q:.3f}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to update policy: {e}")
 
-    async def _update_student_model(self, student_id: str, state: EnvironmentState, action: Any, reward: float):
+    async def _update_student_model(
+        self, student_id: str, state: EnvironmentState, action: Any, reward: float
+    ):
         """Update individual student model"""
 
         if student_id not in self.student_models:
@@ -1339,7 +1458,9 @@ class PolicyEngine:
 
                 # Adjust weights based on what's working
                 best_actions = sorted(
-                    self.policy_performance.items(), key=lambda x: x[1]["success_rate"], reverse=True
+                    self.policy_performance.items(),
+                    key=lambda x: x[1]["success_rate"],
+                    reverse=True,
                 )[:3]
 
                 for action_type, perf in best_actions:
@@ -1383,7 +1504,7 @@ class PolicyEngine:
             self.adaptation_log.extend(adaptations)
             logger.info(f"Adapted {len(adaptations)} policies based on performance")
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of PolicyEngine"""
 
         return {
@@ -1391,7 +1512,10 @@ class PolicyEngine:
             "policies": {
                 "total_policies": len(self.policies),
                 "policy_performance": {
-                    pid: {"success_rate": p.success_rate, "applications": p.total_applications}
+                    pid: {
+                        "success_rate": p.success_rate,
+                        "applications": p.total_applications,
+                    }
                     for pid, p in self.policies.items()
                 },
             },
@@ -1404,14 +1528,19 @@ class PolicyEngine:
             "student_models": {
                 "total_students": len(self.student_models),
                 "avg_learning_curve_length": (
-                    np.mean([len(curve) for curve in self.learning_curves.values()]) if self.learning_curves else 0
+                    np.mean([len(curve) for curve in self.learning_curves.values()])
+                    if self.learning_curves
+                    else 0
                 ),
             },
             "adaptations": len(self.adaptation_log),
             "performance_tracking": {
                 "tracked_actions": len(self.policy_performance),
                 "best_performing_action": (
-                    max(self.policy_performance.items(), key=lambda x: x[1]["success_rate"])[0]
+                    max(
+                        self.policy_performance.items(),
+                        key=lambda x: x[1]["success_rate"],
+                    )[0]
                     if self.policy_performance
                     else None
                 ),

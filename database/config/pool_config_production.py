@@ -8,7 +8,7 @@ for high-traffic production environments.
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -45,14 +45,14 @@ class ProductionPoolConfig(PoolConfig):
 
     # Service-specific pools
     enable_service_pools: bool = True
-    service_pool_configs: Dict[str, Dict[str, Any]] = None
+    service_pool_configs: dict[str, dict[str, Any]] = None
 
     def __post_init__(self):
         """Initialize service-specific pool configurations"""
         if self.service_pool_configs is None:
             self.service_pool_configs = self._get_default_service_pools()
 
-    def _get_default_service_pools(self) -> Dict[str, Dict[str, Any]]:
+    def _get_default_service_pools(self) -> dict[str, dict[str, Any]]:
         """Get optimized pool configurations for different services"""
         cpu_count = os.cpu_count() or 4
 
@@ -94,10 +94,11 @@ class ProductionPoolConfig(PoolConfig):
             },
         }
 
-    def get_service_config(self, service_name: str) -> Dict[str, Any]:
+    def get_service_config(self, service_name: str) -> dict[str, Any]:
         """Get pool configuration for a specific service"""
         return self.service_pool_configs.get(
-            service_name, self.service_pool_configs["api_service"]  # Default to API config
+            service_name,
+            self.service_pool_configs["api_service"],  # Default to API config
         )
 
 
@@ -110,7 +111,7 @@ class ProductionPoolManager:
     def __init__(self, base_config: Optional[ProductionPoolConfig] = None):
         self.config = base_config or self._create_production_config()
         self.monitor = PoolMonitor(self.config)
-        self.pools: Dict[str, Any] = {}
+        self.pools: dict[str, Any] = {}
         self._pre_warmed_connections = []
 
     def _create_production_config(self) -> ProductionPoolConfig:
@@ -170,7 +171,7 @@ class ProductionPoolManager:
 
         logger.info(f"Production pools initialized for {service_name}")
 
-    async def _pre_warm_connections(self, count: int, service_config: Dict[str, Any]):
+    async def _pre_warm_connections(self, count: int, service_config: dict[str, Any]):
         """Pre-warm database connections to avoid cold start latency"""
         logger.info(f"Pre-warming {count} database connections")
 
@@ -277,7 +278,7 @@ dns_zone_check_period = 60
 """
         return config
 
-    def get_monitoring_queries(self) -> Dict[str, str]:
+    def get_monitoring_queries(self) -> dict[str, str]:
         """SQL queries for monitoring connection pool health"""
         return {
             "active_connections": """
@@ -368,7 +369,7 @@ dns_zone_check_period = 60
             """,
         }
 
-    async def auto_tune_pools(self, metrics: Dict[str, Any]):
+    async def auto_tune_pools(self, metrics: dict[str, Any]):
         """Automatically adjust pool sizes based on metrics"""
         utilization = metrics.get("utilization_percent", 0)
         wait_percent = metrics.get("wait_percent", 0)
@@ -395,7 +396,9 @@ dns_zone_check_period = 60
                 self.config.pool_size = new_pool_size
 
 
-def get_production_pool_config(service_name: str = "api_service") -> ProductionPoolConfig:
+def get_production_pool_config(
+    service_name: str = "api_service",
+) -> ProductionPoolConfig:
     """Get production-optimized pool configuration for a service"""
     manager = ProductionPoolManager()
     config = manager.config
@@ -416,4 +419,8 @@ def get_production_pool_config(service_name: str = "api_service") -> ProductionP
 
 
 # Export main components
-__all__ = ["ProductionPoolConfig", "ProductionPoolManager", "get_production_pool_config"]
+__all__ = [
+    "ProductionPoolConfig",
+    "ProductionPoolManager",
+    "get_production_pool_config",
+]

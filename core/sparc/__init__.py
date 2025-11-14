@@ -23,18 +23,19 @@ Usage:
     result = await sparc.execute_cycle(observation)
 """
 
-from typing import Dict, Any, Optional, List
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional
+
+from .action_executor import Action, ActionExecutor, ActionResult
+from .context_tracker import ContextTracker, UserContext
+from .policy_engine import EducationalPolicy, PolicyEngine
+from .reward_calculator import RewardCalculator, RewardSignal
 
 # Import all SPARC components
-from .state_manager import StateManager, EnvironmentState, SPARCStateManager
-from .policy_engine import PolicyEngine, EducationalPolicy
-from .action_executor import ActionExecutor, Action, ActionResult
-from .reward_calculator import RewardCalculator, RewardSignal
-from .context_tracker import ContextTracker, UserContext
+from .state_manager import EnvironmentState, SPARCStateManager, StateManager
 
 __version__ = "1.0.0"
 __all__ = [
@@ -81,8 +82,14 @@ class SPARCConfig:
     safety_check_enabled: bool = True
 
     # Reward calculation
-    reward_dimensions: List[str] = field(
-        default_factory=lambda: ["learning_progress", "engagement", "accuracy", "creativity", "collaboration"]
+    reward_dimensions: list[str] = field(
+        default_factory=lambda: [
+            "learning_progress",
+            "engagement",
+            "accuracy",
+            "creativity",
+            "collaboration",
+        ]
     )
     reward_normalization: bool = True
     reward_history_size: int = 100
@@ -162,7 +169,7 @@ class SPARCFramework:
 
         self.logger.info("SPARC Framework initialized successfully")
 
-    async def execute_cycle(self, observation: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_cycle(self, observation: dict[str, Any]) -> dict[str, Any]:
         """
         Execute a complete SPARC cycle.
 
@@ -194,7 +201,10 @@ class SPARCFramework:
                 type=policy_decision.action_type,
                 parameters=policy_decision.parameters,
                 priority=policy_decision.priority,
-                metadata={"cycle": self.cycle_count, "timestamp": cycle_start.isoformat()},
+                metadata={
+                    "cycle": self.cycle_count,
+                    "timestamp": cycle_start.isoformat(),
+                },
             )
             action_result = await self.action_executor.execute(action)
             self.logger.debug(f"Action executed: {action_result.success}")
@@ -256,7 +266,9 @@ class SPARCFramework:
                 },
             }
 
-            self.logger.info(f"SPARC cycle {self.cycle_count} completed successfully in {cycle_time:.3f}s")
+            self.logger.info(
+                f"SPARC cycle {self.cycle_count} completed successfully in {cycle_time:.3f}s"
+            )
             return response
 
         except Exception as e:
@@ -286,7 +298,7 @@ class SPARCFramework:
 
         self.logger.info("SPARC framework reset completed")
 
-    async def get_framework_status(self) -> Dict[str, Any]:
+    async def get_framework_status(self) -> dict[str, Any]:
         """Get comprehensive status of all SPARC components"""
         return {
             "framework": {
@@ -295,7 +307,10 @@ class SPARCFramework:
                 "last_cycle_time": self.last_cycle_time,
                 "uptime": (
                     (
-                        datetime.now() - datetime.fromisoformat(list(self.performance_metrics.values())[0]["timestamp"])
+                        datetime.now()
+                        - datetime.fromisoformat(
+                            list(self.performance_metrics.values())[0]["timestamp"]
+                        )
                     ).total_seconds()
                     if self.performance_metrics
                     else 0
@@ -335,22 +350,34 @@ class SPARCFramework:
 
         return (late_avg - early_avg) / max(abs(early_avg), 1e-6)
 
-    async def generate_recovery_actions(self, error: Exception) -> List[str]:
+    async def generate_recovery_actions(self, error: Exception) -> list[str]:
         """Generate recovery actions for errors"""
         recovery_actions = []
 
         if "timeout" in str(error).lower():
             recovery_actions.extend(
-                ["Increase action timeout", "Reduce parallel action count", "Check system resources"]
+                [
+                    "Increase action timeout",
+                    "Reduce parallel action count",
+                    "Check system resources",
+                ]
             )
 
         if "memory" in str(error).lower():
             recovery_actions.extend(
-                ["Clear old state history", "Compress context data", "Restart framework components"]
+                [
+                    "Clear old state history",
+                    "Compress context data",
+                    "Restart framework components",
+                ]
             )
 
         if not recovery_actions:
-            recovery_actions = ["Reset affected component", "Check configuration settings", "Review error logs"]
+            recovery_actions = [
+                "Reset affected component",
+                "Check configuration settings",
+                "Review error logs",
+            ]
 
         return recovery_actions
 

@@ -5,32 +5,34 @@ Central orchestrator for the error handling agent swarm using LangGraph workflow
 for intelligent agent coordination and task distribution.
 """
 
-import asyncio
 import logging
-from typing import Dict, Any, Optional, List, TypedDict, Annotated, Sequence
-from datetime import datetime
+from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
-import json
+from typing import Any, Optional
 
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolExecutor
-from pydantic import BaseModel, Field
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 # Import MemorySaver with correct path
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph
+from pydantic import BaseModel, Field
 
 # Import all specialized agents
-from core.agents.error_handling.base_error_agent import ErrorState, ErrorType, ErrorPriority
-from core.agents.error_handling.error_correction_agent import ErrorCorrectionAgent
+from core.agents.error_handling.base_error_agent import ErrorPriority, ErrorState
 from core.agents.error_handling.debugging_agent import AdvancedDebuggingAgent
+from core.agents.error_handling.error_aggregation_intelligence_agent import (
+    ErrorAggregationIntelligenceAgent,
+)
+from core.agents.error_handling.error_correction_agent import ErrorCorrectionAgent
+
 # Note: These imports are now integrated into the unified orchestration system
 # from core.agents.error_handling.testing_orchestrator_agent import TestingOrchestratorAgent
 # from core.agents.error_handling.auto_recovery_orchestrator_agent import AutoRecoveryOrchestratorAgent
-
-from core.agents.error_handling.error_pattern_analysis_agent import ErrorPatternAnalysisAgent
-from core.agents.error_handling.error_aggregation_intelligence_agent import ErrorAggregationIntelligenceAgent
+from core.agents.error_handling.error_pattern_analysis_agent import (
+    ErrorPatternAnalysisAgent,
+)
 
 # Use the new orchestration system for testing and recovery
 try:
@@ -43,14 +45,15 @@ logger = logging.getLogger(__name__)
 
 class SwarmState(TypedDict):
     """Shared state for the error handling swarm"""
-    current_errors: List[ErrorState]
-    processed_errors: List[ErrorState]
-    active_agents: List[str]
-    priority_queue: List[Dict[str, Any]]
-    recovery_attempts: Dict[str, Any]
-    system_health: Dict[str, Any]
-    context: Dict[str, Any]
-    metadata: Dict[str, Any]
+
+    current_errors: list[ErrorState]
+    processed_errors: list[ErrorState]
+    active_agents: list[str]
+    priority_queue: list[Dict[str, Any]]
+    recovery_attempts: dict[str, Any]
+    system_health: dict[str, Any]
+    context: dict[str, Any]
+    metadata: dict[str, Any]
     messages: Sequence[BaseMessage]
     next_action: str
     workflow_status: str
@@ -58,6 +61,7 @@ class SwarmState(TypedDict):
 
 class SwarmAction(Enum):
     """Actions the swarm can take"""
+
     AGGREGATE = "aggregate"
     ANALYZE_PATTERN = "analyze_pattern"
     DEBUG = "debug"
@@ -70,19 +74,21 @@ class SwarmAction(Enum):
 
 class WorkflowResult(BaseModel):
     """Result of a workflow execution"""
+
     workflow_id: str = Field(description="Unique workflow identifier")
     status: str = Field(description="Workflow status")
     errors_processed: int = Field(description="Number of errors processed")
-    agents_involved: List[str] = Field(description="Agents that participated")
-    actions_taken: List[str] = Field(description="Actions executed")
+    agents_involved: list[str] = Field(description="Agents that participated")
+    actions_taken: list[str] = Field(description="Actions executed")
     success_rate: float = Field(description="Success rate of actions")
     duration_seconds: float = Field(description="Total execution time")
-    recommendations: List[str] = Field(description="Recommendations for future")
+    recommendations: list[str] = Field(description="Recommendations for future")
 
 
 @dataclass
 class SwarmConfig:
     """Configuration for swarm coordinator"""
+
     name: str = "ErrorHandlingSwarmCoordinator"
     max_parallel_agents: int = 5
     workflow_timeout: int = 600  # seconds
@@ -109,13 +115,13 @@ class ErrorHandlingSwarmCoordinator:
             "debugging": AdvancedDebuggingAgent(),
             "correction": ErrorCorrectionAgent(),
             "testing": TestingOrchestratorAgent(),
-            "recovery": AutoRecoveryOrchestratorAgent()
+            "recovery": AutoRecoveryOrchestratorAgent(),
         }
 
         # Workflow state
         self.workflow_graph = self._build_workflow_graph()
         self.memory = MemorySaver()
-        self.active_workflows: Dict[str, WorkflowResult] = {}
+        self.active_workflows: dict[str, WorkflowResult] = {}
 
         logger.info("Initialized Error Handling Swarm Coordinator")
 
@@ -147,8 +153,8 @@ class ErrorHandlingSwarmCoordinator:
                 SwarmAction.CORRECT.value: "correct_errors",
                 SwarmAction.RECOVER.value: "recover_system",
                 SwarmAction.MONITOR.value: "monitor_health",
-                SwarmAction.COMPLETE.value: "complete"
-            }
+                SwarmAction.COMPLETE.value: "complete",
+            },
         )
 
         # After specific actions, decide next step
@@ -158,8 +164,8 @@ class ErrorHandlingSwarmCoordinator:
             {
                 SwarmAction.CORRECT.value: "correct_errors",
                 SwarmAction.RECOVER.value: "recover_system",
-                SwarmAction.COMPLETE.value: "complete"
-            }
+                SwarmAction.COMPLETE.value: "complete",
+            },
         )
 
         workflow.add_conditional_edges(
@@ -168,8 +174,8 @@ class ErrorHandlingSwarmCoordinator:
             {
                 SwarmAction.TEST.value: "test_fixes",
                 SwarmAction.RECOVER.value: "recover_system",
-                SwarmAction.COMPLETE.value: "complete"
-            }
+                SwarmAction.COMPLETE.value: "complete",
+            },
         )
 
         workflow.add_edge("test_fixes", "monitor_health")
@@ -182,9 +188,7 @@ class ErrorHandlingSwarmCoordinator:
         return workflow
 
     async def orchestrate_error_handling(
-        self,
-        errors: List[ErrorState],
-        context: Optional[Dict[str, Any]] = None
+        self, errors: list[ErrorState], context: Optional[Dict[str, Any]] = None
     ) -> WorkflowResult:
         """
         Main orchestration method for handling errors.
@@ -213,7 +217,7 @@ class ErrorHandlingSwarmCoordinator:
             "metadata": {"workflow_id": workflow_id},
             "messages": [HumanMessage(content=f"Processing {len(errors)} errors")],
             "next_action": SwarmAction.AGGREGATE.value,
-            "workflow_status": "initiated"
+            "workflow_status": "initiated",
         }
 
         # Execute workflow
@@ -237,7 +241,7 @@ class ErrorHandlingSwarmCoordinator:
                 actions_taken=self._extract_actions(final_state),
                 success_rate=success_rate,
                 duration_seconds=duration,
-                recommendations=self._generate_recommendations(final_state)
+                recommendations=self._generate_recommendations(final_state),
             )
 
             self.active_workflows[workflow_id] = result
@@ -253,7 +257,7 @@ class ErrorHandlingSwarmCoordinator:
                 actions_taken=[],
                 success_rate=0.0,
                 duration_seconds=(datetime.now() - start_time).total_seconds(),
-                recommendations=["Investigate workflow failure"]
+                recommendations=["Investigate workflow failure"],
             )
 
     async def _aggregate_errors(self, state: SwarmState) -> SwarmState:
@@ -262,8 +266,7 @@ class ErrorHandlingSwarmCoordinator:
 
         aggregator = self.agents["aggregation"]
         aggregation_result = await aggregator.aggregate_errors(
-            state["current_errors"],
-            source="swarm_coordinator"
+            state["current_errors"], source="swarm_coordinator"
         )
 
         state["priority_queue"] = self._build_priority_queue(aggregation_result)
@@ -278,8 +281,7 @@ class ErrorHandlingSwarmCoordinator:
 
         analyzer = self.agents["pattern_analysis"]
         analysis_result = await analyzer.analyze_error_patterns(
-            state["current_errors"],
-            timeframe_days=7
+            state["current_errors"], timeframe_days=7
         )
 
         state["context"]["pattern_analysis"] = analysis_result
@@ -351,10 +353,7 @@ class ErrorHandlingSwarmCoordinator:
         for error in state["current_errors"][:10]:  # Limit corrections
             fix = await corrector.correct_error(error)
             if fix.validation_passed:
-                corrections_applied.append({
-                    "error_id": error["error_id"],
-                    "fix": fix.model_dump()
-                })
+                corrections_applied.append({"error_id": error["error_id"], "fix": fix.model_dump()})
                 state["processed_errors"].append(error)
 
         state["context"]["corrections"] = corrections_applied
@@ -377,7 +376,7 @@ class ErrorHandlingSwarmCoordinator:
         if affected_components:
             test_report = await tester.orchestrate_testing(
                 target=list(affected_components)[0] if affected_components else None,
-                test_type="unit"
+                test_type="unit",
             )
             state["context"]["test_report"] = test_report.model_dump()
 
@@ -410,7 +409,7 @@ class ErrorHandlingSwarmCoordinator:
         # Collect health metrics from all agents
         health_metrics = {}
         for agent_name, agent in self.agents.items():
-            if hasattr(agent, 'get_error_metrics'):
+            if hasattr(agent, "get_error_metrics"):
                 metrics = await agent.get_error_metrics()
                 health_metrics[agent_name] = metrics
 
@@ -442,14 +441,16 @@ class ErrorHandlingSwarmCoordinator:
             return SwarmAction.TEST.value
         return SwarmAction.COMPLETE.value
 
-    def _build_priority_queue(self, aggregation_result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _build_priority_queue(self, aggregation_result: dict[str, Any]) -> list[Dict[str, Any]]:
         """Build priority queue from aggregation results"""
         queue = []
         for group_id in aggregation_result.get("aggregated_groups", []):
-            queue.append({
-                "group_id": group_id,
-                "priority": aggregation_result.get("queue_assignments", {}).get(group_id)
-            })
+            queue.append(
+                {
+                    "group_id": group_id,
+                    "priority": aggregation_result.get("queue_assignments", {}).get(group_id),
+                }
+            )
         return sorted(queue, key=lambda x: x.get("priority", 0), reverse=True)
 
     def _calculate_success_rate(self, state: SwarmState) -> float:
@@ -462,7 +463,7 @@ class ErrorHandlingSwarmCoordinator:
 
         return processed / total if total > 0 else 0.0
 
-    def _extract_actions(self, state: SwarmState) -> List[str]:
+    def _extract_actions(self, state: SwarmState) -> list[str]:
         """Extract actions taken during workflow"""
         actions = []
 
@@ -481,7 +482,7 @@ class ErrorHandlingSwarmCoordinator:
 
         return actions
 
-    def _generate_recommendations(self, state: SwarmState) -> List[str]:
+    def _generate_recommendations(self, state: SwarmState) -> list[str]:
         """Generate recommendations based on workflow results"""
         recommendations = []
 
@@ -503,12 +504,12 @@ class ErrorHandlingSwarmCoordinator:
 
         return recommendations
 
-    async def get_swarm_status(self) -> Dict[str, Any]:
+    async def get_swarm_status(self) -> dict[str, Any]:
         """Get current status of the swarm"""
         status = {
             "active_workflows": len(self.active_workflows),
             "available_agents": list(self.agents.keys()),
-            "agent_status": {}
+            "agent_status": {},
         }
 
         for agent_name, agent in self.agents.items():

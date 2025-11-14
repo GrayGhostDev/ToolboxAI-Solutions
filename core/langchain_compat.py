@@ -5,10 +5,10 @@ Provides modern LangChain v0.3+ imports and utilities following official best pr
 Includes LCEL (LangChain Expression Language) components and helpers.
 """
 
-import os
-from typing import Any, Optional, Dict, List, Union, Type
-from functools import lru_cache
 import logging
+import os
+from functools import lru_cache
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 try:
     # Models - Using modern initialization patterns
     # Note: init_chat_model has been deprecated/moved in LangChain 0.3+
-    from langchain_openai import ChatOpenAI, AzureChatOpenAI
     from langchain_anthropic import ChatAnthropic
+    from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
     # Try to import init_chat_model, but don't fail if not available
     try:
@@ -26,64 +26,63 @@ try:
         init_chat_model = None
 
     # Messages
-    from langchain_core.messages import (
-        BaseMessage,
-        HumanMessage,
-        AIMessage,
-        SystemMessage,
-        ToolMessage,
-        FunctionMessage
-    )
-
-    # Prompts - Modern prompt templates
-    from langchain_core.prompts import (
-        ChatPromptTemplate,
-        MessagesPlaceholder,
-        PromptTemplate,
-        FewShotChatMessagePromptTemplate
-    )
-
-    # Output Parsers - Including structured output parsers
-    from langchain_core.output_parsers import (
-        StrOutputParser,
-        JsonOutputParser,
-        PydanticOutputParser
-    )
-    from langchain_core.output_parsers import ResponseSchema, StructuredOutputParser
-
-    # LCEL Components - Core of modern LangChain
-    from langchain_core.runnables import (
-        Runnable,
-        RunnablePassthrough,
-        RunnableParallel,
-        RunnableLambda,
-        RunnableSequence,
-        RunnableBranch,
-        RunnableWithMessageHistory
-    )
-
-    # Tools and Functions
-    from langchain_core.tools import Tool, StructuredTool, tool
-    from langchain_core.utils.function_calling import convert_to_openai_function
-
-    # LangGraph - Modern agent framework
-    from langgraph.graph import StateGraph, END
-    from langgraph.checkpoint.memory import MemorySaver
-    from langgraph.prebuilt import ToolExecutor, ToolInvocation
-
     # Callbacks for streaming and monitoring
     from langchain_core.callbacks import (
         AsyncCallbackManagerForLLMRunForChainRun,
         CallbackManagerForLLMRunForChainRun,
-        StreamingStdOutCallbackHandler
+        StreamingStdOutCallbackHandler,
     )
 
     # Memory components - Note: LangChain legacy memory has Pydantic v2 compatibility issues
     # Use LangGraph's MemorySaver instead for state persistence
     # ConversationBufferMemory and ConversationSummaryMemory are deprecated
-
     # Document processing
     from langchain_core.documents import Document
+    from langchain_core.messages import (
+        AIMessage,
+        BaseMessage,
+        FunctionMessage,
+        HumanMessage,
+        SystemMessage,
+        ToolMessage,
+    )
+
+    # Output Parsers - Including structured output parsers
+    from langchain_core.output_parsers import (
+        JsonOutputParser,
+        PydanticOutputParser,
+        ResponseSchema,
+        StrOutputParser,
+        StructuredOutputParser,
+    )
+
+    # Prompts - Modern prompt templates
+    from langchain_core.prompts import (
+        ChatPromptTemplate,
+        FewShotChatMessagePromptTemplate,
+        MessagesPlaceholder,
+        PromptTemplate,
+    )
+
+    # LCEL Components - Core of modern LangChain
+    from langchain_core.runnables import (
+        Runnable,
+        RunnableBranch,
+        RunnableLambda,
+        RunnableParallel,
+        RunnablePassthrough,
+        RunnableSequence,
+        RunnableWithMessageHistory,
+    )
+
+    # Tools and Functions
+    from langchain_core.tools import StructuredTool, Tool, tool
+    from langchain_core.utils.function_calling import convert_to_openai_function
+    from langgraph.checkpoint.memory import MemorySaver
+
+    # LangGraph - Modern agent framework
+    from langgraph.graph import END, StateGraph
+    from langgraph.prebuilt import ToolExecutor, ToolInvocation
 
     # Retry and error handling - skip if not available
     try:
@@ -117,7 +116,7 @@ def get_chat_model(
     model_name: Optional[str] = None,
     provider: Optional[str] = None,
     temperature: float = 0.7,
-    **kwargs
+    **kwargs,
 ) -> Any:
     """
     Initialize a chat model using modern LangChain patterns.
@@ -151,33 +150,20 @@ def get_chat_model(
     if init_chat_model is not None:
         try:
             return init_chat_model(
-                model_name,
-                model_provider=provider,
-                temperature=temperature,
-                **kwargs
+                model_name, model_provider=provider, temperature=temperature, **kwargs
             )
         except Exception as e:
-            logger.warning(f"Failed to initialize model with init_chat_model: {e}, falling back to direct initialization")
+            logger.warning(
+                f"Failed to initialize model with init_chat_model: {e}, falling back to direct initialization"
+            )
 
     # Direct initialization (always works with current LangChain versions)
     if provider == "openai":
-        return ChatOpenAI(
-            model=model_name,
-            temperature=temperature,
-            **kwargs
-        )
+        return ChatOpenAI(model=model_name, temperature=temperature, **kwargs)
     elif provider == "anthropic":
-        return ChatAnthropic(
-            model=model_name,
-            temperature=temperature,
-            **kwargs
-        )
+        return ChatAnthropic(model=model_name, temperature=temperature, **kwargs)
     elif provider == "azure":
-        return AzureChatOpenAI(
-            model=model_name,
-            temperature=temperature,
-            **kwargs
-        )
+        return AzureChatOpenAI(model=model_name, temperature=temperature, **kwargs)
     else:
         raise ValueError(f"Unknown provider: {provider}")
 
@@ -186,7 +172,7 @@ def get_chat_model(
 def create_chain_template(
     system_prompt: str,
     include_history: bool = False,
-    output_parser: Optional[Any] = None
+    output_parser: Optional[Any] = None,
 ) -> Any:
     """
     Create a reusable LCEL chain template.
@@ -220,9 +206,7 @@ def create_chain_template(
     return prompt | output_parser
 
 
-def create_parallel_chain(
-    chains: Dict[str, Any]
-) -> RunnableParallel:
+def create_parallel_chain(chains: dict[str, Any]) -> RunnableParallel:
     """
     Create a parallel execution chain for concurrent operations.
 
@@ -239,10 +223,7 @@ def create_parallel_chain(
 
 
 def create_tool_from_function(
-    func: callable,
-    name: str,
-    description: str,
-    args_schema: Optional[Type] = None
+    func: callable, name: str, description: str, args_schema: Optional[type] = None
 ) -> StructuredTool:
     """
     Create a structured tool from a Python function.
@@ -260,63 +241,52 @@ def create_tool_from_function(
         raise ImportError("LangChain is not properly installed")
 
     return StructuredTool.from_function(
-        func=func,
-        name=name,
-        description=description,
-        args_schema=args_schema
+        func=func, name=name, description=description, args_schema=args_schema
     )
 
 
 # Export all modern components
 __all__ = [
     # Models
-    'get_chat_model',
-    'ChatOpenAI',
-    'AzureChatOpenAI',
-    'ChatAnthropic',
-
+    "get_chat_model",
+    "ChatOpenAI",
+    "AzureChatOpenAI",
+    "ChatAnthropic",
     # Messages
-    'BaseMessage',
-    'HumanMessage',
-    'AIMessage',
-    'SystemMessage',
-    'ToolMessage',
-    'FunctionMessage',
-
+    "BaseMessage",
+    "HumanMessage",
+    "AIMessage",
+    "SystemMessage",
+    "ToolMessage",
+    "FunctionMessage",
     # Prompts
-    'ChatPromptTemplate',
-    'MessagesPlaceholder',
-    'PromptTemplate',
-
+    "ChatPromptTemplate",
+    "MessagesPlaceholder",
+    "PromptTemplate",
     # Parsers
-    'StrOutputParser',
-    'JsonOutputParser',
-    'PydanticOutputParser',
-    'StructuredOutputParser',
-
+    "StrOutputParser",
+    "JsonOutputParser",
+    "PydanticOutputParser",
+    "StructuredOutputParser",
     # LCEL Components
-    'Runnable',
-    'RunnablePassthrough',
-    'RunnableParallel',
-    'RunnableLambda',
-    'RunnableSequence',
-    'RunnableBranch',
-
+    "Runnable",
+    "RunnablePassthrough",
+    "RunnableParallel",
+    "RunnableLambda",
+    "RunnableSequence",
+    "RunnableBranch",
     # Tools
-    'Tool',
-    'StructuredTool',
-    'tool',
-
+    "Tool",
+    "StructuredTool",
+    "tool",
     # LangGraph
-    'StateGraph',
-    'END',
-    'MemorySaver',
-
+    "StateGraph",
+    "END",
+    "MemorySaver",
     # Helper functions
-    'create_chain_template',
-    'create_parallel_chain',
-    'create_tool_from_function',
-
+    "create_chain_template",
+    "create_parallel_chain",
+    "create_tool_from_function",
     # Flags
-    'LANGCHAIN_AVAILABLE'
+    "LANGCHAIN_AVAILABLE",
 ]

@@ -76,7 +76,10 @@ async def send_chat_message(
 
         # Process message in background
         background_tasks.add_task(
-            roblox_ai_agent.handle_user_message, request.conversation_id, request.message, context
+            roblox_ai_agent.handle_user_message,
+            request.conversation_id,
+            request.message,
+            context,
         )
 
         return ChatMessageResponse(
@@ -102,12 +105,18 @@ async def generate_environment(
     try:
         # Validate that spec has required fields
         spec = request.spec
-        required_fields = ["environment_name", "theme", "map_type", "learning_objectives"]
+        required_fields = [
+            "environment_name",
+            "theme",
+            "map_type",
+            "learning_objectives",
+        ]
         missing_fields = [field for field in required_fields if not spec.get(field)]
 
         if missing_fields:
             raise HTTPException(
-                status_code=400, detail=f"Missing required fields: {', '.join(missing_fields)}"
+                status_code=400,
+                detail=f"Missing required fields: {', '.join(missing_fields)}",
             )
 
         # Start generation in background
@@ -139,7 +148,12 @@ async def get_conversation_status(
         spec = roblox_ai_agent.get_conversation_spec(conversation_id)
 
         # Check for missing required fields
-        required_fields = ["environment_name", "theme", "map_type", "learning_objectives"]
+        required_fields = [
+            "environment_name",
+            "theme",
+            "map_type",
+            "learning_objectives",
+        ]
         missing_fields = [field for field in required_fields if not spec.get(field)]
 
         return ConversationStatusResponse(
@@ -209,7 +223,7 @@ async def health_check():
     """Health check for Roblox AI service"""
     try:
         # Check if AI agent is responsive
-        test_spec = roblox_ai_agent.get_conversation_spec("health_check")
+        roblox_ai_agent.get_conversation_spec("health_check")
 
         return {
             "status": "healthy",

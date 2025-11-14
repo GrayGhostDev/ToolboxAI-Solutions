@@ -9,12 +9,12 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from core.coordinators.base_coordinator import TaskOutput
 
 from core.agents.supabase.supabase_migration_agent import (
     MigrationPlan,
     SupabaseMigrationAgent,
 )
+from core.coordinators.base_coordinator import TaskOutput
 from core.sparc.state_manager import StateManager
 
 
@@ -111,7 +111,11 @@ def sample_analysis_results(sample_schema_data):
             "check_constraints": [],
             "dependencies": {"users": [], "posts": ["users"]},
         },
-        "complexity": {"level": "medium", "factors": ["foreign_keys"], "estimated_effort": 75},
+        "complexity": {
+            "level": "medium",
+            "factors": ["foreign_keys"],
+            "estimated_effort": 75,
+        },
         "recommendations": ["Plan careful foreign key migration with dependency ordering"],
     }
 
@@ -296,7 +300,6 @@ class TestSupabaseMigrationAgent:
                 agent.type_generator, "generate_types", new_callable=AsyncMock
             ) as mock_types,
         ):
-
             # Setup return values
             mock_sparc.return_value = Mock()
             mock_rls.return_value = [{"name": "user_policy", "table": "users"}]
@@ -388,7 +391,8 @@ class TestSupabaseMigrationAgent:
         agent = SupabaseMigrationAgent(state_manager=mock_state_manager)
 
         result = await agent.validate_migration(
-            "postgresql://source@localhost/source_db", "postgresql://target@localhost/target_db"
+            "postgresql://source@localhost/source_db",
+            "postgresql://target@localhost/target_db",
         )
 
         assert "schema_validation" in result
@@ -475,7 +479,8 @@ class TestSupabaseMigrationAgent:
         agent = SupabaseMigrationAgent()
 
         plan = MigrationPlan(
-            data_migrations=[{"row_count": 1000}], edge_functions=[{"name": "simple_func"}]
+            data_migrations=[{"row_count": 1000}],
+            edge_functions=[{"name": "simple_func"}],
         )
 
         risks = agent._assess_risks(plan)
@@ -545,7 +550,10 @@ class TestSupabaseMigrationAgent:
         with patch.object(agent, "generate_migration_plan", new_callable=AsyncMock) as mock_plan:
             mock_plan.return_value = MigrationPlan()
 
-            context = {"analysis_results": sample_analysis_results, "options": {"phased": True}}
+            context = {
+                "analysis_results": sample_analysis_results,
+                "options": {"phased": True},
+            }
 
             result = await agent.process_task("plan migration", context)
 

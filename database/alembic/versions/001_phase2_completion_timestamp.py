@@ -6,8 +6,9 @@ Create Date: 2025-09-20 22:06:00.000000
 
 """
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence, Union
+from typing import Union
 
 import sqlalchemy as sa
 from alembic import op
@@ -27,7 +28,10 @@ def upgrade() -> None:
     op.create_table(
         "phase_completions",
         sa.Column(
-            "id", UUID(as_uuid=True), primary_key=True, server_default=sa.text("gen_random_uuid()")
+            "id",
+            UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column("phase_name", sa.String(50), nullable=False, unique=True),
         sa.Column("completion_timestamp", TIMESTAMP(timezone=True), nullable=False),
@@ -49,17 +53,25 @@ def upgrade() -> None:
     # Create index for efficient phase lookups
     op.create_index("idx_phase_completions_phase_name", "phase_completions", ["phase_name"])
     op.create_index(
-        "idx_phase_completions_completion_timestamp", "phase_completions", ["completion_timestamp"]
+        "idx_phase_completions_completion_timestamp",
+        "phase_completions",
+        ["completion_timestamp"],
     )
 
     # Add Phase 2 completion columns to existing users table if it exists
     try:
         op.add_column(
             "users",
-            sa.Column("phase2_migration_status", sa.String(20), nullable=True, default="pending"),
+            sa.Column(
+                "phase2_migration_status",
+                sa.String(20),
+                nullable=True,
+                default="pending",
+            ),
         )
         op.add_column(
-            "users", sa.Column("phase2_completion_date", TIMESTAMP(timezone=True), nullable=True)
+            "users",
+            sa.Column("phase2_completion_date", TIMESTAMP(timezone=True), nullable=True),
         )
         op.add_column("users", sa.Column("phase2_performance_score", sa.Float, nullable=True))
     except Exception:

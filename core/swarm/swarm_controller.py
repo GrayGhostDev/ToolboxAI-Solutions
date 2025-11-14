@@ -7,18 +7,17 @@ with a focus on educational content generation.
 """
 
 import asyncio
-import time
-from typing import Dict, List, Any, Optional, Callable, Set
-from dataclasses import dataclass, field
-from enum import Enum
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Optional
 
-from .worker_pool import WorkerPool, WorkerAgent, WorkerStatus
-from .task_distributor import TaskDistributor, Task, TaskStatus, TaskPriority
-from .consensus_engine import ConsensusEngine, ConsensusResult
-from .load_balancer import LoadBalancer, ResourceMetrics
+from .consensus_engine import ConsensusEngine
+from .load_balancer import LoadBalancer
+from .task_distributor import Task, TaskDistributor, TaskPriority
+from .worker_pool import WorkerAgent, WorkerPool
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +42,8 @@ class SwarmConfig:
     task_timeout: int = 300  # seconds
     consensus_threshold: float = 0.7
     load_balancing_strategy: str = "round_robin"
-    worker_specializations: List[str] = field(default_factory=list)
-    educational_optimizations: Dict[str, Any] = field(default_factory=dict)
+    worker_specializations: list[str] = field(default_factory=list)
+    educational_optimizations: dict[str, Any] = field(default_factory=dict)
     auto_scaling: bool = True
     health_check_interval: int = 30  # seconds
     metrics_retention_hours: int = 24
@@ -52,7 +51,7 @@ class SwarmConfig:
     # Educational-specific settings
     primary_subject: Optional[str] = None
     target_grade_level: Optional[int] = None
-    curriculum_standards: List[str] = field(default_factory=list)
+    curriculum_standards: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -121,13 +120,13 @@ class SwarmController:
 
         self.state = SwarmState.INITIALIZING
         self.metrics = SwarmMetrics()
-        self.active_tasks: Dict[str, Task] = {}
-        self.completed_tasks: Dict[str, Any] = {}
-        self.event_callbacks: Dict[str, List[Callable]] = {}
+        self.active_tasks: dict[str, Task] = {}
+        self.completed_tasks: dict[str, Any] = {}
+        self.event_callbacks: dict[str, list[Callable]] = {}
 
         # Educational content tracking
-        self.subject_specialists: Dict[str, List[WorkerAgent]] = {}
-        self.grade_level_adapters: Dict[int, List[WorkerAgent]] = {}
+        self.subject_specialists: dict[str, list[WorkerAgent]] = {}
+        self.grade_level_adapters: dict[int, list[WorkerAgent]] = {}
 
         # Background tasks
         self._health_check_task: Optional[asyncio.Task] = None
@@ -171,7 +170,11 @@ class SwarmController:
             await self._emit_event("swarm_shutting_down", {})
 
             # Cancel background tasks
-            tasks_to_cancel = [self._health_check_task, self._metrics_task, self._auto_scaling_task]
+            tasks_to_cancel = [
+                self._health_check_task,
+                self._metrics_task,
+                self._auto_scaling_task,
+            ]
 
             for task in tasks_to_cancel:
                 if task and not task.done():
@@ -205,10 +208,10 @@ class SwarmController:
     async def submit_task(
         self,
         task_type: str,
-        task_data: Dict[str, Any],
+        task_data: dict[str, Any],
         priority: TaskPriority = TaskPriority.NORMAL,
         requires_consensus: bool = True,
-        educational_context: Optional[Dict[str, Any]] = None,
+        educational_context: Optional[dict[str, Any]] = None,
     ) -> str:
         """
         Submit a task to the swarm for execution.
@@ -248,7 +251,8 @@ class SwarmController:
         await self._distribute_task(task)
 
         await self._emit_event(
-            "task_submitted", {"task_id": task_id, "task_type": task_type, "priority": priority.value}
+            "task_submitted",
+            {"task_id": task_id, "task_type": task_type, "priority": priority.value},
         )
 
         logger.info(f"Task {task_id} submitted: {task_type}")
@@ -289,12 +293,16 @@ class SwarmController:
         self.metrics.calculate_derived_metrics()
 
         await self._emit_event(
-            "task_completed", {"task_id": task_id, "execution_time": getattr(result, "execution_time", 0)}
+            "task_completed",
+            {
+                "task_id": task_id,
+                "execution_time": getattr(result, "execution_time", 0),
+            },
         )
 
         return result
 
-    async def get_swarm_status(self) -> Dict[str, Any]:
+    async def get_swarm_status(self) -> dict[str, Any]:
         """Get comprehensive swarm status information."""
         worker_status = await self.worker_pool.get_status()
         task_status = await self.task_distributor.get_status()
@@ -334,7 +342,9 @@ class SwarmController:
 
             if success:
                 self.metrics.active_workers = await self.worker_pool.get_worker_count()
-                await self._emit_event("swarm_scaled", {"new_worker_count": self.metrics.active_workers})
+                await self._emit_event(
+                    "swarm_scaled", {"new_worker_count": self.metrics.active_workers}
+                )
                 logger.info(f"Swarm scaled to {self.metrics.active_workers} workers")
 
             self.state = SwarmState.ACTIVE
@@ -498,7 +508,7 @@ class SwarmController:
             # Fallback to general worker pool
             await self.worker_pool.assign_task(task)
 
-    async def _find_suitable_workers(self, task: Task) -> List[WorkerAgent]:
+    async def _find_suitable_workers(self, task: Task) -> list[WorkerAgent]:
         """Find workers suitable for a specific task."""
         suitable_workers = []
 
@@ -521,7 +531,7 @@ class SwarmController:
 
         return available_workers
 
-    async def _handle_unhealthy_workers(self, unhealthy_workers: List[WorkerAgent]):
+    async def _handle_unhealthy_workers(self, unhealthy_workers: list[WorkerAgent]):
         """Handle workers that have become unhealthy."""
         for worker in unhealthy_workers:
             try:
@@ -535,7 +545,7 @@ class SwarmController:
             except (ValueError, TypeError, AttributeError, RuntimeError) as e:
                 logger.error(f"Error handling unhealthy worker {worker.worker_id}: {e}")
 
-    async def _handle_stalled_tasks(self, stalled_tasks: List[str]):
+    async def _handle_stalled_tasks(self, stalled_tasks: list[str]):
         """Handle tasks that have become stalled."""
         for task_id in stalled_tasks:
             try:
@@ -553,7 +563,7 @@ class SwarmController:
         while self.active_tasks:
             await asyncio.sleep(0.1)
 
-    async def _emit_event(self, event_type: str, event_data: Dict[str, Any]):
+    async def _emit_event(self, event_type: str, event_data: dict[str, Any]):
         """Emit an event to registered callbacks."""
         if event_type in self.event_callbacks:
             for callback in self.event_callbacks[event_type]:

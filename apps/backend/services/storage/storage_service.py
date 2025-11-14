@@ -315,7 +315,7 @@ class StorageService(ABC):
             options: Listing options and filters
 
         Returns:
-            List[FileInfo]: List of file information
+            list[FileInfo]: List of file information
 
         Raises:
             StorageError: If listing fails
@@ -360,7 +360,10 @@ class StorageService(ABC):
 
     @abstractmethod
     async def copy_file(
-        self, source_file_id: UUID, destination_path: str, options: UploadOptions | None = None
+        self,
+        source_file_id: UUID,
+        destination_path: str,
+        options: UploadOptions | None = None,
     ) -> UploadResult:
         """
         Copy a file to a new location.
@@ -445,7 +448,10 @@ class StorageService(ABC):
         return progress
 
     def _generate_storage_path(
-        self, filename: str, file_category: str = "media_resource", include_timestamp: bool = True
+        self,
+        filename: str,
+        file_category: str = "media_resource",
+        include_timestamp: bool = True,
     ) -> str:
         """
         Generate a storage path for a file.

@@ -4,9 +4,9 @@ Fix dynamic imports in integration modules by making __all__ exports dynamic.
 This prevents AttributeError when importing * from modules with optional dependencies.
 """
 
+import argparse
 import re
 from pathlib import Path
-import argparse
 
 
 def fix_init_file(file_path: Path) -> bool:
@@ -35,12 +35,11 @@ def fix_init_file(file_path: Path) -> bool:
             print(f"  Could not parse __all__: {file_path}")
             return False
 
-        all_content = all_match.group(1)
+        all_match.group(1)
 
         # Extract static imports (those before try/except blocks)
         lines = content.split('\n')
         static_exports = []
-        in_try_block = False
 
         # Find imports before first try block
         for line in lines:

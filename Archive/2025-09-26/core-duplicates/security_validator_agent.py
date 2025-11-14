@@ -5,9 +5,10 @@ This agent checks for exploits, validates RemoteEvent/RemoteFunction security,
 and implements anti-cheat measures.
 """
 
-from typing import Dict, List, Any, Optional
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any
+
 from ..base_agent import BaseAgent
 
 
@@ -63,7 +64,7 @@ class RobloxSecurityValidatorAgent(BaseAgent):
             "sanity_check": r"if.*and.*<.*then"
         }
     
-    async def validate_script(self, script_code: str) -> Dict[str, Any]:
+    async def validate_script(self, script_code: str) -> dict[str, Any]:
         """Validate a Roblox script for security issues"""
         issues = []
         
@@ -195,7 +196,7 @@ remoteFunction.OnServerInvoke = function(player, ...)
 end
 """
     
-    async def execute_task(self, task: str) -> Dict[str, Any]:
+    async def execute_task(self, task: str) -> dict[str, Any]:
         """Execute security validation task"""
         if "validate" in task.lower():
             # Extract code from task and validate

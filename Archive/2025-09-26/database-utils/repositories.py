@@ -5,25 +5,37 @@ Provides clean abstraction layer for database operations with async support,
 validation, and business logic separation.
 """
 
-import uuid
-from typing import Optional, List, Dict, Any, Generic, TypeVar, Type
-from datetime import datetime, timezone
-from abc import ABC, abstractmethod
-
-from sqlalchemy import select, update, delete, func, and_, or_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
-from sqlalchemy.exc import IntegrityError, NoResultFound
-
-from database.models import (
-    Base, User, Course, Lesson, Content, Quiz, QuizQuestion,
-    QuizAttempt, QuizResponse, UserProgress, Analytics,
-    Achievement, UserAchievement, Leaderboard, Enrollment,
-    UserRole, ContentStatus, DifficultyLevel
-)
-from apps.backend.api.auth.auth import hash_password, verify_password
-
 import logging
+import uuid
+from abc import ABC
+from datetime import datetime, timezone
+from typing import Any, Generic, Optional, TypeVar
+
+from sqlalchemy import and_, delete, func, or_, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from apps.backend.api.auth.auth import hash_password, verify_password
+from database.models import (
+    Achievement,
+    Analytics,
+    Base,
+    Content,
+    ContentStatus,
+    Course,
+    Enrollment,
+    Leaderboard,
+    Lesson,
+    Quiz,
+    QuizAttempt,
+    QuizQuestion,
+    QuizResponse,
+    User,
+    UserAchievement,
+    UserProgress,
+    UserRole,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +46,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 class BaseRepository(ABC, Generic[ModelType]):
     """Base repository with common CRUD operations"""
     
-    def __init__(self, model: Type[ModelType], session: AsyncSession):
+    def __init__(self, model: type[ModelType], session: AsyncSession):
         """
         Initialize repository
         
@@ -56,7 +68,7 @@ class BaseRepository(ABC, Generic[ModelType]):
         skip: int = 0,
         limit: int = 100,
         **filters
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """Get all records with optional filtering and pagination"""
         stmt = select(self.model)
         
@@ -242,7 +254,7 @@ class CourseRepository(BaseRepository[Course]):
         self,
         subject: str,
         grade_level: int
-    ) -> List[Course]:
+    ) -> list[Course]:
         """Get courses by subject and grade level"""
         stmt = select(Course).where(
             and_(
@@ -254,7 +266,7 @@ class CourseRepository(BaseRepository[Course]):
         result = await self.session.execute(stmt)
         return result.scalars().all()
     
-    async def get_user_courses(self, user_id: uuid.UUID) -> List[Course]:
+    async def get_user_courses(self, user_id: uuid.UUID) -> list[Course]:
         """Get all courses enrolled by a user"""
         stmt = select(Course).join(Enrollment).where(
             Enrollment.user_id == user_id
@@ -282,7 +294,7 @@ class LessonRepository(BaseRepository[Lesson]):
         self,
         course_id: uuid.UUID,
         only_published: bool = True
-    ) -> List[Lesson]:
+    ) -> list[Lesson]:
         """Get all lessons for a course"""
         stmt = select(Lesson).where(Lesson.course_id == course_id)
         
@@ -322,7 +334,7 @@ class ContentRepository(BaseRepository[Content]):
         lesson_id: uuid.UUID,
         content_type: Optional[str] = None,
         status: Optional[ContentStatus] = None
-    ) -> List[Content]:
+    ) -> list[Content]:
         """Get content items for a lesson"""
         stmt = select(Content).where(Content.lesson_id == lesson_id)
         
@@ -367,7 +379,7 @@ class QuizRepository(BaseRepository[Quiz]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_by_lesson(self, lesson_id: uuid.UUID) -> List[Quiz]:
+    async def get_by_lesson(self, lesson_id: uuid.UUID) -> list[Quiz]:
         """Get all quizzes for a lesson"""
         stmt = select(Quiz).where(
             and_(
@@ -556,7 +568,7 @@ class ProgressRepository(BaseRepository[UserProgress]):
         self,
         user_id: uuid.UUID,
         course_id: uuid.UUID
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get overall course progress for a user"""
         # Get all lessons in course
         stmt = select(Lesson).where(Lesson.course_id == course_id)
@@ -609,7 +621,7 @@ class AnalyticsRepository(BaseRepository[Analytics]):
         self,
         event_type: str,
         user_id: Optional[uuid.UUID] = None,
-        event_data: Optional[Dict] = None,
+        event_data: Optional[dict] = None,
         **kwargs
     ) -> Analytics:
         """Track an analytics event"""
@@ -628,7 +640,7 @@ class AnalyticsRepository(BaseRepository[Analytics]):
         user_id: uuid.UUID,
         event_type: Optional[str] = None,
         limit: int = 100
-    ) -> List[Analytics]:
+    ) -> list[Analytics]:
         """Get analytics events for a user"""
         stmt = select(Analytics).where(Analytics.user_id == user_id)
         
@@ -644,7 +656,7 @@ class AnalyticsRepository(BaseRepository[Analytics]):
         event_type: str,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get statistics for an event type"""
         stmt = select(
             func.count(Analytics.id).label("count"),
@@ -677,8 +689,8 @@ class AchievementRepository(BaseRepository[Achievement]):
     async def check_user_achievements(
         self,
         user_id: uuid.UUID,
-        user_stats: Dict[str, Any]
-    ) -> List[Achievement]:
+        user_stats: dict[str, Any]
+    ) -> list[Achievement]:
         """Check which achievements a user has earned"""
         # Get all active achievements
         stmt = select(Achievement).where(Achievement.is_active == True)
@@ -721,8 +733,8 @@ class AchievementRepository(BaseRepository[Achievement]):
     
     def _check_requirements(
         self,
-        requirements: Dict[str, Any],
-        user_stats: Dict[str, Any]
+        requirements: dict[str, Any],
+        user_stats: dict[str, Any]
     ) -> bool:
         """Check if achievement requirements are met"""
         for key, required_value in requirements.items():
@@ -789,7 +801,7 @@ class LeaderboardRepository(BaseRepository[Leaderboard]):
         self,
         limit: int = 10,
         timeframe: str = "all"
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get top users from leaderboard"""
         # Select score column based on timeframe
         if timeframe == "weekly":

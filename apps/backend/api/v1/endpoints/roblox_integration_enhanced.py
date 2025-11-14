@@ -31,8 +31,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Import authentication and dependencies
 try:
-    from apps.backend.services.websocket_handler import websocket_manager
-
     from apps.backend.api.auth.auth import (
         get_current_user,
         require_any_role,
@@ -40,6 +38,7 @@ try:
     )
     from apps.backend.core.deps import get_db
     from apps.backend.core.security.rate_limit_manager import rate_limit
+    from apps.backend.services.websocket_handler import websocket_manager
 except ImportError:
     # Fallback for development
     def get_current_user():
@@ -361,7 +360,11 @@ async def notify_roblox_update(event_type: str, data: dict[str, Any], user_id: s
         await trigger_event(
             "roblox-updates",
             f"roblox.{event_type}",
-            {"data": data, "user_id": user_id, "timestamp": datetime.now(timezone.utc).isoformat()},
+            {
+                "data": data,
+                "user_id": user_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
         )
     except Exception as e:
         logger.warning(f"Failed to send Roblox update notification: {e}")
@@ -373,7 +376,15 @@ def validate_script_security(script_content: str) -> dict[str, Any]:
     security_issues = []
 
     # Check for potentially dangerous functions
-    dangerous_patterns = ["require(", "loadstring(", "getfenv(", "setfenv(", "debug.", "os.", "io."]
+    dangerous_patterns = [
+        "require(",
+        "loadstring(",
+        "getfenv(",
+        "setfenv(",
+        "debug.",
+        "os.",
+        "io.",
+    ]
 
     for pattern in dangerous_patterns:
         if pattern in script_content:
@@ -502,7 +513,8 @@ educationalFunction()
     except Exception as e:
         logger.error(f"Error generating script: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate script"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate script",
         )
 
 
@@ -586,7 +598,8 @@ async def validate_script(
     except Exception as e:
         logger.error(f"Error validating script: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to validate script"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to validate script",
         )
 
 
@@ -617,7 +630,8 @@ async def upload_asset(
                 )
         except Exception:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid asset data encoding"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid asset data encoding",
             )
 
         # Create asset response
@@ -641,7 +655,11 @@ async def upload_asset(
                 "license_type": request.license_type,
                 "uploaded_by": current_user["id"],
             },
-            usage_statistics={"downloads": 0, "usage_in_environments": 0, "user_ratings": []},
+            usage_statistics={
+                "downloads": 0,
+                "usage_in_environments": 0,
+                "user_ratings": [],
+            },
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -665,7 +683,8 @@ async def upload_asset(
     except Exception as e:
         logger.error(f"Error uploading asset: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to upload asset"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload asset",
         )
 
 
@@ -713,7 +732,8 @@ async def list_assets(
     except Exception as e:
         logger.error(f"Error listing assets: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve assets"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve assets",
         )
 
 
@@ -765,7 +785,10 @@ async def deploy_environment(
         background_tasks.add_task(
             notify_roblox_update,
             "environment_deployment_started",
-            {"deployment_id": deployment_id, "environment_type": request.environment_type.value},
+            {
+                "deployment_id": deployment_id,
+                "environment_type": request.environment_type.value,
+            },
             current_user["id"],
         )
 
@@ -805,7 +828,9 @@ async def get_deployment_status(deployment_id: str, current_user: dict = Depends
 
 
 @router.post(
-    "/studio/sync", response_model=StudioSyncResponse, status_code=status.HTTP_202_ACCEPTED
+    "/studio/sync",
+    response_model=StudioSyncResponse,
+    status_code=status.HTTP_202_ACCEPTED,
 )
 # @rate_limit(requests=5)  # 5 sync operations per minute
 async def sync_with_studio(
@@ -862,7 +887,9 @@ async def sync_with_studio(
 
 @router.websocket("/environments/{environment_id}/realtime")
 async def environment_realtime(
-    websocket: WebSocket, environment_id: str, current_user: dict = Depends(get_current_user)
+    websocket: WebSocket,
+    environment_id: str,
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Real-time WebSocket connection for environment monitoring.
@@ -975,5 +1002,6 @@ async def browse_marketplace(
     except Exception as e:
         logger.error(f"Error browsing marketplace: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to browse marketplace"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to browse marketplace",
         )

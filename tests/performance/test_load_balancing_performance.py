@@ -18,8 +18,6 @@ import time
 import aioredis
 import numpy as np
 import pytest
-from apps.backend.core.websocket_cluster import WebSocketCluster
-from database.replica_router import ConsistencyLevel, ReplicaRouter
 from locust import HttpUser, between, task
 from locust.env import Environment
 from locust.log import setup_logging
@@ -39,6 +37,8 @@ from apps.backend.core.global_load_balancer import (
     TrafficPolicy,
 )
 from apps.backend.core.rate_limiter import RateLimitConfig, RateLimiter
+from apps.backend.core.websocket_cluster import WebSocketCluster
+from database.replica_router import ConsistencyLevel, ReplicaRouter
 
 
 class LoadBalancingUser(HttpUser):
@@ -54,14 +54,12 @@ class LoadBalancingUser(HttpUser):
     @task(10)
     def read_operation(self):
         """Simulate read operations"""
-        response = self.client.get(
-            "/api/v1/content/list", headers={"X-Session-ID": self.session_id}
-        )
+        self.client.get("/api/v1/content/list", headers={"X-Session-ID": self.session_id})
 
     @task(5)
     def write_operation(self):
         """Simulate write operations"""
-        response = self.client.post(
+        self.client.post(
             "/api/v1/content/create",
             json={"title": "Test", "content": "Content"},
             headers={"X-Session-ID": self.session_id},
@@ -70,15 +68,13 @@ class LoadBalancingUser(HttpUser):
     @task(3)
     def cached_operation(self):
         """Simulate cached requests"""
-        response = self.client.get(
-            "/api/v1/static/resource", headers={"X-Session-ID": self.session_id}
-        )
+        self.client.get("/api/v1/static/resource", headers={"X-Session-ID": self.session_id})
 
     @task(1)
     def websocket_operation(self):
         """Simulate WebSocket connections"""
         # In real test, would establish WebSocket connection
-        response = self.client.get("/ws/connect", headers={"X-Session-ID": self.session_id})
+        self.client.get("/ws/connect", headers={"X-Session-ID": self.session_id})
 
 
 class TestCircuitBreakerPerformance:
@@ -109,7 +105,7 @@ class TestCircuitBreakerPerformance:
             async def single_operation():
                 start = time.time()
                 try:
-                    result = await breaker.call(failing_operation)
+                    await breaker.call(failing_operation)
                     results["success"] += 1
                 except Exception as e:
                     if "Circuit breaker" in str(e):
@@ -417,7 +413,8 @@ class TestGlobalLoadBalancerPerformance:
         ]
 
         policy = TrafficPolicy(
-            policy_type=RoutingPolicy.GEOPROXIMITY, endpoints=[r.endpoints[0] for r in regions]
+            policy_type=RoutingPolicy.GEOPROXIMITY,
+            endpoints=[r.endpoints[0] for r in regions],
         )
 
         health_check = HealthCheck(endpoint="health", type="http", interval=30)

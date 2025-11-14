@@ -3,18 +3,17 @@
 Script to fix malformed TypeScript imports in dashboard components.
 Fixes the pattern: import // @ts-ignore - comment from 'module/// @ts-ignore - comment';
 """
-import os
 import re
 import sys
 from pathlib import Path
 
+
 def fix_malformed_imports(file_path):
     """Fix malformed import statements in a TypeScript file."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             content = f.read()
 
-        original_content = content
 
         # Pattern to match malformed imports like:
         # import // @ts-ignore - Temporary fix for MUI imports from '@mui/material/// @ts-ignore - Temporary fix for MUI imports';

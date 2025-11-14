@@ -175,7 +175,7 @@ terminology:
         )
         validator = DocumentationValidator(config)
 
-        stats = await validator.validate_all()
+        await validator.validate_all()
 
         # Should find issues in bad.md
         syntax_issues = [i for i in validator.issues if i.issue_type == "syntax"]
@@ -189,11 +189,14 @@ terminology:
     async def test_link_validation(self, temp_docs):
         """Test link validation"""
         config = ValidationConfig(
-            root_dir=temp_docs, check_links=True, check_code_examples=False, check_terminology=False
+            root_dir=temp_docs,
+            check_links=True,
+            check_code_examples=False,
+            check_terminology=False,
         )
         validator = DocumentationValidator(config)
 
-        stats = await validator.validate_all()
+        await validator.validate_all()
 
         # Should find broken links
         link_issues = [i for i in validator.issues if i.issue_type == "broken_link"]
@@ -203,11 +206,14 @@ terminology:
     async def test_formatting_validation(self, temp_docs):
         """Test formatting validation"""
         config = ValidationConfig(
-            root_dir=temp_docs, check_formatting=True, check_links=False, check_code_examples=False
+            root_dir=temp_docs,
+            check_formatting=True,
+            check_links=False,
+            check_code_examples=False,
         )
         validator = DocumentationValidator(config)
 
-        stats = await validator.validate_all()
+        await validator.validate_all()
 
         # Should find formatting issues
         format_issues = [i for i in validator.issues if i.issue_type == "formatting"]
@@ -217,11 +223,14 @@ terminology:
     async def test_terminology_validation(self, temp_docs):
         """Test terminology consistency"""
         config = ValidationConfig(
-            root_dir=temp_docs, check_terminology=True, check_links=False, check_code_examples=False
+            root_dir=temp_docs,
+            check_terminology=True,
+            check_links=False,
+            check_code_examples=False,
         )
         validator = DocumentationValidator(config)
 
-        stats = await validator.validate_all()
+        await validator.validate_all()
 
         # Should find terminology issues
         term_issues = [i for i in validator.issues if i.issue_type == "terminology"]
@@ -231,11 +240,14 @@ terminology:
     async def test_code_security_validation(self, temp_docs):
         """Test dangerous code detection"""
         config = ValidationConfig(
-            root_dir=temp_docs, check_code_examples=True, check_links=False, check_terminology=False
+            root_dir=temp_docs,
+            check_code_examples=True,
+            check_links=False,
+            check_terminology=False,
         )
         validator = DocumentationValidator(config)
 
-        stats = await validator.validate_all()
+        await validator.validate_all()
 
         # Should find security issues
         security_issues = [i for i in validator.issues if i.severity == Severity.CRITICAL]
@@ -244,7 +256,7 @@ terminology:
     def test_auto_fix_functionality(self, temp_docs):
         """Test auto-fix functionality"""
         config = ValidationConfig(root_dir=temp_docs, auto_fix_enabled=True, max_auto_fixes=10)
-        validator = DocumentationValidator(config)
+        DocumentationValidator(config)
 
         # Create a file with fixable issues
         fixable_file = temp_docs / "docs" / "fixable.md"
@@ -675,7 +687,8 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_migration_checker_initialization(self, temp_repo_with_migrations):
         """Test migration checker initialization"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations,
+            output_dir=temp_repo_with_migrations / "output",
         )
 
         assert len(checker.known_migrations) >= 3  # Should have predefined migrations
@@ -684,7 +697,8 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_todo_extraction(self, temp_repo_with_migrations):
         """Test TODO item extraction"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations,
+            output_dir=temp_repo_with_migrations / "output",
         )
 
         report = type("Report", (), {"todos": []})()
@@ -701,7 +715,8 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_deprecated_feature_detection(self, temp_repo_with_migrations):
         """Test deprecated feature detection"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations,
+            output_dir=temp_repo_with_migrations / "output",
         )
 
         report = type("Report", (), {"deprecations": [], "issues": []})()
@@ -717,7 +732,8 @@ const socket = io(process.env.REACT_APP_WS_URL);
     async def test_migration_guide_validation(self, temp_repo_with_migrations):
         """Test migration guide validation"""
         checker = MigrationDocumentationChecker(
-            root_dir=temp_repo_with_migrations, output_dir=temp_repo_with_migrations / "output"
+            root_dir=temp_repo_with_migrations,
+            output_dir=temp_repo_with_migrations / "output",
         )
 
         report = type("Report", (), {"issues": []})()
@@ -725,7 +741,7 @@ const socket = io(process.env.REACT_APP_WS_URL);
 
         # Should validate the migration guide exists and has required sections
         # May find some missing sections
-        guide_issues = [i for i in report.issues if i.category == "incomplete_migration_guide"]
+        [i for i in report.issues if i.category == "incomplete_migration_guide"]
         # This might be 0 if the test guide is complete, which is fine
 
 

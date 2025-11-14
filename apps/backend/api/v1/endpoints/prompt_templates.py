@@ -130,7 +130,10 @@ async def start_conversation(request: StartConversationRequest):
         )
 
         # Start conversation
-        context, prompt_response = await prompt_integration.start_educational_content_creation(
+        (
+            context,
+            prompt_response,
+        ) = await prompt_integration.start_educational_content_creation(
             user_profile, request.initial_message
         )
 
@@ -177,10 +180,12 @@ async def process_user_input(request: ProcessInputRequest):
 
     try:
         # Process input
-        prompt_response, flow_decision, response_metadata = (
-            await prompt_integration.process_user_input(
-                request.conversation_id, request.user_input, request.additional_context
-            )
+        (
+            prompt_response,
+            flow_decision,
+            response_metadata,
+        ) = await prompt_integration.process_user_input(
+            request.conversation_id, request.user_input, request.additional_context
         )
 
         return ConversationResponse(
@@ -301,7 +306,10 @@ async def validate_conversation(conversation_id: str):
         )
 
 
-@router.post("/conversations/{conversation_id}/generate-workflow", response_model=WorkflowResponse)
+@router.post(
+    "/conversations/{conversation_id}/generate-workflow",
+    response_model=WorkflowResponse,
+)
 async def generate_workflow(conversation_id: str, background_tasks: BackgroundTasks):
     """Generate content creation workflow"""
 
@@ -437,10 +445,11 @@ async def get_guidance(stage: str):
     try:
         # Convert string to ConversationStage enum
         try:
-            conversation_stage = ConversationStage(stage)
+            ConversationStage(stage)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid stage: {stage}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid stage: {stage}",
             )
 
         # Get guidance

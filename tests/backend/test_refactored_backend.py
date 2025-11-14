@@ -97,7 +97,7 @@ class TestApplicationStartup:
 
     def test_app_routes_registered(self):
         """Test that routes are registered correctly"""
-        client = TestClient(main_app)
+        TestClient(main_app)
         # Get the routes list
         routes = [route.path for route in main_app.routes]
 
@@ -184,7 +184,8 @@ class TestEndpointMigration:
     def test_pusher_auth_endpoint(self):
         """Test Pusher authentication endpoint"""
         response = self.client.post(
-            "/pusher/auth", params={"socket_id": "test_socket_123", "channel_name": "test_channel"}
+            "/pusher/auth",
+            params={"socket_id": "test_socket_123", "channel_name": "test_channel"},
         )
         # Should either succeed or return 503 if Pusher unavailable
         assert response.status_code in [200, 503]
@@ -369,7 +370,7 @@ class TestPerformance:
     def test_app_startup_time(self):
         """Test that app starts quickly"""
         start_time = time.time()
-        app = create_test_app()
+        create_test_app()
         end_time = time.time()
 
         startup_time = end_time - start_time
@@ -503,7 +504,8 @@ class TestServiceMocking:
         """Test Pusher service availability detection"""
         # The app should handle Pusher being unavailable gracefully
         response = self.client.post(
-            "/realtime/trigger", json={"channel": "test", "event": "test", "payload": {}}
+            "/realtime/trigger",
+            json={"channel": "test", "event": "test", "payload": {}},
         )
 
         # Should return success even if Pusher unavailable (fallback behavior)
@@ -542,9 +544,9 @@ def measure_endpoint_response_time(client: TestClient, endpoint: str, method: st
     start_time = time.time()
 
     if method.upper() == "POST":
-        response = client.post(endpoint, json={})
+        client.post(endpoint, json={})
     else:
-        response = client.get(endpoint)
+        client.get(endpoint)
 
     end_time = time.time()
     return end_time - start_time

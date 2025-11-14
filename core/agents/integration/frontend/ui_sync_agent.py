@@ -12,35 +12,36 @@ This agent handles:
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Set
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import json
-import hashlib
+from typing import Any, Optional
+
+from core.agents.base_agent import AgentConfig
 
 from ..base_integration_agent import (
     BaseIntegrationAgent,
-    IntegrationPlatform,
     IntegrationEvent,
-    TaskResult
+    IntegrationPlatform,
+    TaskResult,
 )
-from core.agents.base_agent import AgentConfig
 
 logger = logging.getLogger(__name__)
 
 
 class UIUpdateStrategy(Enum):
     """UI update strategies"""
-    IMMEDIATE = "immediate"        # Update immediately
-    BATCHED = "batched"            # Batch multiple updates
-    DEBOUNCED = "debounced"        # Debounce rapid updates
-    THROTTLED = "throttled"        # Throttle update frequency
-    OPTIMISTIC = "optimistic"      # Update optimistically, rollback on error
+
+    IMMEDIATE = "immediate"  # Update immediately
+    BATCHED = "batched"  # Batch multiple updates
+    DEBOUNCED = "debounced"  # Debounce rapid updates
+    THROTTLED = "throttled"  # Throttle update frequency
+    OPTIMISTIC = "optimistic"  # Update optimistically, rollback on error
 
 
 class ComponentType(Enum):
     """UI component types"""
+
     TABLE = "table"
     FORM = "form"
     CHART = "chart"
@@ -54,12 +55,13 @@ class ComponentType(Enum):
 @dataclass
 class UIComponent:
     """UI component definition"""
+
     component_id: str
     component_type: ComponentType
     path: str  # Component path in UI hierarchy
-    props: Dict[str, Any]
-    state: Dict[str, Any]
-    subscriptions: List[str] = field(default_factory=list)  # Event subscriptions
+    props: dict[str, Any]
+    state: dict[str, Any]
+    subscriptions: list[str] = field(default_factory=list)  # Event subscriptions
     update_strategy: UIUpdateStrategy = UIUpdateStrategy.IMMEDIATE
     last_updated: Optional[datetime] = None
     version: int = 0
@@ -68,10 +70,11 @@ class UIComponent:
 @dataclass
 class UIStateSnapshot:
     """Snapshot of UI state for rollback"""
+
     snapshot_id: str
     component_id: str
-    state: Dict[str, Any]
-    props: Dict[str, Any]
+    state: dict[str, Any]
+    props: dict[str, Any]
     timestamp: datetime = field(default_factory=datetime.utcnow)
     reason: str = ""
 
@@ -79,18 +82,21 @@ class UIStateSnapshot:
 @dataclass
 class UIUpdateBatch:
     """Batch of UI updates"""
+
     batch_id: str
-    updates: List[Dict[str, Any]]
+    updates: list[dict[str, Any]]
     created_at: datetime = field(default_factory=datetime.utcnow)
     priority: int = 1
 
-    def add_update(self, component_id: str, changes: Dict[str, Any]):
+    def add_update(self, component_id: str, changes: dict[str, Any]):
         """Add an update to the batch"""
-        self.updates.append({
-            "component_id": component_id,
-            "changes": changes,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        self.updates.append(
+            {
+                "component_id": component_id,
+                "changes": changes,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
 
 class UISyncAgent(BaseIntegrationAgent):
@@ -110,26 +116,26 @@ class UISyncAgent(BaseIntegrationAgent):
                 - Handling state conflicts and rollbacks
                 - Optimizing UI update performance
                 - Coordinating multi-component updates
-                """
+                """,
             )
         super().__init__(config)
 
         # Component registry
-        self.components: Dict[str, UIComponent] = {}
-        self.component_hierarchy: Dict[str, List[str]] = {}  # Parent -> children
+        self.components: dict[str, UIComponent] = {}
+        self.component_hierarchy: dict[str, list[str]] = {}  # Parent -> children
 
         # State management
-        self.state_snapshots: Dict[str, UIStateSnapshot] = {}
-        self.pending_updates: Dict[str, UIUpdateBatch] = {}
+        self.state_snapshots: dict[str, UIStateSnapshot] = {}
+        self.pending_updates: dict[str, UIUpdateBatch] = {}
 
         # Update optimization
         self.update_queue: asyncio.Queue = asyncio.Queue()
-        self.debounce_timers: Dict[str, asyncio.Task] = {}
-        self.throttle_windows: Dict[str, datetime] = {}
+        self.debounce_timers: dict[str, asyncio.Task] = {}
+        self.throttle_windows: dict[str, datetime] = {}
 
         # Performance metrics
-        self.update_latency: List[float] = []
-        self.batch_sizes: List[int] = []
+        self.update_latency: list[float] = []
+        self.batch_sizes: list[int] = []
         self.rollback_count: int = 0
 
     async def register_component(
@@ -137,10 +143,10 @@ class UISyncAgent(BaseIntegrationAgent):
         component_id: str,
         component_type: ComponentType,
         path: str,
-        initial_state: Optional[Dict[str, Any]] = None,
-        initial_props: Optional[Dict[str, Any]] = None,
-        subscriptions: Optional[List[str]] = None,
-        update_strategy: UIUpdateStrategy = UIUpdateStrategy.IMMEDIATE
+        initial_state: Optional[dict[str, Any]] = None,
+        initial_props: Optional[dict[str, Any]] = None,
+        subscriptions: Optional[list[str]] = None,
+        update_strategy: UIUpdateStrategy = UIUpdateStrategy.IMMEDIATE,
     ) -> TaskResult:
         """Register a UI component for synchronization"""
         try:
@@ -151,7 +157,7 @@ class UISyncAgent(BaseIntegrationAgent):
                 state=initial_state or {},
                 props=initial_props or {},
                 subscriptions=subscriptions or [],
-                update_strategy=update_strategy
+                update_strategy=update_strategy,
             )
 
             self.components[component_id] = component
@@ -165,38 +171,29 @@ class UISyncAgent(BaseIntegrationAgent):
             logger.info(f"Registered component: {component_id} ({component_type.value})")
 
             # Emit registration event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"component_registered_{component_id}",
-                event_type="ui_component_registered",
-                source_platform=IntegrationPlatform.FRONTEND,
-                payload={
-                    "component_id": component_id,
-                    "type": component_type.value,
-                    "path": path
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"component_registered_{component_id}",
+                    event_type="ui_component_registered",
+                    source_platform=IntegrationPlatform.FRONTEND,
+                    payload={
+                        "component_id": component_id,
+                        "type": component_type.value,
+                        "path": path,
+                    },
+                )
+            )
 
             return TaskResult(
-                success=True,
-                output={
-                    "component_id": component_id,
-                    "registered": True
-                }
+                success=True, output={"component_id": component_id, "registered": True}
             )
 
         except Exception as e:
             logger.error(f"Error registering component: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def update_component_state(
-        self,
-        component_id: str,
-        state_changes: Dict[str, Any],
-        optimistic: bool = False
+        self, component_id: str, state_changes: dict[str, Any], optimistic: bool = False
     ) -> TaskResult:
         """Update component state"""
         try:
@@ -204,7 +201,7 @@ class UISyncAgent(BaseIntegrationAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error=f"Component not found: {component_id}"
+                    error=f"Component not found: {component_id}",
                 )
 
             component = self.components[component_id]
@@ -216,7 +213,7 @@ class UISyncAgent(BaseIntegrationAgent):
                     component_id=component_id,
                     state=component.state.copy(),
                     props=component.props.copy(),
-                    reason="optimistic_update"
+                    reason="optimistic_update",
                 )
                 self.state_snapshots[snapshot.snapshot_id] = snapshot
 
@@ -237,25 +234,17 @@ class UISyncAgent(BaseIntegrationAgent):
                 output={
                     "component_id": component_id,
                     "updated_fields": list(state_changes.keys()),
-                    "version": component.version
-                }
+                    "version": component.version,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error updating component state: {e}")
             if optimistic:
                 await self.rollback_component_state(component_id)
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def _apply_immediate_update(
-        self,
-        component: UIComponent,
-        state_changes: Dict[str, Any]
-    ):
+    async def _apply_immediate_update(self, component: UIComponent, state_changes: dict[str, Any]):
         """Apply immediate state update"""
         start_time = datetime.utcnow()
 
@@ -265,35 +254,30 @@ class UISyncAgent(BaseIntegrationAgent):
         component.last_updated = datetime.utcnow()
 
         # Emit update event
-        await self.emit_event(IntegrationEvent(
-            event_id=f"state_update_{component.component_id}_{component.version}",
-            event_type="component_state_updated",
-            source_platform=IntegrationPlatform.FRONTEND,
-            target_platform=IntegrationPlatform.FRONTEND,
-            payload={
-                "component_id": component.component_id,
-                "changes": state_changes,
-                "version": component.version
-            }
-        ))
+        await self.emit_event(
+            IntegrationEvent(
+                event_id=f"state_update_{component.component_id}_{component.version}",
+                event_type="component_state_updated",
+                source_platform=IntegrationPlatform.FRONTEND,
+                target_platform=IntegrationPlatform.FRONTEND,
+                payload={
+                    "component_id": component.component_id,
+                    "changes": state_changes,
+                    "version": component.version,
+                },
+            )
+        )
 
         # Track latency
         latency = (datetime.utcnow() - start_time).total_seconds() * 1000
         self.update_latency.append(latency)
 
-    async def _batch_update(
-        self,
-        component: UIComponent,
-        state_changes: Dict[str, Any]
-    ):
+    async def _batch_update(self, component: UIComponent, state_changes: dict[str, Any]):
         """Batch multiple updates together"""
         batch_key = f"batch_{component.component_id}"
 
         if batch_key not in self.pending_updates:
-            self.pending_updates[batch_key] = UIUpdateBatch(
-                batch_id=batch_key,
-                updates=[]
-            )
+            self.pending_updates[batch_key] = UIUpdateBatch(batch_id=batch_key, updates=[])
 
         batch = self.pending_updates[batch_key]
         batch.add_update(component.component_id, state_changes)
@@ -321,11 +305,7 @@ class UISyncAgent(BaseIntegrationAgent):
                 component = self.components[component_id]
                 await self._apply_immediate_update(component, merged_changes)
 
-    async def _debounce_update(
-        self,
-        component: UIComponent,
-        state_changes: Dict[str, Any]
-    ):
+    async def _debounce_update(self, component: UIComponent, state_changes: dict[str, Any]):
         """Debounce rapid updates"""
         debounce_key = f"debounce_{component.component_id}"
 
@@ -338,20 +318,12 @@ class UISyncAgent(BaseIntegrationAgent):
             self._debounced_apply(component, state_changes)
         )
 
-    async def _debounced_apply(
-        self,
-        component: UIComponent,
-        state_changes: Dict[str, Any]
-    ):
+    async def _debounced_apply(self, component: UIComponent, state_changes: dict[str, Any]):
         """Apply update after debounce delay"""
         await asyncio.sleep(0.3)  # 300ms debounce delay
         await self._apply_immediate_update(component, state_changes)
 
-    async def _throttle_update(
-        self,
-        component: UIComponent,
-        state_changes: Dict[str, Any]
-    ):
+    async def _throttle_update(self, component: UIComponent, state_changes: dict[str, Any]):
         """Throttle update frequency"""
         throttle_key = f"throttle_{component.component_id}"
         now = datetime.utcnow()
@@ -364,11 +336,7 @@ class UISyncAgent(BaseIntegrationAgent):
         self.throttle_windows[throttle_key] = now
         await self._apply_immediate_update(component, state_changes)
 
-    async def _apply_optimistic_update(
-        self,
-        component: UIComponent,
-        state_changes: Dict[str, Any]
-    ):
+    async def _apply_optimistic_update(self, component: UIComponent, state_changes: dict[str, Any]):
         """Apply optimistic update with potential rollback"""
         # Apply update immediately
         await self._apply_immediate_update(component, state_changes)
@@ -380,9 +348,7 @@ class UISyncAgent(BaseIntegrationAgent):
             await self.rollback_component_state(component.component_id)
 
     async def rollback_component_state(
-        self,
-        component_id: str,
-        snapshot_id: Optional[str] = None
+        self, component_id: str, snapshot_id: Optional[str] = None
     ) -> TaskResult:
         """Rollback component to previous state"""
         try:
@@ -390,7 +356,7 @@ class UISyncAgent(BaseIntegrationAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error=f"Component not found: {component_id}"
+                    error=f"Component not found: {component_id}",
                 )
 
             component = self.components[component_id]
@@ -401,8 +367,7 @@ class UISyncAgent(BaseIntegrationAgent):
             else:
                 # Find most recent snapshot for component
                 snapshots = [
-                    s for s in self.state_snapshots.values()
-                    if s.component_id == component_id
+                    s for s in self.state_snapshots.values() if s.component_id == component_id
                 ]
                 snapshot = max(snapshots, key=lambda s: s.timestamp) if snapshots else None
 
@@ -410,7 +375,7 @@ class UISyncAgent(BaseIntegrationAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error="No snapshot available for rollback"
+                    error="No snapshot available for rollback",
                 )
 
             # Restore state
@@ -422,16 +387,18 @@ class UISyncAgent(BaseIntegrationAgent):
             self.rollback_count += 1
 
             # Emit rollback event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"rollback_{component_id}_{component.version}",
-                event_type="component_state_rollback",
-                source_platform=IntegrationPlatform.FRONTEND,
-                payload={
-                    "component_id": component_id,
-                    "snapshot_id": snapshot.snapshot_id,
-                    "reason": snapshot.reason
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"rollback_{component_id}_{component.version}",
+                    event_type="component_state_rollback",
+                    source_platform=IntegrationPlatform.FRONTEND,
+                    payload={
+                        "component_id": component_id,
+                        "snapshot_id": snapshot.snapshot_id,
+                        "reason": snapshot.reason,
+                    },
+                )
+            )
 
             logger.info(f"Rolled back component {component_id} to snapshot {snapshot.snapshot_id}")
 
@@ -440,23 +407,15 @@ class UISyncAgent(BaseIntegrationAgent):
                 output={
                     "component_id": component_id,
                     "rolled_back": True,
-                    "snapshot_id": snapshot.snapshot_id
-                }
+                    "snapshot_id": snapshot.snapshot_id,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error rolling back component state: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def sync_component_tree(
-        self,
-        root_path: str = "/",
-        recursive: bool = True
-    ) -> TaskResult:
+    async def sync_component_tree(self, root_path: str = "/", recursive: bool = True) -> TaskResult:
         """Synchronize an entire component tree"""
         try:
             synced_components = []
@@ -472,17 +431,13 @@ class UISyncAgent(BaseIntegrationAgent):
                         # Sync with backend
                         backend_state = await self._fetch_backend_state(component_id)
                         if backend_state:
-                            await self.update_component_state(
-                                component_id,
-                                backend_state
-                            )
+                            await self.update_component_state(component_id, backend_state)
                             synced_components.append(component_id)
 
                         # Recursively sync children if needed
                         if recursive:
                             child_result = await self.sync_component_tree(
-                                root_path=component.path,
-                                recursive=True
+                                root_path=component.path, recursive=True
                             )
                             if child_result.success:
                                 synced_components.extend(
@@ -493,32 +448,21 @@ class UISyncAgent(BaseIntegrationAgent):
                 success=True,
                 output={
                     "synced_components": synced_components,
-                    "count": len(synced_components)
-                }
+                    "count": len(synced_components),
+                },
             )
 
         except Exception as e:
             logger.error(f"Error syncing component tree: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
-    async def _fetch_backend_state(
-        self,
-        component_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def _fetch_backend_state(self, component_id: str) -> Optional[dict[str, Any]]:
         """Fetch state from backend (placeholder)"""
         # This would connect to actual backend
         # For now, return None to indicate no changes
         return None
 
-    async def handle_backend_event(
-        self,
-        event_type: str,
-        payload: Dict[str, Any]
-    ) -> TaskResult:
+    async def handle_backend_event(self, event_type: str, payload: dict[str, Any]) -> TaskResult:
         """Handle events from backend and update UI accordingly"""
         try:
             affected_components = []
@@ -531,9 +475,7 @@ class UISyncAgent(BaseIntegrationAgent):
 
                     if state_changes:
                         await self.update_component_state(
-                            component_id,
-                            state_changes,
-                            optimistic=False
+                            component_id, state_changes, optimistic=False
                         )
                         affected_components.append(component_id)
 
@@ -542,24 +484,17 @@ class UISyncAgent(BaseIntegrationAgent):
                 output={
                     "event_type": event_type,
                     "affected_components": affected_components,
-                    "count": len(affected_components)
-                }
+                    "count": len(affected_components),
+                },
             )
 
         except Exception as e:
             logger.error(f"Error handling backend event: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     def _derive_state_changes(
-        self,
-        event_type: str,
-        payload: Dict[str, Any],
-        component: UIComponent
-    ) -> Dict[str, Any]:
+        self, event_type: str, payload: dict[str, Any], component: UIComponent
+    ) -> dict[str, Any]:
         """Derive state changes from backend event"""
         state_changes = {}
 
@@ -586,8 +521,12 @@ class UISyncAgent(BaseIntegrationAgent):
     async def optimize_performance(self) -> TaskResult:
         """Analyze and optimize UI sync performance"""
         try:
-            avg_latency = sum(self.update_latency) / len(self.update_latency) if self.update_latency else 0
-            avg_batch_size = sum(self.batch_sizes) / len(self.batch_sizes) if self.batch_sizes else 0
+            avg_latency = (
+                sum(self.update_latency) / len(self.update_latency) if self.update_latency else 0
+            )
+            avg_batch_size = (
+                sum(self.batch_sizes) / len(self.batch_sizes) if self.batch_sizes else 0
+            )
 
             recommendations = []
 
@@ -603,13 +542,16 @@ class UISyncAgent(BaseIntegrationAgent):
 
             # Check for inefficient update patterns
             frequently_updated = [
-                cid for cid, comp in self.components.items()
-                if comp.last_updated and
-                (datetime.utcnow() - comp.last_updated).total_seconds() < 60
+                cid
+                for cid, comp in self.components.items()
+                if comp.last_updated
+                and (datetime.utcnow() - comp.last_updated).total_seconds() < 60
             ]
 
             if len(frequently_updated) > 5:
-                recommendations.append(f"Consider throttling updates for {len(frequently_updated)} frequently updated components")
+                recommendations.append(
+                    f"Consider throttling updates for {len(frequently_updated)} frequently updated components"
+                )
 
             return TaskResult(
                 success=True,
@@ -618,28 +560,21 @@ class UISyncAgent(BaseIntegrationAgent):
                         "average_latency_ms": avg_latency,
                         "average_batch_size": avg_batch_size,
                         "rollback_count": self.rollback_count,
-                        "total_components": len(self.components)
+                        "total_components": len(self.components),
                     },
-                    "recommendations": recommendations
-                }
+                    "recommendations": recommendations,
+                },
             )
 
         except Exception as e:
             logger.error(f"Error optimizing performance: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def _process_integration_event(self, event: IntegrationEvent):
         """Process integration events for UI sync"""
         if event.event_type == "backend_state_change":
             # Update UI based on backend changes
-            await self.handle_backend_event(
-                event_type="data_updated",
-                payload=event.payload
-            )
+            await self.handle_backend_event(event_type="data_updated", payload=event.payload)
 
         elif event.event_type == "component_registration_request":
             # Register new component
@@ -650,7 +585,7 @@ class UISyncAgent(BaseIntegrationAgent):
                 initial_state=event.payload.get("initial_state"),
                 initial_props=event.payload.get("initial_props"),
                 subscriptions=event.payload.get("subscriptions", []),
-                update_strategy=UIUpdateStrategy[event.payload.get("update_strategy", "IMMEDIATE")]
+                update_strategy=UIUpdateStrategy[event.payload.get("update_strategy", "IMMEDIATE")],
             )
 
         elif event.event_type == "sync_request":
@@ -664,10 +599,10 @@ class UISyncAgent(BaseIntegrationAgent):
             else:
                 await self.sync_component_tree(
                     root_path=event.payload.get("path", "/"),
-                    recursive=event.payload.get("recursive", True)
+                    recursive=event.payload.get("recursive", True),
                 )
 
-    async def execute_task(self, task: str, context: Optional[Dict[str, Any]] = None) -> TaskResult:
+    async def execute_task(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
         """Execute UI sync specific tasks"""
         if task == "register_component":
             return await self.register_component(**context)
@@ -675,22 +610,21 @@ class UISyncAgent(BaseIntegrationAgent):
             return await self.update_component_state(
                 component_id=context["component_id"],
                 state_changes=context["changes"],
-                optimistic=context.get("optimistic", False)
+                optimistic=context.get("optimistic", False),
             )
         elif task == "rollback":
             return await self.rollback_component_state(
                 component_id=context["component_id"],
-                snapshot_id=context.get("snapshot_id")
+                snapshot_id=context.get("snapshot_id"),
             )
         elif task == "sync_tree":
             return await self.sync_component_tree(
                 root_path=context.get("path", "/"),
-                recursive=context.get("recursive", True)
+                recursive=context.get("recursive", True),
             )
         elif task == "handle_event":
             return await self.handle_backend_event(
-                event_type=context["event_type"],
-                payload=context["payload"]
+                event_type=context["event_type"], payload=context["payload"]
             )
         elif task == "optimize":
             return await self.optimize_performance()

@@ -4,24 +4,23 @@ Unit Tests for Backup Validator
 Tests validation levels, prerequisites checks, and validation workflows.
 """
 
-import pytest
-import asyncio
-import json
-import os
-from pathlib import Path
-from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
-import tempfile
-import shutil
 import hashlib
-
+import json
+import shutil
 import sys
+import tempfile
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from validation.backup_validator import (
     BackupValidator,
     ValidationLevel,
-    ValidationResult
+    ValidationResult,
 )
 
 
@@ -38,19 +37,14 @@ def mock_validator_config(temp_validation_dir):
     """Create mock validator configuration."""
     return {
         "version": "1.0.0",
-        "storage": {
-            "local": {
-                "path": str(temp_validation_dir),
-                "max_size_gb": 500
-            }
-        }
+        "storage": {"local": {"path": str(temp_validation_dir), "max_size_gb": 500}},
     }
 
 
 @pytest.fixture
 def backup_validator(mock_validator_config, temp_validation_dir):
     """Create BackupValidator instance."""
-    with patch.object(BackupValidator, '_load_config', return_value=mock_validator_config):
+    with patch.object(BackupValidator, "_load_config", return_value=mock_validator_config):
         validator = BackupValidator()
         validator.backup_root = temp_validation_dir
         validator.metadata_dir = temp_validation_dir / "metadata"
@@ -88,7 +82,7 @@ class TestValidationResultSaving:
             duration_seconds=5.5,
             checks_passed=["checksum", "metadata"],
             checks_failed=[],
-            warnings=[]
+            warnings=[],
         )
 
         backup_validator._save_validation_result(result)
@@ -98,7 +92,7 @@ class TestValidationResultSaving:
         assert log_file.exists()
 
         # Verify content
-        with open(log_file, 'r') as f:
+        with open(log_file) as f:
             saved_data = json.load(f)
 
         assert saved_data["backup_id"] == "test_backup"
@@ -113,7 +107,7 @@ class TestPrerequisitesValidation:
     async def test_validate_prerequisites_success(self, backup_validator, temp_validation_dir):
         """Test successful prerequisites validation."""
         # Mock sufficient disk space
-        with patch('shutil.disk_usage') as mock_disk:
+        with patch("shutil.disk_usage") as mock_disk:
             mock_disk.return_value = Mock(free=500 * 1024**3)  # 500 GB free
 
             # Mock pg_dump available
@@ -121,9 +115,9 @@ class TestPrerequisitesValidation:
             mock_process.returncode = 0
             mock_process.communicate = AsyncMock(return_value=(b"pg_dump version", b""))
 
-            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
-                with patch('validation.backup_validator.settings') as mock_settings:
-                    mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+            with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+                with patch("validation.backup_validator.settings") as mock_settings:
+                    mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
                     results = await backup_validator.validate_prerequisites()
 
@@ -135,7 +129,7 @@ class TestPrerequisitesValidation:
     async def test_validate_prerequisites_low_disk_space(self, backup_validator):
         """Test prerequisites validation with low disk space."""
         # Mock insufficient disk space (10 GB free, 500 GB max)
-        with patch('shutil.disk_usage') as mock_disk:
+        with patch("shutil.disk_usage") as mock_disk:
             mock_disk.return_value = Mock(free=10 * 1024**3)
 
             results = await backup_validator.validate_prerequisites()
@@ -147,10 +141,10 @@ class TestPrerequisitesValidation:
     @pytest.mark.asyncio
     async def test_validate_prerequisites_pg_dump_missing(self, backup_validator):
         """Test prerequisites validation when pg_dump not found."""
-        with patch('shutil.disk_usage') as mock_disk:
+        with patch("shutil.disk_usage") as mock_disk:
             mock_disk.return_value = Mock(free=500 * 1024**3)
 
-            with patch('asyncio.create_subprocess_exec', side_effect=FileNotFoundError):
+            with patch("asyncio.create_subprocess_exec", side_effect=FileNotFoundError):
                 results = await backup_validator.validate_prerequisites()
 
         assert results["all_passed"] is False
@@ -159,7 +153,7 @@ class TestPrerequisitesValidation:
     @pytest.mark.asyncio
     async def test_validate_prerequisites_database_unreachable(self, backup_validator):
         """Test prerequisites validation when database is unreachable."""
-        with patch('shutil.disk_usage') as mock_disk:
+        with patch("shutil.disk_usage") as mock_disk:
             mock_disk.return_value = Mock(free=500 * 1024**3)
 
             # Mock pg_dump available
@@ -173,15 +167,15 @@ class TestPrerequisitesValidation:
             mock_pg_isready.communicate = AsyncMock(return_value=(b"", b"could not connect"))
 
             async def mock_subprocess(*args, **kwargs):
-                if 'pg_dump' in args[0]:
+                if "pg_dump" in args[0]:
                     return mock_pg_dump
-                elif 'pg_isready' in args[0]:
+                elif "pg_isready" in args[0]:
                     return mock_pg_isready
                 return mock_pg_dump
 
-            with patch('asyncio.create_subprocess_exec', side_effect=mock_subprocess):
-                with patch('validation.backup_validator.settings') as mock_settings:
-                    mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+            with patch("asyncio.create_subprocess_exec", side_effect=mock_subprocess):
+                with patch("validation.backup_validator.settings") as mock_settings:
+                    mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
                     results = await backup_validator.validate_prerequisites()
 
@@ -208,20 +202,19 @@ class TestBasicValidation:
             "backup_type": "full",
             "file_path": str(backup_file),
             "checksum": checksum,
-            "status": "completed"
+            "status": "completed",
         }
 
         metadata_file = backup_validator.metadata_dir / "backup_test.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f)
 
         # Mock restore_manager validation
-        with patch('validation.backup_validator.restore_manager') as mock_restore:
+        with patch("validation.backup_validator.restore_manager") as mock_restore:
             mock_restore._validate_backup.return_value = True
 
             result = await backup_validator.validate_backup(
-                backup_id="backup_test",
-                validation_level=ValidationLevel.BASIC.value
+                backup_id="backup_test", validation_level=ValidationLevel.BASIC.value
             )
 
         assert result.success is True
@@ -239,19 +232,18 @@ class TestBasicValidation:
             "backup_id": "backup_test",
             "file_path": str(backup_file),
             "checksum": "wrong_checksum",
-            "status": "completed"
+            "status": "completed",
         }
 
         metadata_file = backup_validator.metadata_dir / "backup_test.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f)
 
-        with patch('validation.backup_validator.restore_manager') as mock_restore:
+        with patch("validation.backup_validator.restore_manager") as mock_restore:
             mock_restore._validate_backup.return_value = False
 
             result = await backup_validator.validate_backup(
-                backup_id="backup_test",
-                validation_level=ValidationLevel.BASIC.value
+                backup_id="backup_test", validation_level=ValidationLevel.BASIC.value
             )
 
         assert result.success is False
@@ -278,19 +270,18 @@ class TestStandardValidation:
             "file_path": str(backup_file),
             "file_size": len(test_content),
             "checksum": checksum,
-            "status": "completed"
+            "status": "completed",
         }
 
         metadata_file = backup_validator.metadata_dir / "backup_test.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f)
 
-        with patch('validation.backup_validator.restore_manager') as mock_restore:
+        with patch("validation.backup_validator.restore_manager") as mock_restore:
             mock_restore._validate_backup.return_value = True
 
             result = await backup_validator.validate_backup(
-                backup_id="backup_test",
-                validation_level=ValidationLevel.STANDARD.value
+                backup_id="backup_test", validation_level=ValidationLevel.STANDARD.value
             )
 
         assert result.success is True
@@ -298,7 +289,9 @@ class TestStandardValidation:
         assert "metadata_complete" in result.checks_passed
 
     @pytest.mark.asyncio
-    async def test_validate_backup_standard_warns_missing_fields(self, backup_validator, temp_validation_dir):
+    async def test_validate_backup_standard_warns_missing_fields(
+        self, backup_validator, temp_validation_dir
+    ):
         """Test standard validation warns about missing metadata fields."""
         backup_file = temp_validation_dir / "backup_test.dump"
         backup_file.write_bytes(b"Test")
@@ -308,19 +301,18 @@ class TestStandardValidation:
             "backup_id": "backup_test",
             "file_path": str(backup_file),
             "checksum": hashlib.sha256(b"Test").hexdigest(),
-            "status": "completed"
+            "status": "completed",
         }
 
         metadata_file = backup_validator.metadata_dir / "backup_test.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f)
 
-        with patch('validation.backup_validator.restore_manager') as mock_restore:
+        with patch("validation.backup_validator.restore_manager") as mock_restore:
             mock_restore._validate_backup.return_value = True
 
             result = await backup_validator.validate_backup(
-                backup_id="backup_test",
-                validation_level=ValidationLevel.STANDARD.value
+                backup_id="backup_test", validation_level=ValidationLevel.STANDARD.value
             )
 
         assert result.success is True
@@ -332,7 +324,9 @@ class TestComprehensiveValidation:
     """Test COMPREHENSIVE validation level."""
 
     @pytest.mark.asyncio
-    async def test_validate_backup_comprehensive_includes_test_restore(self, backup_validator, temp_validation_dir):
+    async def test_validate_backup_comprehensive_includes_test_restore(
+        self, backup_validator, temp_validation_dir
+    ):
         """Test comprehensive validation includes test restore."""
         backup_file = temp_validation_dir / "backup_test.dump"
         backup_file.write_bytes(b"Test")
@@ -344,19 +338,19 @@ class TestComprehensiveValidation:
             "file_path": str(backup_file),
             "file_size": 4,
             "checksum": hashlib.sha256(b"Test").hexdigest(),
-            "status": "completed"
+            "status": "completed",
         }
 
         metadata_file = backup_validator.metadata_dir / "backup_test.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f)
 
-        with patch('validation.backup_validator.restore_manager') as mock_restore:
+        with patch("validation.backup_validator.restore_manager") as mock_restore:
             mock_restore._validate_backup.return_value = True
 
             result = await backup_validator.validate_backup(
                 backup_id="backup_test",
-                validation_level=ValidationLevel.COMPREHENSIVE.value
+                validation_level=ValidationLevel.COMPREHENSIVE.value,
             )
 
         assert result.success is True
@@ -372,8 +366,7 @@ class TestValidationErrors:
     async def test_validate_backup_metadata_not_found(self, backup_validator):
         """Test validation fails when metadata doesn't exist."""
         result = await backup_validator.validate_backup(
-            backup_id="nonexistent_backup",
-            validation_level=ValidationLevel.BASIC.value
+            backup_id="nonexistent_backup", validation_level=ValidationLevel.BASIC.value
         )
 
         assert result.success is False
@@ -387,16 +380,15 @@ class TestValidationErrors:
             "backup_id": "backup_test",
             "file_path": "/nonexistent/backup.dump",
             "checksum": "abc123",
-            "status": "completed"
+            "status": "completed",
         }
 
         metadata_file = backup_validator.metadata_dir / "backup_test.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(metadata, f)
 
         result = await backup_validator.validate_backup(
-            backup_id="backup_test",
-            validation_level=ValidationLevel.BASIC.value
+            backup_id="backup_test", validation_level=ValidationLevel.BASIC.value
         )
 
         assert result.success is False

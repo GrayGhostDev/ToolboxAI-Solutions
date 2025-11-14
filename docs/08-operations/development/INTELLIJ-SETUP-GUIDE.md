@@ -164,7 +164,7 @@ pnpm install
 pnpm run test:e2e:install
 ```
 
-### Step 4: Verify pnpm Configuration
+### Step 4: Verify pnp[.dev-logs](../../../.dev-logs)m Configuration
 
 **CRITICAL:** This project uses **pnpm**, NOT npm!
 

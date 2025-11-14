@@ -14,21 +14,20 @@ efficiently, and with proper error handling and recovery mechanisms.
 """
 
 import asyncio
-import json
 import logging
 import os
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Callable, Union, Tuple
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from collections import deque, defaultdict
 import traceback
+import uuid
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import Any, Callable, Optional
+
 import aiohttp
-import aiofiles
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ class Action:
     # Core identification
     action_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     type: str = ""
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
 
     # Execution control
     priority: float = 0.5  # 0-1 priority level
@@ -88,11 +87,11 @@ class Action:
     # Scheduling
     scheduled_time: Optional[datetime] = None
     deadline: Optional[datetime] = None
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
 
     # Safety and validation
     safety_checks_required: bool = True
-    validation_rules: List[str] = field(default_factory=list)
+    validation_rules: list[str] = field(default_factory=list)
     rollback_enabled: bool = True
 
     # Educational context
@@ -101,7 +100,7 @@ class Action:
     learning_objective: Optional[str] = None
 
     # Metadata
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
 
     # Status tracking
@@ -138,7 +137,7 @@ class Action:
         else:
             return Priority.LOW
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
         result["status"] = self.status.value
@@ -160,7 +159,7 @@ class ActionResult:
     # Core result data
     action_id: str
     success: bool
-    result_data: Dict[str, Any] = field(default_factory=dict)
+    result_data: dict[str, Any] = field(default_factory=dict)
 
     # Execution details
     execution_time: float = 0.0
@@ -173,18 +172,18 @@ class ActionResult:
     stack_trace: Optional[str] = None
 
     # Educational outcomes
-    learning_impact: Optional[Dict[str, Any]] = None
-    student_response: Optional[Dict[str, Any]] = None
+    learning_impact: Optional[dict[str, Any]] = None
+    student_response: Optional[dict[str, Any]] = None
 
     # Rollback information
-    rollback_data: Optional[Dict[str, Any]] = None
+    rollback_data: Optional[dict[str, Any]] = None
     rollback_possible: bool = True
 
     # Metadata
     timestamp: datetime = field(default_factory=datetime.now)
-    executor_info: Dict[str, Any] = field(default_factory=dict)
+    executor_info: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
         result["final_status"] = self.final_status.value
@@ -217,7 +216,7 @@ class SafetyChecker:
             r"spawn\s*\(",  # Uncontrolled spawning
         ]
 
-    async def check_action_safety(self, action: Action) -> Tuple[bool, List[str]]:
+    async def check_action_safety(self, action: Action) -> tuple[bool, list[str]]:
         """
         Perform comprehensive safety checks on an action.
 
@@ -253,7 +252,7 @@ class SafetyChecker:
         allowed_types = [at.value for at in ActionType]
         return action_type in allowed_types
 
-    async def _check_parameter_safety(self, action: Action) -> List[str]:
+    async def _check_parameter_safety(self, action: Action) -> list[str]:
         """Check safety of action parameters"""
         issues = []
 
@@ -285,7 +284,7 @@ class SafetyChecker:
 
         return issues
 
-    def _check_resource_limits(self, action: Action) -> List[str]:
+    def _check_resource_limits(self, action: Action) -> list[str]:
         """Check if action respects resource limits"""
         issues = []
 
@@ -299,7 +298,7 @@ class SafetyChecker:
 
         return issues
 
-    def _check_timing_safety(self, action: Action) -> List[str]:
+    def _check_timing_safety(self, action: Action) -> list[str]:
         """Check timing-related safety constraints"""
         issues = []
 
@@ -316,7 +315,7 @@ class SafetyChecker:
 
         return issues
 
-    async def _check_educational_appropriateness(self, action: Action) -> List[str]:
+    async def _check_educational_appropriateness(self, action: Action) -> list[str]:
         """Check if action is educationally appropriate"""
         issues = []
 
@@ -349,7 +348,7 @@ class ActionValidator:
             ActionType.FEEDBACK_DELIVERY: self._validate_feedback_delivery,
         }
 
-    async def validate_action(self, action: Action) -> Tuple[bool, List[str]]:
+    async def validate_action(self, action: Action) -> tuple[bool, list[str]]:
         """Validate action against type-specific rules"""
 
         issues = []
@@ -374,7 +373,7 @@ class ActionValidator:
 
         return len(issues) == 0, issues
 
-    async def _validate_roblox_command(self, action: Action) -> List[str]:
+    async def _validate_roblox_command(self, action: Action) -> list[str]:
         """Validate Roblox-specific action"""
         issues = []
 
@@ -392,7 +391,7 @@ class ActionValidator:
 
         return issues
 
-    async def _validate_content_generation(self, action: Action) -> List[str]:
+    async def _validate_content_generation(self, action: Action) -> list[str]:
         """Validate content generation action"""
         issues = []
 
@@ -409,7 +408,7 @@ class ActionValidator:
 
         return issues
 
-    async def _validate_quiz_creation(self, action: Action) -> List[str]:
+    async def _validate_quiz_creation(self, action: Action) -> list[str]:
         """Validate quiz creation action"""
         issues = []
 
@@ -426,7 +425,7 @@ class ActionValidator:
 
         return issues
 
-    async def _validate_lms_interaction(self, action: Action) -> List[str]:
+    async def _validate_lms_interaction(self, action: Action) -> list[str]:
         """Validate LMS interaction action"""
         issues = []
 
@@ -443,7 +442,7 @@ class ActionValidator:
 
         return issues
 
-    async def _validate_feedback_delivery(self, action: Action) -> List[str]:
+    async def _validate_feedback_delivery(self, action: Action) -> list[str]:
         """Validate feedback delivery action"""
         issues = []
 
@@ -471,7 +470,11 @@ class ActionExecutor:
     """
 
     def __init__(
-        self, max_parallel: int = 5, timeout: float = 30.0, retry_attempts: int = 3, safety_checks: bool = True
+        self,
+        max_parallel: int = 5,
+        timeout: float = 30.0,
+        retry_attempts: int = 3,
+        safety_checks: bool = True,
     ):
         """
         Initialize ActionExecutor.
@@ -490,7 +493,7 @@ class ActionExecutor:
         # Execution infrastructure
         self.executor = ThreadPoolExecutor(max_workers=max_parallel)
         self.action_queue = asyncio.PriorityQueue()
-        self.running_actions: Dict[str, asyncio.Task] = {}
+        self.running_actions: dict[str, asyncio.Task] = {}
         self.completed_actions: deque = deque(maxlen=1000)
 
         # Safety and validation
@@ -509,7 +512,7 @@ class ActionExecutor:
         }
 
         # Action handlers
-        self.action_handlers: Dict[str, Callable] = {
+        self.action_handlers: dict[str, Callable] = {
             ActionType.ROBLOX_COMMAND.value: self._execute_roblox_command,
             ActionType.CONTENT_GENERATION.value: self._execute_content_generation,
             ActionType.QUIZ_CREATION.value: self._execute_quiz_creation,
@@ -521,7 +524,7 @@ class ActionExecutor:
         }
 
         # Rollback handlers
-        self.rollback_handlers: Dict[str, Callable] = {
+        self.rollback_handlers: dict[str, Callable] = {
             ActionType.ROBLOX_COMMAND.value: self._rollback_roblox_command,
             ActionType.CONTENT_GENERATION.value: self._rollback_content_generation,
             ActionType.DIFFICULTY_ADJUSTMENT.value: self._rollback_difficulty_adjustment,
@@ -530,14 +533,17 @@ class ActionExecutor:
         # External service connections
         self.roblox_api_url = "http://localhost:5001"
         self.content_api_url = "http://localhost:8008"
-        self.lms_apis = {"schoology": "https://api.schoology.com", "canvas": "https://canvas.instructure.com/api/v1"}
+        self.lms_apis = {
+            "schoology": "https://api.schoology.com",
+            "canvas": "https://canvas.instructure.com/api/v1",
+        }
 
         # Processing control
         self.processing_active = False
         self.processor_task: Optional[asyncio.Task] = None
 
         # Persistence - use environment-aware path for Docker compatibility
-        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        data_dir = os.environ.get("DATA_DIR", "/tmp" if os.path.exists("/tmp") else "data")
         self.persistence_path = Path(data_dir) / "action_executor"
         try:
             self.persistence_path.mkdir(parents=True, exist_ok=True)
@@ -674,7 +680,6 @@ class ActionExecutor:
         """Rollback a completed action if possible"""
 
         # Find the action in completed actions
-        target_action = None
         target_result = None
 
         for result in self.completed_actions:
@@ -726,7 +731,9 @@ class ActionExecutor:
 
                 # Get next action from queue (with timeout to allow checking processing_active)
                 try:
-                    priority, queued_time, action = await asyncio.wait_for(self.action_queue.get(), timeout=1.0)
+                    priority, queued_time, action = await asyncio.wait_for(
+                        self.action_queue.get(), timeout=1.0
+                    )
                 except asyncio.TimeoutError:
                     continue
 
@@ -740,7 +747,9 @@ class ActionExecutor:
                 self.running_actions[action.action_id] = task
 
                 # Set up task completion callback
-                task.add_done_callback(lambda t, aid=action.action_id: self.running_actions.pop(aid, None))
+                task.add_done_callback(
+                    lambda t, aid=action.action_id: self.running_actions.pop(aid, None)
+                )
 
             except Exception as e:
                 logger.error(f"Error in action processing loop: {e}")
@@ -818,7 +827,7 @@ class ActionExecutor:
 
     # Action Handlers
 
-    async def _execute_roblox_command(self, action: Action) -> Dict[str, Any]:
+    async def _execute_roblox_command(self, action: Action) -> dict[str, Any]:
         """Execute Roblox command via API"""
 
         command = action.parameters.get("command", "")
@@ -826,18 +835,29 @@ class ActionExecutor:
         game_id = action.parameters.get("game_id")
 
         # Prepare API request
-        payload = {"command": command, "target_player": target_player, "game_id": game_id, "metadata": action.metadata}
+        payload = {
+            "command": command,
+            "target_player": target_player,
+            "game_id": game_id,
+            "metadata": action.metadata,
+        }
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{self.roblox_api_url}/execute_command", json=payload) as response:
+            async with session.post(
+                f"{self.roblox_api_url}/execute_command", json=payload
+            ) as response:
                 if response.status == 200:
                     result = await response.json()
-                    return {"roblox_response": result, "command_executed": command, "execution_successful": True}
+                    return {
+                        "roblox_response": result,
+                        "command_executed": command,
+                        "execution_successful": True,
+                    }
                 else:
                     error_text = await response.text()
                     raise Exception(f"Roblox API error ({response.status}): {error_text}")
 
-    async def _execute_content_generation(self, action: Action) -> Dict[str, Any]:
+    async def _execute_content_generation(self, action: Action) -> dict[str, Any]:
         """Execute content generation via AI API"""
 
         content_type = action.parameters.get("content_type", "lesson")
@@ -853,20 +873,32 @@ class ActionExecutor:
             "additional_params": {
                 k: v
                 for k, v in action.parameters.items()
-                if k not in ["content_type", "subject_area", "grade_level", "learning_objectives"]
+                if k
+                not in [
+                    "content_type",
+                    "subject_area",
+                    "grade_level",
+                    "learning_objectives",
+                ]
             },
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{self.content_api_url}/generate_content", json=payload) as response:
+            async with session.post(
+                f"{self.content_api_url}/generate_content", json=payload
+            ) as response:
                 if response.status == 200:
                     result = await response.json()
-                    return {"generated_content": result, "content_type": content_type, "generation_successful": True}
+                    return {
+                        "generated_content": result,
+                        "content_type": content_type,
+                        "generation_successful": True,
+                    }
                 else:
                     error_text = await response.text()
                     raise Exception(f"Content API error ({response.status}): {error_text}")
 
-    async def _execute_quiz_creation(self, action: Action) -> Dict[str, Any]:
+    async def _execute_quiz_creation(self, action: Action) -> dict[str, Any]:
         """Execute quiz creation"""
 
         subject_area = action.parameters.get("subject_area", "general")
@@ -884,7 +916,9 @@ class ActionExecutor:
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{self.content_api_url}/generate_content", json=payload) as response:
+            async with session.post(
+                f"{self.content_api_url}/generate_content", json=payload
+            ) as response:
                 if response.status == 200:
                     result = await response.json()
                     return {
@@ -897,12 +931,12 @@ class ActionExecutor:
                     error_text = await response.text()
                     raise Exception(f"Quiz creation error ({response.status}): {error_text}")
 
-    async def _execute_lms_interaction(self, action: Action) -> Dict[str, Any]:
+    async def _execute_lms_interaction(self, action: Action) -> dict[str, Any]:
         """Execute LMS interaction"""
 
         platform = action.parameters.get("lms_platform", "").lower()
         operation = action.parameters.get("operation", "")
-        data = action.parameters.get("data", {})
+        action.parameters.get("data", {})
 
         if platform not in self.lms_apis:
             raise Exception(f"Unsupported LMS platform: {platform}")
@@ -910,7 +944,7 @@ class ActionExecutor:
         # This is a simplified implementation
         # In a real system, you'd need proper authentication and API handling
 
-        api_url = self.lms_apis[platform]
+        self.lms_apis[platform]
 
         # Mock implementation for demonstration
         await asyncio.sleep(1)  # Simulate API call
@@ -922,7 +956,7 @@ class ActionExecutor:
             "response_data": {"status": "completed", "platform": platform},
         }
 
-    async def _execute_feedback_delivery(self, action: Action) -> Dict[str, Any]:
+    async def _execute_feedback_delivery(self, action: Action) -> dict[str, Any]:
         """Execute feedback delivery"""
 
         feedback_content = action.parameters.get("feedback_content", "")
@@ -937,7 +971,9 @@ class ActionExecutor:
             }
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(f"{self.roblox_api_url}/execute_command", json=payload) as response:
+                async with session.post(
+                    f"{self.roblox_api_url}/execute_command", json=payload
+                ) as response:
                     if response.status != 200:
                         raise Exception(f"Failed to deliver feedback via Roblox: {response.status}")
 
@@ -948,12 +984,12 @@ class ActionExecutor:
             "content_length": len(feedback_content),
         }
 
-    async def _execute_difficulty_adjustment(self, action: Action) -> Dict[str, Any]:
+    async def _execute_difficulty_adjustment(self, action: Action) -> dict[str, Any]:
         """Execute difficulty adjustment"""
 
         adjustment = action.parameters.get("difficulty_adjustment", 0)
-        current_performance = action.parameters.get("current_performance", 0.5)
-        target_success_rate = action.parameters.get("target_success_rate", 0.7)
+        action.parameters.get("current_performance", 0.5)
+        action.parameters.get("target_success_rate", 0.7)
 
         # Store previous state for potential rollback
         rollback_data = {
@@ -973,11 +1009,11 @@ class ActionExecutor:
             "rollback_data": rollback_data,
         }
 
-    async def _execute_hint_provision(self, action: Action) -> Dict[str, Any]:
+    async def _execute_hint_provision(self, action: Action) -> dict[str, Any]:
         """Execute hint provision"""
 
         hint_level = action.parameters.get("hint_level", 1)
-        context_specific = action.parameters.get("context_specific", True)
+        action.parameters.get("context_specific", True)
         student_id = action.student_id
 
         # Generate contextual hint (mock implementation)
@@ -1006,15 +1042,16 @@ class ActionExecutor:
             "hint_provided": True,
             "hint_level": hint_level,
             "hint_text": hint_text,
-            "delivery_successful": delivery_result.get("feedback_delivered", False) if student_id else True,
+            "delivery_successful": (
+                delivery_result.get("feedback_delivered", False) if student_id else True
+            ),
         }
 
-    async def _execute_assessment(self, action: Action) -> Dict[str, Any]:
+    async def _execute_assessment(self, action: Action) -> dict[str, Any]:
         """Execute assessment action"""
 
         assessment_type = action.parameters.get("assessment_type", "performance_check")
         student_id = action.student_id
-        subject_area = action.subject_area
 
         # Mock assessment implementation
         await asyncio.sleep(1)  # Simulate assessment processing
@@ -1023,7 +1060,10 @@ class ActionExecutor:
         assessment_results = {
             "overall_score": 0.75,  # Mock score
             "subject_scores": {"knowledge": 0.8, "application": 0.7, "analysis": 0.6},
-            "recommendations": ["Continue practicing problem-solving", "Focus on analytical thinking"],
+            "recommendations": [
+                "Continue practicing problem-solving",
+                "Focus on analytical thinking",
+            ],
             "next_steps": ["Advanced challenges", "Peer collaboration"],
         }
 
@@ -1063,7 +1103,10 @@ class ActionExecutor:
         # Execute reverse adjustment
         reverse_action = Action(
             type=ActionType.DIFFICULTY_ADJUSTMENT.value,
-            parameters={"difficulty_adjustment": -previous_adjustment, "rollback_operation": True},
+            parameters={
+                "difficulty_adjustment": -previous_adjustment,
+                "rollback_operation": True,
+            },
         )
 
         reverse_result = await self._execute_difficulty_adjustment(reverse_action)
@@ -1082,9 +1125,11 @@ class ActionExecutor:
 
         # Update average execution time
         total_actions = self.execution_stats["total_actions"]
-        self.execution_stats["average_execution_time"] = self.execution_stats["total_execution_time"] / total_actions
+        self.execution_stats["average_execution_time"] = (
+            self.execution_stats["total_execution_time"] / total_actions
+        )
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of ActionExecutor"""
 
         return {

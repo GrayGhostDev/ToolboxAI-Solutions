@@ -278,7 +278,13 @@ class TestQuizAgent:
         quiz_agent.llm.ainvoke = AsyncMock(
             return_value=AIMessage(
                 content=json.dumps(
-                    {"quiz": {"title": "Adaptive Quiz", "questions": [], "difficulty": "adaptive"}},
+                    {
+                        "quiz": {
+                            "title": "Adaptive Quiz",
+                            "questions": [],
+                            "difficulty": "adaptive",
+                        }
+                    },
                     default=make_json_serializable,
                 )
             )
@@ -378,11 +384,11 @@ class TestScriptAgent:
         -- Educational Game Script
         local Players = game:GetService("Players")
         local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        
+
         local function onPlayerJoined(player)
             print("Welcome " .. player.Name)
         end
-        
+
         Players.PlayerAdded:Connect(onPlayerJoined)
         """
             )
@@ -601,12 +607,16 @@ class TestSupervisorAgent:
             "execute",
             new=AsyncMock(
                 return_value=TaskResult(
-                    success=True, output={"aggregated": "results"}, error=None, execution_time=2.0
+                    success=True,
+                    output={"aggregated": "results"},
+                    error=None,
+                    execution_time=2.0,
                 )
             ),
         ):
             result = await supervisor_agent.delegate_complex_task(
-                "Generate complete educational experience", {"subject": "Math", "grade_level": 7}
+                "Generate complete educational experience",
+                {"subject": "Math", "grade_level": 7},
             )
 
             assert result.success == True
@@ -948,7 +958,8 @@ class TestTestingAgent:
         # Mock coverage JSON data
         with patch("pathlib.Path.exists", return_value=True):
             with patch(
-                "builtins.open", mock_open(read_data='{"totals": {"percent_covered": 85.5}}')
+                "builtins.open",
+                mock_open(read_data='{"totals": {"percent_covered": 85.5}}'),
             ):
                 task = "coverage report"
                 context = {}
@@ -1054,7 +1065,7 @@ class TestTestingAgent:
     def test_cleanup_test_artifacts(self, testing_agent):
         """Test cleaning up test artifacts"""
         with patch("pathlib.Path.exists", return_value=True):
-            with patch("pathlib.Path.unlink") as mock_unlink:
+            with patch("pathlib.Path.unlink"):
                 with patch("pathlib.Path.is_file", return_value=True):
                     result = testing_agent.cleanup_test_artifacts()
 

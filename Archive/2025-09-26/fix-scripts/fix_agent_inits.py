@@ -12,7 +12,7 @@ agent_files = [
 
 for file_path, agent_name in agent_files:
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
 
         # Pattern to find the old super().__init__ call with named parameters

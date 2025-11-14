@@ -53,10 +53,14 @@ class TestPusherPerformance:
             start = time.perf_counter()
 
             try:
-                result = pusher_client.trigger(
+                pusher_client.trigger(
                     "test-channel",
                     "latency-test",
-                    {"timestamp": start, "sequence": i, "test_data": "x" * 100},  # Small payload
+                    {
+                        "timestamp": start,
+                        "sequence": i,
+                        "test_data": "x" * 100,
+                    },  # Small payload
                 )
 
                 latency = (time.perf_counter() - start) * 1000  # Convert to ms
@@ -99,7 +103,7 @@ class TestPusherPerformance:
                 # Simulate subscribing to a private channel
                 channel_name = f"private-test-{conn_id}"
 
-                result = pusher_client.trigger(
+                pusher_client.trigger(
                     channel_name,
                     "connection-test",
                     {"connection_id": conn_id, "timestamp": time.time()},
@@ -173,7 +177,10 @@ class TestPusherPerformance:
                     # Authenticate for private channel
                     response = await client.post(
                         "/api/v1/pusher/auth",
-                        json={"channel": f"private-perf-test-{i}", "socket_id": f"test.{i}"},
+                        json={
+                            "channel": f"private-perf-test-{i}",
+                            "socket_id": f"test.{i}",
+                        },
                     )
 
                     subscription_time = (time.perf_counter() - start) * 1000
@@ -288,7 +295,11 @@ class TestPusherPerformance:
                     pusher_client.trigger(
                         channel_name,
                         "scale-test",
-                        {"channel_id": channel_id, "message_id": msg_id, "timestamp": time.time()},
+                        {
+                            "channel_id": channel_id,
+                            "message_id": msg_id,
+                            "timestamp": time.time(),
+                        },
                     )
 
                     times.append((time.perf_counter() - start) * 1000)
@@ -327,7 +338,11 @@ class TestPusherPerformance:
         error_scenarios = [
             {"channel": "", "event": "test", "data": {}},  # Empty channel
             {"channel": "test", "event": "", "data": {}},  # Empty event
-            {"channel": "test", "event": "test", "data": "x" * 100000},  # Oversized data
+            {
+                "channel": "test",
+                "event": "test",
+                "data": "x" * 100000,
+            },  # Oversized data
         ]
 
         recovery_times = []
@@ -392,7 +407,7 @@ class TestPusherPerformance:
         for i in range(10):
             start = time.perf_counter()
 
-            client = Pusher(
+            Pusher(
                 app_id=f"test_app_{i}",
                 key=f"test_key_{i}",
                 secret=f"test_secret_{i}",

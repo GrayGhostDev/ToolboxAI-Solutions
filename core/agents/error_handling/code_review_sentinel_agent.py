@@ -5,20 +5,20 @@ Monitors code quality and performs automated code reviews
 for error prevention and quality assurance.
 """
 
-import asyncio
 import logging
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from core.agents.base_agent import AgentConfig, BaseAgent, TaskResult
 
 logger = logging.getLogger(__name__)
 
 
 class ReviewSeverity(Enum):
     """Severity levels for code review findings"""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -29,6 +29,7 @@ class ReviewSeverity(Enum):
 @dataclass
 class ReviewFinding:
     """Represents a code review finding"""
+
     severity: ReviewSeverity
     file_path: str
     line_number: Optional[int]
@@ -59,7 +60,7 @@ class CodeReviewSentinelAgent(BaseAgent):
                 name="CodeReviewSentinel",
                 description="Automated code review and quality monitoring",
                 capabilities=["code_review", "security_scan", "quality_check"],
-                max_concurrent_tasks=3
+                max_concurrent_tasks=3,
             )
 
         super().__init__(config)
@@ -67,11 +68,11 @@ class CodeReviewSentinelAgent(BaseAgent):
         self.review_patterns = self._load_review_patterns()
         self.security_patterns = self._load_security_patterns()
         self.quality_metrics = {}
-        self.findings: List[ReviewFinding] = []
+        self.findings: list[ReviewFinding] = []
 
         logger.info(f"Code Review Sentinel Agent initialized: {self.config.name}")
 
-    def _load_review_patterns(self) -> Dict[str, Any]:
+    def _load_review_patterns(self) -> dict[str, Any]:
         """Load code review patterns and rules"""
         return {
             "error_handling": {
@@ -80,7 +81,7 @@ class CodeReviewSentinelAgent(BaseAgent):
                     r"except\s+Exception\s*:",  # Too broad exception
                     r"pass\s*$",  # Empty except block
                 ],
-                "severity": ReviewSeverity.MEDIUM
+                "severity": ReviewSeverity.MEDIUM,
             },
             "security": {
                 "patterns": [
@@ -89,18 +90,18 @@ class CodeReviewSentinelAgent(BaseAgent):
                     r"pickle\.loads",  # Unsafe deserialization
                     r"os\.system\(",  # Command injection risk
                 ],
-                "severity": ReviewSeverity.HIGH
+                "severity": ReviewSeverity.HIGH,
             },
             "performance": {
                 "patterns": [
                     r"for.*in.*range.*len\(",  # Inefficient iteration
                     r"time\.sleep\(",  # Blocking sleep in async context
                 ],
-                "severity": ReviewSeverity.LOW
-            }
+                "severity": ReviewSeverity.LOW,
+            },
         }
 
-    def _load_security_patterns(self) -> Dict[str, Any]:
+    def _load_security_patterns(self) -> dict[str, Any]:
         """Load security-specific patterns"""
         return {
             "credentials": {
@@ -109,18 +110,18 @@ class CodeReviewSentinelAgent(BaseAgent):
                     r"api_key\s*=\s*['\"].*['\"]",
                     r"secret\s*=\s*['\"].*['\"]",
                 ],
-                "severity": ReviewSeverity.CRITICAL
+                "severity": ReviewSeverity.CRITICAL,
             },
             "injection": {
                 "patterns": [
                     r"f['\"].*SELECT.*FROM.*{",  # SQL injection risk
                     r"\.format\(.*SELECT.*FROM",  # SQL injection risk
                 ],
-                "severity": ReviewSeverity.HIGH
-            }
+                "severity": ReviewSeverity.HIGH,
+            },
         }
 
-    async def execute_task(self, task: Dict[str, Any]) -> TaskResult:
+    async def execute_task(self, task: dict[str, Any]) -> TaskResult:
         """
         Execute a code review task.
 
@@ -169,25 +170,21 @@ class CodeReviewSentinelAgent(BaseAgent):
                         "low": sum(1 for f in findings if f.severity == ReviewSeverity.LOW),
                         "info": sum(1 for f in findings if f.severity == ReviewSeverity.INFO),
                     },
-                    "status": status
+                    "status": status,
                 },
                 message=message,
                 metadata={
                     "file_path": file_path,
                     "review_type": review_type,
-                    "timestamp": datetime.now().isoformat()
-                }
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
         except Exception as e:
             logger.error(f"Code review failed: {e}")
-            return TaskResult(
-                success=False,
-                error=str(e),
-                message=f"Review failed: {str(e)}"
-            )
+            return TaskResult(success=False, error=str(e), message=f"Review failed: {str(e)}")
 
-    async def _perform_review(self, file_path: str, review_type: str) -> List[ReviewFinding]:
+    async def _perform_review(self, file_path: str, review_type: str) -> list[ReviewFinding]:
         """
         Perform the actual code review.
 
@@ -205,29 +202,33 @@ class CodeReviewSentinelAgent(BaseAgent):
 
         if review_type in ["full", "security"]:
             # Check for security issues
-            findings.append(ReviewFinding(
-                severity=ReviewSeverity.INFO,
-                file_path=file_path,
-                line_number=None,
-                category="security",
-                message="Security review completed",
-                suggestion="No critical security issues detected"
-            ))
+            findings.append(
+                ReviewFinding(
+                    severity=ReviewSeverity.INFO,
+                    file_path=file_path,
+                    line_number=None,
+                    category="security",
+                    message="Security review completed",
+                    suggestion="No critical security issues detected",
+                )
+            )
 
         if review_type in ["full", "performance"]:
             # Check for performance issues
-            findings.append(ReviewFinding(
-                severity=ReviewSeverity.INFO,
-                file_path=file_path,
-                line_number=None,
-                category="performance",
-                message="Performance review completed",
-                suggestion="Code follows performance best practices"
-            ))
+            findings.append(
+                ReviewFinding(
+                    severity=ReviewSeverity.INFO,
+                    file_path=file_path,
+                    line_number=None,
+                    category="performance",
+                    message="Performance review completed",
+                    suggestion="Code follows performance best practices",
+                )
+            )
 
         return findings
 
-    def _finding_to_dict(self, finding: ReviewFinding) -> Dict[str, Any]:
+    def _finding_to_dict(self, finding: ReviewFinding) -> dict[str, Any]:
         """Convert a ReviewFinding to a dictionary"""
         return {
             "severity": finding.severity.value,
@@ -237,10 +238,10 @@ class CodeReviewSentinelAgent(BaseAgent):
             "message": finding.message,
             "suggestion": finding.suggestion,
             "code_snippet": finding.code_snippet,
-            "timestamp": finding.timestamp.isoformat()
+            "timestamp": finding.timestamp.isoformat(),
         }
 
-    async def analyze_project(self, project_path: str) -> Dict[str, Any]:
+    async def analyze_project(self, project_path: str) -> dict[str, Any]:
         """
         Analyze an entire project for code quality issues.
 
@@ -261,11 +262,11 @@ class CodeReviewSentinelAgent(BaseAgent):
             "quality_score": 95.0,
             "recommendations": [
                 "Consider adding more unit tests",
-                "Update documentation for new features"
-            ]
+                "Update documentation for new features",
+            ],
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform health check for the agent.
 
@@ -278,7 +279,7 @@ class CodeReviewSentinelAgent(BaseAgent):
             "state": self.state.value,
             "patterns_loaded": len(self.review_patterns) + len(self.security_patterns),
             "findings_count": len(self.findings),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def cleanup(self) -> None:

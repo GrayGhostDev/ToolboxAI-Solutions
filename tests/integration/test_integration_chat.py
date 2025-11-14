@@ -83,7 +83,7 @@ async def test_full_chat_flow():
         try:
             from tests.fixtures.pusher_mocks import MockPusherService
 
-            ws_url = f"pusher://app_key@cluster/{conversation['id']}"
+            f"pusher://app_key@cluster/{conversation['id']}"
 
             try:
                 async with async_mock_pusher_context() as pusher:
@@ -160,7 +160,10 @@ async def test_full_chat_flow():
                     "subject": "Mathematics",
                     "grade_level": 5,
                     "difficulty": "intermediate",
-                    "learning_objectives": ["Understanding fractions", "Adding fractions"],
+                    "learning_objectives": [
+                        "Understanding fractions",
+                        "Adding fractions",
+                    ],
                     "description": "Interactive lesson about fractions",
                     "ai_assistance": True,
                 },
@@ -182,7 +185,8 @@ async def test_full_chat_flow():
         print("\n6. Listing conversations...")
         try:
             response = await client.get(
-                f"{base_url}/api/v1/ai-chat/conversations", headers={"Authorization": "Bearer test"}
+                f"{base_url}/api/v1/ai-chat/conversations",
+                headers={"Authorization": "Bearer test"},
             )
             if response.status_code == 200:
                 conversations = response.json()

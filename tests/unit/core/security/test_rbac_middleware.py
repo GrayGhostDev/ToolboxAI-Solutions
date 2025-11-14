@@ -31,7 +31,12 @@ def mock_app():
 @pytest.fixture
 def mock_admin_user_dict():
     """Create mock admin user dictionary."""
-    return {"id": 1, "email": "admin@example.com", "role": Role.ADMIN, "organization_id": uuid4()}
+    return {
+        "id": 1,
+        "email": "admin@example.com",
+        "role": Role.ADMIN,
+        "organization_id": uuid4(),
+    }
 
 
 @pytest.fixture
@@ -377,7 +382,7 @@ class TestAuditLogging:
         mock_request.state.user = mock_admin_user_dict
 
         with patch("apps.backend.core.security.rbac_middleware.logger") as mock_logger:
-            response = await middleware.dispatch(mock_request, mock_call_next)
+            await middleware.dispatch(mock_request, mock_call_next)
 
             # Check that INFO log was called for successful access
             assert mock_logger.log.called
@@ -396,7 +401,7 @@ class TestAuditLogging:
         mock_request.state.user = mock_student_user_dict
 
         with patch("apps.backend.core.security.rbac_middleware.logger") as mock_logger:
-            response = await middleware.dispatch(mock_request, mock_call_next)
+            await middleware.dispatch(mock_request, mock_call_next)
 
             # Check that WARNING log was called for denied access
             assert mock_logger.log.called
@@ -412,7 +417,7 @@ class TestAuditLogging:
         mock_request.state.user = mock_admin_user_dict
 
         with patch("apps.backend.core.security.rbac_middleware.logger") as mock_logger:
-            response = await middleware.dispatch(mock_request, mock_call_next)
+            await middleware.dispatch(mock_request, mock_call_next)
 
             # Check that duration is logged
             log_calls = mock_logger.log.call_args_list
@@ -456,12 +461,11 @@ class TestRequestStateModification:
             state_attrs[name] = value
             object.__setattr__(obj, name, value)
 
-        original_setattr = mock_request.state.__setattr__
         mock_request.state.__setattr__ = lambda name, value: track_setattr(
             mock_request.state, name, value
         )
 
-        response = await middleware.dispatch(mock_request, mock_call_next)
+        await middleware.dispatch(mock_request, mock_call_next)
 
         # Check that granted_permission was set
         assert "granted_permission" in state_attrs or hasattr(
@@ -480,7 +484,7 @@ class TestOrganizationScopingMiddleware:
         middleware = OrganizationScopingMiddleware(mock_app)
         mock_request.state.user = mock_teacher_user_dict
 
-        response = await middleware.dispatch(mock_request, mock_call_next)
+        await middleware.dispatch(mock_request, mock_call_next)
 
         assert hasattr(mock_request.state, "organization_id")
         assert mock_request.state.organization_id == mock_teacher_user_dict["organization_id"]
@@ -559,7 +563,7 @@ class TestPerformance:
         mock_request.state.user = mock_admin_user_dict
 
         start = time.time()
-        response = await middleware.dispatch(mock_request, mock_call_next)
+        await middleware.dispatch(mock_request, mock_call_next)
         duration = time.time() - start
 
         # Middleware should add minimal overhead (<10ms)
@@ -573,7 +577,7 @@ class TestPerformance:
         mock_request.state.user = None
 
         start = time.time()
-        response = await middleware.dispatch(mock_request, mock_call_next)
+        await middleware.dispatch(mock_request, mock_call_next)
         duration = time.time() - start
 
         # Bypass should be very fast (<1ms)

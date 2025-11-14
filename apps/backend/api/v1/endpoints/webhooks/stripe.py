@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Any
 
 import stripe
-from database.db import get_async_db
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -20,6 +19,7 @@ from apps.backend.services.dunning_service import DunningService
 from apps.backend.services.email.queue import EmailPriority, email_queue
 from apps.backend.services.invoice_generator import InvoiceGenerator
 from apps.backend.services.stripe_service import StripeService
+from database.db import get_async_db
 from database.models.payment import Customer, Invoice, Payment, Subscription
 
 logger = logging.getLogger(__name__)
@@ -146,7 +146,8 @@ async def handle_stripe_webhook(
         # Return 200 to acknowledge receipt even if processing failed
         # This prevents Stripe from retrying
         return JSONResponse(
-            content={"status": "error", "message": str(e)}, status_code=status.HTTP_200_OK
+            content={"status": "error", "message": str(e)},
+            status_code=status.HTTP_200_OK,
         )
 
 

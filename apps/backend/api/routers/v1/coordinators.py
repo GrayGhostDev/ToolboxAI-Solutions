@@ -9,11 +9,11 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from apps.backend.models.user import User
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from apps.backend.core.auth import get_current_user
+from apps.backend.models.user import User
 from apps.backend.services.coordinator_service import (
     CoordinatorService,
     get_coordinator,
@@ -24,7 +24,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/api/v1/coordinators",
     tags=["coordinators", "agents"],
-    responses={404: {"description": "Not found"}, 500: {"description": "Internal server error"}},
+    responses={
+        404: {"description": "Not found"},
+        500: {"description": "Internal server error"},
+    },
 )
 
 
@@ -36,7 +39,8 @@ class ContentGenerationRequest(BaseModel):
     grade_level: int = Field(..., ge=1, le=12, description="Grade level (1-12)")
     learning_objectives: list[str] = Field(..., description="List of learning objectives")
     environment_type: str = Field(
-        default="interactive_classroom", description="Type of Roblox environment to generate"
+        default="interactive_classroom",
+        description="Type of Roblox environment to generate",
     )
     include_quiz: bool = Field(default=True, description="Include quiz generation")
     include_gamification: bool = Field(default=True, description="Include gamification elements")
@@ -167,7 +171,9 @@ async def generate_educational_content(
 
 
 @router.get("/health", response_model=HealthResponse)
-async def get_coordinator_health(coordinator: CoordinatorService = Depends(get_coordinator)):
+async def get_coordinator_health(
+    coordinator: CoordinatorService = Depends(get_coordinator),
+):
     """
     Get health status of the coordinator system.
 
@@ -266,7 +272,15 @@ async def execute_agent_task(
     """
     try:
         # Validate agent exists
-        valid_agents = ["content", "quiz", "terrain", "script", "review", "testing", "supervisor"]
+        valid_agents = [
+            "content",
+            "quiz",
+            "terrain",
+            "script",
+            "review",
+            "testing",
+            "supervisor",
+        ]
 
         if agent_name.lower() not in valid_agents:
             raise HTTPException(status_code=404, detail=f"Agent '{agent_name}' not found")

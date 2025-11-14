@@ -7,15 +7,13 @@ to provide unified educational content generation and management.
 
 import asyncio
 import logging
-from typing import Dict, Any, List, Optional, Set
-from datetime import datetime, timedelta
-import json
-from dataclasses import dataclass, asdict
-from collections import defaultdict
 import uuid
+from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +24,9 @@ class SystemHealth:
 
     status: str  # healthy, degraded, unhealthy
     timestamp: datetime
-    component_health: Dict[str, str]
+    component_health: dict[str, str]
     active_workflows: int
-    resource_utilization: Dict[str, float]
+    resource_utilization: dict[str, float]
     error_count: int
     last_error: Optional[str] = None
 
@@ -40,10 +38,10 @@ class ContentGenerationRequest:
     request_id: str
     subject: str
     grade_level: int
-    learning_objectives: List[str]
+    learning_objectives: list[str]
     environment_type: str
     include_quiz: bool
-    custom_parameters: Dict[str, Any]
+    custom_parameters: dict[str, Any]
     priority: int = 1
     timestamp: datetime = None
 
@@ -58,11 +56,11 @@ class ContentGenerationResult:
 
     request_id: str
     success: bool
-    content: Optional[Dict[str, Any]]
-    scripts: List[str]
-    quiz_data: Optional[Dict[str, Any]]
-    metrics: Dict[str, Any]
-    errors: List[str]
+    content: Optional[dict[str, Any]]
+    scripts: list[str]
+    quiz_data: Optional[dict[str, Any]]
+    metrics: dict[str, Any]
+    errors: list[str]
     generation_time: float
     timestamp: datetime = None
 
@@ -90,7 +88,7 @@ class MainCoordinator:
         resource_coordinator=None,
         sync_coordinator=None,
         error_coordinator=None,
-        config: Dict[str, Any] = None,
+        config: dict[str, Any] = None,
     ):
         self.workflow_coordinator = workflow_coordinator
         self.resource_coordinator = resource_coordinator
@@ -105,10 +103,10 @@ class MainCoordinator:
 
         # State management
         self.is_initialized = False
-        self.active_requests: Set[str] = set()
-        self.request_history: Dict[str, ContentGenerationResult] = {}
+        self.active_requests: set[str] = set()
+        self.request_history: dict[str, ContentGenerationResult] = {}
         self.system_metrics = defaultdict(float)
-        self.cache: Dict[str, Any] = {}
+        self.cache: dict[str, Any] = {}
 
         # Component connections
         self.agent_system = None
@@ -249,10 +247,10 @@ class MainCoordinator:
         self,
         subject: str,
         grade_level: int,
-        learning_objectives: List[str],
+        learning_objectives: list[str],
         environment_type: str = "classroom",
         include_quiz: bool = True,
-        custom_parameters: Dict[str, Any] = None,
+        custom_parameters: dict[str, Any] = None,
         priority: int = 1,
     ) -> ContentGenerationResult:
         """
@@ -288,9 +286,7 @@ class MainCoordinator:
         try:
             # Validate request capacity
             if len(self.active_requests) >= self.max_concurrent_requests:
-                raise HTTPException(
-                    status_code=429, detail="Too many concurrent requests"
-                )
+                raise HTTPException(status_code=429, detail="Too many concurrent requests")
 
             self.active_requests.add(request_id)
             logger.info(f"Starting content generation for request {request_id}")
@@ -406,8 +402,8 @@ class MainCoordinator:
         self,
         request: ContentGenerationRequest,
         workflow_id: Optional[str],
-        sparc_context: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        sparc_context: dict[str, Any],
+    ) -> dict[str, Any]:
         """Orchestrate the multi-agent content generation process"""
 
         # Phase 1: Content Planning (Agent System)
@@ -467,9 +463,7 @@ class MainCoordinator:
                 )
 
             # Execute all tasks in parallel
-            generation_results = await asyncio.gather(
-                *generation_tasks, return_exceptions=True
-            )
+            generation_results = await asyncio.gather(*generation_tasks, return_exceptions=True)
         else:
             generation_results = []
 
@@ -496,10 +490,10 @@ class MainCoordinator:
 
     async def _assemble_final_content(
         self,
-        content_plan: Dict[str, Any],
-        generation_results: List[Any],
+        content_plan: dict[str, Any],
+        generation_results: list[Any],
         request: ContentGenerationRequest,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Assemble final content from all generation phases"""
 
         content = {
@@ -546,7 +540,7 @@ class MainCoordinator:
 
         return content
 
-    def _calculate_complexity_score(self, content: Dict[str, Any]) -> float:
+    def _calculate_complexity_score(self, content: dict[str, Any]) -> float:
         """Calculate content complexity score (0-100)"""
         score = 0
 
@@ -558,9 +552,7 @@ class MainCoordinator:
             score += 20
 
         # Script complexity
-        total_script_lines = sum(
-            len(script.split("\n")) for script in content["scripts"]
-        )
+        total_script_lines = sum(len(script.split("\n")) for script in content["scripts"])
         score += min(total_script_lines / 10, 30)
 
         # Quiz complexity
@@ -570,7 +562,7 @@ class MainCoordinator:
 
         return min(score, 100)
 
-    def _calculate_quality_score(self, content: Dict[str, Any]) -> float:
+    def _calculate_quality_score(self, content: dict[str, Any]) -> float:
         """Calculate content quality score (0-100)"""
         score = 100
 
@@ -581,10 +573,7 @@ class MainCoordinator:
         if not content["scripts"]:
             score -= 20
 
-        if (
-            content["metadata"]["environment_type"] != "text_only"
-            and not content["terrain_data"]
-        ):
+        if content["metadata"]["environment_type"] != "text_only" and not content["terrain_data"]:
             score -= 15
 
         # Bonus for comprehensive content
@@ -597,7 +586,9 @@ class MainCoordinator:
         self, request: ContentGenerationRequest
     ) -> Optional[ContentGenerationResult]:
         """Check cache for similar content requests"""
-        cache_key = f"{request.subject}_{request.grade_level}_{hash(tuple(request.learning_objectives))}"
+        cache_key = (
+            f"{request.subject}_{request.grade_level}_{hash(tuple(request.learning_objectives))}"
+        )
 
         if cache_key in self.cache:
             cached_data = self.cache[cache_key]
@@ -615,7 +606,9 @@ class MainCoordinator:
         self, request: ContentGenerationRequest, result: ContentGenerationResult
     ):
         """Cache successful generation result"""
-        cache_key = f"{request.subject}_{request.grade_level}_{hash(tuple(request.learning_objectives))}"
+        cache_key = (
+            f"{request.subject}_{request.grade_level}_{hash(tuple(request.learning_objectives))}"
+        )
 
         # Store result data (without request-specific fields)
         cache_data = asdict(result)
@@ -678,9 +671,7 @@ class MainCoordinator:
                         health = await system.get_health()
                         component_health[name] = health.get("status", "unknown")
                     else:
-                        component_health[name] = (
-                            "healthy"  # Assume healthy if no health check
-                        )
+                        component_health[name] = "healthy"  # Assume healthy if no health check
                 except Exception as e:
                     component_health[name] = "unhealthy"
                     error_count += 1
@@ -689,12 +680,8 @@ class MainCoordinator:
                 component_health[name] = "not_initialized"
 
         # Determine overall status
-        unhealthy_count = sum(
-            1 for status in component_health.values() if status == "unhealthy"
-        )
-        degraded_count = sum(
-            1 for status in component_health.values() if status == "degraded"
-        )
+        unhealthy_count = sum(1 for status in component_health.values() if status == "unhealthy")
+        degraded_count = sum(1 for status in component_health.values() if status == "degraded")
 
         if unhealthy_count > 0:
             overall_status = "unhealthy"

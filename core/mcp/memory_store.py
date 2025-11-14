@@ -11,13 +11,13 @@ FIXED VERSION: Addresses SonarQube issues
 import hashlib
 import json
 import logging
-import sqlite3
 import secrets  # More secure than random for cryptographic purposes
+import sqlite3
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -40,7 +40,7 @@ class Memory:
 
     id: str
     content: str
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     timestamp: datetime
     embedding: Optional[np.ndarray] = None
     access_count: int = 0
@@ -64,7 +64,7 @@ class MemoryStore:
         """Initialize SQLite database with proper resource management"""
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row  # Enable column access by name
-        
+
         # Use context manager for automatic transaction handling
         with self.conn:
             cursor = self.conn.cursor()
@@ -86,12 +86,8 @@ class MemoryStore:
                 )
 
                 # Create indexes for faster queries
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_timestamp ON memories(timestamp)"
-                )
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_importance ON memories(importance)"
-                )
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON memories(timestamp)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_importance ON memories(importance)")
                 cursor.execute(
                     "CREATE INDEX IF NOT EXISTS idx_access_count ON memories(access_count)"
                 )
@@ -116,7 +112,7 @@ class MemoryStore:
         hash_input = f"{content}:{timestamp}:{salt}"
         return hashlib.sha256(hash_input.encode()).hexdigest()[:16]
 
-    def _calculate_importance(self, content: str, metadata: Dict) -> float:
+    def _calculate_importance(self, content: str, metadata: dict) -> float:
         """Calculate importance score for memory"""
         # Base importance on content length and metadata
         base_score = min(len(content) / 1000, 1.0)
@@ -134,7 +130,7 @@ class MemoryStore:
     def store_memory(
         self,
         content: str,
-        metadata: Optional[Dict] = None,
+        metadata: Optional[dict] = None,
         embedding: Optional[np.ndarray] = None,
     ) -> str:
         """Store a new memory with proper resource management"""
@@ -152,7 +148,7 @@ class MemoryStore:
                 # Update existing memory
                 cursor.execute(
                     """
-                    UPDATE memories 
+                    UPDATE memories
                     SET access_count = access_count + 1,
                         last_accessed = ?
                     WHERE id = ?
@@ -163,15 +159,13 @@ class MemoryStore:
                 return memory_id
 
         # Insert new memory with transaction
-        embedding_bytes = (
-            json.dumps(embedding.tolist()) if embedding is not None else None
-        )
+        embedding_bytes = json.dumps(embedding.tolist()) if embedding is not None else None
 
         with self.conn:
             with self._get_cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO memories 
+                    INSERT INTO memories
                     (id, content, embedding, metadata, timestamp, last_accessed, importance)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -213,7 +207,7 @@ class MemoryStore:
             with self._get_cursor() as cursor:
                 cursor.execute(
                     """
-                    UPDATE memories 
+                    UPDATE memories
                     SET access_count = access_count + 1,
                         last_accessed = ?
                     WHERE id = ?
@@ -234,10 +228,14 @@ class MemoryStore:
             id=memory_id,
             content=row["content"],
             embedding=embedding,
-            metadata=json.loads(row["metadata"], memory_key="chat_history") if row["metadata"] else {},
+            metadata=(
+                json.loads(row["metadata"], memory_key="chat_history") if row["metadata"] else {}
+            ),
             timestamp=datetime.fromisoformat(row["timestamp"]),
             access_count=row["access_count"],
-            last_accessed=datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else None,
+            last_accessed=(
+                datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else None
+            ),
             importance=row["importance"],
         )
 
@@ -246,15 +244,15 @@ class MemoryStore:
         query: str = "",
         limit: int = 10,
         min_importance: float = MIN_IMPORTANCE_SCORE,
-        metadata_filter: Optional[Dict] = None,
-    ) -> List[Memory]:
+        metadata_filter: Optional[dict] = None,
+    ) -> list[Memory]:
         """Search memories with various filters"""
         # Validate and sanitize limit (SonarQube: S5131)
         limit = min(max(1, limit), MAX_QUERY_LIMIT)
 
         # Build query with proper parameterization
         base_query = """
-            SELECT id, content, embedding, metadata, timestamp, 
+            SELECT id, content, embedding, metadata, timestamp,
                    access_count, last_accessed, importance
             FROM memories
             WHERE importance >= ?
@@ -299,17 +297,25 @@ class MemoryStore:
                     id=row["id"],
                     content=row["content"],
                     embedding=embedding,
-                    metadata=json.loads(row["metadata"], memory_key="chat_history") if row["metadata"] else {},
+                    metadata=(
+                        json.loads(row["metadata"], memory_key="chat_history")
+                        if row["metadata"]
+                        else {}
+                    ),
                     timestamp=datetime.fromisoformat(row["timestamp"]),
                     access_count=row["access_count"],
-                    last_accessed=datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else None,
+                    last_accessed=(
+                        datetime.fromisoformat(row["last_accessed"])
+                        if row["last_accessed"]
+                        else None
+                    ),
                     importance=row["importance"],
                 )
             )
 
         return memories
 
-    def get_recent_memories(self, hours: int = 24, limit: int = 10) -> List[Memory]:
+    def get_recent_memories(self, hours: int = 24, limit: int = 10) -> list[Memory]:
         """Get recently accessed memories"""
         # Validate and sanitize limit
         limit = min(max(1, limit), MAX_QUERY_LIMIT)
@@ -345,17 +351,25 @@ class MemoryStore:
                     id=row["id"],
                     content=row["content"],
                     embedding=embedding,
-                    metadata=json.loads(row["metadata"], memory_key="chat_history") if row["metadata"] else {},
+                    metadata=(
+                        json.loads(row["metadata"], memory_key="chat_history")
+                        if row["metadata"]
+                        else {}
+                    ),
                     timestamp=datetime.fromisoformat(row["timestamp"]),
                     access_count=row["access_count"],
-                    last_accessed=datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else None,
+                    last_accessed=(
+                        datetime.fromisoformat(row["last_accessed"])
+                        if row["last_accessed"]
+                        else None
+                    ),
                     importance=row["importance"],
                 )
             )
 
         return memories
 
-    def get_important_memories(self, limit: int = 10) -> List[Memory]:
+    def get_important_memories(self, limit: int = 10) -> list[Memory]:
         """Get most important memories"""
         # Validate and sanitize limit
         limit = min(max(1, limit), MAX_QUERY_LIMIT)
@@ -389,10 +403,18 @@ class MemoryStore:
                     id=row["id"],
                     content=row["content"],
                     embedding=embedding,
-                    metadata=json.loads(row["metadata"], memory_key="chat_history") if row["metadata"] else {},
+                    metadata=(
+                        json.loads(row["metadata"], memory_key="chat_history")
+                        if row["metadata"]
+                        else {}
+                    ),
                     timestamp=datetime.fromisoformat(row["timestamp"]),
                     access_count=row["access_count"],
-                    last_accessed=datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else None,
+                    last_accessed=(
+                        datetime.fromisoformat(row["last_accessed"])
+                        if row["last_accessed"]
+                        else None
+                    ),
                     importance=row["importance"],
                 )
             )
@@ -424,7 +446,9 @@ class MemoryStore:
 
         for row in rows:
             # Calculate recency score
-            last_accessed = datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else now
+            last_accessed = (
+                datetime.fromisoformat(row["last_accessed"]) if row["last_accessed"] else now
+            )
             days_old = (now - last_accessed).days
             recency_score = 1.0 / (1.0 + days_old)
 
@@ -445,7 +469,7 @@ class MemoryStore:
             with self._get_cursor() as cursor:
                 all_ids = [s[0] for s in scores]
                 delete_ids = [id for id in all_ids if id not in keep_ids]
-                
+
                 # Delete in batches to avoid large queries
                 for i in range(0, len(delete_ids), PRUNE_BATCH_SIZE):
                     batch = delete_ids[i : i + PRUNE_BATCH_SIZE]
@@ -458,7 +482,7 @@ class MemoryStore:
         """Update importance score for a memory"""
         # Validate importance range
         importance = max(0.0, min(10.0, importance))
-        
+
         with self.conn:
             with self._get_cursor() as cursor:
                 cursor.execute(
@@ -476,7 +500,7 @@ class MemoryStore:
     def clear_old_memories(self, days: int = 30):
         """Clear memories older than specified days"""
         cutoff_date = (datetime.now() - timedelta(days=days)).isoformat()
-        
+
         with self.conn:
             with self._get_cursor() as cursor:
                 cursor.execute(
@@ -493,7 +517,7 @@ class MemoryStore:
         with self._get_cursor() as cursor:
             cursor.execute(
                 """
-                SELECT id, content, metadata, timestamp, access_count, 
+                SELECT id, content, metadata, timestamp, access_count,
                        last_accessed, importance
                 FROM memories
             """
@@ -502,22 +526,24 @@ class MemoryStore:
 
         memories = []
         for row in rows:
-            memories.append({
-                "id": row["id"],
-                "content": row["content"],
-                "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
-                "timestamp": row["timestamp"],
-                "access_count": row["access_count"],
-                "last_accessed": row["last_accessed"],
-                "importance": row["importance"],
-            })
+            memories.append(
+                {
+                    "id": row["id"],
+                    "content": row["content"],
+                    "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
+                    "timestamp": row["timestamp"],
+                    "access_count": row["access_count"],
+                    "last_accessed": row["last_accessed"],
+                    "importance": row["importance"],
+                }
+            )
 
         with open(filepath, "w") as f:
             json.dump(memories, f, indent=2)
 
     def import_memories(self, filepath: str):
         """Import memories from JSON file"""
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             memories = json.load(f)
 
         with self.conn:
@@ -525,7 +551,7 @@ class MemoryStore:
                 for memory in memories:
                     cursor.execute(
                         """
-                        INSERT OR REPLACE INTO memories 
+                        INSERT OR REPLACE INTO memories
                         (id, content, metadata, timestamp, access_count, last_accessed, importance)
                         VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
@@ -540,7 +566,7 @@ class MemoryStore:
                         ),
                     )
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get memory store statistics"""
         with self._get_cursor() as cursor:
             cursor.execute("SELECT COUNT(*) FROM memories")

@@ -312,7 +312,7 @@ class CORSMiddlewareWithLogging(CORSMiddleware):
         super().__init__(
             app,
             allow_origins=cors_config.allowed_origins,
-            allow_origin_regex=cors_config.allowed_origins_regex,
+            allow_origin_pattern=cors_config.allowed_origins_regex,
             allow_credentials=cors_config.allow_credentials,
             allow_methods=cors_config.allowed_methods,
             allow_headers=cors_config.allowed_headers,
@@ -383,7 +383,7 @@ def create_cors_middleware(
     cors_config = SecureCORSConfig(
         environment=environment,
         allowed_origins=allowed_origins,
-        allowed_origins_regex=allowed_origins_regex,
+        allowed_origins_pattern=allowed_origins_regex,
         **kwargs,
     )
 

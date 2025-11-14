@@ -162,7 +162,7 @@ class TestEnhancedSecurityMCP:
 
         # Many rapid requests should trigger rate limiting
         for _ in range(20):
-            result = await security_mcp.apply_advanced_rate_limiting(request)
+            await security_mcp.apply_advanced_rate_limiting(request)
 
         # Should eventually be rate limited
         final_result = await security_mcp.apply_advanced_rate_limiting(request)
@@ -497,7 +497,8 @@ class TestAIDrivenContextMCP:
 
         # Test pruning
         prune_result = await ai_context_mcp.intelligent_prune(
-            max_tokens=5000, preserve_educational=True  # Force pruning
+            max_tokens=5000,
+            preserve_educational=True,  # Force pruning
         )
 
         assert prune_result is not None
@@ -584,7 +585,10 @@ class TestAIDrivenContextMCP:
         # High educational value content
         high_value_context = {
             "content": "This lesson teaches students about photosynthesis",
-            "learning_objectives": ["Understand chlorophyll", "Learn about oxygen production"],
+            "learning_objectives": [
+                "Understand chlorophyll",
+                "Learn about oxygen production",
+            ],
             "grade_level": 7,
             "curriculum": "NGSS standards",
             "assessment": "quiz included",

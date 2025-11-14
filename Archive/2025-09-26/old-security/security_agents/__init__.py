@@ -13,10 +13,10 @@ Architecture:
 Security Score Target: Maintain 95%+ at all times
 """
 
-from .vulnerability_scanner import VulnerabilityScanner
 from .compliance_checker import ComplianceChecker
 from .secret_rotator import SecretRotator
 from .security_coordinator import SecurityCoordinator
+from .vulnerability_scanner import VulnerabilityScanner
 
 __version__ = "1.0.0"
 __author__ = "ToolBoxAI Security Team"

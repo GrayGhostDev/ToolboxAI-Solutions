@@ -5,17 +5,16 @@ Provides a comprehensive dashboard interface for monitoring the GPT-4.1 migratio
 progress, including real-time metrics, visualizations, and management controls.
 """
 
-import asyncio
 import json
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
-from .gpt4_migration_monitor import GPT4MigrationMonitor, MigrationPhase
-from .cost_tracker import CostTracker, CostCategory
-from .performance_analyzer import PerformanceAnalyzer, PerformanceMetric
-from .alert_manager import AlertManager, AlertSeverity, AlertCategory
+from .alert_manager import AlertManager, AlertSeverity
+from .cost_tracker import CostTracker
+from .gpt4_migration_monitor import GPT4MigrationMonitor
+from .performance_analyzer import PerformanceAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +22,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DashboardWidget:
     """Dashboard widget configuration"""
+
     id: str
     title: str
     type: str  # chart, metric, table, alert
     size: str  # small, medium, large
-    position: Tuple[int, int]  # row, column
-    config: Dict[str, Any] = field(default_factory=dict)
+    position: tuple[int, int]  # row, column
+    config: dict[str, Any] = field(default_factory=dict)
     data_source: str = ""
     refresh_interval: int = 30  # seconds
 
@@ -36,9 +36,10 @@ class DashboardWidget:
 @dataclass
 class DashboardLayout:
     """Dashboard layout configuration"""
+
     name: str
     description: str
-    widgets: List[DashboardWidget]
+    widgets: list[DashboardWidget]
     auto_refresh: bool = True
     refresh_interval: int = 30
 
@@ -62,7 +63,7 @@ class MigrationDashboard:
         migration_monitor: GPT4MigrationMonitor,
         cost_tracker: CostTracker,
         performance_analyzer: PerformanceAnalyzer,
-        alert_manager: AlertManager
+        alert_manager: AlertManager,
     ):
         self.migration_monitor = migration_monitor
         self.cost_tracker = cost_tracker
@@ -71,12 +72,12 @@ class MigrationDashboard:
 
         # Dashboard state
         self.current_layout = "default"
-        self.layouts: Dict[str, DashboardLayout] = {}
-        self.user_preferences: Dict[str, Any] = {}
+        self.layouts: dict[str, DashboardLayout] = {}
+        self.user_preferences: dict[str, Any] = {}
 
         # Real-time data cache
-        self.data_cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_timestamps: Dict[str, datetime] = {}
+        self.data_cache: dict[str, dict[str, Any]] = {}
+        self.cache_timestamps: dict[str, datetime] = {}
 
         # Initialize default layouts
         self._initialize_default_layouts()
@@ -98,7 +99,7 @@ class MigrationDashboard:
                     size="large",
                     position=(0, 0),
                     config={"show_deadline": True, "color_scheme": "blue"},
-                    data_source="migration_progress"
+                    data_source="migration_progress",
                 ),
                 DashboardWidget(
                     id="cost_summary",
@@ -107,7 +108,7 @@ class MigrationDashboard:
                     size="medium",
                     position=(0, 1),
                     config={"format": "currency", "trend": True},
-                    data_source="cost_summary"
+                    data_source="cost_summary",
                 ),
                 DashboardWidget(
                     id="performance_score",
@@ -116,7 +117,7 @@ class MigrationDashboard:
                     size="medium",
                     position=(0, 2),
                     config={"min": 0, "max": 100, "thresholds": [50, 75, 90]},
-                    data_source="performance_score"
+                    data_source="performance_score",
                 ),
                 DashboardWidget(
                     id="active_alerts",
@@ -124,8 +125,11 @@ class MigrationDashboard:
                     type="alert_list",
                     size="large",
                     position=(1, 0),
-                    config={"severity_filter": ["critical", "emergency"], "max_items": 5},
-                    data_source="active_alerts"
+                    config={
+                        "severity_filter": ["critical", "emergency"],
+                        "max_items": 5,
+                    },
+                    data_source="active_alerts",
                 ),
                 DashboardWidget(
                     id="cost_projection",
@@ -134,9 +138,9 @@ class MigrationDashboard:
                     size="large",
                     position=(1, 1),
                     config={"time_range": "30d", "show_budget_line": True},
-                    data_source="cost_trends"
-                )
-            ]
+                    data_source="cost_trends",
+                ),
+            ],
         )
 
         # Technical Operations Layout
@@ -151,7 +155,7 @@ class MigrationDashboard:
                     size="large",
                     position=(0, 0),
                     config={"time_range": "24h", "metrics": ["p50", "p95", "p99"]},
-                    data_source="latency_metrics"
+                    data_source="latency_metrics",
                 ),
                 DashboardWidget(
                     id="error_rates",
@@ -160,7 +164,7 @@ class MigrationDashboard:
                     size="medium",
                     position=(0, 1),
                     config={"group_by": "model", "time_range": "24h"},
-                    data_source="error_rates"
+                    data_source="error_rates",
                 ),
                 DashboardWidget(
                     id="throughput",
@@ -169,7 +173,7 @@ class MigrationDashboard:
                     size="medium",
                     position=(0, 2),
                     config={"time_range": "24h", "aggregate": "requests_per_minute"},
-                    data_source="throughput_metrics"
+                    data_source="throughput_metrics",
                 ),
                 DashboardWidget(
                     id="model_performance",
@@ -178,7 +182,7 @@ class MigrationDashboard:
                     size="large",
                     position=(1, 0),
                     config={"metrics": ["latency", "success_rate", "cost_efficiency"]},
-                    data_source="model_comparison"
+                    data_source="model_comparison",
                 ),
                 DashboardWidget(
                     id="token_usage",
@@ -187,7 +191,7 @@ class MigrationDashboard:
                     size="large",
                     position=(1, 1),
                     config={"time_range": "7d", "group_by": "model"},
-                    data_source="token_usage"
+                    data_source="token_usage",
                 ),
                 DashboardWidget(
                     id="system_health",
@@ -196,9 +200,9 @@ class MigrationDashboard:
                     size="medium",
                     position=(2, 0),
                     config={"show_last_check": True},
-                    data_source="system_health"
-                )
-            ]
+                    data_source="system_health",
+                ),
+            ],
         )
 
         # Cost Management Layout
@@ -213,7 +217,7 @@ class MigrationDashboard:
                     size="large",
                     position=(0, 0),
                     config={"time_range": "30d", "stack_by": "category"},
-                    data_source="daily_costs"
+                    data_source="daily_costs",
                 ),
                 DashboardWidget(
                     id="budget_utilization",
@@ -222,7 +226,7 @@ class MigrationDashboard:
                     size="medium",
                     position=(0, 1),
                     config={"show_percentage": True, "show_remaining": True},
-                    data_source="budget_status"
+                    data_source="budget_status",
                 ),
                 DashboardWidget(
                     id="cost_per_model",
@@ -231,7 +235,7 @@ class MigrationDashboard:
                     size="medium",
                     position=(0, 2),
                     config={"time_range": "7d"},
-                    data_source="cost_by_model"
+                    data_source="cost_by_model",
                 ),
                 DashboardWidget(
                     id="efficiency_metrics",
@@ -239,8 +243,14 @@ class MigrationDashboard:
                     type="metric_grid",
                     size="large",
                     position=(1, 0),
-                    config={"metrics": ["cost_per_request", "tokens_per_dollar", "efficiency_score"]},
-                    data_source="efficiency_metrics"
+                    config={
+                        "metrics": [
+                            "cost_per_request",
+                            "tokens_per_dollar",
+                            "efficiency_score",
+                        ]
+                    },
+                    data_source="efficiency_metrics",
                 ),
                 DashboardWidget(
                     id="optimization_recommendations",
@@ -249,9 +259,9 @@ class MigrationDashboard:
                     size="large",
                     position=(1, 1),
                     config={"priority_filter": ["high", "critical"], "max_items": 10},
-                    data_source="cost_recommendations"
-                )
-            ]
+                    data_source="cost_recommendations",
+                ),
+            ],
         )
 
         # Store layouts
@@ -259,14 +269,12 @@ class MigrationDashboard:
             "executive": executive_layout,
             "technical": technical_layout,
             "cost": cost_layout,
-            "default": executive_layout  # Default to executive view
+            "default": executive_layout,  # Default to executive view
         }
 
     async def get_dashboard_data(
-        self,
-        layout_name: str = "default",
-        force_refresh: bool = False
-    ) -> Dict[str, Any]:
+        self, layout_name: str = "default", force_refresh: bool = False
+    ) -> dict[str, Any]:
         """Get comprehensive dashboard data for specified layout"""
 
         if layout_name not in self.layouts:
@@ -280,14 +288,14 @@ class MigrationDashboard:
                 "name": layout.name,
                 "description": layout.description,
                 "auto_refresh": layout.auto_refresh,
-                "refresh_interval": layout.refresh_interval
+                "refresh_interval": layout.refresh_interval,
             },
             "widgets": {},
             "metadata": {
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "layout_name": layout_name,
-                "data_freshness": {}
-            }
+                "data_freshness": {},
+            },
         }
 
         # Collect data for each widget
@@ -295,14 +303,18 @@ class MigrationDashboard:
             try:
                 widget_data = await self._get_widget_data(widget, force_refresh)
                 dashboard_data["widgets"][widget.id] = widget_data
-                dashboard_data["metadata"]["data_freshness"][widget.id] = widget_data.get("last_updated")
+                dashboard_data["metadata"]["data_freshness"][widget.id] = widget_data.get(
+                    "last_updated"
+                )
             except Exception as e:
                 logger.error(f"Failed to get data for widget {widget.id}: {e}")
                 dashboard_data["widgets"][widget.id] = {"error": str(e)}
 
         return dashboard_data
 
-    async def _get_widget_data(self, widget: DashboardWidget, force_refresh: bool = False) -> Dict[str, Any]:
+    async def _get_widget_data(
+        self, widget: DashboardWidget, force_refresh: bool = False
+    ) -> dict[str, Any]:
         """Get data for a specific widget"""
 
         # Check cache first (unless force refresh)
@@ -328,7 +340,7 @@ class MigrationDashboard:
         age = (datetime.now(timezone.utc) - self.cache_timestamps[cache_key]).total_seconds()
         return age < max_age_seconds
 
-    async def _generate_widget_data(self, widget: DashboardWidget) -> Dict[str, Any]:
+    async def _generate_widget_data(self, widget: DashboardWidget) -> dict[str, Any]:
         """Generate data for widget based on its data source"""
 
         data_source = widget.data_source
@@ -374,7 +386,7 @@ class MigrationDashboard:
             logger.error(f"Failed to generate data for {data_source}: {e}")
             return {"error": str(e)}
 
-    async def _get_migration_progress_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_migration_progress_data(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get migration progress data"""
 
         deadline_progress = await self.migration_monitor._check_deadline_progress()
@@ -387,13 +399,13 @@ class MigrationDashboard:
                 "current_phase": deadline_progress["current_phase"],
                 "urgency_level": deadline_progress["urgency_level"],
                 "on_track": deadline_progress["on_track"],
-                "deadline": deadline_progress["migration_deadline"]
+                "deadline": deadline_progress["migration_deadline"],
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_cost_summary_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_cost_summary_data(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get cost summary data"""
 
         # Get current month projection
@@ -412,13 +424,13 @@ class MigrationDashboard:
                 "daily_average": projection["daily_average"],
                 "budget_utilization": projection["budget_utilization_percentage"],
                 "weekly_total": analysis.total_cost,
-                "trend_percentage": analysis.cost_trends.get("cost_change_percentage", 0)
+                "trend_percentage": analysis.cost_trends.get("cost_change_percentage", 0),
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_performance_score_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_performance_score_data(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get overall performance score data"""
 
         # Get performance data for primary model (gpt-4o)
@@ -430,13 +442,13 @@ class MigrationDashboard:
                 "score": real_time_metrics["performance_score"],
                 "status": real_time_metrics["status"],
                 "anomaly_count": len(real_time_metrics["anomalies"]),
-                "metrics": real_time_metrics["metrics"]
+                "metrics": real_time_metrics["metrics"],
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_active_alerts_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_active_alerts_data(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get active alerts data"""
 
         # Filter alerts based on config
@@ -467,7 +479,7 @@ class MigrationDashboard:
                         "category": alert.category.value,
                         "timestamp": alert.timestamp.isoformat(),
                         "acknowledged": alert.acknowledged,
-                        "escalation_level": alert.escalation_level
+                        "escalation_level": alert.escalation_level,
                     }
                     for alert in active_alerts[:max_items]
                 ],
@@ -475,13 +487,13 @@ class MigrationDashboard:
                 "severity_breakdown": {
                     severity.value: len([a for a in active_alerts if a.severity == severity])
                     for severity in AlertSeverity
-                }
+                },
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_cost_trends_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_cost_trends_data(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get cost trends data for charting"""
 
         time_range = config.get("time_range", "30d")
@@ -499,11 +511,13 @@ class MigrationDashboard:
             date_str = current_date.date().isoformat()
             daily_cost = self.cost_tracker.daily_costs.get(date_str, 0.0)
 
-            daily_data.append({
-                "date": date_str,
-                "cost": daily_cost,
-                "timestamp": current_date.isoformat()
-            })
+            daily_data.append(
+                {
+                    "date": date_str,
+                    "cost": daily_cost,
+                    "timestamp": current_date.isoformat(),
+                }
+            )
 
             current_date += timedelta(days=1)
 
@@ -514,20 +528,15 @@ class MigrationDashboard:
         return {
             "widget_type": "line_chart",
             "data": {
-                "series": [
-                    {
-                        "name": "Daily Cost",
-                        "data": daily_data
-                    }
-                ],
+                "series": [{"name": "Daily Cost", "data": daily_data}],
                 "budget_line": budget_line if config.get("show_budget_line") else None,
-                "time_range": time_range
+                "time_range": time_range,
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_model_comparison_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_model_comparison_data(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get model performance comparison data"""
 
         models = ["gpt-4", "gpt-4o", "gpt-4o-mini"]
@@ -536,12 +545,14 @@ class MigrationDashboard:
         for model in models:
             try:
                 summary = self.performance_analyzer.generate_performance_summary(model)
-                comparison_data.append({
-                    "model": model,
-                    "performance_score": summary.overall_score,
-                    "metrics": summary.metrics,
-                    "anomaly_count": len(summary.anomalies)
-                })
+                comparison_data.append(
+                    {
+                        "model": model,
+                        "performance_score": summary.overall_score,
+                        "metrics": summary.metrics,
+                        "anomaly_count": len(summary.anomalies),
+                    }
+                )
             except Exception as e:
                 logger.warning(f"Failed to get comparison data for {model}: {e}")
 
@@ -549,32 +560,62 @@ class MigrationDashboard:
             "widget_type": "comparison_table",
             "data": {
                 "models": comparison_data,
-                "metrics": config.get("metrics", ["latency", "success_rate", "cost_efficiency"])
+                "metrics": config.get("metrics", ["latency", "success_rate", "cost_efficiency"]),
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
     # Placeholder methods for other data sources
-    async def _get_latency_metrics_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return {"widget_type": "time_series", "data": {"placeholder": True}, "config": config, "last_updated": datetime.now(timezone.utc).isoformat()}
+    async def _get_latency_metrics_data(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "widget_type": "time_series",
+            "data": {"placeholder": True},
+            "config": config,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
 
-    async def _get_error_rates_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return {"widget_type": "bar_chart", "data": {"placeholder": True}, "config": config, "last_updated": datetime.now(timezone.utc).isoformat()}
+    async def _get_error_rates_data(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "widget_type": "bar_chart",
+            "data": {"placeholder": True},
+            "config": config,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
 
-    async def _get_throughput_metrics_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return {"widget_type": "area_chart", "data": {"placeholder": True}, "config": config, "last_updated": datetime.now(timezone.utc).isoformat()}
+    async def _get_throughput_metrics_data(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "widget_type": "area_chart",
+            "data": {"placeholder": True},
+            "config": config,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
 
-    async def _get_token_usage_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return {"widget_type": "stacked_area", "data": {"placeholder": True}, "config": config, "last_updated": datetime.now(timezone.utc).isoformat()}
+    async def _get_token_usage_data(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "widget_type": "stacked_area",
+            "data": {"placeholder": True},
+            "config": config,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
 
-    async def _get_system_health_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return {"widget_type": "status_grid", "data": {"placeholder": True}, "config": config, "last_updated": datetime.now(timezone.utc).isoformat()}
+    async def _get_system_health_data(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "widget_type": "status_grid",
+            "data": {"placeholder": True},
+            "config": config,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
 
-    async def _get_daily_costs_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        return {"widget_type": "column_chart", "data": {"placeholder": True}, "config": config, "last_updated": datetime.now(timezone.utc).isoformat()}
+    async def _get_daily_costs_data(self, config: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "widget_type": "column_chart",
+            "data": {"placeholder": True},
+            "config": config,
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+        }
 
-    async def _get_budget_status_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_budget_status_data(self, config: dict[str, Any]) -> dict[str, Any]:
         projection = self.cost_tracker.project_monthly_cost()
         return {
             "widget_type": "progress_bar",
@@ -583,13 +624,13 @@ class MigrationDashboard:
                 "current_amount": projection["current_month_cost"],
                 "budget_amount": projection["monthly_budget"],
                 "remaining_amount": projection["monthly_budget"] - projection["current_month_cost"],
-                "is_over_budget": projection["is_over_budget"]
+                "is_over_budget": projection["is_over_budget"],
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_cost_by_model_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_cost_by_model_data(self, config: dict[str, Any]) -> dict[str, Any]:
         time_range = config.get("time_range", "7d")
         days_back = int(time_range.rstrip("d"))
 
@@ -601,33 +642,34 @@ class MigrationDashboard:
             "widget_type": "pie_chart",
             "data": {
                 "breakdown": analysis.breakdown_by_model,
-                "total": analysis.total_cost
+                "total": analysis.total_cost,
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_efficiency_metrics_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_efficiency_metrics_data(self, config: dict[str, Any]) -> dict[str, Any]:
         analysis = self.cost_tracker.get_cost_analysis()
         return {
             "widget_type": "metric_grid",
             "data": {
                 "cost_per_request": analysis.avg_cost_per_request,
                 "tokens_per_dollar": analysis.tokens_per_dollar,
-                "efficiency_score": analysis.efficiency_score
+                "efficiency_score": analysis.efficiency_score,
             },
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _get_cost_recommendations_data(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _get_cost_recommendations_data(self, config: dict[str, Any]) -> dict[str, Any]:
         recommendations = self.cost_tracker.get_optimization_recommendations()
 
         # Filter by priority if specified
         priority_filter = config.get("priority_filter", [])
         if priority_filter:
             recommendations = [
-                rec for rec in recommendations
+                rec
+                for rec in recommendations
                 if rec.get("priority", "").lower() in [p.lower() for p in priority_filter]
             ]
 
@@ -635,32 +677,30 @@ class MigrationDashboard:
 
         return {
             "widget_type": "recommendation_list",
-            "data": {
-                "recommendations": recommendations[:max_items]
-            },
+            "data": {"recommendations": recommendations[:max_items]},
             "config": config,
-            "last_updated": datetime.now(timezone.utc).isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
     # Dashboard management methods
 
-    def get_available_layouts(self) -> List[Dict[str, str]]:
+    def get_available_layouts(self) -> list[dict[str, str]]:
         """Get list of available dashboard layouts"""
         return [
             {
                 "name": name,
                 "description": layout.description,
-                "widget_count": len(layout.widgets)
+                "widget_count": len(layout.widgets),
             }
             for name, layout in self.layouts.items()
         ]
 
-    def set_user_preferences(self, user_id: str, preferences: Dict[str, Any]) -> None:
+    def set_user_preferences(self, user_id: str, preferences: dict[str, Any]) -> None:
         """Set user-specific dashboard preferences"""
         self.user_preferences[user_id] = preferences
         logger.info(f"Updated preferences for user {user_id}")
 
-    def get_user_preferences(self, user_id: str) -> Dict[str, Any]:
+    def get_user_preferences(self, user_id: str) -> dict[str, Any]:
         """Get user-specific dashboard preferences"""
         return self.user_preferences.get(user_id, {})
 
@@ -675,7 +715,7 @@ class MigrationDashboard:
         self.cache_timestamps.clear()
         logger.info("Dashboard cache cleared")
 
-    async def get_real_time_update(self, widget_ids: List[str]) -> Dict[str, Any]:
+    async def get_real_time_update(self, widget_ids: list[str]) -> dict[str, Any]:
         """Get real-time updates for specific widgets"""
 
         updates = {}
@@ -697,7 +737,4 @@ class MigrationDashboard:
                 except Exception as e:
                     updates[widget_id] = {"error": str(e)}
 
-        return {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "updates": updates
-        }
+        return {"timestamp": datetime.now(timezone.utc).isoformat(), "updates": updates}

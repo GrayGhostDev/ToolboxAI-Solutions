@@ -417,7 +417,11 @@ async def cdn_optimization_example():
             print(f"     {breakpoint}: {url}")
 
         # Optimized delivery based on user context
-        mobile_context = {"device_type": "mobile", "connection_speed": "slow", "country": "US"}
+        mobile_context = {
+            "device_type": "mobile",
+            "connection_speed": "slow",
+            "country": "US",
+        }
 
         optimized_url = await cdn.optimize_delivery(storage_path, mobile_context, "org_123")
         print(f"   Mobile Optimized: {optimized_url}")
@@ -532,8 +536,8 @@ async def main():
 
     # Basic examples
     file_id_1 = await basic_file_upload_example()
-    file_id_2 = await image_upload_with_processing_example()
-    file_id_3 = await multipart_upload_example()
+    await image_upload_with_processing_example()
+    await multipart_upload_example()
 
     # Advanced features
     await compliance_and_security_example()
@@ -552,7 +556,8 @@ async def main():
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run examples

@@ -11,7 +11,7 @@ Reference: https://docs.sqlalchemy.org/en/20/
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import and_, func, select
@@ -19,7 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database.cache_modern import cache_result, invalidate_cache
-from database.models.user_modern import User, UserProfile, UserRole, UserSession, UserStatus
+from database.models.user_modern import (
+    User,
+    UserProfile,
+    UserRole,
+    UserSession,
+    UserStatus,
+)
 from database.repositories.base_repository import BaseRepository
 
 
@@ -107,7 +113,7 @@ class UserRepository(BaseRepository[User]):
         role: Optional[UserRole] = None,
         skip: int = 0,
         limit: int = 100,
-    ) -> List[User]:
+    ) -> list[User]:
         """
         Get active users, optionally filtered by role.
 
@@ -295,7 +301,7 @@ class UserRepository(BaseRepository[User]):
         self,
         session: AsyncSession,
         user_id: UUID,
-    ) -> List[UserSession]:
+    ) -> list[UserSession]:
         """
         Get all active sessions for user.
 

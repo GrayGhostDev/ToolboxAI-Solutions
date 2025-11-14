@@ -17,7 +17,7 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 try:
     import psutil  # For system resource monitoring
@@ -85,7 +85,7 @@ class PoolConfig:
     enable_statement_logging: bool = False  # Log all SQL statements
     slow_query_threshold: float = 1.0  # Threshold for slow query logging (seconds)
 
-    def to_engine_kwargs(self) -> Dict[str, Any]:
+    def to_engine_kwargs(self) -> dict[str, Any]:
         """
         Convert to SQLAlchemy 2.0 engine kwargs with PostgreSQL 16+ optimizations
         Following psycopg3 documentation: https://www.psycopg.org/psycopg3/docs/
@@ -131,7 +131,7 @@ class PoolConfig:
             },
         }
 
-    def to_async_engine_kwargs(self) -> Dict[str, Any]:
+    def to_async_engine_kwargs(self) -> dict[str, Any]:
         """
         Convert to AsyncEngine kwargs for SQLAlchemy 2.0 with asyncpg driver
         Following asyncpg documentation: https://magicstack.github.io/asyncpg/current/
@@ -178,7 +178,8 @@ class PoolConfigFactory:
 
     @staticmethod
     def create_config(
-        strategy: PoolStrategy = PoolStrategy.PRODUCTION, environment: Optional[str] = None
+        strategy: PoolStrategy = PoolStrategy.PRODUCTION,
+        environment: Optional[str] = None,
     ) -> PoolConfig:
         """
         Create pool configuration based on strategy
@@ -380,7 +381,7 @@ class PoolMonitor:
 
     def calculate_optimal_size(
         self, concurrent_requests: int, avg_query_time: float
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """
         Calculate optimal pool size based on load
 
@@ -411,7 +412,7 @@ class PoolMonitor:
             "total_connections": recommended_pool_size + recommended_overflow,
         }
 
-    def get_recommendations(self) -> Dict[str, Any]:
+    def get_recommendations(self) -> dict[str, Any]:
         """Get optimization recommendations based on metrics"""
         recommendations = []
 

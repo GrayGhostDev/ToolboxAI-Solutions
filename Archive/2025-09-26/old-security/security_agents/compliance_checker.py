@@ -15,13 +15,13 @@ Ensures continuous compliance during Phase 1.5 fixes.
 
 import asyncio
 import logging
-import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from datetime import datetime
 from pathlib import Path
-import aiohttp
+from typing import Optional
+
 import aiofiles
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +46,9 @@ class ComplianceReport:
     passed_checks: int
     failed_checks: int
     warning_checks: int
-    categories: Dict[str, float]
-    compliance_status: Dict[str, bool]
-    recommendations: List[str]
+    categories: dict[str, float]
+    compliance_status: dict[str, bool]
+    recommendations: list[str]
     generated_at: datetime
 
 class ComplianceChecker:
@@ -69,7 +69,7 @@ class ComplianceChecker:
         self.base_url = base_url
         self.monitoring = False
         self.check_interval = 600  # 10 minutes
-        self.checks: List[ComplianceCheck] = []
+        self.checks: list[ComplianceCheck] = []
         
         # OWASP Top 10 2025 categories
         self.owasp_categories = {
@@ -358,7 +358,7 @@ class ComplianceChecker:
                 debug_safe = True
                 for env_file in env_files:
                     try:
-                        async with aiofiles.open(env_file, 'r') as f:
+                        async with aiofiles.open(env_file) as f:
                             content = await f.read()
                             if 'DEBUG=true' in content or 'DEBUG=True' in content:
                                 debug_safe = False
@@ -726,7 +726,7 @@ class ComplianceChecker:
             for file_path in self.project_root.glob(file_pattern):
                 if file_path.is_file() and 'node_modules' not in str(file_path):
                     try:
-                        async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        async with aiofiles.open(file_path, encoding='utf-8', errors='ignore') as f:
                             content = await f.read()
                             if pattern.lower() in content.lower():
                                 return True
@@ -828,7 +828,7 @@ class ComplianceChecker:
         
         return len(failed_checks) == 0
     
-    def generate_recommendations(self) -> List[str]:
+    def generate_recommendations(self) -> list[str]:
         """Generate compliance recommendations"""
         recommendations = []
         
@@ -848,7 +848,7 @@ class ComplianceChecker:
         
         return recommendations
     
-    async def get_compliance_report(self) -> Dict:
+    async def get_compliance_report(self) -> dict:
         """Get comprehensive compliance report"""
         report = self.generate_compliance_report()
         

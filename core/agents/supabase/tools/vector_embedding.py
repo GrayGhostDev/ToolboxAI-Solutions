@@ -1,25 +1,24 @@
 """Vector embedding tool for Supabase migration with pgvector support."""
 
 import asyncio
+import hashlib
 import json
 import logging
-import hashlib
 import time
-from typing import Dict, List, Any, Optional, Callable, Union
 from dataclasses import dataclass
 from enum import Enum
-import asyncpg
+from typing import Any, Callable, Optional
+
 import aiofiles
-import openai
+import asyncpg
 from openai import AsyncOpenAI
-import numpy as np
-from sqlalchemy import create_engine, text
 
 logger = logging.getLogger(__name__)
 
 
 class EmbeddingStatus(Enum):
     """Embedding generation status."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -30,8 +29,9 @@ class EmbeddingStatus(Enum):
 @dataclass
 class EmbeddingBatch:
     """Batch of content for embedding generation."""
+
     batch_id: int
-    content_items: List[Dict[str, Any]]
+    content_items: list[dict[str, Any]]
     status: EmbeddingStatus
     started_at: Optional[float] = None
     completed_at: Optional[float] = None
@@ -41,6 +41,7 @@ class EmbeddingBatch:
 @dataclass
 class EmbeddingResult:
     """Result of embedding generation."""
+
     table_name: str
     total_items: int
     processed_items: int
@@ -70,7 +71,7 @@ class VectorEmbeddingTool:
         batch_size: int = 50,
         max_concurrent_batches: int = 3,
         embedding_model: str = "text-embedding-ada-002",
-        cache_embeddings: bool = True
+        cache_embeddings: bool = True,
     ):
         """
         Initialize the vector embedding tool.
@@ -87,18 +88,18 @@ class VectorEmbeddingTool:
         self.max_concurrent_batches = max_concurrent_batches
         self.embedding_model = embedding_model
         self.cache_embeddings = cache_embeddings
-        self.embedding_cache: Dict[str, List[float]] = {}
+        self.embedding_cache: dict[str, list[float]] = {}
         self.progress_callback: Optional[Callable] = None
 
     async def generate_embeddings(
         self,
         conn_string: str,
         table_name: str,
-        text_columns: List[str],
+        text_columns: list[str],
         embedding_column: str = "embedding",
         batch_size: Optional[int] = None,
         where_clause: str = "TRUE",
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
     ) -> EmbeddingResult:
         """
         Generate embeddings for text content in a table.
@@ -130,11 +131,7 @@ class VectorEmbeddingTool:
 
             # Get content to embed
             content_items = await self._get_content_items(
-                conn_string,
-                table_name,
-                text_columns,
-                embedding_column,
-                where_clause
+                conn_string, table_name, text_columns, embedding_column, where_clause
             )
 
             if not content_items:
@@ -146,7 +143,7 @@ class VectorEmbeddingTool:
                     cached_items=0,
                     failed_items=0,
                     duration_seconds=time.time() - start_time,
-                    status=EmbeddingStatus.COMPLETED
+                    status=EmbeddingStatus.COMPLETED,
                 )
 
             # Load cache if enabled
@@ -158,10 +155,7 @@ class VectorEmbeddingTool:
 
             # Process batches
             result = await self._process_embedding_batches(
-                conn_string,
-                table_name,
-                embedding_column,
-                batches
+                conn_string, table_name, embedding_column, batches
             )
 
             # Save cache if enabled
@@ -170,9 +164,7 @@ class VectorEmbeddingTool:
 
             # Create vector index
             index_created = await self._create_vector_index(
-                conn_string,
-                table_name,
-                embedding_column
+                conn_string, table_name, embedding_column
             )
 
             result.index_created = index_created
@@ -190,7 +182,7 @@ class VectorEmbeddingTool:
                 cached_items=0,
                 failed_items=0,
                 duration_seconds=time.time() - start_time,
-                status=EmbeddingStatus.FAILED
+                status=EmbeddingStatus.FAILED,
             )
 
     async def setup_vector_search(
@@ -198,7 +190,7 @@ class VectorEmbeddingTool:
         conn_string: str,
         table_name: str,
         embedding_column: str = "embedding",
-        similarity_function: str = "cosine"
+        similarity_function: str = "cosine",
     ) -> bool:
         """
         Setup vector similarity search infrastructure.
@@ -223,19 +215,11 @@ class VectorEmbeddingTool:
             # Create similarity search function
             function_name = f"search_{table_name}_by_similarity"
             await self._create_similarity_function(
-                conn,
-                function_name,
-                table_name,
-                embedding_column,
-                similarity_function
+                conn, function_name, table_name, embedding_column, similarity_function
             )
 
             # Create index for performance
-            index_created = await self._create_vector_index(
-                conn_string,
-                table_name,
-                embedding_column
-            )
+            await self._create_vector_index(conn_string, table_name, embedding_column)
 
             await conn.close()
 
@@ -254,8 +238,8 @@ class VectorEmbeddingTool:
         embedding_column: str = "embedding",
         limit: int = 10,
         similarity_threshold: float = 0.5,
-        similarity_function: str = "cosine"
-    ) -> List[Dict[str, Any]]:
+        similarity_function: str = "cosine",
+    ) -> list[dict[str, Any]]:
         """
         Perform similarity search using embeddings.
 
@@ -301,12 +285,7 @@ class VectorEmbeddingTool:
             LIMIT $3
             """
 
-            results = await conn.fetch(
-                query,
-                query_embedding,
-                similarity_threshold,
-                limit
-            )
+            results = await conn.fetch(query, query_embedding, similarity_threshold, limit)
 
             await conn.close()
 
@@ -320,9 +299,9 @@ class VectorEmbeddingTool:
         self,
         conn_string: str,
         table_name: str,
-        text_columns: List[str],
+        text_columns: list[str],
         embedding_column: str = "embedding",
-        updated_since: Optional[str] = None
+        updated_since: Optional[str] = None,
     ) -> EmbeddingResult:
         """
         Update embeddings for modified content.
@@ -349,7 +328,7 @@ class VectorEmbeddingTool:
             table_name,
             text_columns,
             embedding_column,
-            where_clause=where_clause
+            where_clause=where_clause,
         )
 
     async def migrate_embeddings(
@@ -357,7 +336,7 @@ class VectorEmbeddingTool:
         source_conn_string: str,
         target_conn_string: str,
         table_name: str,
-        embedding_column: str = "embedding"
+        embedding_column: str = "embedding",
     ) -> bool:
         """
         Migrate embeddings from source to target database.
@@ -375,11 +354,7 @@ class VectorEmbeddingTool:
 
         try:
             # Setup target embedding column
-            await self._setup_embedding_column(
-                target_conn_string,
-                table_name,
-                embedding_column
-            )
+            await self._setup_embedding_column(target_conn_string, table_name, embedding_column)
 
             # Get embeddings from source
             source_conn = await asyncpg.connect(source_conn_string)
@@ -405,11 +380,7 @@ class VectorEmbeddingTool:
             """
 
             for row in embeddings:
-                await target_conn.execute(
-                    update_query,
-                    row['id'],
-                    row[embedding_column]
-                )
+                await target_conn.execute(update_query, row["id"], row[embedding_column])
 
             await target_conn.close()
 
@@ -421,10 +392,7 @@ class VectorEmbeddingTool:
             return False
 
     async def _setup_embedding_column(
-        self,
-        conn_string: str,
-        table_name: str,
-        embedding_column: str
+        self, conn_string: str, table_name: str, embedding_column: str
     ):
         """Setup embedding column in table."""
         conn = await asyncpg.connect(conn_string)
@@ -456,10 +424,10 @@ class VectorEmbeddingTool:
         self,
         conn_string: str,
         table_name: str,
-        text_columns: List[str],
+        text_columns: list[str],
         embedding_column: str,
-        where_clause: str
-    ) -> List[Dict[str, Any]]:
+        where_clause: str,
+    ) -> list[dict[str, Any]]:
         """Get content items that need embeddings."""
         conn = await asyncpg.connect(conn_string)
         try:
@@ -481,19 +449,18 @@ class VectorEmbeddingTool:
             await conn.close()
 
     def _create_embedding_batches(
-        self,
-        content_items: List[Dict[str, Any]]
-    ) -> List[EmbeddingBatch]:
+        self, content_items: list[dict[str, Any]]
+    ) -> list[EmbeddingBatch]:
         """Create batches for embedding generation."""
         batches = []
         batch_id = 0
 
         for i in range(0, len(content_items), self.batch_size):
-            batch_items = content_items[i:i + self.batch_size]
+            batch_items = content_items[i : i + self.batch_size]
             batch = EmbeddingBatch(
                 batch_id=batch_id,
                 content_items=batch_items,
-                status=EmbeddingStatus.PENDING
+                status=EmbeddingStatus.PENDING,
             )
             batches.append(batch)
             batch_id += 1
@@ -505,7 +472,7 @@ class VectorEmbeddingTool:
         conn_string: str,
         table_name: str,
         embedding_column: str,
-        batches: List[EmbeddingBatch]
+        batches: list[EmbeddingBatch],
     ) -> EmbeddingResult:
         """Process embedding batches."""
         start_time = time.time()
@@ -516,13 +483,10 @@ class VectorEmbeddingTool:
         # Create semaphore for rate limiting
         semaphore = asyncio.Semaphore(self.max_concurrent_batches)
 
-        async def process_batch(batch: EmbeddingBatch) -> Dict[str, int]:
+        async def process_batch(batch: EmbeddingBatch) -> dict[str, int]:
             async with semaphore:
                 return await self._process_single_embedding_batch(
-                    conn_string,
-                    table_name,
-                    embedding_column,
-                    batch
+                    conn_string, table_name, embedding_column, batch
                 )
 
         # Process batches concurrently
@@ -537,9 +501,9 @@ class VectorEmbeddingTool:
                 failed_items += self.batch_size  # Estimate
                 logger.error(f"Batch processing failed: {str(result)}")
             else:
-                processed_items += result.get('processed', 0)
-                cached_items += result.get('cached', 0)
-                failed_items += result.get('failed', 0)
+                processed_items += result.get("processed", 0)
+                cached_items += result.get("cached", 0)
+                failed_items += result.get("failed", 0)
 
         # Determine status
         if failed_items == 0:
@@ -556,7 +520,7 @@ class VectorEmbeddingTool:
             cached_items=cached_items,
             failed_items=failed_items,
             duration_seconds=time.time() - start_time,
-            status=status
+            status=status,
         )
 
     async def _process_single_embedding_batch(
@@ -564,8 +528,8 @@ class VectorEmbeddingTool:
         conn_string: str,
         table_name: str,
         embedding_column: str,
-        batch: EmbeddingBatch
-    ) -> Dict[str, int]:
+        batch: EmbeddingBatch,
+    ) -> dict[str, int]:
         """Process a single embedding batch."""
         batch.started_at = time.time()
         batch.status = EmbeddingStatus.IN_PROGRESS
@@ -591,13 +555,13 @@ class VectorEmbeddingTool:
                         conn_string,
                         table_name,
                         embedding_column,
-                        item['id'],
-                        self.embedding_cache[text_hash]
+                        item["id"],
+                        self.embedding_cache[text_hash],
                     )
                     cached += 1
                 else:
                     texts_to_embed.append(combined_text)
-                    item_map[len(texts_to_embed) - 1] = (item['id'], text_hash)
+                    item_map[len(texts_to_embed) - 1] = (item["id"], text_hash)
 
             # Generate embeddings for non-cached items
             if texts_to_embed:
@@ -613,7 +577,7 @@ class VectorEmbeddingTool:
                             table_name,
                             embedding_column,
                             item_id,
-                            embedding
+                            embedding,
                         )
 
                         # Cache embedding
@@ -629,40 +593,28 @@ class VectorEmbeddingTool:
 
             # Progress callback
             if self.progress_callback:
-                await self.progress_callback({
-                    'table': table_name,
-                    'batch_id': batch.batch_id,
-                    'processed': processed,
-                    'cached': cached,
-                    'failed': failed
-                })
+                await self.progress_callback(
+                    {
+                        "table": table_name,
+                        "batch_id": batch.batch_id,
+                        "processed": processed,
+                        "cached": cached,
+                        "failed": failed,
+                    }
+                )
 
-            return {
-                'processed': processed,
-                'cached': cached,
-                'failed': failed
-            }
+            return {"processed": processed, "cached": cached, "failed": failed}
 
         except Exception as e:
             batch.status = EmbeddingStatus.FAILED
             batch.error_message = str(e)
             logger.error(f"Embedding batch {batch.batch_id} failed: {str(e)}")
-            return {
-                'processed': 0,
-                'cached': 0,
-                'failed': len(batch.content_items)
-            }
+            return {"processed": 0, "cached": 0, "failed": len(batch.content_items)}
 
-    async def _generate_embeddings_batch(
-        self,
-        texts: List[str]
-    ) -> List[Optional[List[float]]]:
+    async def _generate_embeddings_batch(self, texts: list[str]) -> list[Optional[list[float]]]:
         """Generate embeddings for a batch of texts."""
         try:
-            response = await self.client.embeddings.create(
-                input=texts,
-                model=self.embedding_model
-            )
+            response = await self.client.embeddings.create(input=texts, model=self.embedding_model)
 
             embeddings = []
             for embedding_data in response.data:
@@ -674,24 +626,21 @@ class VectorEmbeddingTool:
             logger.error(f"OpenAI embedding generation failed: {str(e)}")
             return [None] * len(texts)
 
-    async def _generate_single_embedding(self, text: str) -> Optional[List[float]]:
+    async def _generate_single_embedding(self, text: str) -> Optional[list[float]]:
         """Generate embedding for a single text."""
         try:
-            response = await self.client.embeddings.create(
-                input=[text],
-                model=self.embedding_model
-            )
+            response = await self.client.embeddings.create(input=[text], model=self.embedding_model)
             return response.data[0].embedding
 
         except Exception as e:
             logger.error(f"Single embedding generation failed: {str(e)}")
             return None
 
-    def _combine_text_fields(self, item: Dict[str, Any]) -> str:
+    def _combine_text_fields(self, item: dict[str, Any]) -> str:
         """Combine text fields into a single string."""
         text_parts = []
         for key, value in item.items():
-            if key != 'id' and value and isinstance(value, str):
+            if key != "id" and value and isinstance(value, str):
                 text_parts.append(value.strip())
 
         return " ".join(text_parts)
@@ -706,7 +655,7 @@ class VectorEmbeddingTool:
         table_name: str,
         embedding_column: str,
         item_id: Any,
-        embedding: List[float]
+        embedding: list[float],
     ):
         """Update embedding in database."""
         conn = await asyncpg.connect(conn_string)
@@ -722,10 +671,7 @@ class VectorEmbeddingTool:
             await conn.close()
 
     async def _create_vector_index(
-        self,
-        conn_string: str,
-        table_name: str,
-        embedding_column: str
+        self, conn_string: str, table_name: str, embedding_column: str
     ) -> bool:
         """Create vector index for similarity search."""
         try:
@@ -755,7 +701,7 @@ class VectorEmbeddingTool:
         function_name: str,
         table_name: str,
         embedding_column: str,
-        similarity_function: str
+        similarity_function: str,
     ):
         """Create similarity search function."""
         if similarity_function == "cosine":
@@ -803,7 +749,7 @@ class VectorEmbeddingTool:
 
         cache_file = f"embedding_cache_{table_name}.json"
         try:
-            async with aiofiles.open(cache_file, 'r') as f:
+            async with aiofiles.open(cache_file) as f:
                 cache_data = json.loads(await f.read())
                 self.embedding_cache.update(cache_data)
                 logger.info(f"Loaded {len(cache_data)} cached embeddings")
@@ -820,18 +766,18 @@ class VectorEmbeddingTool:
 
         cache_file = f"embedding_cache_{table_name}.json"
         try:
-            async with aiofiles.open(cache_file, 'w') as f:
+            async with aiofiles.open(cache_file, "w") as f:
                 await f.write(json.dumps(self.embedding_cache))
                 logger.info(f"Saved {len(self.embedding_cache)} embeddings to cache")
 
         except Exception as e:
             logger.warning(f"Failed to save embedding cache: {str(e)}")
 
-    def get_embedding_stats(self) -> Dict[str, Any]:
+    def get_embedding_stats(self) -> dict[str, Any]:
         """Get embedding generation statistics."""
         return {
-            'cache_size': len(self.embedding_cache),
-            'embedding_model': self.embedding_model,
-            'batch_size': self.batch_size,
-            'max_concurrent_batches': self.max_concurrent_batches
+            "cache_size": len(self.embedding_cache),
+            "embedding_model": self.embedding_model,
+            "batch_size": self.batch_size,
+            "max_concurrent_batches": self.max_concurrent_batches,
         }

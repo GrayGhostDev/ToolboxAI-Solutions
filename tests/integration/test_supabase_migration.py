@@ -45,10 +45,19 @@ def sample_production_schema():
                         "default": "gen_random_uuid()",
                     },
                     {"name": "email", "type": "VARCHAR(255)", "nullable": False},
-                    {"name": "encrypted_password", "type": "VARCHAR(255)", "nullable": False},
+                    {
+                        "name": "encrypted_password",
+                        "type": "VARCHAR(255)",
+                        "nullable": False,
+                    },
                     {"name": "first_name", "type": "VARCHAR(100)", "nullable": True},
                     {"name": "last_name", "type": "VARCHAR(100)", "nullable": True},
-                    {"name": "role", "type": "user_role", "nullable": False, "default": "student"},
+                    {
+                        "name": "role",
+                        "type": "user_role",
+                        "nullable": False,
+                        "default": "student",
+                    },
                     {"name": "organization_id", "type": "UUID", "nullable": True},
                     {
                         "name": "created_at",
@@ -73,7 +82,11 @@ def sample_production_schema():
                     }
                 ],
                 "indexes": [
-                    {"name": "idx_users_email", "column_names": ["email"], "unique": True},
+                    {
+                        "name": "idx_users_email",
+                        "column_names": ["email"],
+                        "unique": True,
+                    },
                     {
                         "name": "idx_users_organization_id",
                         "column_names": ["organization_id"],
@@ -118,7 +131,11 @@ def sample_production_schema():
                 "primary_key": {"constrained_columns": ["id"]},
                 "foreign_keys": [],
                 "indexes": [
-                    {"name": "idx_organizations_domain", "column_names": ["domain"], "unique": True}
+                    {
+                        "name": "idx_organizations_domain",
+                        "column_names": ["domain"],
+                        "unique": True,
+                    }
                 ],
                 "unique_constraints": [
                     {"name": "uq_organizations_domain", "column_names": ["domain"]}
@@ -194,11 +211,18 @@ def sample_production_schema():
                         "column_names": ["created_by"],
                         "unique": False,
                     },
-                    {"name": "idx_lessons_status", "column_names": ["status"], "unique": False},
+                    {
+                        "name": "idx_lessons_status",
+                        "column_names": ["status"],
+                        "unique": False,
+                    },
                 ],
                 "unique_constraints": [],
                 "check_constraints": [
-                    {"name": "ck_lessons_difficulty", "sqltext": "difficulty_level BETWEEN 1 AND 5"}
+                    {
+                        "name": "ck_lessons_difficulty",
+                        "sqltext": "difficulty_level BETWEEN 1 AND 5",
+                    }
                 ],
                 "row_count": 25000,
                 "size_bytes": 10485760,
@@ -309,8 +333,16 @@ def sample_production_schema():
             }
         ],
         "functions": [
-            {"name": "calculate_user_progress", "type": "FUNCTION", "return_type": "numeric"},
-            {"name": "update_lesson_statistics", "type": "PROCEDURE", "return_type": "void"},
+            {
+                "name": "calculate_user_progress",
+                "type": "FUNCTION",
+                "return_type": "numeric",
+            },
+            {
+                "name": "update_lesson_statistics",
+                "type": "PROCEDURE",
+                "return_type": "void",
+            },
         ],
         "triggers": [
             {
@@ -327,8 +359,14 @@ def sample_production_schema():
             },
         ],
         "enums": [
-            {"name": "user_role", "values": ["student", "teacher", "admin", "super_admin"]},
-            {"name": "content_status", "values": ["draft", "review", "published", "archived"]},
+            {
+                "name": "user_role",
+                "values": ["student", "teacher", "admin", "super_admin"],
+            },
+            {
+                "name": "content_status",
+                "values": ["draft", "review", "published", "archived"],
+            },
         ],
     }
 
@@ -373,7 +411,10 @@ class TestSupabaseMigrationIntegration:
 
     @pytest.mark.asyncio
     async def test_full_migration_workflow(
-        self, mock_database_connections, sample_production_schema, sample_access_patterns
+        self,
+        mock_database_connections,
+        sample_production_schema,
+        sample_access_patterns,
     ):
         """Test the complete migration workflow from analysis to validation."""
         # Initialize agent
@@ -403,7 +444,6 @@ class TestSupabaseMigrationIntegration:
             ) as mock_types,
             patch.object(agent, "_sparc_reasoning", new_callable=AsyncMock) as mock_sparc,
         ):
-
             # Setup mock responses
             mock_analyze.return_value = sample_production_schema
             mock_relationships.return_value = self._extract_relationships_from_schema(
@@ -470,7 +510,6 @@ class TestSupabaseMigrationIntegration:
             patch("sqlalchemy.create_engine") as mock_engine,
             patch("sqlalchemy.inspect") as mock_inspect,
         ):
-
             # Mock engine and inspector
             mock_engine.return_value.dispose = Mock()
             mock_inspector_instance = Mock()
@@ -489,7 +528,6 @@ class TestSupabaseMigrationIntegration:
                 patch.object(tool, "_get_triggers", new_callable=AsyncMock) as mock_triggers,
                 patch.object(tool, "_get_view_definition", new_callable=AsyncMock) as mock_view_def,
             ):
-
                 # Setup async mock responses
                 mock_row_count.side_effect = lambda table: {
                     "users": 10000,
@@ -657,7 +695,7 @@ class TestSupabaseMigrationIntegration:
         self, mock_database_connections, sample_production_schema
     ):
         """Test migration handling of complex foreign key dependencies."""
-        agent = SupabaseMigrationAgent()
+        SupabaseMigrationAgent()
 
         # Extract dependency information from schema
         relationships = self._extract_relationships_from_schema(sample_production_schema)
@@ -692,7 +730,10 @@ class TestSupabaseMigrationIntegration:
         plan = MigrationPlan(
             schema_mappings={
                 "users": {"original": {"name": "users"}, "supabase": {"name": "users"}},
-                "lessons": {"original": {"name": "lessons"}, "supabase": {"name": "lessons"}},
+                "lessons": {
+                    "original": {"name": "lessons"},
+                    "supabase": {"name": "lessons"},
+                },
             },
             rls_policies=[
                 {"name": "users_select_own", "table": "users"},
@@ -702,7 +743,10 @@ class TestSupabaseMigrationIntegration:
 
         # Mock rollback execution
         with patch.object(agent, "_execute_rollback", new_callable=AsyncMock) as mock_rollback:
-            mock_rollback.return_value = {"status": "rolled_back", "procedures_executed": 2}
+            mock_rollback.return_value = {
+                "status": "rolled_back",
+                "procedures_executed": 2,
+            }
 
             # Simulate failed migration
             with patch.object(agent, "_migrate_schema", new_callable=AsyncMock) as mock_migrate:
@@ -726,7 +770,6 @@ class TestSupabaseMigrationIntegration:
             patch.object(agent, "_compare_performance", new_callable=AsyncMock) as mock_perf_val,
             patch.object(agent, "_validate_security", new_callable=AsyncMock) as mock_security_val,
         ):
-
             # Setup validation responses
             mock_schema_val.return_value = {
                 "status": "passed",
@@ -785,7 +828,6 @@ class TestSupabaseMigrationIntegration:
             patch.object(tool, "_get_row_count", new_callable=AsyncMock) as mock_count,
             patch.object(tool, "_execute_migration", new_callable=AsyncMock) as mock_execute,
         ):
-
             mock_count.return_value = large_table_data["total_rows"]
 
             # Simulate successful large migration
@@ -845,7 +887,10 @@ class TestSupabaseMigrationIntegration:
             # Extract primary keys
             if table.get("primary_key"):
                 relationships["primary_keys"].append(
-                    {"table": table_name, "columns": table["primary_key"]["constrained_columns"]}
+                    {
+                        "table": table_name,
+                        "columns": table["primary_key"]["constrained_columns"],
+                    }
                 )
 
             # Build dependencies

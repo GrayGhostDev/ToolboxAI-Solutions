@@ -7,7 +7,7 @@ All specific repositories inherit from this base class.
 Reference: https://docs.sqlalchemy.org/en/20/
 """
 
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 from uuid import UUID
 
 from sqlalchemy import Select, func, select
@@ -35,7 +35,7 @@ class BaseRepository(Generic[ModelType]):
         ModelType: SQLAlchemy model class
     """
 
-    def __init__(self, model: Type[ModelType]):
+    def __init__(self, model: type[ModelType]):
         """
         Initialize repository.
 
@@ -77,7 +77,7 @@ class BaseRepository(Generic[ModelType]):
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """
         Get all records with pagination.
 
@@ -105,7 +105,7 @@ class BaseRepository(Generic[ModelType]):
         field_name: str,
         field_value: Any,
         include_deleted: bool = False,
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """
         Get records by field value.
 
@@ -160,8 +160,8 @@ class BaseRepository(Generic[ModelType]):
     async def create_many(
         self,
         session: AsyncSession,
-        items: List[Dict[str, Any]],
-    ) -> List[ModelType]:
+        items: list[dict[str, Any]],
+    ) -> list[ModelType]:
         """
         Create multiple records in bulk.
 
@@ -327,7 +327,7 @@ class BaseRepository(Generic[ModelType]):
     def _apply_filters(
         self,
         stmt: Select,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
     ) -> Select:
         """
         Apply filters to query.
@@ -355,13 +355,13 @@ class BaseRepository(Generic[ModelType]):
     async def find(
         self,
         session: AsyncSession,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         skip: int = 0,
         limit: int = 100,
         order_by: Optional[str] = None,
         descending: bool = False,
         include_deleted: bool = False,
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """
         Find records with filters and ordering.
 
@@ -400,7 +400,7 @@ class BaseRepository(Generic[ModelType]):
     async def find_one(
         self,
         session: AsyncSession,
-        filters: Dict[str, Any],
+        filters: dict[str, Any],
         include_deleted: bool = False,
     ) -> Optional[ModelType]:
         """

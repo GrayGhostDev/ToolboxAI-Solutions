@@ -10,19 +10,16 @@ Version: 1.0.0
 """
 
 import asyncio
-import json
 import logging
-import os
-import platform
-import psutil
 import subprocess
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
+import psutil
+
+from core.agents.base_agent import AgentConfig, BaseAgent, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +27,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResourceSnapshot:
     """Snapshot of system resources at a point in time."""
+
     timestamp: datetime
     cpu_percent: float
     memory_percent: float
@@ -47,19 +45,21 @@ class ResourceSnapshot:
 @dataclass
 class WorktreeResources:
     """Resource usage for a specific worktree."""
+
     worktree_path: Path
     branch_name: str
     cpu_percent: float
     memory_mb: float
     disk_usage_mb: float
-    process_pids: List[int]
-    port_usage: Dict[int, str]  # port -> process name
+    process_pids: list[int]
+    port_usage: dict[int, str]  # port -> process name
     last_updated: datetime
 
 
 @dataclass
 class AgentResources:
     """Resource usage for a specific agent."""
+
     agent_id: str
     agent_type: str
     cpu_percent: float
@@ -73,6 +73,7 @@ class AgentResources:
 @dataclass
 class ResourceAlert:
     """Alert for resource issues."""
+
     alert_id: str
     severity: str  # critical, warning, info
     resource_type: str  # cpu, memory, disk, network
@@ -97,7 +98,7 @@ class ResourceMonitorAgent(BaseAgent):
                 name="ResourceMonitorAgent",
                 model="gpt-3.5-turbo",
                 temperature=0.1,
-                verbose=False
+                verbose=False,
             )
         super().__init__(config)
 
@@ -110,14 +111,14 @@ class ResourceMonitorAgent(BaseAgent):
             "memory_critical": 90.0,
             "memory_warning": 80.0,
             "disk_critical": 95.0,
-            "disk_warning": 85.0
+            "disk_warning": 85.0,
         }
 
         # Resource tracking
-        self.resource_history: List[ResourceSnapshot] = []
-        self.worktree_resources: Dict[str, WorktreeResources] = {}
-        self.agent_resources: Dict[str, AgentResources] = {}
-        self.active_alerts: List[ResourceAlert] = []
+        self.resource_history: list[ResourceSnapshot] = []
+        self.worktree_resources: dict[str, WorktreeResources] = {}
+        self.agent_resources: dict[str, AgentResources] = {}
+        self.active_alerts: list[ResourceAlert] = []
 
         # Port ranges for monitoring
         self.backend_port_range = (8008, 8028)
@@ -128,13 +129,13 @@ class ResourceMonitorAgent(BaseAgent):
             "snapshots_collected": 0,
             "alerts_generated": 0,
             "optimizations_applied": 0,
-            "monitoring_uptime": 0.0
+            "monitoring_uptime": 0.0,
         }
 
         self.monitoring_task: Optional[asyncio.Task] = None
         self.start_time = datetime.now()
 
-    async def _process_task(self, task: Dict[str, Any]) -> TaskResult:
+    async def _process_task(self, task: dict[str, Any]) -> TaskResult:
         """Process a task (required by BaseAgent).
 
         Args:
@@ -145,7 +146,7 @@ class ResourceMonitorAgent(BaseAgent):
         """
         return await self.execute(task)
 
-    async def execute(self, task: Dict[str, Any]) -> TaskResult:
+    async def execute(self, task: dict[str, Any]) -> TaskResult:
         """Execute resource monitoring task.
 
         Args:
@@ -178,18 +179,10 @@ class ResourceMonitorAgent(BaseAgent):
             elif action == "stop_monitoring":
                 return await self.stop_continuous_monitoring()
             else:
-                return TaskResult(
-                    success=False,
-                    output=None,
-                    error=f"Unknown action: {action}"
-                )
+                return TaskResult(success=False, output=None, error=f"Unknown action: {action}")
         except Exception as e:
             logger.error(f"Error executing resource monitor task: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def monitor_resources(self) -> TaskResult:
         """Monitor current system resources.
@@ -203,7 +196,7 @@ class ResourceMonitorAgent(BaseAgent):
 
             # Trim history if needed
             if len(self.resource_history) > self.history_size:
-                self.resource_history = self.resource_history[-self.history_size:]
+                self.resource_history = self.resource_history[-self.history_size :]
 
             # Check for alerts
             await self._check_alerts(snapshot)
@@ -215,8 +208,8 @@ class ResourceMonitorAgent(BaseAgent):
                 success=True,
                 output={
                     "snapshot": self._snapshot_to_dict(snapshot),
-                    "active_alerts": len(self.active_alerts)
-                }
+                    "active_alerts": len(self.active_alerts),
+                },
             )
 
         except Exception as e:
@@ -238,7 +231,7 @@ class ResourceMonitorAgent(BaseAgent):
         memory_available_mb = memory.available / (1024 * 1024)
 
         # Disk usage
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         disk_usage_percent = disk.percent
         disk_free_gb = disk.free / (1024 * 1024 * 1024)
 
@@ -264,7 +257,7 @@ class ResourceMonitorAgent(BaseAgent):
             network_recv_mb=network_recv_mb,
             process_count=process_count,
             thread_count=thread_count,
-            open_files=open_files
+            open_files=open_files,
         )
 
     async def monitor_worktree(self, worktree_path: str) -> TaskResult:
@@ -282,17 +275,12 @@ class ResourceMonitorAgent(BaseAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error=f"Worktree path does not exist: {worktree_path}"
+                    error=f"Worktree path does not exist: {worktree_path}",
                 )
 
             # Get branch name
             branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-            result = subprocess.run(
-                branch_cmd,
-                cwd=str(path),
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(branch_cmd, cwd=str(path), capture_output=True, text=True)
             branch_name = result.stdout.strip() if result.returncode == 0 else "unknown"
 
             # Collect process information
@@ -301,12 +289,12 @@ class ResourceMonitorAgent(BaseAgent):
             memory_total = 0.0
 
             # Find processes using the worktree path
-            for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_info', 'cwd']):
+            for proc in psutil.process_iter(["pid", "name", "cpu_percent", "memory_info", "cwd"]):
                 try:
-                    if proc.info['cwd'] and str(path) in proc.info['cwd']:
-                        pids.append(proc.info['pid'])
-                        cpu_total += proc.info['cpu_percent']
-                        memory_total += proc.info['memory_info'].rss / (1024 * 1024)
+                    if proc.info["cwd"] and str(path) in proc.info["cwd"]:
+                        pids.append(proc.info["pid"])
+                        cpu_total += proc.info["cpu_percent"]
+                        memory_total += proc.info["memory_info"].rss / (1024 * 1024)
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
@@ -314,9 +302,9 @@ class ResourceMonitorAgent(BaseAgent):
             port_usage = await self._check_port_usage(path)
 
             # Calculate disk usage
-            disk_usage_mb = sum(
-                f.stat().st_size for f in path.rglob('*') if f.is_file()
-            ) / (1024 * 1024)
+            disk_usage_mb = sum(f.stat().st_size for f in path.rglob("*") if f.is_file()) / (
+                1024 * 1024
+            )
 
             resources = WorktreeResources(
                 worktree_path=path,
@@ -326,20 +314,17 @@ class ResourceMonitorAgent(BaseAgent):
                 disk_usage_mb=disk_usage_mb,
                 process_pids=pids,
                 port_usage=port_usage,
-                last_updated=datetime.now()
+                last_updated=datetime.now(),
             )
 
             self.worktree_resources[str(path)] = resources
 
-            return TaskResult(
-                success=True,
-                output=self._worktree_resources_to_dict(resources)
-            )
+            return TaskResult(success=True, output=self._worktree_resources_to_dict(resources))
 
         except Exception as e:
             return TaskResult(success=False, output=None, error=str(e))
 
-    async def _check_port_usage(self, worktree_path: Path) -> Dict[int, str]:
+    async def _check_port_usage(self, worktree_path: Path) -> dict[int, str]:
         """Check port usage for a worktree.
 
         Args:
@@ -354,7 +339,7 @@ class ResourceMonitorAgent(BaseAgent):
         for port in range(*self.backend_port_range):
             try:
                 for conn in psutil.net_connections():
-                    if conn.laddr.port == port and conn.status == 'LISTEN':
+                    if conn.laddr.port == port and conn.status == "LISTEN":
                         try:
                             proc = psutil.Process(conn.pid)
                             port_usage[port] = proc.name()
@@ -367,7 +352,7 @@ class ResourceMonitorAgent(BaseAgent):
         for port in range(*self.frontend_port_range):
             try:
                 for conn in psutil.net_connections():
-                    if conn.laddr.port == port and conn.status == 'LISTEN':
+                    if conn.laddr.port == port and conn.status == "LISTEN":
                         try:
                             proc = psutil.Process(conn.pid)
                             port_usage[port] = proc.name()
@@ -393,8 +378,8 @@ class ResourceMonitorAgent(BaseAgent):
             success=True,
             data={
                 "agent_id": agent_id,
-                "message": "Agent monitoring not yet implemented"
-            }
+                "message": "Agent monitoring not yet implemented",
+            },
         )
 
     async def analyze_usage(self) -> TaskResult:
@@ -404,11 +389,7 @@ class ResourceMonitorAgent(BaseAgent):
             Analysis results
         """
         if len(self.resource_history) < 2:
-            return TaskResult(
-                success=False,
-                output=None,
-                error="Insufficient history for analysis"
-            )
+            return TaskResult(success=False, output=None, error="Insufficient history for analysis")
 
         # Calculate statistics
         cpu_values = [s.cpu_percent for s in self.resource_history]
@@ -421,29 +402,29 @@ class ResourceMonitorAgent(BaseAgent):
                 "max": max(cpu_values),
                 "min": min(cpu_values),
                 "current": cpu_values[-1],
-                "trend": "increasing" if cpu_values[-1] > cpu_values[0] else "decreasing"
+                "trend": "increasing" if cpu_values[-1] > cpu_values[0] else "decreasing",
             },
             "memory": {
                 "average": sum(memory_values) / len(memory_values),
                 "max": max(memory_values),
                 "min": min(memory_values),
                 "current": memory_values[-1],
-                "trend": "increasing" if memory_values[-1] > memory_values[0] else "decreasing"
+                "trend": "increasing" if memory_values[-1] > memory_values[0] else "decreasing",
             },
             "disk": {
                 "average": sum(disk_values) / len(disk_values),
                 "max": max(disk_values),
                 "min": min(disk_values),
                 "current": disk_values[-1],
-                "trend": "increasing" if disk_values[-1] > disk_values[0] else "decreasing"
+                "trend": "increasing" if disk_values[-1] > disk_values[0] else "decreasing",
             },
             "patterns": self._identify_patterns(),
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         return TaskResult(success=True, output=analysis)
 
-    def _identify_patterns(self) -> List[str]:
+    def _identify_patterns(self) -> list[str]:
         """Identify resource usage patterns.
 
         Returns:
@@ -476,7 +457,7 @@ class ResourceMonitorAgent(BaseAgent):
 
         return patterns
 
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self) -> list[str]:
         """Generate optimization recommendations.
 
         Returns:
@@ -547,14 +528,14 @@ class ResourceMonitorAgent(BaseAgent):
                 success=True,
                 output={
                     "optimizations": optimizations,
-                    "idle_worktrees": idle_worktrees
-                }
+                    "idle_worktrees": idle_worktrees,
+                },
             )
 
         except Exception as e:
             return TaskResult(success=False, output=None, error=str(e))
 
-    async def _cleanup_logs(self) -> Dict[str, Any]:
+    async def _cleanup_logs(self) -> dict[str, Any]:
         """Clean up old log files.
 
         Returns:
@@ -563,7 +544,7 @@ class ResourceMonitorAgent(BaseAgent):
         freed_mb = 0
         log_dirs = [
             Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/logs"),
-            Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees")
+            Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions-worktrees"),
         ]
 
         for log_dir in log_dirs:
@@ -581,7 +562,7 @@ class ResourceMonitorAgent(BaseAgent):
 
         return {"freed_mb": freed_mb}
 
-    async def _clear_caches(self) -> Dict[str, Any]:
+    async def _clear_caches(self) -> dict[str, Any]:
         """Clear cache directories.
 
         Returns:
@@ -590,7 +571,7 @@ class ResourceMonitorAgent(BaseAgent):
         freed_mb = 0
         cache_dirs = [
             Path.home() / ".cache" / "toolboxai",
-            Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.cache")
+            Path("/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/.cache"),
         ]
 
         for cache_dir in cache_dirs:
@@ -606,7 +587,7 @@ class ResourceMonitorAgent(BaseAgent):
 
         return {"freed_mb": freed_mb}
 
-    async def _cleanup_zombie_processes(self) -> Dict[str, int]:
+    async def _cleanup_zombie_processes(self) -> dict[str, int]:
         """Clean up zombie processes.
 
         Returns:
@@ -614,9 +595,9 @@ class ResourceMonitorAgent(BaseAgent):
         """
         killed = 0
 
-        for proc in psutil.process_iter(['pid', 'status']):
+        for proc in psutil.process_iter(["pid", "status"]):
             try:
-                if proc.info['status'] == psutil.STATUS_ZOMBIE:
+                if proc.info["status"] == psutil.STATUS_ZOMBIE:
                     proc.kill()
                     killed += 1
             except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -624,7 +605,7 @@ class ResourceMonitorAgent(BaseAgent):
 
         return {"killed": killed}
 
-    def _find_idle_worktrees(self) -> List[str]:
+    def _find_idle_worktrees(self) -> list[str]:
         """Find idle worktrees.
 
         Returns:
@@ -651,37 +632,55 @@ class ResourceMonitorAgent(BaseAgent):
         # Check CPU alerts
         if snapshot.cpu_percent > self.alert_thresholds["cpu_critical"]:
             self._create_alert(
-                "critical", "cpu", f"CPU usage critical: {snapshot.cpu_percent:.1f}%",
-                snapshot.cpu_percent, self.alert_thresholds["cpu_critical"]
+                "critical",
+                "cpu",
+                f"CPU usage critical: {snapshot.cpu_percent:.1f}%",
+                snapshot.cpu_percent,
+                self.alert_thresholds["cpu_critical"],
             )
         elif snapshot.cpu_percent > self.alert_thresholds["cpu_warning"]:
             self._create_alert(
-                "warning", "cpu", f"CPU usage high: {snapshot.cpu_percent:.1f}%",
-                snapshot.cpu_percent, self.alert_thresholds["cpu_warning"]
+                "warning",
+                "cpu",
+                f"CPU usage high: {snapshot.cpu_percent:.1f}%",
+                snapshot.cpu_percent,
+                self.alert_thresholds["cpu_warning"],
             )
 
         # Check memory alerts
         if snapshot.memory_percent > self.alert_thresholds["memory_critical"]:
             self._create_alert(
-                "critical", "memory", f"Memory usage critical: {snapshot.memory_percent:.1f}%",
-                snapshot.memory_percent, self.alert_thresholds["memory_critical"]
+                "critical",
+                "memory",
+                f"Memory usage critical: {snapshot.memory_percent:.1f}%",
+                snapshot.memory_percent,
+                self.alert_thresholds["memory_critical"],
             )
         elif snapshot.memory_percent > self.alert_thresholds["memory_warning"]:
             self._create_alert(
-                "warning", "memory", f"Memory usage high: {snapshot.memory_percent:.1f}%",
-                snapshot.memory_percent, self.alert_thresholds["memory_warning"]
+                "warning",
+                "memory",
+                f"Memory usage high: {snapshot.memory_percent:.1f}%",
+                snapshot.memory_percent,
+                self.alert_thresholds["memory_warning"],
             )
 
         # Check disk alerts
         if snapshot.disk_usage_percent > self.alert_thresholds["disk_critical"]:
             self._create_alert(
-                "critical", "disk", f"Disk usage critical: {snapshot.disk_usage_percent:.1f}%",
-                snapshot.disk_usage_percent, self.alert_thresholds["disk_critical"]
+                "critical",
+                "disk",
+                f"Disk usage critical: {snapshot.disk_usage_percent:.1f}%",
+                snapshot.disk_usage_percent,
+                self.alert_thresholds["disk_critical"],
             )
         elif snapshot.disk_usage_percent > self.alert_thresholds["disk_warning"]:
             self._create_alert(
-                "warning", "disk", f"Disk usage high: {snapshot.disk_usage_percent:.1f}%",
-                snapshot.disk_usage_percent, self.alert_thresholds["disk_warning"]
+                "warning",
+                "disk",
+                f"Disk usage high: {snapshot.disk_usage_percent:.1f}%",
+                snapshot.disk_usage_percent,
+                self.alert_thresholds["disk_warning"],
             )
 
     def _create_alert(
@@ -690,7 +689,7 @@ class ResourceMonitorAgent(BaseAgent):
         resource_type: str,
         message: str,
         value: float,
-        threshold: float
+        threshold: float,
     ):
         """Create a resource alert.
 
@@ -708,7 +707,7 @@ class ResourceMonitorAgent(BaseAgent):
             message=message,
             value=value,
             threshold=threshold,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
         self.active_alerts.append(alert)
@@ -729,8 +728,8 @@ class ResourceMonitorAgent(BaseAgent):
             success=True,
             data={
                 "alerts": [self._alert_to_dict(a) for a in active],
-                "count": len(active)
-            }
+                "count": len(active),
+            },
         )
 
     async def get_resource_status(self) -> TaskResult:
@@ -749,7 +748,7 @@ class ResourceMonitorAgent(BaseAgent):
             },
             "alerts": len([a for a in self.active_alerts if not a.resolved]),
             "metrics": self.metrics,
-            "uptime": (datetime.now() - self.start_time).total_seconds()
+            "uptime": (datetime.now() - self.start_time).total_seconds(),
         }
 
         return TaskResult(success=True, output=status)
@@ -761,11 +760,7 @@ class ResourceMonitorAgent(BaseAgent):
             Success status
         """
         if self.monitoring_task and not self.monitoring_task.done():
-            return TaskResult(
-                success=False,
-                output=None,
-                error="Monitoring already running"
-            )
+            return TaskResult(success=False, output=None, error="Monitoring already running")
 
         self.monitoring_task = asyncio.create_task(self._monitoring_loop())
         return TaskResult(success=True, output={"message": "Monitoring started"})
@@ -798,7 +793,7 @@ class ResourceMonitorAgent(BaseAgent):
                 logger.error(f"Error in monitoring loop: {e}")
                 await asyncio.sleep(self.monitoring_interval)
 
-    def _snapshot_to_dict(self, snapshot: ResourceSnapshot) -> Dict[str, Any]:
+    def _snapshot_to_dict(self, snapshot: ResourceSnapshot) -> dict[str, Any]:
         """Convert snapshot to dictionary.
 
         Args:
@@ -822,10 +817,10 @@ class ResourceMonitorAgent(BaseAgent):
             "network_recv_mb": snapshot.network_recv_mb,
             "process_count": snapshot.process_count,
             "thread_count": snapshot.thread_count,
-            "open_files": snapshot.open_files
+            "open_files": snapshot.open_files,
         }
 
-    def _worktree_resources_to_dict(self, resources: WorktreeResources) -> Dict[str, Any]:
+    def _worktree_resources_to_dict(self, resources: WorktreeResources) -> dict[str, Any]:
         """Convert worktree resources to dictionary.
 
         Args:
@@ -841,10 +836,10 @@ class ResourceMonitorAgent(BaseAgent):
             "disk_usage_mb": resources.disk_usage_mb,
             "process_count": len(resources.process_pids),
             "port_usage": resources.port_usage,
-            "last_updated": resources.last_updated.isoformat()
+            "last_updated": resources.last_updated.isoformat(),
         }
 
-    def _alert_to_dict(self, alert: ResourceAlert) -> Dict[str, Any]:
+    def _alert_to_dict(self, alert: ResourceAlert) -> dict[str, Any]:
         """Convert alert to dictionary.
 
         Args:
@@ -861,10 +856,10 @@ class ResourceMonitorAgent(BaseAgent):
             "value": alert.value,
             "threshold": alert.threshold,
             "timestamp": alert.timestamp.isoformat(),
-            "resolved": alert.resolved
+            "resolved": alert.resolved,
         }
 
-    def get_report(self) -> Dict[str, Any]:
+    def get_report(self) -> dict[str, Any]:
         """Generate a resource monitoring report.
 
         Returns:
@@ -877,13 +872,13 @@ class ResourceMonitorAgent(BaseAgent):
                 "snapshots_collected": self.metrics["snapshots_collected"],
                 "alerts_generated": self.metrics["alerts_generated"],
                 "optimizations_applied": self.metrics["optimizations_applied"],
-                "active_alerts": len([a for a in self.active_alerts if not a.resolved])
+                "active_alerts": len([a for a in self.active_alerts if not a.resolved]),
             },
             "resources": {
                 "worktrees_monitored": len(self.worktree_resources),
-                "agents_monitored": len(self.agent_resources)
+                "agents_monitored": len(self.agent_resources),
             },
-            "uptime": (datetime.now() - self.start_time).total_seconds()
+            "uptime": (datetime.now() - self.start_time).total_seconds(),
         }
 
 

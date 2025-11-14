@@ -6,28 +6,29 @@ Supports multiple databases, connection pooling, and health monitoring.
 """
 
 import asyncio
-import os
 import logging
+import os
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
-from typing import Dict, Optional, Any, List, Union, Generator, AsyncGenerator
-from urllib.parse import quote_plus
 from datetime import datetime
+from typing import Any, Optional
+from urllib.parse import quote_plus
 
-import redis
 import pymongo
-from sqlalchemy import create_engine, MetaData, text, Engine, event, pool
+import redis
+from dotenv import load_dotenv
+from sqlalchemy import Engine, create_engine, event, text
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
+    AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    AsyncEngine,
+    create_async_engine,
 )
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import QueuePool, NullPool, StaticPool, AsyncAdaptedQueuePool
-from dotenv import load_dotenv
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import AsyncAdaptedQueuePool, QueuePool
 
 # Import optimized pool configuration
-from .pool_config import get_database_pool_config, PoolMonitor, PoolStrategy
+from .pool_config import PoolMonitor, get_database_pool_config
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +43,13 @@ class DatabaseConnectionManager:
 
     def __init__(self):
         """Initialize the database connection manager."""
-        self.engines: Dict[str, Engine] = {}
-        self.async_engines: Dict[str, AsyncEngine] = {}
-        self.session_factories: Dict[str, sessionmaker] = {}
-        self.async_session_factories: Dict[str, async_sessionmaker] = {}
+        self.engines: dict[str, Engine] = {}
+        self.async_engines: dict[str, AsyncEngine] = {}
+        self.session_factories: dict[str, sessionmaker] = {}
+        self.async_session_factories: dict[str, async_sessionmaker] = {}
         self.redis_client: Optional[redis.Redis] = None
         self.mongo_client: Optional[pymongo.MongoClient] = None
-        self.pool_monitors: Dict[str, PoolMonitor] = {}
+        self.pool_monitors: dict[str, PoolMonitor] = {}
         self._initialized = False
         self.environment = os.getenv("ENVIRONMENT", "production")
 
@@ -230,7 +231,7 @@ class DatabaseConnectionManager:
             print(f"❌ Failed to connect to MongoDB: {e}")
             self.mongo_client = None
 
-    def _build_postgresql_url(self, config: Dict[str, Any]) -> str:
+    def _build_postgresql_url(self, config: dict[str, Any]) -> str:
         """
         Build PostgreSQL connection URL.
         Supports both psycopg3 and psycopg2 drivers.
@@ -249,7 +250,7 @@ class DatabaseConnectionManager:
 
         return f"{driver}://{config['username']}{password_part}@{config['host']}:{config['port']}/{config['database']}"
     
-    def _build_async_postgresql_url(self, config: Dict[str, Any]) -> str:
+    def _build_async_postgresql_url(self, config: dict[str, Any]) -> str:
         """
         Build async PostgreSQL connection URL for asyncpg.
         Always uses asyncpg driver for async connections.
@@ -398,7 +399,7 @@ class DatabaseConnectionManager:
 
         return self.async_engines[database]
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Check health of all database connections."""
         results = {}
 
@@ -475,7 +476,7 @@ class DatabaseConnectionManager:
             try:
                 # Check if there's a running event loop
                 try:
-                    loop = asyncio.get_running_loop()
+                    asyncio.get_running_loop()
                     # If we're in an async context, create a task
                     asyncio.create_task(engine.dispose())
                 except RuntimeError:

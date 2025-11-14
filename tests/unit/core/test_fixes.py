@@ -26,18 +26,21 @@ def fix_plugin_pipeline_tests():
 
     # Patch the OpenAI client in the plugin communication module
     with patch("core.agents.plugin_communication.client", mock_openai):
-        with patch("core.agents.plugin_communication.openai.AsyncOpenAI", return_value=mock_openai):
+        with patch(
+            "core.agents.plugin_communication.openai.AsyncOpenAI",
+            return_value=mock_openai,
+        ):
             yield
 
 
 def fix_websocket_tests():
     """Fix websocket tests by providing proper mocks for authentication and rate limiting"""
     # Mock JWT token validation
-    mock_token = "valid_test_token"
     mock_user = {"id": str(uuid.uuid4()), "username": "test_user", "role": "student"}
 
     with patch(
-        "apps.backend.services.websocket_handler.decode_access_token", return_value=mock_user
+        "apps.backend.services.websocket_handler.decode_access_token",
+        return_value=mock_user,
     ):
         with patch("apps.backend.api.auth.auth.decode_access_token", return_value=mock_user):
             yield
@@ -59,10 +62,12 @@ def fix_security_tests():
     """Fix security tests by providing proper security context"""
     # Mock security dependencies
     with patch(
-        "apps.backend.core.security.input_validation.validate_file_upload", return_value=True
+        "apps.backend.core.security.input_validation.validate_file_upload",
+        return_value=True,
     ):
         with patch(
-            "apps.backend.core.security.sql_injection.check_sql_injection", return_value=False
+            "apps.backend.core.security.sql_injection.check_sql_injection",
+            return_value=False,
         ):
             yield
 

@@ -13,18 +13,18 @@ This component is crucial for maintaining awareness of the educational environme
 and enabling intelligent decision-making by other SPARC components.
 """
 
-import asyncio
+import gzip
+import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-import numpy as np
 from collections import deque
-import hashlib
-import gzip
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import Any, Optional
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +59,8 @@ class EnvironmentState:
     state_type: StateType
 
     # State data
-    data: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     # Quality metrics
     confidence: float = 1.0  # 0-1 confidence in state accuracy
@@ -74,9 +74,9 @@ class EnvironmentState:
     student_id: Optional[str] = None
 
     # Game context (for Roblox states)
-    game_state: Optional[Dict[str, Any]] = None
-    player_positions: Optional[Dict[str, Tuple[float, float, float]]] = None
-    active_tools: Optional[List[str]] = None
+    game_state: Optional[dict[str, Any]] = None
+    player_positions: Optional[dict[str, tuple[float, float, float]]] = None
+    active_tools: Optional[list[str]] = None
 
     # Derived properties
     @property
@@ -106,7 +106,7 @@ class EnvironmentState:
             f"age: {self.age.total_seconds():.1f}s)"
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert state to dictionary"""
         result = asdict(self)
         result["timestamp"] = self.timestamp.isoformat()
@@ -219,7 +219,7 @@ class StateManager:
         # State storage
         self.current_state: Optional[EnvironmentState] = None
         self.state_history: deque = deque(maxlen=history_size)
-        self.state_index: Dict[str, StateHistoryEntry] = {}
+        self.state_index: dict[str, StateHistoryEntry] = {}
 
         # Quality tracking
         self.quality_metrics = {
@@ -236,7 +236,8 @@ class StateManager:
 
         # Persistence - use environment-aware path for Docker compatibility
         import os
-        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+
+        data_dir = os.environ.get("DATA_DIR", "/tmp" if os.path.exists("/tmp") else "data")
         self.persistence_path = Path(data_dir) / "state_manager"
         try:
             self.persistence_path.mkdir(parents=True, exist_ok=True)
@@ -252,15 +253,15 @@ class StateManager:
 
         logger.info(f"StateManager initialized with history_size={history_size}")
 
-    async def initialize_state(self, initial_data: Dict[str, Any] = None) -> EnvironmentState:
+    async def initialize_state(self, initial_data: dict[str, Any] = None) -> EnvironmentState:
         """
         Initialize a new state with optional initial data.
         Ensures sensible defaults for confidence/completeness by injecting
         timestamp and source metadata if missing.
-        
+
         Args:
             initial_data: Optional initial state data
-            
+
         Returns:
             Initialized EnvironmentState
         """
@@ -268,7 +269,7 @@ class StateManager:
             initial_data = {}
 
         # Populate defaults to improve initial quality metrics
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             **initial_data,
         }
         # Ensure an ISO timestamp is present for freshness/confidence computation
@@ -279,8 +280,8 @@ class StateManager:
         payload.setdefault("system_bootstrap", True)
 
         return await self.update_state(payload)
-    
-    async def update_state(self, observation: Dict[str, Any]) -> EnvironmentState:
+
+    async def update_state(self, observation: dict[str, Any]) -> EnvironmentState:
         """
         Update environment state with new observation.
 
@@ -317,33 +318,25 @@ class StateManager:
                 await self._update_predictions(new_state)
 
             # Persist if interval passed
-            if (
-                datetime.now() - self.last_persistence
-            ).total_seconds() > self.persistence_interval:
+            if (datetime.now() - self.last_persistence).total_seconds() > self.persistence_interval:
                 await self._persist_states()
 
             # Track performance
             update_time = (datetime.now() - start_time).total_seconds()
             self.update_times.append(update_time)
 
-            logger.debug(
-                f"State updated: {new_state.summary} (took {update_time:.3f}s)"
-            )
+            logger.debug(f"State updated: {new_state.summary} (took {update_time:.3f}s)")
             return new_state
 
         except (ValueError, TypeError, KeyError, AttributeError, RuntimeError) as e:
             logger.error(f"Failed to update state: {e}")
             raise
 
-    async def _create_state_from_observation(
-        self, observation: Dict[str, Any]
-    ) -> EnvironmentState:
+    async def _create_state_from_observation(self, observation: dict[str, Any]) -> EnvironmentState:
         """Create EnvironmentState from raw observation data"""
 
         # Generate unique state ID
-        state_id = (
-            f"state_{datetime.now().timestamp()}_{hash(str(observation)) % 10000}"
-        )
+        state_id = f"state_{datetime.now().timestamp()}_{hash(str(observation)) % 10000}"
 
         # Determine state type from observation
         state_type = self._infer_state_type(observation)
@@ -394,7 +387,7 @@ class StateManager:
 
         return state
 
-    def _infer_state_type(self, observation: Dict[str, Any]) -> StateType:
+    def _infer_state_type(self, observation: dict[str, Any]) -> StateType:
         """Infer state type from observation data"""
 
         if "roblox" in str(observation).lower() or "game_state" in observation:
@@ -410,7 +403,7 @@ class StateManager:
         else:
             return StateType.SYSTEM_STATUS
 
-    def _calculate_confidence(self, observation: Dict[str, Any]) -> float:
+    def _calculate_confidence(self, observation: dict[str, Any]) -> float:
         """Calculate confidence in observation data"""
         confidence_factors = []
 
@@ -442,13 +435,9 @@ class StateManager:
                 DEFAULT_CONFIDENCE = 0.5
                 confidence_factors.append(DEFAULT_CONFIDENCE)
 
-        return (
-            sum(confidence_factors) / len(confidence_factors)
-            if confidence_factors
-            else 0.5
-        )
+        return sum(confidence_factors) / len(confidence_factors) if confidence_factors else 0.5
 
-    def _calculate_completeness(self, observation: Dict[str, Any]) -> float:
+    def _calculate_completeness(self, observation: dict[str, Any]) -> float:
         """Calculate completeness of observation data"""
 
         # Define expected keys for different observation types
@@ -473,9 +462,7 @@ class StateManager:
             return present_keys / len(expected_keys)
 
         # Generic completeness assessment
-        non_empty_values = sum(
-            1 for v in observation.values() if v is not None and str(v).strip()
-        )
+        non_empty_values = sum(1 for v in observation.values() if v is not None and str(v).strip())
         MIN_EXPECTED_FIELDS = 5
         return min(1.0, non_empty_values / max(MIN_EXPECTED_FIELDS, len(observation)))
 
@@ -492,9 +479,7 @@ class StateManager:
         # Check for required educational context
         if state.state_type in [StateType.EDUCATIONAL_CONTENT, StateType.QUIZ_SESSION]:
             if not state.subject_area:
-                logger.warning(
-                    f"Missing subject area in educational state: {state.state_id}"
-                )
+                logger.warning(f"Missing subject area in educational state: {state.state_id}")
 
         # Validate Roblox game states
         if state.state_type == StateType.ROBLOX_GAME:
@@ -578,9 +563,7 @@ class StateManager:
         if compressed_count > 0:
             self.compression_stats["compressed"] += compressed_count
             self.compression_stats["saved_bytes"] += bytes_saved
-            logger.debug(
-                f"Compressed {compressed_count} states, saved {bytes_saved} bytes"
-            )
+            logger.debug(f"Compressed {compressed_count} states, saved {bytes_saved} bytes")
 
     async def _update_predictions(self, state: EnvironmentState):
         """Update predictive models with new state"""
@@ -655,7 +638,7 @@ class StateManager:
                 state_dict["educational_metrics"] = {
                     "learning_effectiveness": self._calculate_learning_effectiveness(state),
                     "curriculum_alignment": self._calculate_curriculum_alignment(state),
-                    "engagement_score": self._calculate_engagement_score(state)
+                    "engagement_score": self._calculate_engagement_score(state),
                 }
                 educational_states.append(state_dict)
 
@@ -668,7 +651,7 @@ class StateManager:
                 "subject_distribution": self._analyze_subject_distribution(),
                 "grade_level_coverage": self._analyze_grade_level_coverage(),
                 "learning_objective_completion": self._analyze_learning_objectives(),
-                "adaptive_learning_trends": self._analyze_adaptive_trends()
+                "adaptive_learning_trends": self._analyze_adaptive_trends(),
             }
 
             metrics_file = self.persistence_path / "quality_metrics.json"
@@ -678,14 +661,14 @@ class StateManager:
             self.last_persistence = datetime.now()
             logger.debug("Enhanced educational states persisted successfully")
 
-        except (IOError, OSError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to persist states: {e}")
 
     def get_current_state(self) -> Optional[EnvironmentState]:
         """Get the current environment state"""
         return self.current_state
 
-    def get_recent_states(self, count: int = 10) -> List[EnvironmentState]:
+    def get_recent_states(self, count: int = 10) -> list[EnvironmentState]:
         """Get recent states from history"""
 
         if not self.state_history:
@@ -694,9 +677,7 @@ class StateManager:
         recent_entries = list(self.state_history)[-count:]
         return [entry.get_state() for entry in recent_entries]
 
-    def get_states_by_type(
-        self, state_type: StateType, count: int = 10
-    ) -> List[EnvironmentState]:
+    def get_states_by_type(self, state_type: StateType, count: int = 10) -> list[EnvironmentState]:
         """Get states of specific type"""
 
         matching_states = []
@@ -717,7 +698,7 @@ class StateManager:
 
     async def predict_next_state(
         self, current_state: Optional[EnvironmentState] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Predict likely next state based on patterns"""
 
         if not self.prediction_enabled:
@@ -747,9 +728,7 @@ class StateManager:
                 predictions[next_pattern] = probability
 
             # Sort by probability
-            sorted_predictions = sorted(
-                predictions.items(), key=lambda x: x[1], reverse=True
-            )
+            sorted_predictions = sorted(predictions.items(), key=lambda x: x[1], reverse=True)
 
             return {
                 "prediction": "success",
@@ -760,7 +739,7 @@ class StateManager:
 
         return {"prediction": "no_pattern_match"}
 
-    async def calculate_reward(self, metrics: Dict[str, Any]) -> float:
+    async def calculate_reward(self, metrics: dict[str, Any]) -> float:
         """Calculate a normalized reward [0, 1] for a completed task.
 
         The reward considers learning objectives met and execution time. It is
@@ -814,7 +793,7 @@ class StateManager:
             # Return a conservative default
             return 0.0
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of StateManager"""
 
         return {
@@ -822,17 +801,13 @@ class StateManager:
             "history_size": len(self.state_history),
             "quality_metrics": self.quality_metrics.copy(),
             "performance": {
-                "average_update_time": (
-                    np.mean(self.update_times) if self.update_times else 0
-                ),
+                "average_update_time": (np.mean(self.update_times) if self.update_times else 0),
                 "compression_stats": self.compression_stats.copy(),
             },
             "prediction_models": len(self.state_predictors),
             "memory_usage": {
                 "total_entries": len(self.state_history),
-                "compressed_entries": sum(
-                    1 for e in self.state_history if e.compressed
-                ),
+                "compressed_entries": sum(1 for e in self.state_history if e.compressed),
                 "estimated_bytes": sum(e.memory_usage for e in self.state_history),
             },
             "persistence": {
@@ -887,7 +862,11 @@ class StateManager:
             engagement_score = engagement_data.get("interaction_rate", 0.5)
             effectiveness_factors.append(engagement_score)
 
-        return sum(effectiveness_factors) / len(effectiveness_factors) if effectiveness_factors else 0.0
+        return (
+            sum(effectiveness_factors) / len(effectiveness_factors)
+            if effectiveness_factors
+            else 0.0
+        )
 
     def _calculate_curriculum_alignment(self, state: EnvironmentState) -> float:
         """Calculate curriculum alignment score"""
@@ -907,7 +886,9 @@ class StateManager:
             content_tags = state.data["content_tags"]
             subject_keywords = self._get_subject_keywords(state.subject_area)
             if subject_keywords:
-                relevance_score = len(set(content_tags) & set(subject_keywords)) / len(subject_keywords)
+                relevance_score = len(set(content_tags) & set(subject_keywords)) / len(
+                    subject_keywords
+                )
                 subject_relevance = min(1.0, relevance_score)
 
         return (grade_appropriateness + subject_relevance) / 2.0
@@ -935,7 +916,7 @@ class StateManager:
 
         return sum(engagement_factors) / len(engagement_factors) if engagement_factors else 0.5
 
-    def _analyze_subject_distribution(self) -> Dict[str, int]:
+    def _analyze_subject_distribution(self) -> dict[str, int]:
         """Analyze distribution of subjects across recent states"""
         subject_counts = {}
         recent_states = self.get_recent_states(100)
@@ -946,7 +927,7 @@ class StateManager:
 
         return subject_counts
 
-    def _analyze_grade_level_coverage(self) -> Dict[str, int]:
+    def _analyze_grade_level_coverage(self) -> dict[str, int]:
         """Analyze grade level coverage across recent states"""
         grade_counts = {}
         recent_states = self.get_recent_states(100)
@@ -958,12 +939,12 @@ class StateManager:
 
         return grade_counts
 
-    def _analyze_learning_objectives(self) -> Dict[str, float]:
+    def _analyze_learning_objectives(self) -> dict[str, float]:
         """Analyze learning objective completion rates"""
         objective_metrics = {
             "total_objectives_tracked": 0,
             "average_completion_rate": 0.0,
-            "objectives_per_session": 0.0
+            "objectives_per_session": 0.0,
         }
 
         recent_states = self.get_recent_states(50)
@@ -980,17 +961,19 @@ class StateManager:
         if total_objectives > 0:
             objective_metrics["total_objectives_tracked"] = total_objectives
             objective_metrics["average_completion_rate"] = total_completion / total_objectives
-            objective_metrics["objectives_per_session"] = total_objectives / max(1, len(recent_states))
+            objective_metrics["objectives_per_session"] = total_objectives / max(
+                1, len(recent_states)
+            )
 
         return objective_metrics
 
-    def _analyze_adaptive_trends(self) -> Dict[str, Any]:
+    def _analyze_adaptive_trends(self) -> dict[str, Any]:
         """Analyze adaptive learning trends from state history"""
         trends = {
             "quality_improvement": 0.0,
             "complexity_adaptation": "stable",
             "engagement_trend": "stable",
-            "personalization_effectiveness": 0.0
+            "personalization_effectiveness": 0.0,
         }
 
         recent_states = self.get_recent_states(20)
@@ -1005,7 +988,7 @@ class StateManager:
         # Analyze complexity adaptation
         complexity_changes = []
         for i in range(1, len(recent_states)):
-            prev_complexity = recent_states[i-1].data.get("content_complexity", 0.5)
+            prev_complexity = recent_states[i - 1].data.get("content_complexity", 0.5)
             curr_complexity = recent_states[i].data.get("content_complexity", 0.5)
             complexity_changes.append(curr_complexity - prev_complexity)
 
@@ -1018,14 +1001,50 @@ class StateManager:
 
         return trends
 
-    def _get_subject_keywords(self, subject: str) -> List[str]:
+    def _get_subject_keywords(self, subject: str) -> list[str]:
         """Get relevant keywords for subject area"""
         subject_keywords = {
-            "math": ["equation", "number", "calculation", "algebra", "geometry", "statistics"],
-            "science": ["experiment", "hypothesis", "observation", "theory", "biology", "chemistry", "physics"],
-            "english": ["reading", "writing", "grammar", "literature", "vocabulary", "composition"],
-            "history": ["timeline", "event", "civilization", "culture", "war", "politics"],
-            "geography": ["map", "location", "climate", "population", "resources", "continent"]
+            "math": [
+                "equation",
+                "number",
+                "calculation",
+                "algebra",
+                "geometry",
+                "statistics",
+            ],
+            "science": [
+                "experiment",
+                "hypothesis",
+                "observation",
+                "theory",
+                "biology",
+                "chemistry",
+                "physics",
+            ],
+            "english": [
+                "reading",
+                "writing",
+                "grammar",
+                "literature",
+                "vocabulary",
+                "composition",
+            ],
+            "history": [
+                "timeline",
+                "event",
+                "civilization",
+                "culture",
+                "war",
+                "politics",
+            ],
+            "geography": [
+                "map",
+                "location",
+                "climate",
+                "population",
+                "resources",
+                "continent",
+            ],
         }
 
         return subject_keywords.get(subject.lower(), [])

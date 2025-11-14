@@ -63,7 +63,8 @@ def coordinator_service_with_mocks(
 ):
     """CoordinatorService with all dependencies mocked"""
     with patch(
-        "apps.backend.services.coordinator_service.redis.from_url", return_value=mock_redis_client
+        "apps.backend.services.coordinator_service.redis.from_url",
+        return_value=mock_redis_client,
     ):
         with patch(
             "apps.backend.services.coordinator_service.MainCoordinator",
@@ -110,7 +111,8 @@ class TestCoordinatorServiceInitialization:
     def test_coordinator_service_construction(self):
         """Test coordinator service construction"""
         with patch(
-            "apps.backend.services.coordinator_service.MainCoordinator", return_value=AsyncMock()
+            "apps.backend.services.coordinator_service.MainCoordinator",
+            return_value=AsyncMock(),
         ):
             with patch(
                 "apps.backend.services.coordinator_service.WorkflowCoordinator",
@@ -556,7 +558,7 @@ class TestLangChainConfiguration:
                                         ):
                                             mock_getenv.return_value = None
 
-                                            service = CoordinatorService()
+                                            CoordinatorService()
 
                                             # Verify defaults were set
                                             assert "LANGCHAIN_PROJECT" in mock_environ
@@ -595,7 +597,7 @@ class TestLangChainConfiguration:
                                             "apps.backend.services.coordinator_service.Client",
                                             return_value=AsyncMock(),
                                         ):
-                                            service = CoordinatorService()
+                                            CoordinatorService()
 
                                             # Verify warning was logged
                                             mock_logger.warning.assert_called()

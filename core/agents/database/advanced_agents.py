@@ -13,26 +13,22 @@ Version: 1.0.0
 """
 
 import asyncio
-import logging
 import hashlib
 import json
+import logging
 import uuid
-import gzip
-import shutil
-from typing import Dict, Any, Optional, List, Set, Tuple, Union
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-import pickle
+from typing import Any, Optional
+
+from core.agents.base_agent import AgentCapability, AgentState, TaskResult
 
 from .base_database_agent import (
     BaseDatabaseAgent,
     DatabaseAgentConfig,
     DatabaseOperation,
-    DatabaseHealth
 )
-from core.agents.base_agent import AgentCapability, AgentState, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -41,18 +37,20 @@ logger = logging.getLogger(__name__)
 # EVENT SOURCING AGENT
 # ============================================================================
 
+
 @dataclass
 class Event:
     """Represents a domain event."""
+
     event_id: str
     aggregate_id: str
     event_type: str
-    event_data: Dict[str, Any]
-    event_metadata: Dict[str, Any]
+    event_data: dict[str, Any]
+    event_metadata: dict[str, Any]
     event_version: int
     created_at: datetime
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert event to dictionary."""
         return {
             "event_id": self.event_id,
@@ -61,7 +59,7 @@ class Event:
             "event_data": self.event_data,
             "event_metadata": self.event_metadata,
             "event_version": self.event_version,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
 
@@ -85,18 +83,18 @@ class EventSourcingAgent(BaseDatabaseAgent):
                 name="EventSourcingAgent",
                 capability=AgentCapability.ORCHESTRATION,
                 event_sourcing_enabled=True,
-                cqrs_enabled=True
+                cqrs_enabled=True,
             )
         super().__init__(config)
-        self.event_store: List[Event] = []
-        self.snapshots: Dict[str, Any] = {}
-        self.projections: Dict[str, Any] = {}
-        self.event_handlers: Dict[str, List[callable]] = {}
+        self.event_store: list[Event] = []
+        self.snapshots: dict[str, Any] = {}
+        self.projections: dict[str, Any] = {}
+        self.event_handlers: dict[str, list[callable]] = {}
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process event sourcing tasks."""
         task = state.get("task", "")
-        operation = state.get("operation")
+        state.get("operation")
 
         if task == "append_event":
             event_data = state.get("event_data", {})
@@ -110,7 +108,7 @@ class EventSourcingAgent(BaseDatabaseAgent):
         else:
             return await self.get_event_stream()
 
-    async def append_event(self, event_data: Dict[str, Any]) -> TaskResult:
+    async def append_event(self, event_data: dict[str, Any]) -> TaskResult:
         """
         Append a new event to the event store.
 
@@ -129,24 +127,27 @@ class EventSourcingAgent(BaseDatabaseAgent):
                 event_data=event_data.get("data", {}),
                 event_metadata=event_data.get("metadata", {}),
                 event_version=len(self.event_store) + 1,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
 
             # Store event in database
             async with self.get_db_session() as session:
-                await session.execute("""
+                await session.execute(
+                    """
                     INSERT INTO event_store
                     (event_id, aggregate_id, event_type, event_data, event_metadata, event_version, created_at)
                     VALUES (:event_id, :aggregate_id, :event_type, :event_data, :event_metadata, :event_version, :created_at)
-                """, {
-                    "event_id": event.event_id,
-                    "aggregate_id": event.aggregate_id,
-                    "event_type": event.event_type,
-                    "event_data": json.dumps(event.event_data),
-                    "event_metadata": json.dumps(event.event_metadata),
-                    "event_version": event.event_version,
-                    "created_at": event.created_at
-                })
+                """,
+                    {
+                        "event_id": event.event_id,
+                        "aggregate_id": event.aggregate_id,
+                        "event_type": event.event_type,
+                        "event_data": json.dumps(event.event_data),
+                        "event_metadata": json.dumps(event.event_metadata),
+                        "event_version": event.event_version,
+                        "created_at": event.created_at,
+                    },
+                )
 
             # Add to in-memory store
             self.event_store.append(event)
@@ -169,22 +170,19 @@ class EventSourcingAgent(BaseDatabaseAgent):
                     "aggregate_id": event.aggregate_id,
                     "event_type": event.event_type,
                     "event_version": event.event_version,
-                    "timestamp": event.created_at.isoformat()
-                }
+                    "timestamp": event.created_at.isoformat(),
+                },
             )
 
         except Exception as e:
             logger.error(f"Failed to append event: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def replay_events(
         self,
         aggregate_id: Optional[str] = None,
         from_version: int = 0,
-        to_version: Optional[int] = None
+        to_version: Optional[int] = None,
     ) -> TaskResult:
         """
         Replay events for an aggregate or all events.
@@ -230,7 +228,7 @@ class EventSourcingAgent(BaseDatabaseAgent):
                         event_data=json.loads(row["event_data"]),
                         event_metadata=json.loads(row["event_metadata"]),
                         event_version=row["event_version"],
-                        created_at=row["created_at"]
+                        created_at=row["created_at"],
                     )
                     events_to_replay.append(event)
 
@@ -247,16 +245,13 @@ class EventSourcingAgent(BaseDatabaseAgent):
                     "events_replayed": len(events_to_replay),
                     "final_state": rebuilt_state,
                     "aggregate_id": aggregate_id,
-                    "version_range": f"{from_version}-{to_version or 'latest'}"
-                }
+                    "version_range": f"{from_version}-{to_version or 'latest'}",
+                },
             )
 
         except Exception as e:
             logger.error(f"Event replay failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def create_snapshot(self, aggregate_id: str) -> TaskResult:
         """
@@ -281,40 +276,37 @@ class EventSourcingAgent(BaseDatabaseAgent):
                 "aggregate_id": aggregate_id,
                 "snapshot_data": current_state,
                 "event_version": len(self.event_store),
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.utcnow().isoformat(),
             }
 
             # Store snapshot
             async with self.get_db_session() as session:
-                await session.execute("""
+                await session.execute(
+                    """
                     INSERT INTO event_snapshots
                     (snapshot_id, aggregate_id, snapshot_data, event_version, created_at)
                     VALUES (:snapshot_id, :aggregate_id, :snapshot_data, :event_version, :created_at)
-                """, {
-                    "snapshot_id": snapshot_id,
-                    "aggregate_id": aggregate_id,
-                    "snapshot_data": json.dumps(snapshot["snapshot_data"]),
-                    "event_version": snapshot["event_version"],
-                    "created_at": snapshot["created_at"]
-                })
+                """,
+                    {
+                        "snapshot_id": snapshot_id,
+                        "aggregate_id": aggregate_id,
+                        "snapshot_data": json.dumps(snapshot["snapshot_data"]),
+                        "event_version": snapshot["event_version"],
+                        "created_at": snapshot["created_at"],
+                    },
+                )
 
             self.snapshots[aggregate_id] = snapshot
 
             logger.info(f"Snapshot created for aggregate {aggregate_id}")
 
-            return TaskResult(
-                success=True,
-                data=snapshot
-            )
+            return TaskResult(success=True, data=snapshot)
 
         except Exception as e:
             logger.error(f"Snapshot creation failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def get_event_stream(self, filters: Optional[Dict] = None) -> TaskResult:
+    async def get_event_stream(self, filters: Optional[dict] = None) -> TaskResult:
         """Get event stream with optional filters."""
         try:
             events = []
@@ -344,31 +336,26 @@ class EventSourcingAgent(BaseDatabaseAgent):
                 rows = result.fetchall()
 
                 for row in rows:
-                    events.append({
-                        "event_id": row["event_id"],
-                        "aggregate_id": row["aggregate_id"],
-                        "event_type": row["event_type"],
-                        "event_version": row["event_version"],
-                        "created_at": row["created_at"].isoformat()
-                    })
+                    events.append(
+                        {
+                            "event_id": row["event_id"],
+                            "aggregate_id": row["aggregate_id"],
+                            "event_type": row["event_type"],
+                            "event_version": row["event_version"],
+                            "created_at": row["created_at"].isoformat(),
+                        }
+                    )
 
             return TaskResult(
                 success=True,
-                data={
-                    "events": events,
-                    "count": len(events),
-                    "filters": filters or {}
-                }
+                data={"events": events, "count": len(events), "filters": filters or {}},
             )
 
         except Exception as e:
             logger.error(f"Failed to get event stream: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _apply_event(self, state: Dict, event: Event) -> Dict:
+    async def _apply_event(self, state: dict, event: Event) -> dict:
         """Apply an event to rebuild state."""
         # Event-specific logic would go here
         # This is a simplified implementation
@@ -389,7 +376,7 @@ class EventSourcingAgent(BaseDatabaseAgent):
         self.projections[projection_key] = {
             "last_event": event.event_id,
             "version": event.event_version,
-            "updated_at": event.created_at.isoformat()
+            "updated_at": event.created_at.isoformat(),
         }
 
     async def _trigger_handlers(self, event: Event):
@@ -412,6 +399,7 @@ class EventSourcingAgent(BaseDatabaseAgent):
 # DATA INTEGRITY AGENT
 # ============================================================================
 
+
 class DataIntegrityAgent(BaseDatabaseAgent):
     """
     Validates data consistency and repairs integrity issues.
@@ -431,16 +419,16 @@ class DataIntegrityAgent(BaseDatabaseAgent):
             config = DatabaseAgentConfig(
                 name="DataIntegrityAgent",
                 capability=AgentCapability.VALIDATION,
-                auto_repair=True
+                auto_repair=True,
             )
         super().__init__(config)
-        self.integrity_checks: Dict[str, callable] = {}
-        self.repair_strategies: Dict[str, callable] = {}
-        self.validation_history: List[Dict] = []
+        self.integrity_checks: dict[str, callable] = {}
+        self.repair_strategies: dict[str, callable] = {}
+        self.validation_history: list[dict] = []
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process data integrity tasks."""
-        task = state.get("task", "")
+        state.get("task", "")
         operation = state.get("operation", DatabaseOperation.VALIDATE)
 
         if operation == DatabaseOperation.VALIDATE:
@@ -466,7 +454,7 @@ class DataIntegrityAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "checks_performed": [],
                 "issues_found": [],
-                "status": "healthy"
+                "status": "healthy",
             }
 
             # Check foreign key constraints
@@ -508,19 +496,15 @@ class DataIntegrityAgent(BaseDatabaseAgent):
             # Publish validation results
             await self.publish_event("integrity_validated", validation_report)
 
-            logger.info(f"Integrity validation completed: {len(validation_report['issues_found'])} issues found")
-
-            return TaskResult(
-                success=True,
-                data=validation_report
+            logger.info(
+                f"Integrity validation completed: {len(validation_report['issues_found'])} issues found"
             )
+
+            return TaskResult(success=True, data=validation_report)
 
         except Exception as e:
             logger.error(f"Integrity validation failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def repair_integrity_issues(self) -> TaskResult:
         """
@@ -537,7 +521,7 @@ class DataIntegrityAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "repairs_attempted": [],
                 "repairs_successful": [],
-                "repairs_failed": []
+                "repairs_failed": [],
             }
 
             # Get latest validation report
@@ -559,10 +543,7 @@ class DataIntegrityAgent(BaseDatabaseAgent):
                         repair_report["repairs_successful"].append(issue)
                         logger.info(f"Repaired: {issue['type']} - {issue.get('description', '')}")
                     except Exception as e:
-                        repair_report["repairs_failed"].append({
-                            "issue": issue,
-                            "error": str(e)
-                        })
+                        repair_report["repairs_failed"].append({"issue": issue, "error": str(e)})
                         logger.error(f"Repair failed: {e}")
 
             # Verify repairs
@@ -570,32 +551,28 @@ class DataIntegrityAgent(BaseDatabaseAgent):
                 verification_result = await self.validate_integrity()
                 repair_report["verification"] = verification_result.data
 
-            return TaskResult(
-                success=True,
-                data=repair_report
-            )
+            return TaskResult(success=True, data=repair_report)
 
         except Exception as e:
             logger.error(f"Repair process failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _check_foreign_keys(self) -> List[Dict]:
+    async def _check_foreign_keys(self) -> list[dict]:
         """Check foreign key constraint violations."""
         issues = []
 
         try:
             async with self.get_db_session() as session:
                 # Check for invalid foreign keys (simplified example)
-                result = await session.execute("""
+                result = await session.execute(
+                    """
                     SELECT
                         tc.table_name,
                         tc.constraint_name
                     FROM information_schema.table_constraints tc
                     WHERE tc.constraint_type = 'FOREIGN KEY'
-                """)
+                """
+                )
 
                 constraints = result.fetchall()
 
@@ -607,18 +584,20 @@ class DataIntegrityAgent(BaseDatabaseAgent):
 
                     # Example of finding an issue
                     if False:  # Would be actual check
-                        issues.append({
-                            "type": "foreign_key_violation",
-                            "table": constraint["table_name"],
-                            "constraint": constraint["constraint_name"],
-                            "description": "Invalid foreign key reference"
-                        })
+                        issues.append(
+                            {
+                                "type": "foreign_key_violation",
+                                "table": constraint["table_name"],
+                                "constraint": constraint["constraint_name"],
+                                "description": "Invalid foreign key reference",
+                            }
+                        )
         except:
             pass  # Handle database not available
 
         return issues
 
-    async def _check_orphan_records(self) -> List[Dict]:
+    async def _check_orphan_records(self) -> list[dict]:
         """Check for orphan records without parent references."""
         issues = []
 
@@ -631,23 +610,25 @@ class DataIntegrityAgent(BaseDatabaseAgent):
 
             # Example of finding orphans (would be actual query)
             if False:  # Would check actual orphans
-                issues.append({
-                    "type": "orphan_records",
-                    "table": table,
-                    "count": 5,
-                    "description": f"Found orphan records in {table}"
-                })
+                issues.append(
+                    {
+                        "type": "orphan_records",
+                        "table": table,
+                        "count": 5,
+                        "description": f"Found orphan records in {table}",
+                    }
+                )
 
         return issues
 
-    async def _check_data_consistency(self) -> List[Dict]:
+    async def _check_data_consistency(self) -> list[dict]:
         """Check for data consistency issues."""
         issues = []
 
         # Check for inconsistent data
         consistency_checks = [
             {"field": "email", "pattern": r"^[\w\.-]+@[\w\.-]+\.\w+$"},
-            {"field": "phone", "pattern": r"^\+?1?\d{9,15}$"}
+            {"field": "phone", "pattern": r"^\+?1?\d{9,15}$"},
         ]
 
         for check in consistency_checks:
@@ -656,16 +637,18 @@ class DataIntegrityAgent(BaseDatabaseAgent):
 
             # Example of finding inconsistency
             if False:  # Would be actual check
-                issues.append({
-                    "type": "data_inconsistency",
-                    "field": check["field"],
-                    "pattern": check["pattern"],
-                    "description": f"Invalid format for {check['field']}"
-                })
+                issues.append(
+                    {
+                        "type": "data_inconsistency",
+                        "field": check["field"],
+                        "pattern": check["pattern"],
+                        "description": f"Invalid format for {check['field']}",
+                    }
+                )
 
         return issues
 
-    async def _check_duplicates(self) -> List[Dict]:
+    async def _check_duplicates(self) -> list[dict]:
         """Check for duplicate records."""
         issues = []
 
@@ -678,12 +661,14 @@ class DataIntegrityAgent(BaseDatabaseAgent):
 
             # Example of finding duplicates
             if False:  # Would be actual check
-                issues.append({
-                    "type": "duplicate_records",
-                    "table": table,
-                    "count": 3,
-                    "description": f"Found duplicate records in {table}"
-                })
+                issues.append(
+                    {
+                        "type": "duplicate_records",
+                        "table": table,
+                        "count": 3,
+                        "description": f"Found duplicate records in {table}",
+                    }
+                )
 
         return issues
 
@@ -693,39 +678,36 @@ class DataIntegrityAgent(BaseDatabaseAgent):
             constraint_report = {
                 "timestamp": datetime.utcnow().isoformat(),
                 "constraints_checked": 0,
-                "violations": []
+                "violations": [],
             }
 
             async with self.get_db_session() as session:
                 # Get all constraints
-                result = await session.execute("""
+                result = await session.execute(
+                    """
                     SELECT
                         tc.constraint_name,
                         tc.constraint_type,
                         tc.table_name
                     FROM information_schema.table_constraints tc
                     WHERE tc.table_schema = 'public'
-                """)
+                """
+                )
 
                 constraints = result.fetchall()
                 constraint_report["constraints_checked"] = len(constraints)
 
-            return TaskResult(
-                success=True,
-                data=constraint_report
-            )
+            return TaskResult(success=True, data=constraint_report)
 
         except Exception as e:
             logger.error(f"Constraint check failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
 
 # ============================================================================
 # BACKUP RECOVERY AGENT
 # ============================================================================
+
 
 class BackupRecoveryAgent(BaseDatabaseAgent):
     """
@@ -746,20 +728,20 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
             config = DatabaseAgentConfig(
                 name="BackupRecoveryAgent",
                 capability=AgentCapability.ORCHESTRATION,
-                backup_retention_days=30
+                backup_retention_days=30,
             )
         super().__init__(config)
-        self.backup_history: List[Dict] = []
-        self.recovery_points: Dict[str, Any] = {}
-        self.backup_schedule: Dict[str, Any] = {
+        self.backup_history: list[dict] = []
+        self.recovery_points: dict[str, Any] = {}
+        self.backup_schedule: dict[str, Any] = {
             "full": "0 2 * * 0",  # Weekly full backup at 2 AM Sunday
             "incremental": "0 2 * * 1-6",  # Daily incremental
-            "transaction_log": "*/15 * * * *"  # Every 15 minutes
+            "transaction_log": "*/15 * * * *",  # Every 15 minutes
         }
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process backup and recovery tasks."""
-        task = state.get("task", "")
+        state.get("task", "")
         operation = state.get("operation", DatabaseOperation.BACKUP)
 
         if operation == DatabaseOperation.BACKUP:
@@ -810,7 +792,7 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
                 "size_bytes": backup_result.get("size", 0),
                 "duration_seconds": backup_result.get("duration", 0),
                 "checksum": backup_result.get("checksum", ""),
-                "status": "completed"
+                "status": "completed",
             }
 
             # Store backup metadata
@@ -840,22 +822,14 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
 
             logger.info(f"Backup completed: {backup_id}")
 
-            return TaskResult(
-                success=True,
-                data=backup_metadata
-            )
+            return TaskResult(success=True, data=backup_metadata)
 
         except Exception as e:
             logger.error(f"Backup failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e), "backup_type": backup_type}
-            )
+            return TaskResult(success=False, data={"error": str(e), "backup_type": backup_type})
 
     async def restore_backup(
-        self,
-        backup_id: Optional[str] = None,
-        point_in_time: Optional[datetime] = None
+        self, backup_id: Optional[str] = None, point_in_time: Optional[datetime] = None
     ) -> TaskResult:
         """
         Restore database from backup.
@@ -880,17 +854,14 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
                 backup = self.backup_history[-1] if self.backup_history else None
 
             if not backup:
-                return TaskResult(
-                    success=False,
-                    data={"error": "No suitable backup found"}
-                )
+                return TaskResult(success=False, data={"error": "No suitable backup found"})
 
             restoration_report = {
                 "restoration_id": str(uuid.uuid4()),
                 "backup_id": backup["backup_id"],
                 "started_at": datetime.utcnow().isoformat(),
                 "backup_timestamp": backup["timestamp"],
-                "steps": []
+                "steps": [],
             }
 
             # Step 1: Validate backup
@@ -898,25 +869,30 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
             if not validation["valid"]:
                 return TaskResult(
                     success=False,
-                    data={"error": "Backup validation failed", "validation": validation}
+                    data={
+                        "error": "Backup validation failed",
+                        "validation": validation,
+                    },
                 )
             restoration_report["steps"].append({"step": "validation", "status": "completed"})
 
             # Step 2: Create restoration point
-            restoration_point = await self._create_restoration_point()
+            await self._create_restoration_point()
             restoration_report["steps"].append({"step": "restoration_point", "status": "completed"})
 
             # Step 3: Restore data
-            restore_result = await self._restore_data(Path(backup["path"]))
+            await self._restore_data(Path(backup["path"]))
             restoration_report["steps"].append({"step": "restore_data", "status": "completed"})
 
             # Step 4: Apply transaction logs if point-in-time
             if point_in_time:
-                log_result = await self._apply_transaction_logs(backup["timestamp"], point_in_time)
-                restoration_report["steps"].append({"step": "transaction_logs", "status": "completed"})
+                await self._apply_transaction_logs(backup["timestamp"], point_in_time)
+                restoration_report["steps"].append(
+                    {"step": "transaction_logs", "status": "completed"}
+                )
 
             # Step 5: Verify restoration
-            verification = await self._verify_restoration()
+            await self._verify_restoration()
             restoration_report["steps"].append({"step": "verification", "status": "completed"})
 
             restoration_report["completed_at"] = datetime.utcnow().isoformat()
@@ -927,17 +903,11 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
 
             logger.info(f"Restoration completed: {restoration_report['restoration_id']}")
 
-            return TaskResult(
-                success=True,
-                data=restoration_report
-            )
+            return TaskResult(success=True, data=restoration_report)
 
         except Exception as e:
             logger.error(f"Restoration failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def verify_backups(self) -> TaskResult:
         """Verify all backups for integrity and recoverability."""
@@ -947,11 +917,13 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
                 "backups_checked": 0,
                 "valid_backups": [],
                 "invalid_backups": [],
-                "recovery_test_results": []
+                "recovery_test_results": [],
             }
 
             # Check recent backups
-            recent_backups = self.backup_history[-10:] if len(self.backup_history) > 10 else self.backup_history
+            recent_backups = (
+                self.backup_history[-10:] if len(self.backup_history) > 10 else self.backup_history
+            )
 
             for backup in recent_backups:
                 verification_report["backups_checked"] += 1
@@ -962,29 +934,25 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
                 if integrity["valid"]:
                     verification_report["valid_backups"].append(backup["backup_id"])
                 else:
-                    verification_report["invalid_backups"].append({
-                        "backup_id": backup["backup_id"],
-                        "reason": integrity.get("error", "Unknown")
-                    })
+                    verification_report["invalid_backups"].append(
+                        {
+                            "backup_id": backup["backup_id"],
+                            "reason": integrity.get("error", "Unknown"),
+                        }
+                    )
 
             # Perform recovery test on latest backup
             if self.backup_history:
                 test_result = await self._test_recovery(self.backup_history[-1])
                 verification_report["recovery_test_results"].append(test_result)
 
-            return TaskResult(
-                success=True,
-                data=verification_report
-            )
+            return TaskResult(success=True, data=verification_report)
 
         except Exception as e:
             logger.error(f"Backup verification failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _full_backup(self, path: Path) -> Dict:
+    async def _full_backup(self, path: Path) -> dict:
         """Perform full database backup."""
         # Simulate full backup
         await asyncio.sleep(0.5)
@@ -993,10 +961,10 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
             "duration": 5,
             "checksum": hashlib.sha256(str(path).encode()).hexdigest(),
             "compress": True,
-            "replicate": True
+            "replicate": True,
         }
 
-    async def _incremental_backup(self, path: Path) -> Dict:
+    async def _incremental_backup(self, path: Path) -> dict:
         """Perform incremental backup."""
         # Simulate incremental backup
         await asyncio.sleep(0.2)
@@ -1005,10 +973,10 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
             "duration": 2,
             "checksum": hashlib.sha256(str(path).encode()).hexdigest(),
             "compress": True,
-            "replicate": False
+            "replicate": False,
         }
 
-    async def _differential_backup(self, path: Path) -> Dict:
+    async def _differential_backup(self, path: Path) -> dict:
         """Perform differential backup."""
         # Simulate differential backup
         await asyncio.sleep(0.3)
@@ -1017,10 +985,10 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
             "duration": 3,
             "checksum": hashlib.sha256(str(path).encode()).hexdigest(),
             "compress": True,
-            "replicate": False
+            "replicate": False,
         }
 
-    async def _transaction_log_backup(self, path: Path) -> Dict:
+    async def _transaction_log_backup(self, path: Path) -> dict:
         """Backup transaction logs."""
         # Simulate transaction log backup
         await asyncio.sleep(0.1)
@@ -1029,7 +997,7 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
             "duration": 1,
             "checksum": hashlib.sha256(str(path).encode()).hexdigest(),
             "compress": False,
-            "replicate": True
+            "replicate": True,
         }
 
     async def _compress_backup(self, path: Path):
@@ -1037,43 +1005,36 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
         # Simulate compression
         await asyncio.sleep(0.1)
 
-    async def _verify_backup_integrity(self, path: Path) -> Dict:
+    async def _verify_backup_integrity(self, path: Path) -> dict:
         """Verify backup file integrity."""
         # Simulate integrity check
         await asyncio.sleep(0.05)
-        return {
-            "valid": True,
-            "checksum_match": True,
-            "files_complete": True
-        }
+        return {"valid": True, "checksum_match": True, "files_complete": True}
 
-    async def _replicate_backup(self, path: Path) -> Dict:
+    async def _replicate_backup(self, path: Path) -> dict:
         """Replicate backup to secondary location."""
         # Simulate replication
         await asyncio.sleep(0.2)
-        return {
-            "success": True,
-            "destination": "s3://backup-bucket/",
-            "duration": 2
-        }
+        return {"success": True, "destination": "s3://backup-bucket/", "duration": 2}
 
     async def _cleanup_old_backups(self):
         """Remove backups older than retention period."""
         retention_date = datetime.utcnow() - timedelta(days=self.db_config.backup_retention_days)
 
         self.backup_history = [
-            backup for backup in self.backup_history
+            backup
+            for backup in self.backup_history
             if datetime.fromisoformat(backup["timestamp"]) > retention_date
         ]
 
-    def _find_backup(self, backup_id: str) -> Optional[Dict]:
+    def _find_backup(self, backup_id: str) -> Optional[dict]:
         """Find backup by ID."""
         for backup in self.backup_history:
             if backup["backup_id"] == backup_id:
                 return backup
         return None
 
-    def _find_backup_for_pit(self, point_in_time: datetime) -> Optional[Dict]:
+    def _find_backup_for_pit(self, point_in_time: datetime) -> Optional[dict]:
         """Find suitable backup for point-in-time recovery."""
         # Find the latest full backup before the target time
         for backup in reversed(self.backup_history):
@@ -1082,44 +1043,45 @@ class BackupRecoveryAgent(BaseDatabaseAgent):
                     return backup
         return None
 
-    async def _create_restoration_point(self) -> Dict:
+    async def _create_restoration_point(self) -> dict:
         """Create restoration point before restoring."""
         # Simulate creating restoration point
         await asyncio.sleep(0.1)
         return {"restoration_point": str(uuid.uuid4())}
 
-    async def _restore_data(self, path: Path) -> Dict:
+    async def _restore_data(self, path: Path) -> dict:
         """Restore data from backup."""
         # Simulate data restoration
         await asyncio.sleep(0.5)
         return {"restored": True}
 
-    async def _apply_transaction_logs(self, from_time: str, to_time: datetime) -> Dict:
+    async def _apply_transaction_logs(self, from_time: str, to_time: datetime) -> dict:
         """Apply transaction logs for point-in-time recovery."""
         # Simulate applying transaction logs
         await asyncio.sleep(0.2)
         return {"logs_applied": True}
 
-    async def _verify_restoration(self) -> Dict:
+    async def _verify_restoration(self) -> dict:
         """Verify successful restoration."""
         # Simulate verification
         await asyncio.sleep(0.1)
         return {"verified": True}
 
-    async def _test_recovery(self, backup: Dict) -> Dict:
+    async def _test_recovery(self, backup: dict) -> dict:
         """Test recovery procedure with a backup."""
         # Simulate recovery test
         await asyncio.sleep(0.3)
         return {
             "backup_id": backup["backup_id"],
             "test_status": "passed",
-            "recovery_time": 10
+            "recovery_time": 10,
         }
 
 
 # ============================================================================
 # MONITORING AGENT
 # ============================================================================
+
 
 class MonitoringAgent(BaseDatabaseAgent):
     """
@@ -1141,25 +1103,25 @@ class MonitoringAgent(BaseDatabaseAgent):
                 name="MonitoringAgent",
                 capability=AgentCapability.ANALYSIS,
                 enable_monitoring=True,
-                monitoring_interval=60
+                monitoring_interval=60,
             )
         super().__init__(config)
-        self.metrics_history: List[Dict] = []
-        self.alerts: List[Dict] = []
-        self.thresholds: Dict[str, float] = {
+        self.metrics_history: list[dict] = []
+        self.alerts: list[dict] = []
+        self.thresholds: dict[str, float] = {
             "cpu_percent": 80.0,
             "memory_percent": 85.0,
             "disk_usage_percent": 90.0,
             "query_time_ms": 1000.0,
             "error_rate": 0.05,
-            "connection_pool_usage": 0.8
+            "connection_pool_usage": 0.8,
         }
-        self.anomaly_baselines: Dict[str, Any] = {}
+        self.anomaly_baselines: dict[str, Any] = {}
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process monitoring tasks."""
         task = state.get("task", "")
-        operation = state.get("operation", DatabaseOperation.MONITOR)
+        state.get("operation", DatabaseOperation.MONITOR)
 
         if task == "collect_metrics":
             return await self.collect_metrics()
@@ -1189,7 +1151,7 @@ class MonitoringAgent(BaseDatabaseAgent):
                 "database": {},
                 "cache": {},
                 "replication": {},
-                "errors": {}
+                "errors": {},
             }
 
             # Collect performance metrics
@@ -1218,7 +1180,8 @@ class MonitoringAgent(BaseDatabaseAgent):
             # Keep only last 24 hours of metrics
             cutoff_time = datetime.utcnow() - timedelta(hours=24)
             self.metrics_history = [
-                m for m in self.metrics_history
+                m
+                for m in self.metrics_history
                 if datetime.fromisoformat(m["timestamp"]) > cutoff_time
             ]
 
@@ -1233,17 +1196,11 @@ class MonitoringAgent(BaseDatabaseAgent):
 
             logger.info(f"Metrics collected: {len(metrics)} categories")
 
-            return TaskResult(
-                success=True,
-                data=metrics
-            )
+            return TaskResult(success=True, data=metrics)
 
         except Exception as e:
             logger.error(f"Metrics collection failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def detect_anomalies(self) -> TaskResult:
         """
@@ -1258,12 +1215,7 @@ class MonitoringAgent(BaseDatabaseAgent):
             anomalies = {
                 "timestamp": datetime.utcnow().isoformat(),
                 "anomalies_detected": [],
-                "severity_counts": {
-                    "low": 0,
-                    "medium": 0,
-                    "high": 0,
-                    "critical": 0
-                }
+                "severity_counts": {"low": 0, "medium": 0, "high": 0, "critical": 0},
             }
 
             if len(self.metrics_history) < 10:
@@ -1272,8 +1224,8 @@ class MonitoringAgent(BaseDatabaseAgent):
                     success=True,
                     data={
                         "message": "Insufficient data for anomaly detection",
-                        "metrics_available": len(self.metrics_history)
-                    }
+                        "metrics_available": len(self.metrics_history),
+                    },
                 )
 
             # Analyze query times
@@ -1302,19 +1254,15 @@ class MonitoringAgent(BaseDatabaseAgent):
                 if anomaly.get("severity") in ["high", "critical"]:
                     await self._create_alert(anomaly)
 
-            logger.info(f"Anomaly detection completed: {len(anomalies['anomalies_detected'])} found")
-
-            return TaskResult(
-                success=True,
-                data=anomalies
+            logger.info(
+                f"Anomaly detection completed: {len(anomalies['anomalies_detected'])} found"
             )
+
+            return TaskResult(success=True, data=anomalies)
 
         except Exception as e:
             logger.error(f"Anomaly detection failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def generate_alerts(self) -> TaskResult:
         """Generate and manage alerts based on monitoring data."""
@@ -1323,7 +1271,7 @@ class MonitoringAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "active_alerts": [],
                 "resolved_alerts": [],
-                "new_alerts": []
+                "new_alerts": [],
             }
 
             # Check current metrics against thresholds
@@ -1340,9 +1288,11 @@ class MonitoringAgent(BaseDatabaseAgent):
                             "metric": metric_name,
                             "value": current_value,
                             "threshold": threshold,
-                            "severity": self._calculate_severity(metric_name, current_value, threshold),
+                            "severity": self._calculate_severity(
+                                metric_name, current_value, threshold
+                            ),
                             "timestamp": datetime.utcnow().isoformat(),
-                            "status": "active"
+                            "status": "active",
                         }
 
                         alert_report["new_alerts"].append(alert)
@@ -1365,17 +1315,11 @@ class MonitoringAgent(BaseDatabaseAgent):
                 if alert["severity"] == "critical":
                     await self._send_alert_notification(alert)
 
-            return TaskResult(
-                success=True,
-                data=alert_report
-            )
+            return TaskResult(success=True, data=alert_report)
 
         except Exception as e:
             logger.error(f"Alert generation failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def generate_dashboard_metrics(self) -> TaskResult:
         """Generate metrics for monitoring dashboard."""
@@ -1385,7 +1329,7 @@ class MonitoringAgent(BaseDatabaseAgent):
                 "summary": {},
                 "charts": {},
                 "alerts": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             # Generate summary metrics
@@ -1396,51 +1340,41 @@ class MonitoringAgent(BaseDatabaseAgent):
                     "active_connections": latest.get("database", {}).get("active_connections", 0),
                     "queries_per_second": latest.get("database", {}).get("qps", 0),
                     "cache_hit_ratio": latest.get("cache", {}).get("hit_ratio", 0),
-                    "error_rate": latest.get("errors", {}).get("rate", 0)
+                    "error_rate": latest.get("errors", {}).get("rate", 0),
                 }
 
             # Generate time series data for charts
             dashboard_data["charts"] = {
                 "performance": self._generate_performance_chart_data(),
                 "queries": self._generate_query_chart_data(),
-                "errors": self._generate_error_chart_data()
+                "errors": self._generate_error_chart_data(),
             }
 
             # Add active alerts
             dashboard_data["alerts"] = [
-                alert for alert in self.alerts
-                if alert.get("status") == "active"
+                alert for alert in self.alerts if alert.get("status") == "active"
             ]
 
             # Generate recommendations
             dashboard_data["recommendations"] = await self._generate_recommendations()
 
-            return TaskResult(
-                success=True,
-                data=dashboard_data
-            )
+            return TaskResult(success=True, data=dashboard_data)
 
         except Exception as e:
             logger.error(f"Dashboard metrics generation failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _collect_performance_metrics(self) -> Dict:
+    async def _collect_performance_metrics(self) -> dict:
         """Collect system performance metrics."""
         # Simulate performance metrics collection
         return {
             "cpu_percent": 45.2,
             "memory_percent": 62.8,
             "disk_usage_percent": 71.5,
-            "network_io": {
-                "bytes_sent": 1024000,
-                "bytes_recv": 2048000
-            }
+            "network_io": {"bytes_sent": 1024000, "bytes_recv": 2048000},
         }
 
-    async def _collect_database_metrics(self) -> Dict:
+    async def _collect_database_metrics(self) -> dict:
         """Collect database-specific metrics."""
         metrics = {
             "active_connections": self.metrics.active_connections,
@@ -1448,18 +1382,20 @@ class MonitoringAgent(BaseDatabaseAgent):
             "queries_per_second": 150,
             "avg_query_time_ms": self.metrics.avg_query_time * 1000,
             "slow_queries": 5,
-            "deadlocks": 0
+            "deadlocks": 0,
         }
 
         if self.engine:
             # Get actual metrics from database
             try:
                 async with self.get_db_session() as session:
-                    result = await session.execute("""
+                    result = await session.execute(
+                        """
                         SELECT
                             COUNT(*) as connection_count
                         FROM pg_stat_activity
-                    """)
+                    """
+                    )
                     row = result.fetchone()
                     if row:
                         metrics["active_connections"] = row["connection_count"]
@@ -1468,24 +1404,24 @@ class MonitoringAgent(BaseDatabaseAgent):
 
         return metrics
 
-    async def _collect_cache_metrics(self) -> Dict:
+    async def _collect_cache_metrics(self) -> dict:
         """Collect cache performance metrics."""
         return {
             "hit_ratio": self.metrics.cache_hit_ratio,
             "memory_usage_mb": 256,
             "evictions": 10,
-            "keys_count": 5000
+            "keys_count": 5000,
         }
 
-    async def _collect_replication_metrics(self) -> Dict:
+    async def _collect_replication_metrics(self) -> dict:
         """Collect replication metrics."""
         return {
             "lag_seconds": self.metrics.replication_lag,
             "replicas_connected": 2,
-            "sync_status": "in_sync"
+            "sync_status": "in_sync",
         }
 
-    async def _collect_error_metrics(self) -> Dict:
+    async def _collect_error_metrics(self) -> dict:
         """Collect error metrics."""
         return {
             "rate": self.metrics.error_rate,
@@ -1494,11 +1430,11 @@ class MonitoringAgent(BaseDatabaseAgent):
                 "connection": 5,
                 "timeout": 10,
                 "constraint": 3,
-                "other": 7
-            }
+                "other": 7,
+            },
         }
 
-    async def _check_thresholds(self, metrics: Dict) -> List[Dict]:
+    async def _check_thresholds(self, metrics: dict) -> list[dict]:
         """Check metrics against thresholds."""
         alerts = []
 
@@ -1506,16 +1442,18 @@ class MonitoringAgent(BaseDatabaseAgent):
         perf = metrics.get("performance", {})
         for metric, value in perf.items():
             if metric in self.thresholds and value > self.thresholds[metric]:
-                alerts.append({
-                    "metric": metric,
-                    "value": value,
-                    "threshold": self.thresholds[metric],
-                    "severity": "high" if value > self.thresholds[metric] * 1.2 else "medium"
-                })
+                alerts.append(
+                    {
+                        "metric": metric,
+                        "value": value,
+                        "threshold": self.thresholds[metric],
+                        "severity": "high" if value > self.thresholds[metric] * 1.2 else "medium",
+                    }
+                )
 
         return alerts
 
-    async def _update_baselines(self, metrics: Dict):
+    async def _update_baselines(self, metrics: dict):
         """Update anomaly detection baselines."""
         # Simple baseline update (would use more sophisticated methods in production)
         for category, values in metrics.items():
@@ -1527,7 +1465,7 @@ class MonitoringAgent(BaseDatabaseAgent):
                             self.anomaly_baselines[key] = {
                                 "mean": value,
                                 "std": 0,
-                                "count": 1
+                                "count": 1,
                             }
                         else:
                             # Update running statistics
@@ -1535,9 +1473,11 @@ class MonitoringAgent(BaseDatabaseAgent):
                             baseline["count"] += 1
                             delta = value - baseline["mean"]
                             baseline["mean"] += delta / baseline["count"]
-                            baseline["std"] = (baseline["std"] * (baseline["count"] - 1) + delta ** 2) / baseline["count"]
+                            baseline["std"] = (
+                                baseline["std"] * (baseline["count"] - 1) + delta**2
+                            ) / baseline["count"]
 
-    async def _detect_query_anomalies(self) -> List[Dict]:
+    async def _detect_query_anomalies(self) -> list[dict]:
         """Detect anomalies in query performance."""
         anomalies = []
 
@@ -1547,16 +1487,18 @@ class MonitoringAgent(BaseDatabaseAgent):
             previous = self.metrics_history[-2].get("database", {}).get("avg_query_time_ms", 0)
 
             if previous > 0 and recent > previous * 2:
-                anomalies.append({
-                    "type": "query_performance",
-                    "description": f"Query time doubled: {previous}ms -> {recent}ms",
-                    "severity": "high",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                anomalies.append(
+                    {
+                        "type": "query_performance",
+                        "description": f"Query time doubled: {previous}ms -> {recent}ms",
+                        "severity": "high",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
         return anomalies
 
-    async def _detect_connection_anomalies(self) -> List[Dict]:
+    async def _detect_connection_anomalies(self) -> list[dict]:
         """Detect anomalies in connection patterns."""
         anomalies = []
 
@@ -1570,16 +1512,18 @@ class MonitoringAgent(BaseDatabaseAgent):
             current = recent_connections[-1]
 
             if current > avg_connections * 1.5:
-                anomalies.append({
-                    "type": "connection_spike",
-                    "description": f"Connection spike: {current} (avg: {avg_connections:.1f})",
-                    "severity": "medium",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                anomalies.append(
+                    {
+                        "type": "connection_spike",
+                        "description": f"Connection spike: {current} (avg: {avg_connections:.1f})",
+                        "severity": "medium",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
         return anomalies
 
-    async def _detect_error_anomalies(self) -> List[Dict]:
+    async def _detect_error_anomalies(self) -> list[dict]:
         """Detect anomalies in error patterns."""
         anomalies = []
 
@@ -1588,16 +1532,18 @@ class MonitoringAgent(BaseDatabaseAgent):
             current_error_rate = self.metrics_history[-1].get("errors", {}).get("rate", 0)
 
             if current_error_rate > 0.1:  # More than 10% errors
-                anomalies.append({
-                    "type": "high_error_rate",
-                    "description": f"High error rate: {current_error_rate:.1%}",
-                    "severity": "critical",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                anomalies.append(
+                    {
+                        "type": "high_error_rate",
+                        "description": f"High error rate: {current_error_rate:.1%}",
+                        "severity": "critical",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
         return anomalies
 
-    async def _detect_resource_anomalies(self) -> List[Dict]:
+    async def _detect_resource_anomalies(self) -> list[dict]:
         """Detect anomalies in resource usage."""
         anomalies = []
 
@@ -1606,24 +1552,28 @@ class MonitoringAgent(BaseDatabaseAgent):
             perf = self.metrics_history[-1].get("performance", {})
 
             if perf.get("cpu_percent", 0) > 90:
-                anomalies.append({
-                    "type": "high_cpu",
-                    "description": f"CPU usage critical: {perf['cpu_percent']}%",
-                    "severity": "high",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                anomalies.append(
+                    {
+                        "type": "high_cpu",
+                        "description": f"CPU usage critical: {perf['cpu_percent']}%",
+                        "severity": "high",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
             if perf.get("memory_percent", 0) > 90:
-                anomalies.append({
-                    "type": "high_memory",
-                    "description": f"Memory usage critical: {perf['memory_percent']}%",
-                    "severity": "high",
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                anomalies.append(
+                    {
+                        "type": "high_memory",
+                        "description": f"Memory usage critical: {perf['memory_percent']}%",
+                        "severity": "high",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
         return anomalies
 
-    async def _create_alert(self, anomaly: Dict):
+    async def _create_alert(self, anomaly: dict):
         """Create an alert from an anomaly."""
         alert = {
             "alert_id": str(uuid.uuid4()),
@@ -1631,14 +1581,14 @@ class MonitoringAgent(BaseDatabaseAgent):
             "description": anomaly["description"],
             "severity": anomaly["severity"],
             "timestamp": anomaly["timestamp"],
-            "status": "active"
+            "status": "active",
         }
         self.alerts.append(alert)
 
         # Publish alert event
         await self.publish_event("alert_created", alert)
 
-    def _get_metric_value(self, metrics: Dict, metric_name: str) -> Optional[float]:
+    def _get_metric_value(self, metrics: dict, metric_name: str) -> Optional[float]:
         """Extract metric value from nested metrics dictionary."""
         # Map metric names to their locations
         metric_map = {
@@ -1647,7 +1597,7 @@ class MonitoringAgent(BaseDatabaseAgent):
             "disk_usage_percent": ["performance", "disk_usage_percent"],
             "query_time_ms": ["database", "avg_query_time_ms"],
             "error_rate": ["errors", "rate"],
-            "connection_pool_usage": ["database", "active_connections"]
+            "connection_pool_usage": ["database", "active_connections"],
         }
 
         if metric_name in metric_map:
@@ -1680,7 +1630,7 @@ class MonitoringAgent(BaseDatabaseAgent):
         else:
             return "low"
 
-    async def _send_alert_notification(self, alert: Dict):
+    async def _send_alert_notification(self, alert: dict):
         """Send alert notification."""
         # Publish to Redis for notification system
         await self.publish_event("critical_alert", alert)
@@ -1712,39 +1662,39 @@ class MonitoringAgent(BaseDatabaseAgent):
 
         return max(0, min(100, score))
 
-    def _generate_performance_chart_data(self) -> List[Dict]:
+    def _generate_performance_chart_data(self) -> list[dict]:
         """Generate performance chart data."""
         return [
             {
                 "timestamp": m["timestamp"],
                 "cpu": m.get("performance", {}).get("cpu_percent", 0),
-                "memory": m.get("performance", {}).get("memory_percent", 0)
+                "memory": m.get("performance", {}).get("memory_percent", 0),
             }
             for m in self.metrics_history[-20:]  # Last 20 data points
         ]
 
-    def _generate_query_chart_data(self) -> List[Dict]:
+    def _generate_query_chart_data(self) -> list[dict]:
         """Generate query performance chart data."""
         return [
             {
                 "timestamp": m["timestamp"],
                 "qps": m.get("database", {}).get("queries_per_second", 0),
-                "avg_time": m.get("database", {}).get("avg_query_time_ms", 0)
+                "avg_time": m.get("database", {}).get("avg_query_time_ms", 0),
             }
             for m in self.metrics_history[-20:]
         ]
 
-    def _generate_error_chart_data(self) -> List[Dict]:
+    def _generate_error_chart_data(self) -> list[dict]:
         """Generate error rate chart data."""
         return [
             {
                 "timestamp": m["timestamp"],
-                "error_rate": m.get("errors", {}).get("rate", 0) * 100
+                "error_rate": m.get("errors", {}).get("rate", 0) * 100,
             }
             for m in self.metrics_history[-20:]
         ]
 
-    async def _generate_recommendations(self) -> List[str]:
+    async def _generate_recommendations(self) -> list[str]:
         """Generate performance recommendations."""
         recommendations = []
 
@@ -1754,7 +1704,9 @@ class MonitoringAgent(BaseDatabaseAgent):
             # Check cache performance
             cache_hit = latest.get("cache", {}).get("hit_ratio", 0)
             if cache_hit < 0.8:
-                recommendations.append("Consider increasing cache size or optimizing cache strategy")
+                recommendations.append(
+                    "Consider increasing cache size or optimizing cache strategy"
+                )
 
             # Check query performance
             avg_query_time = latest.get("database", {}).get("avg_query_time_ms", 0)
@@ -1770,7 +1722,9 @@ class MonitoringAgent(BaseDatabaseAgent):
             # Check resource usage
             cpu = latest.get("performance", {}).get("cpu_percent", 0)
             if cpu > 70:
-                recommendations.append("CPU usage is high - consider scaling vertically or optimizing queries")
+                recommendations.append(
+                    "CPU usage is high - consider scaling vertically or optimizing queries"
+                )
 
         return recommendations
 
@@ -1780,5 +1734,5 @@ __all__ = [
     "EventSourcingAgent",
     "DataIntegrityAgent",
     "BackupRecoveryAgent",
-    "MonitoringAgent"
+    "MonitoringAgent",
 ]

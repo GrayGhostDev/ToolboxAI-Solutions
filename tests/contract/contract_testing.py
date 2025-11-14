@@ -98,7 +98,10 @@ class ContractValidator:
             return False, str(e)
 
     def validate_response(
-        self, response: dict[str, Any], expected: dict[str, Any], rules: dict | None = None
+        self,
+        response: dict[str, Any],
+        expected: dict[str, Any],
+        rules: dict | None = None,
     ) -> dict[str, Any]:
         """Validate API response against expected contract."""
         result = {
@@ -121,7 +124,10 @@ class ContractValidator:
         # Check headers
         if "headers" in expected:
             self._validate_headers(
-                response.get("headers", {}), expected["headers"], result, rules.get("headers", {})
+                response.get("headers", {}),
+                expected["headers"],
+                result,
+                rules.get("headers", {}),
             )
 
         # Check body
@@ -291,7 +297,11 @@ class ContractValidator:
         return results
 
     async def _test_endpoint(
-        self, session: aiohttp.ClientSession, endpoint: dict, base_url: str, auth: dict | None
+        self,
+        session: aiohttp.ClientSession,
+        endpoint: dict,
+        base_url: str,
+        auth: dict | None,
     ) -> dict[str, Any]:
         """Test a single endpoint."""
         url = base_url + endpoint["path"]
@@ -315,7 +325,6 @@ class ContractValidator:
                 params=params,
                 timeout=aiohttp.ClientTimeout(total=30),
             ) as response:
-
                 # Parse response
                 response_data = {
                     "status_code": response.status,
@@ -763,7 +772,9 @@ async def main():
 
     # Test contract
     results = await validator.test_contract(
-        contract, base_url="http://localhost:8009", auth={"Authorization": "Bearer test-token"}
+        contract,
+        base_url="http://localhost:8009",
+        auth={"Authorization": "Bearer test-token"},
     )
 
     # Display results
@@ -780,7 +791,7 @@ async def main():
     )
 
     # Generate report
-    report = validator.generate_report()
+    validator.generate_report()
     console.print("\n[dim]Report generated[/dim]")
 
 

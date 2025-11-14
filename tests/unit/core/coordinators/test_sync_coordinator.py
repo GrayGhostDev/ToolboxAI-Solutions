@@ -474,7 +474,7 @@ class TestConflictResolution:
         new = StateSnapshot("comp", {"data": "new"}, 2)
 
         with patch.object(sync_coordinator, "publish_event", new_callable=AsyncMock):
-            resolved = await sync_coordinator._handle_conflict("version_conflict", current, new)
+            await sync_coordinator._handle_conflict("version_conflict", current, new)
 
         # Check resolution was recorded
         assert len(sync_coordinator.active_conflicts) == 1

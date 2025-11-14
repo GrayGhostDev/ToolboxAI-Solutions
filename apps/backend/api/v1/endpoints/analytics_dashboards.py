@@ -178,7 +178,8 @@ async def list_dashboards(
     except Exception as e:
         logger.error(f"Failed to list dashboards: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list dashboards"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list dashboards",
         )
 
 
@@ -218,7 +219,8 @@ async def get_dashboard(
     except Exception as e:
         logger.error(f"Failed to get dashboard: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get dashboard"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get dashboard",
         )
 
 
@@ -278,7 +280,8 @@ async def create_dashboard(
         logger.error(f"Failed to create dashboard: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create dashboard"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create dashboard",
         )
 
 
@@ -321,7 +324,8 @@ async def update_dashboard(
         logger.error(f"Failed to update dashboard: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update dashboard"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update dashboard",
         )
 
 
@@ -358,7 +362,8 @@ async def delete_dashboard(
         logger.error(f"Failed to delete dashboard: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete dashboard"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete dashboard",
         )
 
 
@@ -411,7 +416,8 @@ async def get_dashboard_data(
     except Exception as e:
         logger.error(f"Failed to get dashboard data: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get dashboard data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get dashboard data",
         )
 
 
@@ -426,7 +432,7 @@ async def get_dashboard_data(
 async def get_analytics_dashboard(
     current_user: Annotated[User, Depends(get_current_user)],
     time_range: str = Query(
-        "7d", regex="^(1d|7d|30d|90d|1y)$", description="Time range for analytics"
+        "7d", pattern="^(1d|7d|30d|90d|1y)$", description="Time range for analytics"
     ),
 ) -> dict[str, Any]:
     """
@@ -660,7 +666,7 @@ async def get_key_performance_metrics(
     current_user: Annotated[User, Depends(get_current_user)],
     category: str | None = Query(
         None,
-        regex="^(engagement|performance|usage|revenue)$",
+        pattern="^(engagement|performance|usage|revenue)$",
         description="Specific metric category",
     ),
 ) -> dict[str, Any]:
@@ -780,7 +786,9 @@ async def get_trend_analysis(
     current_user: Annotated[User, Depends(get_current_user)],
     metric: str = Query("engagement", description="Metric to analyze trends for"),
     granularity: str = Query(
-        "daily", regex="^(hourly|daily|weekly|monthly)$", description="Data granularity"
+        "daily",
+        pattern="^(hourly|daily|weekly|monthly)$",
+        description="Data granularity",
     ),
     period: int = Query(30, ge=1, le=365, description="Number of time units to analyze"),
 ) -> dict[str, Any]:
@@ -834,7 +842,10 @@ async def get_trend_analysis(
             ),
             "forecasting": {
                 "next_period_prediction": round(values[-1] * (1 + percent_change / 100), 2),
-                "confidence_interval": [round(values[-1] * 0.9, 2), round(values[-1] * 1.1, 2)],
+                "confidence_interval": [
+                    round(values[-1] * 0.9, 2),
+                    round(values[-1] * 1.1, 2),
+                ],
                 "forecast_accuracy": 87.3,
             },
             "recommendations": _generate_recommendations(
@@ -1063,5 +1074,6 @@ async def clone_dashboard(
         logger.error(f"Failed to clone dashboard: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to clone dashboard"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to clone dashboard",
         )

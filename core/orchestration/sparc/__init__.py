@@ -11,20 +11,25 @@ This module provides:
 - Code generation and refinement
 """
 
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 # Import base orchestration components
-from ...agents.master_orchestrator import MasterOrchestrator, AgentSystemType, TaskPriority
+from ...agents.master_orchestrator import (
+    AgentSystemType,
+    MasterOrchestrator,
+    TaskPriority,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class SPARCWorkflowType(Enum):
     """SPARC workflow types."""
+
     SPECIFICATION = "specification"
     PSEUDOCODE = "pseudocode"
     ARCHITECTURE = "architecture"
@@ -51,7 +56,7 @@ class SPARCOrchestrationModule:
             "architectures_designed": 0,
             "code_generated": 0,
             "refinements_applied": 0,
-            "full_sparc_workflows": 0
+            "full_sparc_workflows": 0,
         }
 
         logger.info("SPARC Orchestration Module initialized")
@@ -86,19 +91,19 @@ class SPARCOrchestrationModule:
             "type": "sparc_workflow",
             "workflow_type": workflow_type.value,
             "project_data": project_data,
-            "module": "sparc"
+            "module": "sparc",
         }
 
         # Submit to master orchestrator
         task_id = await self.master.submit_task(
             agent_type=AgentSystemType.CONTENT,  # SPARC is content generation
             task_data=task_data,
-            priority=TaskPriority.MEDIUM
+            priority=TaskPriority.MEDIUM,
         )
 
         return task_id
 
-    async def create_specification(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_specification(self, requirements: dict[str, Any]) -> dict[str, Any]:
         """
         Create project specification following SPARC methodology.
 
@@ -117,13 +122,13 @@ class SPARCOrchestrationModule:
                     "requirements": requirements,
                     "constraints": [],
                     "success_criteria": [],
-                    "assumptions": []
+                    "assumptions": [],
                 },
                 "metadata": {
                     "created_at": datetime.now().isoformat(),
                     "methodology": "SPARC",
-                    "version": "1.0"
-                }
+                    "version": "1.0",
+                },
             }
 
             self.metrics["specifications_created"] += 1
@@ -131,13 +136,9 @@ class SPARCOrchestrationModule:
 
         except Exception as e:
             logger.error(f"Error creating specification: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "specification": None
-            }
+            return {"success": False, "error": str(e), "specification": None}
 
-    async def generate_pseudocode(self, specification: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_pseudocode(self, specification: dict[str, Any]) -> dict[str, Any]:
         """
         Generate pseudocode from specification.
 
@@ -154,25 +155,23 @@ class SPARCOrchestrationModule:
                     "main_flow": [],
                     "functions": [],
                     "data_structures": [],
-                    "algorithms": []
+                    "algorithms": [],
                 },
                 "complexity_analysis": {
                     "time_complexity": "O(n)",
-                    "space_complexity": "O(1)"
-                }
+                    "space_complexity": "O(1)",
+                },
             }
 
             return pseudocode
 
         except Exception as e:
             logger.error(f"Error generating pseudocode: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "pseudocode": None
-            }
+            return {"success": False, "error": str(e), "pseudocode": None}
 
-    async def design_architecture(self, specification: Dict[str, Any], pseudocode: Dict[str, Any]) -> Dict[str, Any]:
+    async def design_architecture(
+        self, specification: dict[str, Any], pseudocode: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Design system architecture.
 
@@ -190,10 +189,10 @@ class SPARCOrchestrationModule:
                     "components": [],
                     "interfaces": [],
                     "data_flow": [],
-                    "deployment_model": "standard"
+                    "deployment_model": "standard",
                 },
                 "design_patterns": [],
-                "quality_attributes": []
+                "quality_attributes": [],
             }
 
             self.metrics["architectures_designed"] += 1
@@ -201,13 +200,9 @@ class SPARCOrchestrationModule:
 
         except Exception as e:
             logger.error(f"Error designing architecture: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "architecture": None
-            }
+            return {"success": False, "error": str(e), "architecture": None}
 
-    async def refine_design(self, architecture: Dict[str, Any]) -> Dict[str, Any]:
+    async def refine_design(self, architecture: dict[str, Any]) -> dict[str, Any]:
         """
         Refine and optimize design.
 
@@ -223,7 +218,7 @@ class SPARCOrchestrationModule:
                 "refinements": [],
                 "optimizations": [],
                 "revised_architecture": architecture,
-                "performance_improvements": []
+                "performance_improvements": [],
             }
 
             self.metrics["refinements_applied"] += 1
@@ -231,13 +226,9 @@ class SPARCOrchestrationModule:
 
         except Exception as e:
             logger.error(f"Error refining design: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "refinements": []
-            }
+            return {"success": False, "error": str(e), "refinements": []}
 
-    async def generate_code(self, refined_design: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_code(self, refined_design: dict[str, Any]) -> dict[str, Any]:
         """
         Generate code from refined design.
 
@@ -250,16 +241,12 @@ class SPARCOrchestrationModule:
         try:
             code_output = {
                 "success": True,
-                "generated_code": {
-                    "files": [],
-                    "structure": {},
-                    "documentation": ""
-                },
+                "generated_code": {"files": [], "structure": {}, "documentation": ""},
                 "code_quality": {
                     "maintainability": "high",
                     "testability": "high",
-                    "reusability": "medium"
-                }
+                    "reusability": "medium",
+                },
             }
 
             self.metrics["code_generated"] += 1
@@ -267,13 +254,9 @@ class SPARCOrchestrationModule:
 
         except Exception as e:
             logger.error(f"Error generating code: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "generated_code": None
-            }
+            return {"success": False, "error": str(e), "generated_code": None}
 
-    async def execute_full_sparc(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_full_sparc(self, requirements: dict[str, Any]) -> dict[str, Any]:
         """
         Execute full SPARC workflow from requirements to code.
 
@@ -296,8 +279,7 @@ class SPARCOrchestrationModule:
                 return pseudo_result
 
             arch_result = await self.design_architecture(
-                spec_result["specification"],
-                pseudo_result["pseudocode"]
+                spec_result["specification"], pseudo_result["pseudocode"]
             )
             if not arch_result["success"]:
                 return arch_result
@@ -316,24 +298,20 @@ class SPARCOrchestrationModule:
                     "pseudocode": pseudo_result["pseudocode"],
                     "architecture": arch_result["architecture"],
                     "refinements": refine_result["refinements"],
-                    "code": code_result["generated_code"]
+                    "code": code_result["generated_code"],
                 },
                 "workflow_metadata": {
                     "methodology": "SPARC",
                     "completed_at": datetime.now().isoformat(),
-                    "phases_completed": 5
-                }
+                    "phases_completed": 5,
+                },
             }
 
         except Exception as e:
             logger.error(f"Error executing full SPARC workflow: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "sparc_results": None
-            }
+            return {"success": False, "error": str(e), "sparc_results": None}
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get the status of the SPARC orchestration module."""
         return {
             "module": "sparc",
@@ -341,7 +319,7 @@ class SPARCOrchestrationModule:
             "methodology": "SPARC (Specification, Pseudocode, Architecture, Refinement, Coding)",
             "available_workflows": [wf.value for wf in SPARCWorkflowType],
             "metrics": self.metrics,
-            "note": "Placeholder implementation - archived enhanced orchestrator to be integrated"
+            "note": "Placeholder implementation - archived enhanced orchestrator to be integrated",
         }
 
     async def cleanup(self):
@@ -355,12 +333,12 @@ class SPARCOrchestrationModule:
 
 
 # Export key classes
-__all__ = [
-    "SPARCOrchestrationModule",
-    "SPARCWorkflowType"
-]
+__all__ = ["SPARCOrchestrationModule", "SPARCWorkflowType"]
+
 
 # Convenience factory function
-def create_sparc_orchestrator(master_orchestrator: MasterOrchestrator) -> SPARCOrchestrationModule:
+def create_sparc_orchestrator(
+    master_orchestrator: MasterOrchestrator,
+) -> SPARCOrchestrationModule:
     """Create and initialize a SPARC orchestration module."""
     return SPARCOrchestrationModule(master_orchestrator)

@@ -2,10 +2,7 @@
 Git LFS Migration Agent for managing large files.
 """
 
-import asyncio
-import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .base_github_agent import BaseGitHubAgent
 
@@ -16,18 +13,35 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the Git LFS migration agent."""
         super().__init__(config_path)
-        self.lfs_config = self.config.get('git_lfs', {})
-        self.auto_migrate = self.lfs_config.get('auto_migrate', False)
-        self.track_patterns = self.lfs_config.get('track_patterns', [
-            '*.png', '*.jpg', '*.jpeg', '*.gif', '*.webp',
-            '*.fig', '*.sketch', '*.xd', '*.psd',
-            '*.blend', '*.obj', '*.fbx', '*.dae',
-            '*.mp4', '*.mov', '*.avi',
-            '*.zip', '*.tar', '*.gz'
-        ])
-        self.size_threshold_mb = self.lfs_config.get('size_threshold_mb', 50)
+        self.lfs_config = self.config.get("git_lfs", {})
+        self.auto_migrate = self.lfs_config.get("auto_migrate", False)
+        self.track_patterns = self.lfs_config.get(
+            "track_patterns",
+            [
+                "*.png",
+                "*.jpg",
+                "*.jpeg",
+                "*.gif",
+                "*.webp",
+                "*.fig",
+                "*.sketch",
+                "*.xd",
+                "*.psd",
+                "*.blend",
+                "*.obj",
+                "*.fbx",
+                "*.dae",
+                "*.mp4",
+                "*.mov",
+                "*.avi",
+                "*.zip",
+                "*.tar",
+                "*.gz",
+            ],
+        )
+        self.size_threshold_mb = self.lfs_config.get("size_threshold_mb", 50)
 
-    async def analyze(self, check_status: bool = True) -> Dict[str, Any]:
+    async def analyze(self, check_status: bool = True) -> dict[str, Any]:
         """Analyze Git LFS status and configuration.
 
         Args:
@@ -42,7 +56,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
             "tracked_patterns": [],
             "lfs_files": [],
             "candidates_for_lfs": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Check if Git LFS is installed
@@ -63,7 +77,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
         # Get tracked patterns
         gitattributes_path = self.get_repository_root() / ".gitattributes"
         if gitattributes_path.exists():
-            with open(gitattributes_path, 'r') as f:
+            with open(gitattributes_path) as f:
                 lines = f.readlines()
                 for line in lines:
                     if "filter=lfs" in line:
@@ -74,9 +88,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
         if check_status:
             lfs_files = await self.execute_git_command("lfs ls-files")
             if lfs_files["success"]:
-                results["lfs_files"] = [
-                    line.strip() for line in lfs_files["stdout"].splitlines()
-                ]
+                results["lfs_files"] = [line.strip() for line in lfs_files["stdout"].splitlines()]
 
         # Find candidates for LFS migration
         candidates = await self._find_lfs_candidates()
@@ -87,15 +99,18 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
                 f"Migrate {len(candidates)} file(s) to Git LFS to improve repository performance"
             )
 
-        await self.log_operation("analyze", {
-            "lfs_installed": results["lfs_installed"],
-            "tracked_patterns": len(results["tracked_patterns"]),
-            "candidates": len(candidates)
-        })
+        await self.log_operation(
+            "analyze",
+            {
+                "lfs_installed": results["lfs_installed"],
+                "tracked_patterns": len(results["tracked_patterns"]),
+                "candidates": len(candidates),
+            },
+        )
 
         return results
 
-    async def _find_lfs_candidates(self) -> List[Dict[str, Any]]:
+    async def _find_lfs_candidates(self) -> list[dict[str, Any]]:
         """Find files that are candidates for LFS migration.
 
         Returns:
@@ -128,16 +143,18 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
                 is_lfs = "lfs" in lfs_check.get("stdout", "")
 
                 if not is_lfs:
-                    candidates.append({
-                        "path": file_path,
-                        "size_bytes": size,
-                        "size_formatted": self.format_size(size),
-                        "file_type": full_path.suffix
-                    })
+                    candidates.append(
+                        {
+                            "path": file_path,
+                            "size_bytes": size,
+                            "size_formatted": self.format_size(size),
+                            "file_type": full_path.suffix,
+                        }
+                    )
 
         return candidates
 
-    async def setup_lfs(self) -> Dict[str, Any]:
+    async def setup_lfs(self) -> dict[str, Any]:
         """Set up Git LFS in the repository.
 
         Returns:
@@ -150,7 +167,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
         if not lfs_version["success"]:
             return {
                 "success": False,
-                "error": "Git LFS is not installed. Install with: brew install git-lfs"
+                "error": "Git LFS is not installed. Install with: brew install git-lfs",
             }
 
         # Initialize Git LFS
@@ -174,7 +191,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
 
         return results
 
-    async def migrate_file_to_lfs(self, file_path: str) -> Dict[str, Any]:
+    async def migrate_file_to_lfs(self, file_path: str) -> dict[str, Any]:
         """Migrate a specific file to Git LFS.
 
         Args:
@@ -187,7 +204,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
             "success": False,
             "file_path": file_path,
             "actions": [],
-            "errors": []
+            "errors": [],
         }
 
         repo_root = self.get_repository_root()
@@ -237,7 +254,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
 
         return results
 
-    async def batch_migrate_directory(self, directory: str) -> Dict[str, Any]:
+    async def batch_migrate_directory(self, directory: str) -> dict[str, Any]:
         """Migrate all large files in a directory to Git LFS.
 
         Args:
@@ -251,7 +268,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
             "directory": directory,
             "migrated_files": [],
             "failed_files": [],
-            "total_size_migrated": 0
+            "total_size_migrated": 0,
         }
 
         repo_root = self.get_repository_root()
@@ -271,10 +288,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
                 size = file_path.stat().st_size
                 if size >= threshold_bytes:
                     relative_path = file_path.relative_to(repo_root)
-                    large_files.append({
-                        "path": str(relative_path),
-                        "size": size
-                    })
+                    large_files.append({"path": str(relative_path), "size": size})
 
         # Migrate each file
         for file_info in large_files:
@@ -283,10 +297,12 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
                 results["migrated_files"].append(file_info["path"])
                 results["total_size_migrated"] += file_info["size"]
             else:
-                results["failed_files"].append({
-                    "path": file_info["path"],
-                    "errors": migration_result.get("errors", [])
-                })
+                results["failed_files"].append(
+                    {
+                        "path": file_info["path"],
+                        "errors": migration_result.get("errors", []),
+                    }
+                )
 
         results["success"] = len(results["migrated_files"]) > 0
         results["total_size_formatted"] = self.format_size(results["total_size_migrated"])
@@ -295,17 +311,13 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
 
         return results
 
-    async def verify_lfs_status(self) -> Dict[str, Any]:
+    async def verify_lfs_status(self) -> dict[str, Any]:
         """Verify the current LFS status and integrity.
 
         Returns:
             Verification results
         """
-        results = {
-            "success": True,
-            "checks": {},
-            "issues": []
-        }
+        results = {"success": True, "checks": {}, "issues": []}
 
         # Check LFS installation
         version_check = await self.execute_git_command("lfs version")
@@ -326,9 +338,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
         # Check for files that should be in LFS
         candidates = await self._find_lfs_candidates()
         if candidates:
-            results["issues"].append(
-                f"{len(candidates)} file(s) should be migrated to LFS"
-            )
+            results["issues"].append(f"{len(candidates)} file(s) should be migrated to LFS")
 
         # Get LFS storage info
         storage_info = await self.execute_git_command("lfs ls-files -s")
@@ -340,7 +350,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
 
         return results
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute a specific action.
 
         Args:
@@ -374,13 +384,13 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
             prune_result = await self.execute_git_command("lfs prune")
             return {
                 "success": prune_result["success"],
-                "output": prune_result.get("stdout", "")
+                "output": prune_result.get("stdout", ""),
             }
 
         else:
             return {"success": False, "error": f"Unknown action: {action}"}
 
-    async def generate_migration_plan(self) -> Dict[str, Any]:
+    async def generate_migration_plan(self) -> dict[str, Any]:
         """Generate a migration plan for large files.
 
         Returns:
@@ -393,7 +403,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
             "total_size": sum(f["size_bytes"] for f in candidates),
             "estimated_time_minutes": len(candidates) * 0.5,  # Rough estimate
             "steps": [],
-            "files_by_type": {}
+            "files_by_type": {},
         }
 
         # Group by file type
@@ -410,7 +420,7 @@ class GitLFSMigrationAgent(BaseGitHubAgent):
             f"3. Track file patterns: {', '.join(self.track_patterns[:5])}",
             f"4. Migrate {len(candidates)} large file(s)",
             "5. Commit changes: git commit -m 'Migrate large files to Git LFS'",
-            "6. Clean up: git lfs prune"
+            "6. Clean up: git lfs prune",
         ]
 
         plan["total_size_formatted"] = self.format_size(plan["total_size"])

@@ -25,7 +25,6 @@ def patch_passlib_bcrypt():
         from passlib.handlers import bcrypt as passlib_bcrypt
 
         # Save the original detect_wrap_bug function
-        original_detect = passlib_bcrypt.detect_wrap_bug
 
         def patched_detect_wrap_bug(ident):
             """
@@ -37,10 +36,10 @@ def patch_passlib_bcrypt():
             # The original function tests with a 254-char password
             # We need to limit it to 72 bytes for bcrypt compatibility
             # Create the test secret (truncated to 72 bytes)
-            secret = b("0123456789" * 20)[:72]  # Originally 254 chars, now 72 bytes
+            b("0123456789" * 20)[:72]  # Originally 254 chars, now 72 bytes
 
             # Create test hashes with the truncated secret
-            bug_hash = b("$2a$04$R1lJ2gkNaoPGdafE.H.16.nVyh2niHsGJhayOHLMiXlI45o8/DU.6")
+            b("$2a$04$R1lJ2gkNaoPGdafE.H.16.nVyh2niHsGJhayOHLMiXlI45o8/DU.6")
 
             # Simple verification function
             def verify(test_secret, test_hash):

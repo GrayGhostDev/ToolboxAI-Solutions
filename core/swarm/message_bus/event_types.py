@@ -4,9 +4,9 @@ Defines the types of events that can flow through the message bus,
 their priorities, and categorization for routing.
 """
 
-from enum import Enum, IntEnum
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from enum import Enum, IntEnum
+from typing import Any, Optional
 
 
 class EventCategory(Enum):
@@ -208,7 +208,7 @@ class EventMetadata:
     ttl: Optional[int] = None  # Time to live in seconds
     retry_count: int = 0
     max_retries: int = 3
-    custom_data: Dict[str, Any] = None
+    custom_data: dict[str, Any] = None
 
     def __post_init__(self):
         """Initialize custom data if not provided."""

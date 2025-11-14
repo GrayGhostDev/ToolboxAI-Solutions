@@ -90,7 +90,8 @@ class TestPusherE2E:
         await page.fill("[data-testid=subject-input]", "Solar System")
         await page.select_option("[data-testid=grade-select]", "5")
         await page.fill(
-            "[data-testid=objectives-input]", "Learn about planets and their characteristics"
+            "[data-testid=objectives-input]",
+            "Learn about planets and their characteristics",
         )
 
         # Mock Pusher connection for testing
@@ -119,11 +120,27 @@ class TestPusherE2E:
 
         # Simulate real-time progress updates
         progress_updates = [
-            {"stage": "initializing", "percentage": 0, "message": "Starting generation..."},
-            {"stage": "analyzing", "percentage": 25, "message": "Analyzing requirements..."},
+            {
+                "stage": "initializing",
+                "percentage": 0,
+                "message": "Starting generation...",
+            },
+            {
+                "stage": "analyzing",
+                "percentage": 25,
+                "message": "Analyzing requirements...",
+            },
             {"stage": "generating", "percentage": 50, "message": "Creating content..."},
-            {"stage": "optimizing", "percentage": 75, "message": "Optimizing for grade level..."},
-            {"stage": "finalizing", "percentage": 100, "message": "Finalizing content..."},
+            {
+                "stage": "optimizing",
+                "percentage": 75,
+                "message": "Optimizing for grade level...",
+            },
+            {
+                "stage": "finalizing",
+                "percentage": 100,
+                "message": "Finalizing content...",
+            },
         ]
 
         for update in progress_updates:
@@ -148,7 +165,8 @@ class TestPusherE2E:
 
             # Verify stage message updates
             stage_element = await page.wait_for_selector(
-                f"[data-testid=stage-message]:has-text('{update['message']}')", timeout=2000
+                f"[data-testid=stage-message]:has-text('{update['message']}')",
+                timeout=2000,
             )
             assert stage_element is not None
 
@@ -223,9 +241,16 @@ class TestPusherE2E:
             },
             {
                 "type": "content_metrics",
-                "data": {"generationsToday": 12, "averageTime": 45, "successRate": 0.95},
+                "data": {
+                    "generationsToday": 12,
+                    "averageTime": 45,
+                    "successRate": 0.95,
+                },
             },
-            {"type": "system_metrics", "data": {"cpu": 52, "memory": 58, "activeConnections": 150}},
+            {
+                "type": "system_metrics",
+                "data": {"cpu": 52, "memory": 58, "activeConnections": 150},
+            },
         ]
 
         for update in updates:
@@ -321,9 +346,7 @@ class TestPusherE2E:
 
         # Verify both users see each other in presence list
         for page in [page1, page2]:
-            members_list = await page.wait_for_selector(
-                "[data-testid=presence-members]", timeout=5000
-            )
+            await page.wait_for_selector("[data-testid=presence-members]", timeout=5000)
             member_elements = await page.query_selector_all("[data-testid=member-item]")
             assert len(member_elements) >= 1  # At least current user
 
@@ -348,7 +371,8 @@ class TestPusherE2E:
 
         # Verify typing indicator appears on page 2
         typing_indicator = await page2.wait_for_selector(
-            "[data-testid=typing-indicator]:has-text('Test User 1 is typing')", timeout=3000
+            "[data-testid=typing-indicator]:has-text('Test User 1 is typing')",
+            timeout=3000,
         )
         assert typing_indicator is not None
 
@@ -379,7 +403,8 @@ class TestPusherE2E:
         # Verify message appears in both chat windows
         for page in [page1, page2]:
             message_element = await page.wait_for_selector(
-                "[data-testid=message-item]:has-text('Hello from User 1!')", timeout=3000
+                "[data-testid=message-item]:has-text('Hello from User 1!')",
+                timeout=3000,
             )
             assert message_element is not None
 
@@ -481,11 +506,36 @@ class TestPusherE2E:
 
         # Mock rapid message sequence
         messages = [
-            {"id": "msg-1", "sequence": 1, "content": "First message", "timestamp": 1000},
-            {"id": "msg-2", "sequence": 2, "content": "Second message", "timestamp": 1001},
-            {"id": "msg-3", "sequence": 3, "content": "Third message", "timestamp": 1002},
-            {"id": "msg-4", "sequence": 4, "content": "Fourth message", "timestamp": 1003},
-            {"id": "msg-5", "sequence": 5, "content": "Fifth message", "timestamp": 1004},
+            {
+                "id": "msg-1",
+                "sequence": 1,
+                "content": "First message",
+                "timestamp": 1000,
+            },
+            {
+                "id": "msg-2",
+                "sequence": 2,
+                "content": "Second message",
+                "timestamp": 1001,
+            },
+            {
+                "id": "msg-3",
+                "sequence": 3,
+                "content": "Third message",
+                "timestamp": 1002,
+            },
+            {
+                "id": "msg-4",
+                "sequence": 4,
+                "content": "Fourth message",
+                "timestamp": 1003,
+            },
+            {
+                "id": "msg-5",
+                "sequence": 5,
+                "content": "Fifth message",
+                "timestamp": 1004,
+            },
         ]
 
         # Send messages rapidly with small delays
@@ -554,7 +604,8 @@ class TestPusherE2E:
 
         # Verify notification content
         title_element = await page.wait_for_selector(
-            "[data-testid=notification-title]:has-text('Scheduled Maintenance')", timeout=2000
+            "[data-testid=notification-title]:has-text('Scheduled Maintenance')",
+            timeout=2000,
         )
         assert title_element is not None
 

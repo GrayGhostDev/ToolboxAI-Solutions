@@ -8,7 +8,7 @@ and subscription management for the ToolBoxAI Educational Platform.
 import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from sqlalchemy import (
     Boolean,
@@ -218,7 +218,7 @@ class Organization(Base):
         return max(0, remaining.days)
 
     @property
-    def usage_percentage(self) -> Dict[str, float]:
+    def usage_percentage(self) -> dict[str, float]:
         """Get usage percentages for various limits"""
         return {
             "users": (self.current_users / self.max_users * 100) if self.max_users > 0 else 0,

@@ -13,17 +13,18 @@ Ensures security is non-negotiable during Phase 1.5 fixes.
 """
 
 import asyncio
-import logging
 import json
+import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, asdict
 from pathlib import Path
+from typing import Optional
+
 import aiofiles
 
-from .vulnerability_scanner import VulnerabilityScanner
 from .compliance_checker import ComplianceChecker
 from .secret_rotator import SecretRotator
+from .vulnerability_scanner import VulnerabilityScanner
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +41,9 @@ class SecurityStatus:
     high_issues: int
     medium_issues: int
     low_issues: int
-    compliance_status: Dict[str, bool]
-    recommendations: List[str]
-    next_actions: List[str]
+    compliance_status: dict[str, bool]
+    recommendations: list[str]
+    next_actions: list[str]
 
 @dataclass
 class SecurityHook:
@@ -85,11 +86,11 @@ class SecurityCoordinator:
         self.high_threshold = 2      # Max 2 high vulnerabilities
         
         # Security hooks
-        self.hooks: Dict[str, SecurityHook] = {}
+        self.hooks: dict[str, SecurityHook] = {}
         self.initialize_security_hooks()
         
         # Security metrics
-        self.security_history: List[SecurityStatus] = []
+        self.security_history: list[SecurityStatus] = []
         self.max_history = 100  # Keep last 100 status reports
         
         # Alert thresholds
@@ -288,10 +289,10 @@ class SecurityCoordinator:
     
     def generate_comprehensive_recommendations(
         self, 
-        vuln_report: Dict, 
-        compliance_report: Dict, 
-        rotation_report: Dict
-    ) -> List[str]:
+        vuln_report: dict, 
+        compliance_report: dict, 
+        rotation_report: dict
+    ) -> list[str]:
         """Generate comprehensive security recommendations"""
         recommendations = []
         
@@ -317,8 +318,8 @@ class SecurityCoordinator:
         overall_score: float, 
         critical_issues: int, 
         high_issues: int, 
-        compliance_status: Dict[str, bool]
-    ) -> List[str]:
+        compliance_status: dict[str, bool]
+    ) -> list[str]:
         """Generate next actions based on security status"""
         next_actions = []
         
@@ -353,7 +354,7 @@ class SecurityCoordinator:
         
         # Check overall security score
         if status.overall_score < self.target_security_score:
-            score_gap = self.target_security_score - status.overall_score
+            self.target_security_score - status.overall_score
             alerts.append(f"🚨 Security score below target: {status.overall_score:.1f}% (target: {self.target_security_score}%)")
         
         # Check for score drops
@@ -555,7 +556,7 @@ class SecurityCoordinator:
         except Exception as e:
             logger.error(f"Error saving security status: {e}")
     
-    async def save_security_alerts(self, alerts: List[str], timestamp: datetime) -> None:
+    async def save_security_alerts(self, alerts: list[str], timestamp: datetime) -> None:
         """Save security alerts to file"""
         try:
             alerts_file = self.project_root / 'security_alerts.json'
@@ -568,7 +569,7 @@ class SecurityCoordinator:
             # Load existing alerts
             existing_alerts = []
             if alerts_file.exists():
-                async with aiofiles.open(alerts_file, 'r') as f:
+                async with aiofiles.open(alerts_file) as f:
                     content = await f.read()
                     if content:
                         data = json.loads(content)
@@ -596,9 +597,9 @@ class SecurityCoordinator:
     async def save_comprehensive_report(
         self, 
         status: SecurityStatus,
-        vuln_report: Dict,
-        compliance_report: Dict, 
-        rotation_report: Dict
+        vuln_report: dict,
+        compliance_report: dict, 
+        rotation_report: dict
     ) -> None:
         """Save comprehensive security report"""
         try:
@@ -644,7 +645,7 @@ class SecurityCoordinator:
         else:
             logger.warning(f"⚠️  Security score below target: {status.overall_score:.1f}% < {self.target_security_score}%")
     
-    async def emergency_security_response(self, reason: str) -> Dict:
+    async def emergency_security_response(self, reason: str) -> dict:
         """Emergency security response procedure"""
         logger.critical(f"🚨 EMERGENCY SECURITY RESPONSE: {reason}")
         
@@ -695,7 +696,7 @@ class SecurityCoordinator:
                 'response_actions': response_actions
             }
     
-    async def get_security_dashboard_data(self) -> Dict:
+    async def get_security_dashboard_data(self) -> dict:
         """Get security dashboard data for monitoring"""
         if not self.security_history:
             status = await self.get_comprehensive_security_status()

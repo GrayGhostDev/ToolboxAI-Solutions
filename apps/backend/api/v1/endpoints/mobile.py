@@ -70,7 +70,7 @@ class PushNotificationRequest(BaseModel):
     title: str
     message: str
     data: dict[str, Any] | None = None
-    priority: str = Field(default="normal", regex="^(low|normal|high|urgent)$")
+    priority: str = Field(default="normal", pattern="^(low|normal|high|urgent)$")
     schedule_time: datetime | None = None
 
 

@@ -535,9 +535,7 @@ async def get_user_dashboard_optimized(user_id: int, role: str) -> dict[str, Any
 
     # Get role-specific data using optimized queries
     if role.lower() == "student":
-        progress_data = await optimizer.execute_prepared_statement(
-            "get_student_progress", {"student_id": user_id}
-        )
+        await optimizer.execute_prepared_statement("get_student_progress", {"student_id": user_id})
         # Combine data...
 
     # Cache the result

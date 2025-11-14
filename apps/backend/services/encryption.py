@@ -56,7 +56,7 @@ class CredentialEncryption:
         if env_key:
             try:
                 # Validate key format
-                test_cipher = Fernet(env_key.encode() if len(env_key) == 44 else env_key)
+                Fernet(env_key.encode() if len(env_key) == 44 else env_key)
                 return (
                     env_key.encode()
                     if isinstance(env_key, str) and len(env_key) == 44

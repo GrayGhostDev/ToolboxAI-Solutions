@@ -13,7 +13,7 @@ agent_files = [
 
 for file_path in agent_files:
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
 
         # Check if AgentConfig is already imported

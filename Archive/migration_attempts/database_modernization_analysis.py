@@ -4,13 +4,10 @@ Database Modernization Analysis for Phase 2
 PostgreSQL 16 Migration & Redis 7 Upgrade Implementation
 """
 
-import os
 import json
-import time
-import subprocess
-from datetime import datetime
-from typing import Dict, List, Any, Optional
 import logging
+from datetime import datetime
+from typing import Any
 
 # Configure logging
 logging.basicConfig(
@@ -39,7 +36,7 @@ class PostgreSQL16Migration:
         self.target_version = "16"
         self.expected_performance_gain = "20-30%"
 
-    def analyze_migration_requirements(self) -> Dict[str, Any]:
+    def analyze_migration_requirements(self) -> dict[str, Any]:
         """Analyze current setup and migration requirements"""
 
         requirements = {
@@ -85,7 +82,7 @@ class PostgreSQL16Migration:
 
         return requirements
 
-    def generate_migration_scripts(self) -> Dict[str, str]:
+    def generate_migration_scripts(self) -> dict[str, str]:
         """Generate migration scripts for different scenarios"""
 
         scripts = {}
@@ -246,7 +243,7 @@ class Redis7Upgrade:
         self.current_version = "6.x"
         self.target_version = "7.x"
 
-    def analyze_upgrade_requirements(self) -> Dict[str, Any]:
+    def analyze_upgrade_requirements(self) -> dict[str, Any]:
         """Analyze Redis 7 upgrade requirements"""
 
         requirements = {
@@ -289,7 +286,7 @@ class Redis7Upgrade:
 
         return requirements
 
-    def generate_migration_plan(self) -> Dict[str, Any]:
+    def generate_migration_plan(self) -> dict[str, Any]:
         """Generate Redis 7 migration plan"""
 
         plan = {
@@ -329,7 +326,7 @@ class Redis7Upgrade:
 
         return plan
 
-    def generate_redis_functions_examples(self) -> Dict[str, str]:
+    def generate_redis_functions_examples(self) -> dict[str, str]:
         """Generate Redis Functions examples replacing Lua scripts"""
 
         functions = {}
@@ -428,7 +425,7 @@ class MigrationValidator:
     def __init__(self):
         self.validation_results = {}
 
-    def generate_validation_scripts(self) -> Dict[str, str]:
+    def generate_validation_scripts(self) -> dict[str, str]:
         """Generate validation scripts for both PostgreSQL and Redis"""
 
         scripts = {}

@@ -4,15 +4,12 @@ This agent creates personalized learning paths and adapts content
 based on individual student needs, preferences, and performance.
 """
 
-import asyncio
-import random
-from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from collections import defaultdict, deque
+from typing import Any, Optional
 
-from ..base_agent import BaseAgent, AgentConfig, TaskResult, AgentCapability
+from ..base_agent import AgentConfig, BaseAgent, TaskResult
 
 
 class LearningPreference(Enum):
@@ -73,14 +70,14 @@ class PersonalizationProfile:
 
     # Academic profile
     current_skill_level: float  # 0-100
-    knowledge_gaps: List[str]
-    strengths: List[str]
-    interests: List[str]
+    knowledge_gaps: list[str]
+    strengths: list[str]
+    interests: list[str]
 
     # Behavioral patterns
     attention_span_minutes: float
     preferred_session_length: float
-    best_learning_times: List[str]
+    best_learning_times: list[str]
     frustration_threshold: float
 
     # Engagement metrics
@@ -99,10 +96,10 @@ class PersonalizationProfile:
     feedback_preference: str
 
     # Historical data
-    learning_history: List[Dict[str, Any]] = field(default_factory=list)
-    adaptation_history: List[Dict[str, Any]] = field(default_factory=list)
-    success_patterns: List[str] = field(default_factory=list)
-    struggle_patterns: List[str] = field(default_factory=list)
+    learning_history: list[dict[str, Any]] = field(default_factory=list)
+    adaptation_history: list[dict[str, Any]] = field(default_factory=list)
+    success_patterns: list[str] = field(default_factory=list)
+    struggle_patterns: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -115,18 +112,18 @@ class LearningPath:
     grade_level: str
 
     # Path structure
-    objectives: List[str]
-    milestones: List[Dict[str, Any]]
+    objectives: list[str]
+    milestones: list[dict[str, Any]]
     current_position: int
 
     # Content sequence
-    content_sequence: List[Dict[str, Any]]
-    completed_items: List[str]
-    skipped_items: List[str]
+    content_sequence: list[dict[str, Any]]
+    completed_items: list[str]
+    skipped_items: list[str]
 
     # Adaptations
-    active_adaptations: List[Dict[str, Any]]
-    recommended_adaptations: List[Dict[str, Any]]
+    active_adaptations: list[dict[str, Any]]
+    recommended_adaptations: list[dict[str, Any]]
 
     # Progress tracking
     overall_progress: float
@@ -135,13 +132,13 @@ class LearningPath:
 
     # Performance metrics
     average_score: float
-    mastery_achieved: List[str]
-    skills_in_progress: List[str]
+    mastery_achieved: list[str]
+    skills_in_progress: list[str]
 
     # Personalization
-    content_preferences: Dict[str, float]
-    difficulty_curve: List[float]
-    engagement_trajectory: List[float]
+    content_preferences: dict[str, float]
+    difficulty_curve: list[float]
+    engagement_trajectory: list[float]
 
 
 @dataclass
@@ -149,9 +146,9 @@ class AdaptiveContent:
     """Content that has been adapted for a specific student."""
 
     content_id: str
-    original_content: Dict[str, Any]
-    adapted_content: Dict[str, Any]
-    adaptations_applied: List[Dict[str, Any]]
+    original_content: dict[str, Any]
+    adapted_content: dict[str, Any]
+    adaptations_applied: list[dict[str, Any]]
     student_id: str
     adaptation_reason: str
     expected_improvement: float
@@ -169,8 +166,8 @@ class LearningRecommendation:
     description: str
     rationale: str
     expected_impact: float
-    implementation: Dict[str, Any]
-    metrics_to_track: List[str]
+    implementation: dict[str, Any]
+    metrics_to_track: list[str]
     review_date: datetime
 
 
@@ -189,14 +186,12 @@ class AdaptiveLearningAgent(BaseAgent):
 
     def __init__(self):
         """Initialize the Adaptive Learning Agent."""
-        config = AgentConfig(
-            name="AdaptiveLearningAgent"
-        )
+        config = AgentConfig(name="AdaptiveLearningAgent")
         super().__init__(config)
 
         # Student profiles
-        self.student_profiles: Dict[str, PersonalizationProfile] = {}
-        self.learning_paths: Dict[str, LearningPath] = {}
+        self.student_profiles: dict[str, PersonalizationProfile] = {}
+        self.learning_paths: dict[str, LearningPath] = {}
 
         # Adaptation strategies
         self.adaptation_strategies = self._initialize_adaptation_strategies()
@@ -209,7 +204,7 @@ class AdaptiveLearningAgent(BaseAgent):
         self.struggle_threshold = 0.5
         self.engagement_threshold = 0.6
 
-    async def process(self, task_data: Dict[str, Any]) -> TaskResult:
+    async def process(self, task_data: dict[str, Any]) -> TaskResult:
         """
         Process adaptive learning request.
 
@@ -246,22 +241,15 @@ class AdaptiveLearningAgent(BaseAgent):
                 data=result,
                 metadata={
                     "task_type": task_type,
-                    "timestamp": datetime.now().isoformat()
-                }
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
         except Exception as e:
             self.logger.error(f"Adaptive learning processing failed: {str(e)}")
-            return TaskResult(
-                success=False,
-                data={},
-                error=str(e)
-            )
+            return TaskResult(success=False, data={}, error=str(e))
 
-    async def create_personalization_profile(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def create_personalization_profile(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create or update a student's personalization profile."""
         student_id = data["student_id"]
 
@@ -293,7 +281,7 @@ class AdaptiveLearningAgent(BaseAgent):
             transfer_ability=patterns.get("transfer", 0.6),
             difficulty_adjustment_rate=0.1,
             hint_usage_pattern=patterns.get("hint_pattern", "moderate"),
-            feedback_preference=preferences.get("feedback", "immediate")
+            feedback_preference=preferences.get("feedback", "immediate"),
         )
 
         self.student_profiles[student_id] = profile
@@ -309,21 +297,18 @@ class AdaptiveLearningAgent(BaseAgent):
                 "skill_level": profile.current_skill_level,
                 "pacing": profile.pacing_preference.value,
                 "strengths": profile.strengths[:3],
-                "gaps": profile.knowledge_gaps[:3]
+                "gaps": profile.knowledge_gaps[:3],
             },
             "recommendations": recommendations,
             "personalization_settings": {
                 "content_complexity": self._determine_complexity_level(profile),
                 "scaffolding_level": self._determine_scaffolding_level(profile),
                 "feedback_style": profile.feedback_preference,
-                "gamification_enabled": profile.gamification_responsiveness > 0.5
-            }
+                "gamification_enabled": profile.gamification_responsiveness > 0.5,
+            },
         }
 
-    async def adapt_content(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def adapt_content(self, data: dict[str, Any]) -> dict[str, Any]:
         """Adapt content for a specific student."""
         student_id = data["student_id"]
         content = data["content"]
@@ -365,9 +350,7 @@ class AdaptiveLearningAgent(BaseAgent):
             applied_adaptations.append(adaptation)
 
         # Add personalized elements
-        adapted_content = await self._add_personalized_elements(
-            adapted_content, profile
-        )
+        adapted_content = await self._add_personalized_elements(adapted_content, profile)
 
         # Create adaptive content record
         adaptive_content = AdaptiveContent(
@@ -377,7 +360,7 @@ class AdaptiveLearningAgent(BaseAgent):
             adaptations_applied=applied_adaptations,
             student_id=student_id,
             adaptation_reason=self._generate_adaptation_reason(profile, adaptations),
-            expected_improvement=self._estimate_improvement(profile, adaptations)
+            expected_improvement=self._estimate_improvement(profile, adaptations),
         )
 
         return {
@@ -386,7 +369,7 @@ class AdaptiveLearningAgent(BaseAgent):
                 {
                     "type": a["type"].value if isinstance(a["type"], Enum) else a["type"],
                     "description": a.get("description", ""),
-                    "impact": a.get("impact", "medium")
+                    "impact": a.get("impact", "medium"),
                 }
                 for a in applied_adaptations
             ],
@@ -396,19 +379,16 @@ class AdaptiveLearningAgent(BaseAgent):
                 "estimated_completion_time": self._estimate_completion_time(
                     adapted_content, profile
                 ),
-                "engagement_boosters": adapted_content.get("engagement_elements", [])
+                "engagement_boosters": adapted_content.get("engagement_elements", []),
             },
             "expected_outcomes": {
                 "comprehension_improvement": f"{adaptive_content.expected_improvement:.0%}",
                 "engagement_prediction": self._predict_engagement(profile, adapted_content),
-                "success_probability": self._predict_success(profile, adapted_content)
-            }
+                "success_probability": self._predict_success(profile, adapted_content),
+            },
         }
 
-    async def create_learning_path(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def create_learning_path(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create a personalized learning path."""
         student_id = data["student_id"]
         subject = data["subject"]
@@ -419,9 +399,7 @@ class AdaptiveLearningAgent(BaseAgent):
         # Get student profile
         profile = self.student_profiles.get(student_id)
         if not profile:
-            return {
-                "error": "Student profile not found. Please create profile first."
-            }
+            return {"error": "Student profile not found. Please create profile first."}
 
         # Generate learning sequence
         content_sequence = await self._generate_content_sequence(
@@ -429,14 +407,10 @@ class AdaptiveLearningAgent(BaseAgent):
         )
 
         # Create milestones
-        milestones = await self._create_milestones(
-            objectives, content_sequence, duration_weeks
-        )
+        milestones = await self._create_milestones(objectives, content_sequence, duration_weeks)
 
         # Determine difficulty curve
-        difficulty_curve = self._generate_difficulty_curve(
-            profile, len(content_sequence)
-        )
+        difficulty_curve = self._generate_difficulty_curve(profile, len(content_sequence))
 
         # Create learning path
         learning_path = LearningPath(
@@ -460,7 +434,7 @@ class AdaptiveLearningAgent(BaseAgent):
             skills_in_progress=[],
             content_preferences={},
             difficulty_curve=difficulty_curve,
-            engagement_trajectory=[]
+            engagement_trajectory=[],
         )
 
         self.learning_paths[student_id] = learning_path
@@ -475,7 +449,7 @@ class AdaptiveLearningAgent(BaseAgent):
                 "total_items": len(content_sequence),
                 "milestones": len(milestones),
                 "estimated_duration": f"{duration_weeks} weeks",
-                "personalized_for": profile.primary_learning_style.value
+                "personalized_for": profile.primary_learning_style.value,
             },
             "first_milestone": milestones[0] if milestones else None,
             "first_content": first_content,
@@ -483,14 +457,11 @@ class AdaptiveLearningAgent(BaseAgent):
                 "difficulty_progression": "adaptive",
                 "pacing": profile.pacing_preference.value,
                 "content_types": self._get_preferred_content_types(profile),
-                "support_level": self._determine_support_level(profile)
-            }
+                "support_level": self._determine_support_level(profile),
+            },
         }
 
-    async def update_learning_path(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def update_learning_path(self, data: dict[str, Any]) -> dict[str, Any]:
         """Update learning path based on student progress."""
         student_id = data["student_id"]
         performance_data = data.get("performance", {})
@@ -511,9 +482,7 @@ class AdaptiveLearningAgent(BaseAgent):
             path.overall_progress = len(path.completed_items) / len(path.content_sequence)
 
         # Analyze performance
-        performance_analysis = await self._analyze_performance(
-            performance_data, profile
-        )
+        performance_analysis = await self._analyze_performance(performance_data, profile)
 
         # Determine if adaptations are needed
         adaptations_needed = await self._check_adaptation_triggers(
@@ -527,9 +496,7 @@ class AdaptiveLearningAgent(BaseAgent):
             )
 
         # Update profile based on performance
-        profile = await self._update_profile_from_performance(
-            profile, performance_analysis
-        )
+        profile = await self._update_profile_from_performance(profile, performance_analysis)
 
         # Get next content recommendation
         next_content = await self._get_next_adapted_content(path, profile)
@@ -548,13 +515,10 @@ class AdaptiveLearningAgent(BaseAgent):
             "estimated_completion": path.estimated_completion.isoformat(),
             "recommendations": await self._generate_progress_recommendations(
                 path, profile, performance_analysis
-            )
+            ),
         }
 
-    async def recommend_next_content(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def recommend_next_content(self, data: dict[str, Any]) -> dict[str, Any]:
         """Recommend the next best content for a student."""
         student_id = data["student_id"]
         context = data.get("context", {})
@@ -575,73 +539,68 @@ class AdaptiveLearningAgent(BaseAgent):
         # Primary recommendation - next in sequence
         if path and path.current_position < len(path.content_sequence):
             primary = path.content_sequence[path.current_position]
-            primary_adapted = await self._adapt_for_current_state(
-                primary, profile, current_state
+            primary_adapted = await self._adapt_for_current_state(primary, profile, current_state)
+            recommendations.append(
+                {
+                    "type": "primary",
+                    "content": primary_adapted,
+                    "reason": "Next in learning path",
+                    "match_score": 0.95,
+                }
             )
-            recommendations.append({
-                "type": "primary",
-                "content": primary_adapted,
-                "reason": "Next in learning path",
-                "match_score": 0.95
-            })
 
         # Alternative recommendation - based on interests
-        interest_based = await self._recommend_by_interests(
-            profile, current_state
-        )
+        interest_based = await self._recommend_by_interests(profile, current_state)
         if interest_based:
-            recommendations.append({
-                "type": "interest",
-                "content": interest_based,
-                "reason": "Matches your interests",
-                "match_score": 0.85
-            })
+            recommendations.append(
+                {
+                    "type": "interest",
+                    "content": interest_based,
+                    "reason": "Matches your interests",
+                    "match_score": 0.85,
+                }
+            )
 
         # Remedial recommendation - if struggling
         if current_state.get("struggling", False):
-            remedial = await self._recommend_remedial_content(
-                profile, current_state
+            remedial = await self._recommend_remedial_content(profile, current_state)
+            recommendations.append(
+                {
+                    "type": "remedial",
+                    "content": remedial,
+                    "reason": "Additional practice recommended",
+                    "match_score": 0.90,
+                }
             )
-            recommendations.append({
-                "type": "remedial",
-                "content": remedial,
-                "reason": "Additional practice recommended",
-                "match_score": 0.90
-            })
 
         # Enrichment recommendation - if excelling
         if current_state.get("excelling", False):
-            enrichment = await self._recommend_enrichment_content(
-                profile, current_state
+            enrichment = await self._recommend_enrichment_content(profile, current_state)
+            recommendations.append(
+                {
+                    "type": "enrichment",
+                    "content": enrichment,
+                    "reason": "Challenge yourself",
+                    "match_score": 0.80,
+                }
             )
-            recommendations.append({
-                "type": "enrichment",
-                "content": enrichment,
-                "reason": "Challenge yourself",
-                "match_score": 0.80
-            })
 
         return {
             "recommendations": recommendations,
             "student_state": {
                 "mood": current_state.get("mood", "neutral"),
                 "energy_level": current_state.get("energy", "medium"),
-                "recent_performance": current_state.get("performance", "average")
+                "recent_performance": current_state.get("performance", "average"),
             },
             "personalization_factors": {
                 "learning_style": profile.primary_learning_style.value,
                 "current_difficulty": current_state.get("difficulty", "medium"),
-                "time_available": current_state.get("time_available", 30)
+                "time_available": current_state.get("time_available", 30),
             },
-            "adaptive_notes": await self._generate_adaptive_notes(
-                profile, recommendations
-            )
+            "adaptive_notes": await self._generate_adaptive_notes(profile, recommendations),
         }
 
-    async def adjust_difficulty(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def adjust_difficulty(self, data: dict[str, Any]) -> dict[str, Any]:
         """Dynamically adjust content difficulty."""
         student_id = data["student_id"]
         current_difficulty = data.get("current_difficulty", "medium")
@@ -656,9 +615,7 @@ class AdaptiveLearningAgent(BaseAgent):
         trend = await self._analyze_performance_trend(performance)
 
         # Determine difficulty adjustment
-        adjustment = self._calculate_difficulty_adjustment(
-            profile, current_difficulty, trend
-        )
+        adjustment = self._calculate_difficulty_adjustment(profile, current_difficulty, trend)
 
         # Generate adjusted content parameters
         adjusted_params = {
@@ -667,7 +624,7 @@ class AdaptiveLearningAgent(BaseAgent):
             "scaffolding_amount": adjustment["scaffolding"],
             "hint_availability": adjustment["hints"],
             "time_limits": adjustment["time"],
-            "success_criteria": adjustment["criteria"]
+            "success_criteria": adjustment["criteria"],
         }
 
         # Create transition plan
@@ -685,19 +642,21 @@ class AdaptiveLearningAgent(BaseAgent):
             "expected_impact": {
                 "engagement": adjustment["expected_engagement"],
                 "success_rate": adjustment["expected_success"],
-                "learning_efficiency": adjustment["expected_efficiency"]
+                "learning_efficiency": adjustment["expected_efficiency"],
             },
             "monitoring_plan": {
-                "metrics_to_track": ["completion_rate", "accuracy", "time_on_task", "help_requests"],
+                "metrics_to_track": [
+                    "completion_rate",
+                    "accuracy",
+                    "time_on_task",
+                    "help_requests",
+                ],
                 "evaluation_period": "next_5_activities",
-                "adjustment_threshold": 0.2
-            }
+                "adjustment_threshold": 0.2,
+            },
         }
 
-    async def personalize_feedback(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def personalize_feedback(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate personalized feedback for a student."""
         student_id = data["student_id"]
         performance = data["performance"]
@@ -713,18 +672,10 @@ class AdaptiveLearningAgent(BaseAgent):
 
         # Generate personalized feedback components
         feedback = {
-            "immediate_feedback": await self._generate_immediate_feedback(
-                analysis, profile
-            ),
-            "explanation": await self._generate_explanation(
-                analysis, profile, content_type
-            ),
-            "encouragement": await self._generate_encouragement(
-                analysis, profile
-            ),
-            "next_steps": await self._generate_next_steps(
-                analysis, profile
-            )
+            "immediate_feedback": await self._generate_immediate_feedback(analysis, profile),
+            "explanation": await self._generate_explanation(analysis, profile, content_type),
+            "encouragement": await self._generate_encouragement(analysis, profile),
+            "next_steps": await self._generate_next_steps(analysis, profile),
         }
 
         # Adapt feedback style
@@ -732,9 +683,7 @@ class AdaptiveLearningAgent(BaseAgent):
 
         # Add motivational elements if needed
         if analysis.get("needs_motivation", False):
-            feedback["motivational"] = await self._add_motivational_elements(
-                profile, analysis
-            )
+            feedback["motivational"] = await self._add_motivational_elements(profile, analysis)
 
         # Add visual/audio elements based on learning style
         if profile.primary_learning_style == LearningPreference.VISUAL:
@@ -748,20 +697,13 @@ class AdaptiveLearningAgent(BaseAgent):
                 "feedback_style": profile.feedback_preference,
                 "learning_style_accommodations": profile.primary_learning_style.value,
                 "emotional_tone": self._determine_emotional_tone(profile, analysis),
-                "detail_level": self._determine_detail_level(profile)
+                "detail_level": self._determine_detail_level(profile),
             },
-            "follow_up_actions": await self._generate_follow_up_actions(
-                analysis, profile
-            ),
-            "parent_teacher_summary": await self._generate_summary_for_adults(
-                analysis, profile
-            )
+            "follow_up_actions": await self._generate_follow_up_actions(analysis, profile),
+            "parent_teacher_summary": await self._generate_summary_for_adults(analysis, profile),
         }
 
-    async def recommend_learning_strategy(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def recommend_learning_strategy(self, data: dict[str, Any]) -> dict[str, Any]:
         """Recommend personalized learning strategies."""
         student_id = data["student_id"]
         goal = data.get("goal", "improve_performance")
@@ -779,27 +721,19 @@ class AdaptiveLearningAgent(BaseAgent):
         strategies = []
 
         # Study strategies
-        study_strategies = await self._recommend_study_strategies(
-            profile, goal, challenges
-        )
+        study_strategies = await self._recommend_study_strategies(profile, goal, challenges)
         strategies.extend(study_strategies)
 
         # Time management strategies
-        time_strategies = await self._recommend_time_strategies(
-            profile, timeframe
-        )
+        time_strategies = await self._recommend_time_strategies(profile, timeframe)
         strategies.extend(time_strategies)
 
         # Motivation strategies
-        motivation_strategies = await self._recommend_motivation_strategies(
-            profile, goal
-        )
+        motivation_strategies = await self._recommend_motivation_strategies(profile, goal)
         strategies.extend(motivation_strategies)
 
         # Cognitive strategies
-        cognitive_strategies = await self._recommend_cognitive_strategies(
-            profile, challenges
-        )
+        cognitive_strategies = await self._recommend_cognitive_strategies(profile, challenges)
         strategies.extend(cognitive_strategies)
 
         # Prioritize strategies
@@ -813,73 +747,97 @@ class AdaptiveLearningAgent(BaseAgent):
         return {
             "recommended_strategies": prioritized[:5],
             "strategy_rationale": {
-                strategy["name"]: strategy["rationale"]
-                for strategy in prioritized[:5]
+                strategy["name"]: strategy["rationale"] for strategy in prioritized[:5]
             },
             "implementation_plan": implementation_plan,
-            "success_metrics": self._define_strategy_success_metrics(
-                prioritized[:5], goal
-            ),
+            "success_metrics": self._define_strategy_success_metrics(prioritized[:5], goal),
             "personalization_factors": {
                 "learning_style": profile.primary_learning_style.value,
                 "autonomy_level": profile.autonomy_level,
-                "motivation_type": self._identify_motivation_type(profile)
+                "motivation_type": self._identify_motivation_type(profile),
             },
             "expected_outcomes": {
                 "short_term": "Improved engagement and understanding",
                 "medium_term": f"Achieve {goal} within {timeframe}",
-                "long_term": "Develop independent learning skills"
-            }
+                "long_term": "Develop independent learning skills",
+            },
         }
 
     # Helper methods
 
-    def _initialize_adaptation_strategies(self) -> Dict[str, Any]:
+    def _initialize_adaptation_strategies(self) -> dict[str, Any]:
         """Initialize adaptation strategies."""
         return {
             "difficulty": {
                 "increase": ["add_complexity", "reduce_scaffolding", "increase_pace"],
-                "decrease": ["simplify", "add_scaffolding", "slow_pace", "add_examples"],
-                "maintain": ["keep_current", "minor_variations"]
+                "decrease": [
+                    "simplify",
+                    "add_scaffolding",
+                    "slow_pace",
+                    "add_examples",
+                ],
+                "maintain": ["keep_current", "minor_variations"],
             },
             "content_type": {
                 "visual": ["add_diagrams", "use_infographics", "include_videos"],
-                "auditory": ["add_narration", "include_podcasts", "verbal_explanations"],
-                "kinesthetic": ["add_interactions", "simulations", "hands_on_activities"],
-                "reading": ["add_text", "detailed_explanations", "written_examples"]
+                "auditory": [
+                    "add_narration",
+                    "include_podcasts",
+                    "verbal_explanations",
+                ],
+                "kinesthetic": [
+                    "add_interactions",
+                    "simulations",
+                    "hands_on_activities",
+                ],
+                "reading": ["add_text", "detailed_explanations", "written_examples"],
             },
             "engagement": {
                 "gamification": ["add_points", "badges", "leaderboards", "challenges"],
                 "storytelling": ["narrative_wrapper", "characters", "plot_progression"],
                 "real_world": ["practical_examples", "case_studies", "applications"],
-                "social": ["peer_collaboration", "discussions", "group_projects"]
-            }
+                "social": ["peer_collaboration", "discussions", "group_projects"],
+            },
         }
 
-    def _initialize_content_templates(self) -> Dict[str, Any]:
+    def _initialize_content_templates(self) -> dict[str, Any]:
         """Initialize content adaptation templates."""
         return {
             "visual_learner": {
                 "additions": ["diagrams", "charts", "mind_maps", "color_coding"],
-                "modifications": ["text_to_visual", "add_icons", "spatial_organization"],
-                "removals": ["excessive_text", "audio_only"]
+                "modifications": [
+                    "text_to_visual",
+                    "add_icons",
+                    "spatial_organization",
+                ],
+                "removals": ["excessive_text", "audio_only"],
             },
             "auditory_learner": {
-                "additions": ["narration", "sound_effects", "verbal_mnemonics", "discussions"],
-                "modifications": ["text_to_speech", "add_rhythm", "verbal_explanations"],
-                "removals": ["silent_reading", "visual_only"]
+                "additions": [
+                    "narration",
+                    "sound_effects",
+                    "verbal_mnemonics",
+                    "discussions",
+                ],
+                "modifications": [
+                    "text_to_speech",
+                    "add_rhythm",
+                    "verbal_explanations",
+                ],
+                "removals": ["silent_reading", "visual_only"],
             },
             "kinesthetic_learner": {
                 "additions": ["interactions", "movement", "hands_on", "simulations"],
-                "modifications": ["static_to_interactive", "add_gestures", "physical_models"],
-                "removals": ["passive_content", "lengthy_sitting"]
-            }
+                "modifications": [
+                    "static_to_interactive",
+                    "add_gestures",
+                    "physical_models",
+                ],
+                "removals": ["passive_content", "lengthy_sitting"],
+            },
         }
 
-    async def _identify_learning_style(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, LearningPreference]:
+    async def _identify_learning_style(self, data: dict[str, Any]) -> dict[str, LearningPreference]:
         """Identify student's learning style."""
         # Simplified learning style identification
         # In production, this would use assessment data and behavior analysis
@@ -895,15 +853,9 @@ class AdaptiveLearningAgent(BaseAgent):
         else:
             primary = LearningPreference.READING_WRITING
 
-        return {
-            "primary": primary,
-            "secondary": LearningPreference.LOGICAL
-        }
+        return {"primary": primary, "secondary": LearningPreference.LOGICAL}
 
-    async def _assess_skill_level(
-        self,
-        data: Dict[str, Any]
-    ) -> float:
+    async def _assess_skill_level(self, data: dict[str, Any]) -> float:
         """Assess student's current skill level."""
         # Simplified skill assessment
         # In production, would use comprehensive assessment data
@@ -917,50 +869,55 @@ class AdaptiveLearningAgent(BaseAgent):
     async def _determine_adaptations(
         self,
         profile: PersonalizationProfile,
-        content: Dict[str, Any],
-        content_type: str
-    ) -> List[Dict[str, Any]]:
+        content: dict[str, Any],
+        content_type: str,
+    ) -> list[dict[str, Any]]:
         """Determine necessary content adaptations."""
         adaptations = []
 
         # Check if difficulty adjustment needed
         if profile.current_skill_level < 40:
-            adaptations.append({
-                "type": AdaptationType.DIFFICULTY,
-                "parameters": {"direction": "decrease", "amount": 0.3},
-                "description": "Reducing difficulty for better comprehension"
-            })
+            adaptations.append(
+                {
+                    "type": AdaptationType.DIFFICULTY,
+                    "parameters": {"direction": "decrease", "amount": 0.3},
+                    "description": "Reducing difficulty for better comprehension",
+                }
+            )
 
         # Check if content type adaptation needed
         if profile.primary_learning_style == LearningPreference.VISUAL:
-            adaptations.append({
-                "type": AdaptationType.CONTENT_TYPE,
-                "parameters": {"add": ["diagrams", "charts", "images"]},
-                "description": "Adding visual elements"
-            })
+            adaptations.append(
+                {
+                    "type": AdaptationType.CONTENT_TYPE,
+                    "parameters": {"add": ["diagrams", "charts", "images"]},
+                    "description": "Adding visual elements",
+                }
+            )
 
         # Check if scaffolding needed
         if profile.current_skill_level < 60 or profile.knowledge_gaps:
-            adaptations.append({
-                "type": AdaptationType.SCAFFOLDING,
-                "parameters": {"level": "high", "type": "progressive"},
-                "description": "Adding learning supports"
-            })
+            adaptations.append(
+                {
+                    "type": AdaptationType.SCAFFOLDING,
+                    "parameters": {"level": "high", "type": "progressive"},
+                    "description": "Adding learning supports",
+                }
+            )
 
         # Check if pacing adjustment needed
         if profile.pacing_preference == PacingPreference.SLOW:
-            adaptations.append({
-                "type": AdaptationType.PACING,
-                "parameters": {"speed": 0.75, "breaks": "frequent"},
-                "description": "Adjusting pace for optimal learning"
-            })
+            adaptations.append(
+                {
+                    "type": AdaptationType.PACING,
+                    "parameters": {"speed": 0.75, "breaks": "frequent"},
+                    "description": "Adjusting pace for optimal learning",
+                }
+            )
 
         return adaptations
 
-    def _determine_complexity_level(
-        self,
-        profile: PersonalizationProfile
-    ) -> str:
+    def _determine_complexity_level(self, profile: PersonalizationProfile) -> str:
         """Determine appropriate content complexity level."""
         if profile.current_skill_level < 30:
             return ContentComplexity.SIMPLIFIED.value
@@ -971,10 +928,7 @@ class AdaptiveLearningAgent(BaseAgent):
         else:
             return ContentComplexity.ADVANCED.value
 
-    def _determine_scaffolding_level(
-        self,
-        profile: PersonalizationProfile
-    ) -> str:
+    def _determine_scaffolding_level(self, profile: PersonalizationProfile) -> str:
         """Determine appropriate scaffolding level."""
         if profile.current_skill_level < 40 or len(profile.knowledge_gaps) > 3:
             return "high"
@@ -982,6 +936,7 @@ class AdaptiveLearningAgent(BaseAgent):
             return "medium"
         else:
             return "low"
+
     async def _process_task(self, state: "AgentState") -> Any:
         """
         Process the task for this educational agent.
@@ -994,7 +949,6 @@ class AdaptiveLearningAgent(BaseAgent):
         Returns:
             Task result
         """
-        from typing import Any
 
         # Extract the task
         task = state.get("task", "")
@@ -1007,5 +961,5 @@ class AdaptiveLearningAgent(BaseAgent):
             "task": task,
             "status": "completed",
             "result": f"{self.__class__.__name__} processed task: {task[:100] if task else 'No task'}...",
-            "context": context
+            "context": context,
         }

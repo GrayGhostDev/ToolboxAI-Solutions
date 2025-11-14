@@ -165,7 +165,8 @@ class TestJWTManager:
         manager = JWTSecurityManager()
 
         with patch.dict(
-            os.environ, {"JWT_SECRET_KEY": "a-very-secure-32-character-secret-key-here!"}
+            os.environ,
+            {"JWT_SECRET_KEY": "a-very-secure-32-character-secret-key-here!"},
         ):
             report = manager.validate_current_secret()
 
@@ -199,13 +200,16 @@ class TestSettingsIntegration:
         """Test settings rejects weak secrets in production"""
         with patch.dict(
             os.environ,
-            {"JWT_SECRET_KEY": "dev-secret-key-change-in-production", "ENV_NAME": "production"},
+            {
+                "JWT_SECRET_KEY": "dev-secret-key-change-in-production",
+                "ENV_NAME": "production",
+            },
         ):
             with pytest.raises(ValueError, match="PRODUCTION SECURITY ERROR"):
                 import importlib
 
                 if "toolboxai_settings.settings" in sys.modules:
-                    toolboxai_settings = importlib.reload(sys.modules["toolboxai_settings"])
+                    importlib.reload(sys.modules["toolboxai_settings"])
                 else:
                     pass
 
@@ -263,7 +267,11 @@ class TestAuthenticationIntegration:
             assert len(secret) >= 32
 
             # Test token creation
-            test_data = {"sub": "test-user-123", "username": "test_user", "role": "student"}
+            test_data = {
+                "sub": "test-user-123",
+                "username": "test_user",
+                "role": "student",
+            }
 
             token = JWTManager.create_access_token(test_data)
             assert isinstance(token, str)

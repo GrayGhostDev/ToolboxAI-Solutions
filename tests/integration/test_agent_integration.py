@@ -154,8 +154,14 @@ class TestAgentSystemIntegration:
                         }
                     ]
                 },
-                terrain={"script": "-- Lua terrain generation script", "environment": "forest"},
-                scripts={"main_script": "-- Game logic script", "ui_script": "-- UI script"},
+                terrain={
+                    "script": "-- Lua terrain generation script",
+                    "environment": "forest",
+                },
+                scripts={
+                    "main_script": "-- Game logic script",
+                    "ui_script": "-- UI script",
+                },
                 review={"approved": True, "quality_score": 92, "suggestions": []},
                 execution_time=2.5,
             )
@@ -264,14 +270,24 @@ class TestAgentSystemIntegration:
         # Create a complex request requiring coordination
         request = {
             "action": "generate_complete_lesson",
-            "parameters": {"subject": "History", "topic": "Ancient Rome", "include_all": True},
+            "parameters": {
+                "subject": "History",
+                "topic": "Ancient Rome",
+                "include_all": True,
+            },
         }
 
         # Mock coordinator methods
         with patch.object(coordinator, "generate_educational_content") as mock_coordinate:
             mock_coordinate.return_value = {
                 "status": "success",
-                "components_generated": ["lesson", "quiz", "terrain", "scripts", "gamification"],
+                "components_generated": [
+                    "lesson",
+                    "quiz",
+                    "terrain",
+                    "scripts",
+                    "gamification",
+                ],
                 "time_taken": 5.2,
                 "resources_used": {"cpu": 0.75, "memory": 0.60, "api_calls": 12},
             }
@@ -319,7 +335,6 @@ class TestAgentSystemIntegration:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_agent_consensus_mechanism(self, setup_system):
         """Test consensus mechanism for quality control."""
-        system = setup_system
 
         # Create multiple agent responses for consensus
         agent_responses = [
@@ -354,15 +369,28 @@ class TestAgentSystemIntegration:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_resource_optimization(self, setup_system):
         """Test resource optimization in agent system."""
-        system = setup_system
         resource_coordinator = ResourceCoordinator()
 
         # Mock resource monitoring
         with patch.object(resource_coordinator, "optimize_resource_allocation") as mock_optimize:
             mock_optimize.return_value = {
-                "cpu_allocation": {"agents": 0.4, "swarm": 0.3, "mcp": 0.1, "other": 0.2},
-                "memory_allocation": {"agents": 0.5, "swarm": 0.2, "mcp": 0.15, "other": 0.15},
-                "optimizations_applied": ["cache_enabled", "parallel_processing", "lazy_loading"],
+                "cpu_allocation": {
+                    "agents": 0.4,
+                    "swarm": 0.3,
+                    "mcp": 0.1,
+                    "other": 0.2,
+                },
+                "memory_allocation": {
+                    "agents": 0.5,
+                    "swarm": 0.2,
+                    "mcp": 0.15,
+                    "other": 0.15,
+                },
+                "optimizations_applied": [
+                    "cache_enabled",
+                    "parallel_processing",
+                    "lazy_loading",
+                ],
             }
 
             # Optimize resources
@@ -376,7 +404,6 @@ class TestAgentSystemIntegration:
     @pytest.mark.asyncio(loop_scope="function")
     async def test_end_to_end_educational_experience(self, setup_system):
         """Test complete educational experience generation."""
-        system = setup_system
 
         # Comprehensive educational request
         request = {
@@ -404,10 +431,17 @@ class TestAgentSystemIntegration:
                     "environment": {"id": "env_789", "type": "3d_forest"},
                     "quiz": {"id": "quiz_012", "adaptive": True},
                     "activities": ["food_chain_builder", "ecosystem_simulator"],
-                    "gamification": {"points": 100, "badges": ["explorer", "scientist"]},
+                    "gamification": {
+                        "points": 100,
+                        "badges": ["explorer", "scientist"],
+                    },
                 },
                 "estimated_completion_time": 45,
-                "accessibility_features": ["screen_reader", "subtitles", "high_contrast"],
+                "accessibility_features": [
+                    "screen_reader",
+                    "subtitles",
+                    "high_contrast",
+                ],
                 "quality_metrics": {
                     "educational_value": 0.95,
                     "engagement_score": 0.92,
@@ -436,7 +470,7 @@ class TestAgentCommunication:
     async def test_supervisor_to_agent_communication(self):
         """Test supervisor communicating with sub-agents."""
         supervisor = SupervisorAgent()
-        content_agent = ContentAgent()
+        ContentAgent()
 
         # Mock communication
         with patch.object(supervisor, "delegate_complex_task") as mock_delegate:
@@ -522,12 +556,6 @@ class TestAgentCommunication:
         sync_coordinator = SyncCoordinator()
 
         # Create shared state
-        shared_state = {
-            "session_id": "session_456",
-            "current_task": "generating_content",
-            "agents_active": ["content", "quiz", "terrain"],
-            "progress": 0.5,
-        }
 
         # Mock synchronization
         with patch.object(sync_coordinator, "sync_component") as mock_sync:
@@ -593,7 +621,9 @@ class TestSystemPerformance:
             from core.agents.orchestrator import OrchestrationResult
 
             mock_gen.return_value = OrchestrationResult(
-                success=True, content={"data": "x" * 1000}, execution_time=0.0  # Small response
+                success=True,
+                content={"data": "x" * 1000},
+                execution_time=0.0,  # Small response
             )
 
             # Generate many experiences
@@ -644,7 +674,6 @@ class TestSystemPerformance:
 
         # Mock processing
         with patch.object(swarm, "submit_task") as mock_submit:
-
             mock_submit.return_value = "task_123"
 
             # Measure response time
@@ -652,7 +681,9 @@ class TestSystemPerformance:
             task_ids = []
             for task_data in heavy_tasks:
                 task_id = await swarm.submit_task(
-                    task_type="test_task", task_data=task_data, priority=TaskPriority.NORMAL
+                    task_type="test_task",
+                    task_data=task_data,
+                    priority=TaskPriority.NORMAL,
                 )
                 task_ids.append(task_id)
             end = time.time()

@@ -195,7 +195,7 @@ class SemanticCacheService:
                 cache_key = self._create_cache_key(prompt, model, temperature)
 
                 # Prepare metadata
-                cache_metadata = {
+                {
                     "model": model,
                     "temperature": temperature,
                     "timestamp": datetime.utcnow().isoformat(),

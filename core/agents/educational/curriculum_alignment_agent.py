@@ -4,14 +4,13 @@ Ensures all generated educational content aligns with relevant curriculum
 standards including Common Core, NGSS, and state-specific requirements.
 """
 
-import asyncio
 import logging
-from typing import Dict, List, Any, Optional, Set, Tuple
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
 
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
+from core.agents.base_agent import AgentConfig, BaseAgent, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -42,20 +41,20 @@ class StandardMapping:
     subject: str
     domain: str  # e.g., "Number & Operations - Fractions"
     cluster: Optional[str] = None
-    learning_targets: List[str] = field(default_factory=list)
-    prerequisite_standards: List[str] = field(default_factory=list)
-    related_standards: List[str] = field(default_factory=list)
+    learning_targets: list[str] = field(default_factory=list)
+    prerequisite_standards: list[str] = field(default_factory=list)
+    related_standards: list[str] = field(default_factory=list)
 
 
 @dataclass
 class AlignmentResult:
     """Result of curriculum alignment analysis."""
 
-    aligned_standards: List[StandardMapping]
+    aligned_standards: list[StandardMapping]
     alignment_score: float  # 0.0 to 1.0
     coverage_percentage: float
-    gaps: List[str]
-    suggestions: List[str]
+    gaps: list[str]
+    suggestions: list[str]
     confidence: float
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -64,7 +63,7 @@ class AlignmentResult:
 class CurriculumConfig(AgentConfig):
     """Configuration for Curriculum Alignment Agent."""
 
-    primary_standards: List[CurriculumStandard] = field(default_factory=list)
+    primary_standards: list[CurriculumStandard] = field(default_factory=list)
     state: Optional[str] = None  # For state-specific standards
     strict_alignment: bool = True
     include_prerequisites: bool = True
@@ -89,20 +88,20 @@ class CurriculumAlignmentAgent(BaseAgent):
         self.standards_db = self._init_standards_database()
 
         # Cache for frequently accessed standards
-        self.standards_cache: Dict[str, StandardMapping] = {}
+        self.standards_cache: dict[str, StandardMapping] = {}
 
         logger.info("Curriculum Alignment Agent initialized")
 
-    def _init_standards_database(self) -> Dict[str, Dict[str, Any]]:
+    def _init_standards_database(self) -> dict[str, dict[str, Any]]:
         """Initialize the standards database."""
         return {
             "common_core_math": self._load_common_core_math(),
             "common_core_ela": self._load_common_core_ela(),
             "ngss": self._load_ngss(),
-            "iste": self._load_iste()
+            "iste": self._load_iste(),
         }
 
-    def _load_common_core_math(self) -> Dict[str, Any]:
+    def _load_common_core_math(self) -> dict[str, Any]:
         """Load Common Core Math standards."""
         return {
             "K": {
@@ -125,7 +124,7 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "CC.K.G.A.2": "Correctly name shapes",
                     "CC.K.G.A.3": "Identify shapes as 2D or 3D",
                     "CC.K.G.B.4": "Analyze and compare 2D and 3D shapes",
-                }
+                },
             },
             "1": {
                 "operations_algebraic": {
@@ -139,7 +138,7 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "CC.1.NBT.B.2": "Understand two-digit numbers",
                     "CC.1.NBT.B.3": "Compare two-digit numbers",
                     "CC.1.NBT.C.4": "Add within 100",
-                }
+                },
             },
             "2": {
                 "operations_algebraic": {
@@ -151,7 +150,7 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "CC.2.NBT.A.2": "Count within 1000",
                     "CC.2.NBT.A.3": "Read and write numbers to 1000",
                     "CC.2.NBT.B.5": "Fluently add and subtract within 100",
-                }
+                },
             },
             "3": {
                 "operations_algebraic": {
@@ -164,7 +163,7 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "CC.3.NF.A.1": "Understand fractions as numbers",
                     "CC.3.NF.A.2": "Understand fractions on number line",
                     "CC.3.NF.A.3": "Explain equivalence and compare fractions",
-                }
+                },
             },
             "4": {
                 "operations_algebraic": {
@@ -180,7 +179,7 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "CC.4.NF.C.5": "Express fractions with denominator 10 as equivalent to 100",
                     "CC.4.NF.C.6": "Use decimal notation for fractions",
                     "CC.4.NF.C.7": "Compare decimals to hundredths",
-                }
+                },
             },
             "5": {
                 "operations_algebraic": {
@@ -195,11 +194,11 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "CC.5.NF.B.5": "Interpret multiplication as scaling",
                     "CC.5.NF.B.6": "Solve problems with multiplication of fractions",
                     "CC.5.NF.B.7": "Divide fractions by whole numbers",
-                }
-            }
+                },
+            },
         }
 
-    def _load_common_core_ela(self) -> Dict[str, Any]:
+    def _load_common_core_ela(self) -> dict[str, Any]:
         """Load Common Core ELA standards."""
         return {
             "K-5": {
@@ -226,11 +225,11 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "W.3.1": "Write opinion pieces on topics",
                     "W.4.1": "Write opinion pieces on topics with reasons",
                     "W.5.1": "Write opinion pieces on topics with organized reasons",
-                }
+                },
             }
         }
 
-    def _load_ngss(self) -> Dict[str, Any]:
+    def _load_ngss(self) -> dict[str, Any]:
         """Load Next Generation Science Standards."""
         return {
             "K-2": {
@@ -251,7 +250,7 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "K-ESS3-1": "Use model to show relationship of needs and environment",
                     "1-ESS1-1": "Use observations of sun, moon, stars",
                     "2-ESS1-1": "Use information to show Earth events happen quickly or slowly",
-                }
+                },
             },
             "3-5": {
                 "physical_science": {
@@ -274,11 +273,11 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "5-ESS1-1": "Support argument about sun brightness compared to stars",
                     "5-ESS2-1": "Develop model showing Earth sphere interactions",
                     "5-ESS3-1": "Obtain information about ways communities protect resources",
-                }
-            }
+                },
+            },
         }
 
-    def _load_iste(self) -> Dict[str, Any]:
+    def _load_iste(self) -> dict[str, Any]:
         """Load ISTE standards for technology education."""
         return {
             "students": {
@@ -311,16 +310,16 @@ class CurriculumAlignmentAgent(BaseAgent):
                     "1.5.b": "Collect data and use digital tools",
                     "1.5.c": "Break problems into component parts",
                     "1.5.d": "Understand how automation works",
-                }
+                },
             }
         }
 
     async def align_content(
         self,
-        content: Dict[str, Any],
+        content: dict[str, Any],
         grade_level: str,
         subject: str,
-        standards_types: Optional[List[CurriculumStandard]] = None
+        standards_types: Optional[list[CurriculumStandard]] = None,
     ) -> AlignmentResult:
         """
         Align educational content with curriculum standards.
@@ -336,7 +335,10 @@ class CurriculumAlignmentAgent(BaseAgent):
         """
         standards_to_check = standards_types or self.config.primary_standards
         if not standards_to_check:
-            standards_to_check = [CurriculumStandard.COMMON_CORE_MATH, CurriculumStandard.NGSS]
+            standards_to_check = [
+                CurriculumStandard.COMMON_CORE_MATH,
+                CurriculumStandard.NGSS,
+            ]
 
         aligned_standards = []
         gaps = []
@@ -345,32 +347,39 @@ class CurriculumAlignmentAgent(BaseAgent):
         # Extract learning objectives from content
         learning_objectives = content.get("learning_objectives", [])
         topics = content.get("topics", [])
-        skills = content.get("skills", [])
+        content.get("skills", [])
 
         # Check each standard type
         for standard_type in standards_to_check:
-            if standard_type == CurriculumStandard.COMMON_CORE_MATH and subject.lower() in ["math", "mathematics"]:
+            if standard_type == CurriculumStandard.COMMON_CORE_MATH and subject.lower() in [
+                "math",
+                "mathematics",
+            ]:
                 math_alignments = await self._check_common_core_math(
                     grade_level, learning_objectives, topics
                 )
                 aligned_standards.extend(math_alignments)
 
-            elif standard_type == CurriculumStandard.COMMON_CORE_ELA and subject.lower() in ["ela", "english", "reading", "writing"]:
+            elif standard_type == CurriculumStandard.COMMON_CORE_ELA and subject.lower() in [
+                "ela",
+                "english",
+                "reading",
+                "writing",
+            ]:
                 ela_alignments = await self._check_common_core_ela(
                     grade_level, learning_objectives, topics
                 )
                 aligned_standards.extend(ela_alignments)
 
-            elif standard_type == CurriculumStandard.NGSS and subject.lower() in ["science", "stem"]:
-                ngss_alignments = await self._check_ngss(
-                    grade_level, learning_objectives, topics
-                )
+            elif standard_type == CurriculumStandard.NGSS and subject.lower() in [
+                "science",
+                "stem",
+            ]:
+                ngss_alignments = await self._check_ngss(grade_level, learning_objectives, topics)
                 aligned_standards.extend(ngss_alignments)
 
         # Calculate alignment score
-        alignment_score = self._calculate_alignment_score(
-            aligned_standards, learning_objectives
-        )
+        alignment_score = self._calculate_alignment_score(aligned_standards, learning_objectives)
 
         # Calculate coverage
         coverage = len(aligned_standards) / max(len(learning_objectives), 1) * 100
@@ -394,20 +403,17 @@ class CurriculumAlignmentAgent(BaseAgent):
             suggestions.extend(extension_suggestions)
 
         return AlignmentResult(
-            aligned_standards=aligned_standards[:self.config.max_standards_per_content],
+            aligned_standards=aligned_standards[: self.config.max_standards_per_content],
             alignment_score=alignment_score,
             coverage_percentage=coverage,
             gaps=gaps,
             suggestions=suggestions,
-            confidence=0.8 if aligned_standards else 0.3
+            confidence=0.8 if aligned_standards else 0.3,
         )
 
     async def _check_common_core_math(
-        self,
-        grade_level: str,
-        learning_objectives: List[str],
-        topics: List[str]
-    ) -> List[StandardMapping]:
+        self, grade_level: str, learning_objectives: list[str], topics: list[str]
+    ) -> list[StandardMapping]:
         """Check alignment with Common Core Math standards."""
         alignments = []
         grade_key = grade_level.replace("th grade", "").replace("grade", "").strip()
@@ -429,28 +435,22 @@ class CurriculumAlignmentAgent(BaseAgent):
                         grade_level=grade_level,
                         subject="Mathematics",
                         domain=domain.replace("_", " ").title(),
-                        learning_targets=self._extract_learning_targets(description)
+                        learning_targets=self._extract_learning_targets(description),
                     )
                     alignments.append(mapping)
 
         return alignments
 
     async def _check_common_core_ela(
-        self,
-        grade_level: str,
-        learning_objectives: List[str],
-        topics: List[str]
-    ) -> List[StandardMapping]:
+        self, grade_level: str, learning_objectives: list[str], topics: list[str]
+    ) -> list[StandardMapping]:
         """Check alignment with Common Core ELA standards."""
         # Implementation similar to math standards
         return []
 
     async def _check_ngss(
-        self,
-        grade_level: str,
-        learning_objectives: List[str],
-        topics: List[str]
-    ) -> List[StandardMapping]:
+        self, grade_level: str, learning_objectives: list[str], topics: list[str]
+    ) -> list[StandardMapping]:
         """Check alignment with NGSS standards."""
         alignments = []
 
@@ -479,13 +479,13 @@ class CurriculumAlignmentAgent(BaseAgent):
                         grade_level=grade_level,
                         subject="Science",
                         domain=domain.replace("_", " ").title(),
-                        learning_targets=self._extract_learning_targets(description)
+                        learning_targets=self._extract_learning_targets(description),
                     )
                     alignments.append(mapping)
 
         return alignments
 
-    def _matches_content(self, standard_desc: str, content_items: List[str]) -> bool:
+    def _matches_content(self, standard_desc: str, content_items: list[str]) -> bool:
         """Check if standard description matches content."""
         standard_lower = standard_desc.lower()
         for item in content_items:
@@ -496,12 +496,21 @@ class CurriculumAlignmentAgent(BaseAgent):
                 return True
         return False
 
-    def _extract_learning_targets(self, description: str) -> List[str]:
+    def _extract_learning_targets(self, description: str) -> list[str]:
         """Extract specific learning targets from standard description."""
         # Simple extraction - would be more sophisticated in production
         targets = []
-        action_verbs = ["understand", "explain", "solve", "identify", "analyze",
-                        "create", "evaluate", "apply", "demonstrate"]
+        action_verbs = [
+            "understand",
+            "explain",
+            "solve",
+            "identify",
+            "analyze",
+            "create",
+            "evaluate",
+            "apply",
+            "demonstrate",
+        ]
 
         for verb in action_verbs:
             if verb in description.lower():
@@ -512,7 +521,8 @@ class CurriculumAlignmentAgent(BaseAgent):
     def _extract_grade_number(self, grade_level: str) -> int:
         """Extract numeric grade from grade level string."""
         import re
-        match = re.search(r'(\d+)', grade_level)
+
+        match = re.search(r"(\d+)", grade_level)
         if match:
             return int(match.group(1))
         elif "kindergarten" in grade_level.lower() or grade_level.lower() == "k":
@@ -520,9 +530,7 @@ class CurriculumAlignmentAgent(BaseAgent):
         return 0
 
     def _calculate_alignment_score(
-        self,
-        aligned_standards: List[StandardMapping],
-        learning_objectives: List[str]
+        self, aligned_standards: list[StandardMapping], learning_objectives: list[str]
     ) -> float:
         """Calculate overall alignment score."""
         if not learning_objectives:
@@ -534,7 +542,7 @@ class CurriculumAlignmentAgent(BaseAgent):
 
         return (coverage * 0.7) + (quality * 0.3)
 
-    def _suggest_prerequisites(self, standards: List[StandardMapping]) -> List[str]:
+    def _suggest_prerequisites(self, standards: list[StandardMapping]) -> list[str]:
         """Suggest prerequisite standards."""
         suggestions = []
         for standard in standards:
@@ -543,13 +551,13 @@ class CurriculumAlignmentAgent(BaseAgent):
                     suggestions.append(f"Consider reviewing prerequisite: {prereq}")
         return suggestions[:3]  # Limit suggestions
 
-    def _suggest_extensions(self, standards: List[StandardMapping]) -> List[str]:
+    def _suggest_extensions(self, standards: list[StandardMapping]) -> list[str]:
         """Suggest extension standards."""
         suggestions = []
         # Would implement logic to suggest next-level standards
         return suggestions
 
-    async def execute_task(self, task: Dict[str, Any]) -> TaskResult:
+    async def execute_task(self, task: dict[str, Any]) -> TaskResult:
         """Execute curriculum alignment task."""
         try:
             content = task.get("content", {})
@@ -565,29 +573,26 @@ class CurriculumAlignmentAgent(BaseAgent):
                         {
                             "code": s.standard_code,
                             "description": s.description,
-                            "domain": s.domain
+                            "domain": s.domain,
                         }
                         for s in result.aligned_standards
                     ],
                     "alignment_score": result.alignment_score,
                     "coverage": result.coverage_percentage,
                     "gaps": result.gaps,
-                    "suggestions": result.suggestions
+                    "suggestions": result.suggestions,
                 },
                 metadata={
                     "confidence": result.confidence,
-                    "standards_count": len(result.aligned_standards)
-                }
+                    "standards_count": len(result.aligned_standards),
+                },
             )
 
         except Exception as e:
             logger.error(f"Curriculum alignment failed: {e}")
-            return TaskResult(
-                success=False,
-                error=str(e)
-            )
+            return TaskResult(success=False, error=str(e))
 
-    async def get_capabilities(self) -> Dict[str, Any]:
+    async def get_capabilities(self) -> dict[str, Any]:
         """Get agent capabilities."""
         return {
             "agent_type": "curriculum_alignment",
@@ -596,12 +601,13 @@ class CurriculumAlignmentAgent(BaseAgent):
                 "gap_analysis",
                 "prerequisite_identification",
                 "extension_suggestions",
-                "multi_standard_alignment"
+                "multi_standard_alignment",
             ],
             "supported_standards": [s.value for s in CurriculumStandard],
             "grade_range": "K-12",
-            "subjects": ["math", "ela", "science", "social_studies", "technology"]
+            "subjects": ["math", "ela", "science", "social_studies", "technology"],
         }
+
     async def _process_task(self, state: "AgentState") -> Any:
         """
         Process the task for this educational agent.
@@ -614,7 +620,6 @@ class CurriculumAlignmentAgent(BaseAgent):
         Returns:
             Task result
         """
-        from typing import Any
 
         # Extract the task
         task = state.get("task", "")
@@ -627,5 +632,5 @@ class CurriculumAlignmentAgent(BaseAgent):
             "task": task,
             "status": "completed",
             "result": f"{self.__class__.__name__} processed task: {task[:100] if task else 'No task'}...",
-            "context": context
+            "context": context,
         }

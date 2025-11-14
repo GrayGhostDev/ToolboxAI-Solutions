@@ -5,16 +5,12 @@ This agent analyzes Docker images, build artifacts, cache efficiency, and provid
 actionable recommendations for optimizing build times and reducing artifact sizes.
 """
 
-import asyncio
-import json
 import logging
-import os
-import re
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
 from .base_github_agent import BaseGitHubAgent
 
@@ -24,46 +20,50 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BuildArtifact:
     """Represents a build artifact with size and optimization potential."""
+
     path: Path
     size_bytes: int
     file_type: str
     optimization_potential: str  # "high", "medium", "low", "none"
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
 class DockerLayerAnalysis:
     """Analysis of Docker layers and optimization opportunities."""
+
     layer_id: str
     command: str
     size_bytes: int
     cacheable: bool
     optimization_score: float  # 0-1, higher = more optimization potential
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
 class CacheAnalysis:
     """Analysis of cache efficiency and recommendations."""
+
     cache_type: str  # "docker", "npm", "pip", "gradle", etc.
     hit_rate: float  # 0-1
     size_mb: float
     last_used: Optional[datetime]
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
 class BuildOptimizationReport:
     """Comprehensive build optimization report."""
+
     timestamp: datetime
     total_build_size_mb: float
     optimization_potential_mb: float
-    docker_analysis: List[DockerLayerAnalysis]
-    artifact_analysis: List[BuildArtifact]
-    cache_analysis: List[CacheAnalysis]
-    parallelization_opportunities: List[str]
-    performance_bottlenecks: List[str]
-    recommendations: List[str]
+    docker_analysis: list[DockerLayerAnalysis]
+    artifact_analysis: list[BuildArtifact]
+    cache_analysis: list[CacheAnalysis]
+    parallelization_opportunities: list[str]
+    performance_bottlenecks: list[str]
+    recommendations: list[str]
     estimated_time_savings: str
     estimated_size_savings_mb: float
 
@@ -76,25 +76,63 @@ class BuildOptimizationAgent(BaseGitHubAgent):
         super().__init__(config_path)
         self.build_patterns = {
             "dockerfile": ["Dockerfile*", "*.dockerfile", ".dockerignore"],
-            "nodejs": ["package.json", "package-lock.json", "yarn.lock", "node_modules/"],
-            "python": ["requirements*.txt", "setup.py", "pyproject.toml", "Pipfile*", "__pycache__/"],
-            "java": ["pom.xml", "build.gradle", "gradle.properties", "target/", "build/"],
+            "nodejs": [
+                "package.json",
+                "package-lock.json",
+                "yarn.lock",
+                "node_modules/",
+            ],
+            "python": [
+                "requirements*.txt",
+                "setup.py",
+                "pyproject.toml",
+                "Pipfile*",
+                "__pycache__/",
+            ],
+            "java": [
+                "pom.xml",
+                "build.gradle",
+                "gradle.properties",
+                "target/",
+                "build/",
+            ],
             "dotnet": ["*.csproj", "*.sln", "packages.config", "bin/", "obj/"],
             "go": ["go.mod", "go.sum", "vendor/"],
-            "rust": ["Cargo.toml", "Cargo.lock", "target/"]
+            "rust": ["Cargo.toml", "Cargo.lock", "target/"],
         }
 
         # Common large file patterns that should be excluded from builds
         self.exclude_patterns = [
-            "*.log", "*.tmp", "*.cache", "*.bak", "*.swp", "*.swo",
-            ".DS_Store", "Thumbs.db", "*.orig", "*.rej",
-            "node_modules/", "__pycache__/", ".pytest_cache/",
-            "target/", "build/", "dist/", "out/", "bin/", "obj/",
-            ".git/", ".svn/", ".hg/", ".bzr/",
-            "*.zip", "*.tar.gz", "*.7z", "*.rar"
+            "*.log",
+            "*.tmp",
+            "*.cache",
+            "*.bak",
+            "*.swp",
+            "*.swo",
+            ".DS_Store",
+            "Thumbs.db",
+            "*.orig",
+            "*.rej",
+            "node_modules/",
+            "__pycache__/",
+            ".pytest_cache/",
+            "target/",
+            "build/",
+            "dist/",
+            "out/",
+            "bin/",
+            "obj/",
+            ".git/",
+            ".svn/",
+            ".hg/",
+            ".bzr/",
+            "*.zip",
+            "*.tar.gz",
+            "*.7z",
+            "*.rar",
         ]
 
-    async def analyze(self, **kwargs) -> Dict[str, Any]:
+    async def analyze(self, **kwargs) -> dict[str, Any]:
         """Main build analysis method.
 
         Args:
@@ -124,7 +162,7 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 "docker_analysis": {},
                 "artifact_analysis": {},
                 "cache_analysis": {},
-                "optimization_report": {}
+                "optimization_report": {},
             }
 
             # Analyze Docker images if requested
@@ -147,11 +185,16 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             results["optimization_report"] = await self.generate_optimization_report(
                 results["docker_analysis"],
                 results["artifact_analysis"],
-                results["cache_analysis"]
+                results["cache_analysis"],
             )
 
-            self.update_metrics(operations_performed=1, files_processed=len(results.get("files", [])))
-            await self.log_operation("analyze_complete", {"results_summary": self._summarize_results(results)})
+            self.update_metrics(
+                operations_performed=1, files_processed=len(results.get("files", []))
+            )
+            await self.log_operation(
+                "analyze_complete",
+                {"results_summary": self._summarize_results(results)},
+            )
 
             return results
 
@@ -161,10 +204,10 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             return {
                 "success": False,
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-    async def analyze_docker_images(self, repo_path: Path) -> Dict[str, Any]:
+    async def analyze_docker_images(self, repo_path: Path) -> dict[str, Any]:
         """Analyze Docker images for optimization opportunities.
 
         Args:
@@ -179,14 +222,14 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             if not dockerfiles:
                 return {
                     "found_dockerfiles": False,
-                    "message": "No Dockerfiles found in repository"
+                    "message": "No Dockerfiles found in repository",
                 }
 
             analysis_results = {
                 "found_dockerfiles": True,
                 "dockerfiles": [],
                 "total_optimization_potential_mb": 0,
-                "recommendations": []
+                "recommendations": [],
             }
 
             for dockerfile_path in dockerfiles:
@@ -196,21 +239,22 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 analysis_results["dockerfiles"].append(dockerfile_analysis)
 
                 # Add to total optimization potential
-                analysis_results["total_optimization_potential_mb"] += dockerfile_analysis.get("optimization_potential_mb", 0)
+                analysis_results["total_optimization_potential_mb"] += dockerfile_analysis.get(
+                    "optimization_potential_mb", 0
+                )
 
             # Generate overall recommendations
-            analysis_results["recommendations"] = self._generate_docker_recommendations(analysis_results["dockerfiles"])
+            analysis_results["recommendations"] = self._generate_docker_recommendations(
+                analysis_results["dockerfiles"]
+            )
 
             return analysis_results
 
         except Exception as e:
             logger.error(f"Error analyzing Docker images: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def analyze_build_artifacts(self, repo_path: Path) -> Dict[str, Any]:
+    async def analyze_build_artifacts(self, repo_path: Path) -> dict[str, Any]:
         """Analyze build artifacts for size and optimization potential.
 
         Args:
@@ -247,29 +291,28 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                     "high_potential": {
                         "count": len(high_potential),
                         "size_mb": sum(a.size_bytes for a in high_potential) / (1024 * 1024),
-                        "artifacts": [self._artifact_to_dict(a) for a in high_potential[:10]]  # Top 10
+                        "artifacts": [
+                            self._artifact_to_dict(a) for a in high_potential[:10]
+                        ],  # Top 10
                     },
                     "medium_potential": {
                         "count": len(medium_potential),
                         "size_mb": sum(a.size_bytes for a in medium_potential) / (1024 * 1024),
-                        "artifacts": [self._artifact_to_dict(a) for a in medium_potential[:10]]
+                        "artifacts": [self._artifact_to_dict(a) for a in medium_potential[:10]],
                     },
                     "low_potential": {
                         "count": len(low_potential),
-                        "size_mb": sum(a.size_bytes for a in low_potential) / (1024 * 1024)
-                    }
+                        "size_mb": sum(a.size_bytes for a in low_potential) / (1024 * 1024),
+                    },
                 },
-                "recommendations": self._generate_artifact_recommendations(artifacts)
+                "recommendations": self._generate_artifact_recommendations(artifacts),
             }
 
         except Exception as e:
             logger.error(f"Error analyzing build artifacts: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def analyze_cache_efficiency(self, repo_path: Path) -> Dict[str, Any]:
+    async def analyze_cache_efficiency(self, repo_path: Path) -> dict[str, Any]:
         """Analyze cache efficiency for different build systems.
 
         Args:
@@ -301,17 +344,14 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             return {
                 "cache_types_found": len(cache_analyses),
                 "cache_analyses": [self._cache_analysis_to_dict(ca) for ca in cache_analyses],
-                "overall_recommendations": self._generate_cache_recommendations(cache_analyses)
+                "overall_recommendations": self._generate_cache_recommendations(cache_analyses),
             }
 
         except Exception as e:
             logger.error(f"Error analyzing cache efficiency: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def optimize_dockerfile(self, dockerfile_path: Path) -> Dict[str, Any]:
+    async def optimize_dockerfile(self, dockerfile_path: Path) -> dict[str, Any]:
         """Generate an optimized version of a Dockerfile.
 
         Args:
@@ -324,22 +364,22 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             if not dockerfile_path.exists():
                 return {
                     "success": False,
-                    "error": f"Dockerfile not found: {dockerfile_path}"
+                    "error": f"Dockerfile not found: {dockerfile_path}",
                 }
 
             # Read original Dockerfile
-            with open(dockerfile_path, 'r') as f:
+            with open(dockerfile_path) as f:
                 original_content = f.read()
 
             # Analyze and optimize
             optimizations = []
             optimized_lines = []
 
-            lines = original_content.split('\n')
+            lines = original_content.split("\n")
 
             for i, line in enumerate(lines):
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     optimized_lines.append(line)
                     continue
 
@@ -348,29 +388,26 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 optimized_lines.append(optimized_line)
                 optimizations.extend(line_optimizations)
 
-            optimized_content = '\n'.join(optimized_lines)
+            optimized_content = "\n".join(optimized_lines)
 
             return {
                 "success": True,
                 "original_content": original_content,
                 "optimized_content": optimized_content,
                 "optimizations_applied": optimizations,
-                "estimated_size_reduction": self._estimate_dockerfile_size_reduction(optimizations)
+                "estimated_size_reduction": self._estimate_dockerfile_size_reduction(optimizations),
             }
 
         except Exception as e:
             logger.error(f"Error optimizing Dockerfile: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def generate_optimization_report(
         self,
-        docker_analysis: Dict[str, Any],
-        artifact_analysis: Dict[str, Any],
-        cache_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        docker_analysis: dict[str, Any],
+        artifact_analysis: dict[str, Any],
+        cache_analysis: dict[str, Any],
+    ) -> dict[str, Any]:
         """Generate a comprehensive optimization report.
 
         Args:
@@ -385,10 +422,14 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             # Calculate overall metrics
             total_optimization_potential_mb = 0
             if docker_analysis.get("total_optimization_potential_mb"):
-                total_optimization_potential_mb += docker_analysis["total_optimization_potential_mb"]
+                total_optimization_potential_mb += docker_analysis[
+                    "total_optimization_potential_mb"
+                ]
             if artifact_analysis.get("optimization_categories"):
                 for category in ["high_potential", "medium_potential"]:
-                    total_optimization_potential_mb += artifact_analysis["optimization_categories"][category]["size_mb"]
+                    total_optimization_potential_mb += artifact_analysis["optimization_categories"][
+                        category
+                    ]["size_mb"]
 
             # Estimate time savings
             estimated_time_savings = self._estimate_time_savings(
@@ -419,27 +460,39 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 "summary": {
                     "total_optimization_potential_mb": round(total_optimization_potential_mb, 2),
                     "estimated_time_savings": estimated_time_savings,
-                    "critical_recommendations": len([r for r in all_recommendations if "critical" in r.lower()]),
-                    "total_recommendations": len(all_recommendations)
+                    "critical_recommendations": len(
+                        [r for r in all_recommendations if "critical" in r.lower()]
+                    ),
+                    "total_recommendations": len(all_recommendations),
                 },
                 "recommendations": {
-                    "high_priority": [r for r in all_recommendations if any(keyword in r.lower() for keyword in ["critical", "urgent", "immediate"])],
-                    "medium_priority": [r for r in all_recommendations if "recommend" in r.lower() and not any(keyword in r.lower() for keyword in ["critical", "urgent"])],
-                    "low_priority": [r for r in all_recommendations if "consider" in r.lower()]
+                    "high_priority": [
+                        r
+                        for r in all_recommendations
+                        if any(
+                            keyword in r.lower() for keyword in ["critical", "urgent", "immediate"]
+                        )
+                    ],
+                    "medium_priority": [
+                        r
+                        for r in all_recommendations
+                        if "recommend" in r.lower()
+                        and not any(keyword in r.lower() for keyword in ["critical", "urgent"])
+                    ],
+                    "low_priority": [r for r in all_recommendations if "consider" in r.lower()],
                 },
                 "parallelization_opportunities": parallelization_opportunities,
                 "performance_bottlenecks": performance_bottlenecks,
-                "next_steps": self._generate_next_steps(all_recommendations, total_optimization_potential_mb)
+                "next_steps": self._generate_next_steps(
+                    all_recommendations, total_optimization_potential_mb
+                ),
             }
 
         except Exception as e:
             logger.error(f"Error generating optimization report: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute a specific optimization action.
 
         Args:
@@ -479,30 +532,36 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                         "clean_build_artifacts",
                         "optimize_gitignore",
                         "generate_dockerignore",
-                        "analyze_parallel_builds"
-                    ]
+                        "analyze_parallel_builds",
+                    ],
                 }
 
         except Exception as e:
             logger.error(f"Error executing action {action}: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     # Helper methods
 
-    def _find_dockerfiles(self, repo_path: Path) -> List[Path]:
+    def _find_dockerfiles(self, repo_path: Path) -> list[Path]:
         """Find all Dockerfiles in the repository."""
         dockerfiles = []
         for pattern in self.build_patterns["dockerfile"]:
             dockerfiles.extend(repo_path.rglob(pattern))
         return dockerfiles
 
-    def _find_build_directories(self, repo_path: Path) -> List[Path]:
+    def _find_build_directories(self, repo_path: Path) -> list[Path]:
         """Find common build output directories."""
         build_dirs = []
-        common_build_dirs = ["dist", "build", "target", "out", "bin", "obj", "node_modules", "__pycache__"]
+        common_build_dirs = [
+            "dist",
+            "build",
+            "target",
+            "out",
+            "bin",
+            "obj",
+            "node_modules",
+            "__pycache__",
+        ]
 
         for dir_name in common_build_dirs:
             for path in repo_path.rglob(dir_name):
@@ -511,37 +570,51 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
         return build_dirs
 
-    async def _analyze_single_dockerfile(self, dockerfile_path: Path) -> Dict[str, Any]:
+    async def _analyze_single_dockerfile(self, dockerfile_path: Path) -> dict[str, Any]:
         """Analyze a single Dockerfile for optimization opportunities."""
         try:
-            with open(dockerfile_path, 'r') as f:
+            with open(dockerfile_path) as f:
                 content = f.read()
 
-            lines = content.split('\n')
+            lines = content.split("\n")
             analysis = {
                 "path": str(dockerfile_path),
-                "total_instructions": len([l for l in lines if l.strip() and not l.strip().startswith('#')]),
+                "total_instructions": len(
+                    [l for l in lines if l.strip() and not l.strip().startswith("#")]
+                ),
                 "optimization_potential_mb": 0,
                 "issues": [],
-                "recommendations": []
+                "recommendations": [],
             }
 
             # Analyze each instruction
             for i, line in enumerate(lines):
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
 
                 # Check for common optimization issues
-                if line.startswith('RUN'):
-                    if '&&' not in line and i < len(lines) - 1 and lines[i+1].strip().startswith('RUN'):
-                        analysis["issues"].append(f"Line {i+1}: Multiple RUN commands can be combined")
-                        analysis["recommendations"].append("Combine consecutive RUN commands to reduce layers")
+                if line.startswith("RUN"):
+                    if (
+                        "&&" not in line
+                        and i < len(lines) - 1
+                        and lines[i + 1].strip().startswith("RUN")
+                    ):
+                        analysis["issues"].append(
+                            f"Line {i+1}: Multiple RUN commands can be combined"
+                        )
+                        analysis["recommendations"].append(
+                            "Combine consecutive RUN commands to reduce layers"
+                        )
 
-                elif line.startswith('COPY') or line.startswith('ADD'):
-                    if '. ' in line or './' in line:
-                        analysis["issues"].append(f"Line {i+1}: Copying entire context may include unnecessary files")
-                        analysis["recommendations"].append("Use specific file paths or .dockerignore to exclude unnecessary files")
+                elif line.startswith("COPY") or line.startswith("ADD"):
+                    if ". " in line or "./" in line:
+                        analysis["issues"].append(
+                            f"Line {i+1}: Copying entire context may include unnecessary files"
+                        )
+                        analysis["recommendations"].append(
+                            "Use specific file paths or .dockerignore to exclude unnecessary files"
+                        )
 
             # Estimate optimization potential
             analysis["optimization_potential_mb"] = len(analysis["issues"]) * 10  # Rough estimate
@@ -550,33 +623,34 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
         except Exception as e:
             logger.error(f"Error analyzing Dockerfile {dockerfile_path}: {e}")
-            return {
-                "path": str(dockerfile_path),
-                "error": str(e)
-            }
+            return {"path": str(dockerfile_path), "error": str(e)}
 
-    async def _analyze_directory_artifacts(self, directory: Path) -> List[BuildArtifact]:
+    async def _analyze_directory_artifacts(self, directory: Path) -> list[BuildArtifact]:
         """Analyze artifacts in a build directory."""
         artifacts = []
 
         try:
-            for file_path in directory.rglob('*'):
+            for file_path in directory.rglob("*"):
                 if file_path.is_file():
                     size_bytes = file_path.stat().st_size
                     file_type = file_path.suffix.lower()
 
                     # Determine optimization potential
-                    optimization_potential = self._assess_artifact_optimization_potential(file_path, size_bytes)
+                    optimization_potential = self._assess_artifact_optimization_potential(
+                        file_path, size_bytes
+                    )
 
                     # Generate recommendations
-                    recommendations = self._generate_artifact_specific_recommendations(file_path, size_bytes, file_type)
+                    recommendations = self._generate_artifact_specific_recommendations(
+                        file_path, size_bytes, file_type
+                    )
 
                     artifact = BuildArtifact(
                         path=file_path,
                         size_bytes=size_bytes,
                         file_type=file_type,
                         optimization_potential=optimization_potential,
-                        recommendations=recommendations
+                        recommendations=recommendations,
                     )
                     artifacts.append(artifact)
 
@@ -589,14 +663,14 @@ class BuildOptimizationAgent(BaseGitHubAgent):
         """Assess the optimization potential of a build artifact."""
         # Size thresholds in bytes
         large_threshold = 10 * 1024 * 1024  # 10MB
-        medium_threshold = 1 * 1024 * 1024   # 1MB
+        medium_threshold = 1 * 1024 * 1024  # 1MB
 
         file_type = file_path.suffix.lower()
 
         # High potential files
         if size_bytes > large_threshold:
             return "high"
-        elif file_type in ['.log', '.tmp', '.cache', '.bak']:
+        elif file_type in [".log", ".tmp", ".cache", ".bak"]:
             return "high"
         elif any(pattern in str(file_path) for pattern in self.exclude_patterns):
             return "high"
@@ -604,7 +678,7 @@ class BuildOptimizationAgent(BaseGitHubAgent):
         # Medium potential files
         elif size_bytes > medium_threshold:
             return "medium"
-        elif file_type in ['.js', '.css', '.html', '.json']:
+        elif file_type in [".js", ".css", ".html", ".json"]:
             return "medium"
 
         # Low potential files
@@ -613,23 +687,25 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
         return "none"
 
-    def _generate_artifact_specific_recommendations(self, file_path: Path, size_bytes: int, file_type: str) -> List[str]:
+    def _generate_artifact_specific_recommendations(
+        self, file_path: Path, size_bytes: int, file_type: str
+    ) -> list[str]:
         """Generate specific recommendations for an artifact."""
         recommendations = []
 
         if size_bytes > 10 * 1024 * 1024:  # 10MB
             recommendations.append("Consider excluding from build - file is very large")
 
-        if file_type in ['.log', '.tmp', '.cache']:
+        if file_type in [".log", ".tmp", ".cache"]:
             recommendations.append("Exclude from version control and builds")
 
-        if file_type in ['.js', '.css']:
+        if file_type in [".js", ".css"]:
             recommendations.append("Consider minification and compression")
 
-        if file_type in ['.png', '.jpg', '.jpeg']:
+        if file_type in [".png", ".jpg", ".jpeg"]:
             recommendations.append("Consider image optimization and compression")
 
-        if 'node_modules' in str(file_path):
+        if "node_modules" in str(file_path):
             recommendations.append("Use .dockerignore to exclude from Docker builds")
 
         return recommendations
@@ -638,17 +714,17 @@ class BuildOptimizationAgent(BaseGitHubAgent):
         """Analyze Docker cache efficiency."""
         try:
             # Check if Docker is available
-            result = subprocess.run(['docker', '--version'], capture_output=True, text=True)
+            result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
             if result.returncode != 0:
                 return None
 
             # Get Docker system info
-            result = subprocess.run(['docker', 'system', 'df'], capture_output=True, text=True)
+            result = subprocess.run(["docker", "system", "df"], capture_output=True, text=True)
             if result.returncode == 0:
                 # Parse Docker system usage
-                lines = result.stdout.split('\n')
+                lines = result.stdout.split("\n")
                 for line in lines:
-                    if 'Build Cache' in line:
+                    if "Build Cache" in line:
                         parts = line.split()
                         if len(parts) >= 4:
                             size_str = parts[2]
@@ -663,8 +739,8 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                                 recommendations=[
                                     "Use multi-stage builds to reduce cache size",
                                     "Order Dockerfile instructions to maximize cache reuse",
-                                    "Use .dockerignore to reduce build context"
-                                ]
+                                    "Use .dockerignore to reduce build context",
+                                ],
                             )
 
             return None
@@ -681,18 +757,18 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 return None
 
             # Check npm cache info
-            result = subprocess.run(['npm', 'cache', 'ls'], capture_output=True, text=True)
+            result = subprocess.run(["npm", "cache", "ls"], capture_output=True, text=True)
             if result.returncode == 0:
                 return CacheAnalysis(
                     cache_type="npm",
                     hit_rate=0.7,  # Typical npm cache hit rate
-                    size_mb=0.0,   # Would need to parse npm cache verify output
+                    size_mb=0.0,  # Would need to parse npm cache verify output
                     last_used=None,
                     recommendations=[
                         "Use npm ci instead of npm install for faster, reliable builds",
                         "Cache node_modules in CI/CD pipelines",
-                        "Use package-lock.json for consistent dependency resolution"
-                    ]
+                        "Use package-lock.json for consistent dependency resolution",
+                    ],
                 )
 
             return None
@@ -719,8 +795,8 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 recommendations=[
                     "Use pip cache in CI/CD to speed up builds",
                     "Pin dependency versions for consistent builds",
-                    "Use virtual environments to isolate dependencies"
-                ]
+                    "Use virtual environments to isolate dependencies",
+                ],
             )
 
         except Exception as e:
@@ -730,7 +806,9 @@ class BuildOptimizationAgent(BaseGitHubAgent):
     async def _analyze_gradle_cache(self, repo_path: Path) -> Optional[CacheAnalysis]:
         """Analyze Gradle cache efficiency."""
         try:
-            gradle_files = list(repo_path.rglob("build.gradle*")) + list(repo_path.rglob("gradle.properties"))
+            gradle_files = list(repo_path.rglob("build.gradle*")) + list(
+                repo_path.rglob("gradle.properties")
+            )
             if not gradle_files:
                 return None
 
@@ -742,8 +820,8 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 recommendations=[
                     "Enable Gradle build cache with org.gradle.caching=true",
                     "Use Gradle daemon for faster builds",
-                    "Configure remote build cache for CI/CD"
-                ]
+                    "Configure remote build cache for CI/CD",
+                ],
             )
 
         except Exception as e:
@@ -765,8 +843,8 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 recommendations=[
                     "Cache ~/.m2/repository in CI/CD pipelines",
                     "Use Maven dependency plugin to analyze dependencies",
-                    "Configure local repository for offline builds"
-                ]
+                    "Configure local repository for offline builds",
+                ],
             )
 
         except Exception as e:
@@ -776,37 +854,43 @@ class BuildOptimizationAgent(BaseGitHubAgent):
     def _parse_size_to_mb(self, size_str: str) -> float:
         """Parse size string (e.g., '1.5GB') to MB."""
         try:
-            size_str = size_str.upper().replace(' ', '')
-            if 'GB' in size_str:
-                return float(size_str.replace('GB', '')) * 1024
-            elif 'MB' in size_str:
-                return float(size_str.replace('MB', ''))
-            elif 'KB' in size_str:
-                return float(size_str.replace('KB', '')) / 1024
-            elif 'B' in size_str:
-                return float(size_str.replace('B', '')) / (1024 * 1024)
+            size_str = size_str.upper().replace(" ", "")
+            if "GB" in size_str:
+                return float(size_str.replace("GB", "")) * 1024
+            elif "MB" in size_str:
+                return float(size_str.replace("MB", ""))
+            elif "KB" in size_str:
+                return float(size_str.replace("KB", "")) / 1024
+            elif "B" in size_str:
+                return float(size_str.replace("B", "")) / (1024 * 1024)
             return 0.0
         except:
             return 0.0
 
-    def _optimize_dockerfile_line(self, line: str, line_num: int, all_lines: List[str]) -> Tuple[str, List[str]]:
+    def _optimize_dockerfile_line(
+        self, line: str, line_num: int, all_lines: list[str]
+    ) -> tuple[str, list[str]]:
         """Optimize a single Dockerfile line."""
         optimizations = []
 
         # Basic optimizations
-        if line.startswith('RUN ') and '&&' not in line:
+        if line.startswith("RUN ") and "&&" not in line:
             # Check if next line is also RUN
-            if line_num + 1 < len(all_lines) and all_lines[line_num + 1].strip().startswith('RUN '):
-                optimizations.append(f"Line {line_num + 1}: Consider combining with next RUN command")
+            if line_num + 1 < len(all_lines) and all_lines[line_num + 1].strip().startswith("RUN "):
+                optimizations.append(
+                    f"Line {line_num + 1}: Consider combining with next RUN command"
+                )
 
         return line, optimizations
 
-    def _estimate_dockerfile_size_reduction(self, optimizations: List[str]) -> str:
+    def _estimate_dockerfile_size_reduction(self, optimizations: list[str]) -> str:
         """Estimate size reduction from Dockerfile optimizations."""
         reduction_mb = len(optimizations) * 5  # Rough estimate: 5MB per optimization
         return f"~{reduction_mb}MB"
 
-    def _estimate_time_savings(self, docker_analysis: Dict, artifact_analysis: Dict, cache_analysis: Dict) -> str:
+    def _estimate_time_savings(
+        self, docker_analysis: dict, artifact_analysis: dict, cache_analysis: dict
+    ) -> str:
         """Estimate build time savings from optimizations."""
         savings_minutes = 0
 
@@ -818,11 +902,15 @@ class BuildOptimizationAgent(BaseGitHubAgent):
         # Artifact optimizations
         if artifact_analysis.get("optimization_categories"):
             high_potential = artifact_analysis["optimization_categories"].get("high_potential", {})
-            savings_minutes += high_potential.get("count", 0) * 1  # 1 minute per artifact optimization
+            savings_minutes += (
+                high_potential.get("count", 0) * 1
+            )  # 1 minute per artifact optimization
 
         # Cache optimizations
         if cache_analysis.get("cache_analyses"):
-            savings_minutes += len(cache_analysis["cache_analyses"]) * 5  # 5 minutes per cache optimization
+            savings_minutes += (
+                len(cache_analysis["cache_analyses"]) * 5
+            )  # 5 minutes per cache optimization
 
         if savings_minutes < 60:
             return f"~{savings_minutes} minutes"
@@ -831,7 +919,9 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             minutes = savings_minutes % 60
             return f"~{hours}h {minutes}m"
 
-    def _identify_parallelization_opportunities(self, docker_analysis: Dict, artifact_analysis: Dict) -> List[str]:
+    def _identify_parallelization_opportunities(
+        self, docker_analysis: dict, artifact_analysis: dict
+    ) -> list[str]:
         """Identify opportunities for parallel builds."""
         opportunities = []
 
@@ -840,19 +930,25 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             opportunities.append("Multiple Dockerfiles can be built in parallel")
 
         # Check for multiple build systems
-        build_systems = []
         if artifact_analysis.get("total_artifacts", 0) > 0:
             # This is a simplified check - in reality, we'd analyze the actual build files
             opportunities.append("Consider using parallel build steps in CI/CD")
 
         return opportunities
 
-    def _identify_performance_bottlenecks(self, docker_analysis: Dict, artifact_analysis: Dict, cache_analysis: Dict) -> List[str]:
+    def _identify_performance_bottlenecks(
+        self, docker_analysis: dict, artifact_analysis: dict, cache_analysis: dict
+    ) -> list[str]:
         """Identify performance bottlenecks in the build process."""
         bottlenecks = []
 
         # Large artifacts
-        if artifact_analysis.get("optimization_categories", {}).get("high_potential", {}).get("size_mb", 0) > 100:
+        if (
+            artifact_analysis.get("optimization_categories", {})
+            .get("high_potential", {})
+            .get("size_mb", 0)
+            > 100
+        ):
             bottlenecks.append("Large build artifacts are slowing down builds and deployments")
 
         # Poor cache efficiency
@@ -862,13 +958,19 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 bottlenecks.append(f"Poor {cache.get('cache_type', 'unknown')} cache hit rate")
 
         # Docker issues
-        docker_issues_count = sum(len(df.get("issues", [])) for df in docker_analysis.get("dockerfiles", []))
+        docker_issues_count = sum(
+            len(df.get("issues", [])) for df in docker_analysis.get("dockerfiles", [])
+        )
         if docker_issues_count > 5:
-            bottlenecks.append("Multiple Docker optimization issues are impacting build performance")
+            bottlenecks.append(
+                "Multiple Docker optimization issues are impacting build performance"
+            )
 
         return bottlenecks
 
-    def _generate_next_steps(self, recommendations: List[str], optimization_potential_mb: float) -> List[str]:
+    def _generate_next_steps(
+        self, recommendations: list[str], optimization_potential_mb: float
+    ) -> list[str]:
         """Generate actionable next steps."""
         next_steps = []
 
@@ -887,7 +989,7 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
     # Additional helper methods for actions
 
-    async def _clean_build_artifacts(self, repo_path: Path) -> Dict[str, Any]:
+    async def _clean_build_artifacts(self, repo_path: Path) -> dict[str, Any]:
         """Clean unnecessary build artifacts."""
         try:
             cleaned_files = []
@@ -908,16 +1010,13 @@ class BuildOptimizationAgent(BaseGitHubAgent):
                 "success": True,
                 "files_cleaned": len(cleaned_files),
                 "size_freed_mb": total_size_freed / (1024 * 1024),
-                "cleaned_files": cleaned_files[:20]  # Show first 20
+                "cleaned_files": cleaned_files[:20],  # Show first 20
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def _optimize_gitignore(self, repo_path: Path) -> Dict[str, Any]:
+    async def _optimize_gitignore(self, repo_path: Path) -> dict[str, Any]:
         """Optimize .gitignore file to exclude build artifacts."""
         try:
             gitignore_path = repo_path / ".gitignore"
@@ -925,26 +1024,41 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             # Read existing .gitignore
             existing_patterns = set()
             if gitignore_path.exists():
-                with open(gitignore_path, 'r') as f:
-                    existing_patterns = set(line.strip() for line in f if line.strip() and not line.startswith('#'))
+                with open(gitignore_path) as f:
+                    existing_patterns = set(
+                        line.strip() for line in f if line.strip() and not line.startswith("#")
+                    )
 
             # Recommended patterns
             recommended_patterns = {
                 "# Build outputs",
-                "dist/", "build/", "target/", "out/", "bin/", "obj/",
+                "dist/",
+                "build/",
+                "target/",
+                "out/",
+                "bin/",
+                "obj/",
                 "# Dependencies",
-                "node_modules/", "__pycache__/", ".pytest_cache/",
+                "node_modules/",
+                "__pycache__/",
+                ".pytest_cache/",
                 "# Logs and temporary files",
-                "*.log", "*.tmp", "*.cache", "*.bak", "*.swp", "*.swo",
+                "*.log",
+                "*.tmp",
+                "*.cache",
+                "*.bak",
+                "*.swp",
+                "*.swo",
                 "# OS generated files",
-                ".DS_Store", "Thumbs.db"
+                ".DS_Store",
+                "Thumbs.db",
             }
 
             new_patterns = recommended_patterns - existing_patterns
 
             if new_patterns:
                 # Append new patterns
-                with open(gitignore_path, 'a') as f:
+                with open(gitignore_path, "a") as f:
                     f.write("\n# Added by BuildOptimizationAgent\n")
                     for pattern in sorted(new_patterns):
                         f.write(f"{pattern}\n")
@@ -952,36 +1066,51 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             return {
                 "success": True,
                 "patterns_added": len(new_patterns),
-                "new_patterns": list(new_patterns)
+                "new_patterns": list(new_patterns),
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def _generate_dockerignore(self, repo_path: Path) -> Dict[str, Any]:
+    async def _generate_dockerignore(self, repo_path: Path) -> dict[str, Any]:
         """Generate optimized .dockerignore file."""
         try:
             dockerignore_path = repo_path / ".dockerignore"
 
             recommended_patterns = [
                 "# Version control",
-                ".git", ".gitignore", ".gitattributes",
+                ".git",
+                ".gitignore",
+                ".gitattributes",
                 "# Build outputs",
-                "dist", "build", "target", "out", "bin", "obj",
+                "dist",
+                "build",
+                "target",
+                "out",
+                "bin",
+                "obj",
                 "# Dependencies",
-                "node_modules", "__pycache__", ".pytest_cache",
+                "node_modules",
+                "__pycache__",
+                ".pytest_cache",
                 "# Development files",
-                "*.md", "README*", "docs/", "tests/",
+                "*.md",
+                "README*",
+                "docs/",
+                "tests/",
                 "# Logs and temporary files",
-                "*.log", "*.tmp", "*.cache", "*.bak",
+                "*.log",
+                "*.tmp",
+                "*.cache",
+                "*.bak",
                 "# IDE files",
-                ".vscode", ".idea", "*.swp", "*.swo"
+                ".vscode",
+                ".idea",
+                "*.swp",
+                "*.swo",
             ]
 
-            with open(dockerignore_path, 'w') as f:
+            with open(dockerignore_path, "w") as f:
                 f.write("# Generated by BuildOptimizationAgent\n")
                 for pattern in recommended_patterns:
                     f.write(f"{pattern}\n")
@@ -989,23 +1118,22 @@ class BuildOptimizationAgent(BaseGitHubAgent):
             return {
                 "success": True,
                 "file_created": str(dockerignore_path),
-                "patterns_count": len([p for p in recommended_patterns if not p.startswith('#')])
+                "patterns_count": len([p for p in recommended_patterns if not p.startswith("#")]),
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    async def _analyze_parallel_build_opportunities(self, repo_path: Path) -> Dict[str, Any]:
+    async def _analyze_parallel_build_opportunities(self, repo_path: Path) -> dict[str, Any]:
         """Analyze opportunities for parallel builds."""
         try:
             opportunities = []
 
             # Check for multiple build systems
             has_node = (repo_path / "package.json").exists()
-            has_python = any((repo_path / f).exists() for f in ["requirements.txt", "setup.py", "pyproject.toml"])
+            has_python = any(
+                (repo_path / f).exists() for f in ["requirements.txt", "setup.py", "pyproject.toml"]
+            )
             has_java = any((repo_path / f).exists() for f in ["pom.xml", "build.gradle"])
             has_docker = len(list(repo_path.rglob("Dockerfile*"))) > 0
 
@@ -1021,36 +1149,39 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
             if len(build_systems) > 1:
                 opportunities.append(f"Multiple build systems detected: {', '.join(build_systems)}")
-                opportunities.append("Consider using parallel CI/CD jobs for different build systems")
+                opportunities.append(
+                    "Consider using parallel CI/CD jobs for different build systems"
+                )
 
             # Check for multiple Dockerfiles
             dockerfiles = list(repo_path.rglob("Dockerfile*"))
             if len(dockerfiles) > 1:
-                opportunities.append(f"{len(dockerfiles)} Dockerfiles found - can be built in parallel")
+                opportunities.append(
+                    f"{len(dockerfiles)} Dockerfiles found - can be built in parallel"
+                )
 
             return {
                 "success": True,
                 "build_systems": build_systems,
                 "opportunities": opportunities,
-                "parallelization_score": len(opportunities) * 2  # Simple scoring
+                "parallelization_score": len(opportunities) * 2,  # Simple scoring
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
-    def _summarize_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
+    def _summarize_results(self, results: dict[str, Any]) -> dict[str, Any]:
         """Create a summary of analysis results."""
         return {
             "docker_files_found": len(results.get("docker_analysis", {}).get("dockerfiles", [])),
             "total_artifacts": results.get("artifact_analysis", {}).get("total_artifacts", 0),
             "cache_types": results.get("cache_analysis", {}).get("cache_types_found", 0),
-            "optimization_potential": results.get("optimization_report", {}).get("summary", {}).get("total_optimization_potential_mb", 0)
+            "optimization_potential": results.get("optimization_report", {})
+            .get("summary", {})
+            .get("total_optimization_potential_mb", 0),
         }
 
-    def _generate_docker_recommendations(self, dockerfiles: List[Dict]) -> List[str]:
+    def _generate_docker_recommendations(self, dockerfiles: list[dict]) -> list[str]:
         """Generate Docker-specific recommendations."""
         recommendations = []
 
@@ -1063,7 +1194,7 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
         return recommendations
 
-    def _generate_artifact_recommendations(self, artifacts: List[BuildArtifact]) -> List[str]:
+    def _generate_artifact_recommendations(self, artifacts: list[BuildArtifact]) -> list[str]:
         """Generate artifact-specific recommendations."""
         recommendations = []
 
@@ -1075,13 +1206,15 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
         return recommendations
 
-    def _generate_cache_recommendations(self, cache_analyses: List[CacheAnalysis]) -> List[str]:
+    def _generate_cache_recommendations(self, cache_analyses: list[CacheAnalysis]) -> list[str]:
         """Generate cache-specific recommendations."""
         recommendations = []
 
         for cache in cache_analyses:
             if cache.hit_rate < 0.6:
-                recommendations.append(f"Improve {cache.cache_type} cache configuration for better hit rates")
+                recommendations.append(
+                    f"Improve {cache.cache_type} cache configuration for better hit rates"
+                )
 
         if cache_analyses:
             recommendations.append("Implement cache warming strategies in CI/CD")
@@ -1089,22 +1222,22 @@ class BuildOptimizationAgent(BaseGitHubAgent):
 
         return recommendations
 
-    def _artifact_to_dict(self, artifact: BuildArtifact) -> Dict[str, Any]:
+    def _artifact_to_dict(self, artifact: BuildArtifact) -> dict[str, Any]:
         """Convert BuildArtifact to dictionary."""
         return {
             "path": str(artifact.path),
             "size_mb": artifact.size_bytes / (1024 * 1024),
             "file_type": artifact.file_type,
             "optimization_potential": artifact.optimization_potential,
-            "recommendations": artifact.recommendations
+            "recommendations": artifact.recommendations,
         }
 
-    def _cache_analysis_to_dict(self, cache_analysis: CacheAnalysis) -> Dict[str, Any]:
+    def _cache_analysis_to_dict(self, cache_analysis: CacheAnalysis) -> dict[str, Any]:
         """Convert CacheAnalysis to dictionary."""
         return {
             "cache_type": cache_analysis.cache_type,
             "hit_rate": cache_analysis.hit_rate,
             "size_mb": cache_analysis.size_mb,
             "last_used": cache_analysis.last_used.isoformat() if cache_analysis.last_used else None,
-            "recommendations": cache_analysis.recommendations
+            "recommendations": cache_analysis.recommendations,
         }

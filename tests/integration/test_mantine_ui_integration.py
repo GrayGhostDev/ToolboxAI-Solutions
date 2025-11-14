@@ -188,14 +188,14 @@ class TestMantineUIIntegration:
                 button = buttons[0]
 
                 # Check button classes for Mantine
-                button_classes = await button.get_attribute("class") or ""
+                await button.get_attribute("class") or ""
                 button_styles = await button.evaluate("el => getComputedStyle(el)")
 
                 # Check if button has reasonable styling
                 assert "cursor" in button_styles
 
                 # Test button interaction
-                button_text_before = await button.text_content()
+                await button.text_content()
                 await button.hover()
 
                 # Button should be interactive
@@ -542,7 +542,7 @@ class TestMantineUIIntegration:
             )
 
             # Layout should adapt to different screen sizes
-            layout_responsive = (
+            (
                 desktop_layout["visibleElements"] != mobile_layout["visibleElements"]
                 or desktop_layout["hiddenElements"] != mobile_layout["hiddenElements"]
             )

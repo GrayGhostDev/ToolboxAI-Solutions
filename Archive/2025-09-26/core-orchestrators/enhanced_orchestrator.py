@@ -16,23 +16,21 @@ Features:
 
 import asyncio
 import logging
-from typing import Dict, List, Any, Optional, Set, Tuple, Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-from uuid import uuid4
-import json
-from pathlib import Path
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+from uuid import uuid4
 
-from .state_manager import StateManager, EnvironmentState, StateType
-from .policy_engine import PolicyEngine, PolicyType, LearningObjective
-from .action_executor import ActionExecutor, ActionType, ActionResult
-from .reward_calculator import RewardCalculator
-from .context_tracker import ContextTracker
-
+from core.agents.base_agent import BaseAgent
 from core.swarm import SwarmController, create_educational_swarm
-from core.agents.base_agent import BaseAgent, AgentCapability
+
+from .action_executor import ActionExecutor
+from .context_tracker import ContextTracker
+from .policy_engine import PolicyEngine
+from .reward_calculator import RewardCalculator
+from .state_manager import StateManager
 
 logger = logging.getLogger(__name__)
 
@@ -85,15 +83,15 @@ class OrchestrationResult:
     """Result of orchestrated content generation"""
     success: bool
     orchestration_id: str
-    generated_content: Dict[str, Any]
-    quality_metrics: Dict[str, float]
+    generated_content: dict[str, Any]
+    quality_metrics: dict[str, float]
     execution_time: float
-    agents_used: List[str]
+    agents_used: list[str]
     strategy_applied: OrchestrationStrategy
-    educational_analytics: Dict[str, Any]
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
-    optimization_suggestions: List[str] = field(default_factory=list)
+    educational_analytics: dict[str, Any]
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    optimization_suggestions: list[str] = field(default_factory=list)
 
 
 class EnhancedSPARCOrchestrator:
@@ -131,21 +129,21 @@ class EnhancedSPARCOrchestrator:
         self.swarm_enabled = self.config.enable_swarm_mode
 
         # Agent management
-        self.specialized_agents: Dict[str, List[BaseAgent]] = {}
-        self.agent_performance: Dict[str, Dict[str, Any]] = {}
+        self.specialized_agents: dict[str, list[BaseAgent]] = {}
+        self.agent_performance: dict[str, dict[str, Any]] = {}
 
         # Orchestration tracking
-        self.active_orchestrations: Dict[str, Dict[str, Any]] = {}
-        self.orchestration_history: List[OrchestrationResult] = []
+        self.active_orchestrations: dict[str, dict[str, Any]] = {}
+        self.orchestration_history: list[OrchestrationResult] = []
 
         # Performance optimization
-        self.content_cache: Dict[str, Any] = {}
+        self.content_cache: dict[str, Any] = {}
         self.quality_assessor = EducationalQualityAssessor()
         self.performance_optimizer = PerformanceOptimizer()
 
         # Real-time monitoring
         self.monitoring_enabled = self.config.real_time_monitoring
-        self.monitoring_tasks: Set[asyncio.Task] = set()
+        self.monitoring_tasks: set[asyncio.Task] = set()
 
         logger.info(f"Enhanced SPARC Orchestrator initialized with strategy: {self.config.strategy}")
 
@@ -184,7 +182,7 @@ class EnhancedSPARCOrchestrator:
 
     async def generate_educational_content(
         self,
-        request: Dict[str, Any],
+        request: dict[str, Any],
         strategy: Optional[OrchestrationStrategy] = None
     ) -> OrchestrationResult:
         """
@@ -321,9 +319,9 @@ class EnhancedSPARCOrchestrator:
         self,
         orchestration_id: str,
         strategy: OrchestrationStrategy,
-        educational_context: Dict[str, Any],
-        request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        educational_context: dict[str, Any],
+        request: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute specific orchestration strategy"""
 
         if strategy == OrchestrationStrategy.SEQUENTIAL:
@@ -356,9 +354,9 @@ class EnhancedSPARCOrchestrator:
     async def _execute_swarm_strategy(
         self,
         orchestration_id: str,
-        educational_context: Dict[str, Any],
-        request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        educational_context: dict[str, Any],
+        request: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute swarm intelligence strategy for optimal content generation"""
 
         if not self.swarm_controller:
@@ -456,9 +454,9 @@ class EnhancedSPARCOrchestrator:
     async def _execute_collaborative_strategy(
         self,
         orchestration_id: str,
-        educational_context: Dict[str, Any],
-        request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        educational_context: dict[str, Any],
+        request: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute collaborative strategy where agents work together"""
 
         # Phase 1: Content ideation and planning
@@ -530,9 +528,9 @@ class EnhancedSPARCOrchestrator:
     async def _execute_adaptive_strategy(
         self,
         orchestration_id: str,
-        educational_context: Dict[str, Any],
-        request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        educational_context: dict[str, Any],
+        request: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute adaptive strategy that changes based on context and performance"""
 
         # Analyze context to determine best initial strategy
@@ -593,7 +591,7 @@ class EnhancedSPARCOrchestrator:
 
     # Helper methods for orchestration
 
-    async def _determine_optimal_strategy(self, educational_context: Dict[str, Any]) -> OrchestrationStrategy:
+    async def _determine_optimal_strategy(self, educational_context: dict[str, Any]) -> OrchestrationStrategy:
         """Determine optimal orchestration strategy based on context"""
 
         if not self.config.adaptive_optimization:
@@ -616,7 +614,7 @@ class EnhancedSPARCOrchestrator:
         else:
             return OrchestrationStrategy.ADAPTIVE
 
-    def _calculate_content_complexity(self, educational_context: Dict[str, Any]) -> float:
+    def _calculate_content_complexity(self, educational_context: dict[str, Any]) -> float:
         """Calculate content complexity score (0-1)"""
         complexity_factors = []
 
@@ -646,7 +644,7 @@ class EnhancedSPARCOrchestrator:
 
         return sum(complexity_factors) / len(complexity_factors) if complexity_factors else 0.5
 
-    def _calculate_urgency_score(self, educational_context: Dict[str, Any]) -> float:
+    def _calculate_urgency_score(self, educational_context: dict[str, Any]) -> float:
         """Calculate urgency score based on deadlines and priorities"""
         urgency_factors = []
 
@@ -721,7 +719,7 @@ class EnhancedSPARCOrchestrator:
             # This would integrate with the actual agent creation system
             # For now, we'll create a mock specialized agent
 
-            from core.agents.base_agent import BaseAgent, AgentConfig, AgentCapability
+            from core.agents.base_agent import AgentCapability, AgentConfig, BaseAgent
 
             config = AgentConfig(
                 agent_id=f"{specialization}_{agent_id}",
@@ -745,14 +743,14 @@ class EnhancedSPARCOrchestrator:
             logger.error(f"Failed to create specialized agent {specialization}_{agent_id}: {e}")
             return None
 
-    async def _get_specialized_agents(self, specialization: str, count: int) -> List[BaseAgent]:
+    async def _get_specialized_agents(self, specialization: str, count: int) -> list[BaseAgent]:
         """Get available specialized agents for a task"""
         available_agents = self.specialized_agents.get(specialization, [])
 
         # Return up to the requested count of agents
         return available_agents[:count]
 
-    def _extract_educational_context(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_educational_context(self, request: dict[str, Any]) -> dict[str, Any]:
         """Extract educational context from request"""
         return {
             "subject_area": request.get("subject", "general"),
@@ -767,7 +765,7 @@ class EnhancedSPARCOrchestrator:
             "priority": request.get("priority", "normal")
         }
 
-    async def _validate_educational_requirements(self, educational_context: Dict[str, Any]):
+    async def _validate_educational_requirements(self, educational_context: dict[str, Any]):
         """Validate educational requirements are met"""
         required_fields = ["subject_area", "grade_level"]
 
@@ -880,7 +878,7 @@ class EnhancedSPARCOrchestrator:
                 logger.error(f"Resource monitoring error: {e}")
                 await asyncio.sleep(60)
 
-    async def get_orchestration_status(self) -> Dict[str, Any]:
+    async def get_orchestration_status(self) -> dict[str, Any]:
         """Get comprehensive orchestration status"""
         return {
             "orchestrator_id": self.orchestration_id,
@@ -935,9 +933,9 @@ class EducationalQualityAssessor:
 
     async def assess_content_quality(
         self,
-        content: Dict[str, Any],
-        educational_context: Dict[str, Any]
-    ) -> Dict[str, float]:
+        content: dict[str, Any],
+        educational_context: dict[str, Any]
+    ) -> dict[str, float]:
         """Assess educational quality metrics"""
 
         quality_metrics = {
@@ -982,7 +980,7 @@ class EducationalQualityAssessor:
         return quality_metrics
 
     def _assess_content_appropriateness(
-        self, content: Dict[str, Any], educational_context: Dict[str, Any]
+        self, content: dict[str, Any], educational_context: dict[str, Any]
     ) -> float:
         """Assess if content is appropriate for grade level and subject"""
         appropriateness_factors = []
@@ -1006,7 +1004,7 @@ class EducationalQualityAssessor:
         return sum(appropriateness_factors) / len(appropriateness_factors) if appropriateness_factors else 0.5
 
     def _assess_objective_alignment(
-        self, content: Dict[str, Any], educational_context: Dict[str, Any]
+        self, content: dict[str, Any], educational_context: dict[str, Any]
     ) -> float:
         """Assess alignment with learning objectives"""
         learning_objectives = educational_context.get("learning_objectives", [])
@@ -1027,7 +1025,7 @@ class EducationalQualityAssessor:
 
         return alignment_score / len(learning_objectives)
 
-    def _assess_engagement_potential(self, content: Dict[str, Any]) -> float:
+    def _assess_engagement_potential(self, content: dict[str, Any]) -> float:
         """Assess potential for student engagement"""
         engagement_factors = []
 
@@ -1049,7 +1047,7 @@ class EducationalQualityAssessor:
 
         return sum(engagement_factors) / len(engagement_factors) if engagement_factors else 0.3
 
-    def _assess_accessibility(self, content: Dict[str, Any]) -> float:
+    def _assess_accessibility(self, content: dict[str, Any]) -> float:
         """Assess accessibility features"""
         accessibility_features = content.get("accessibility_features", [])
 
@@ -1063,7 +1061,7 @@ class EducationalQualityAssessor:
         return min(1.0, feature_score)
 
     def _assess_curriculum_compliance(
-        self, content: Dict[str, Any], educational_context: Dict[str, Any]
+        self, content: dict[str, Any], educational_context: dict[str, Any]
     ) -> float:
         """Assess compliance with curriculum standards"""
         curriculum_standards = educational_context.get("curriculum_standards", [])
@@ -1079,8 +1077,8 @@ class EducationalQualityAssessor:
             compliance_score = overlap / len(curriculum_standards)
         else:
             # Estimate compliance based on subject and grade level
-            subject = educational_context.get("subject_area", "")
-            grade_level = educational_context.get("grade_level", 5)
+            educational_context.get("subject_area", "")
+            educational_context.get("grade_level", 5)
 
             # Simple heuristic based on content completeness
             completeness = len(content) / 10.0  # Assume 10 fields indicate complete content
@@ -1105,7 +1103,7 @@ class EducationalQualityAssessor:
 
         return max(1.0, min(12.0, reading_level))
 
-    def _estimate_concept_complexity(self, concepts: List[str]) -> float:
+    def _estimate_concept_complexity(self, concepts: list[str]) -> float:
         """Estimate complexity of concepts (0-1 scale)"""
         if not concepts:
             return 0.5
@@ -1141,9 +1139,9 @@ class PerformanceOptimizer:
 
     async def optimize_orchestration(
         self,
-        educational_context: Dict[str, Any],
-        historical_performance: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        educational_context: dict[str, Any],
+        historical_performance: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Generate optimization recommendations"""
 
         optimizations = {
@@ -1180,7 +1178,7 @@ class PerformanceOptimizer:
 
         return optimizations
 
-    def _analyze_strategy_performance(self, historical_performance: List[Dict[str, Any]]) -> Dict[str, float]:
+    def _analyze_strategy_performance(self, historical_performance: list[dict[str, Any]]) -> dict[str, float]:
         """Analyze performance of different strategies"""
         strategy_scores = {}
 
@@ -1204,9 +1202,9 @@ class PerformanceOptimizer:
 
     def _optimize_agent_allocation(
         self,
-        educational_context: Dict[str, Any],
-        historical_performance: List[Dict[str, Any]]
-    ) -> Dict[str, int]:
+        educational_context: dict[str, Any],
+        historical_performance: list[dict[str, Any]]
+    ) -> dict[str, int]:
         """Optimize agent allocation based on content requirements"""
 
         subject = educational_context.get("subject_area", "general")
@@ -1241,9 +1239,9 @@ class PerformanceOptimizer:
 
     def _optimize_timeouts(
         self,
-        educational_context: Dict[str, Any],
-        historical_performance: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+        educational_context: dict[str, Any],
+        historical_performance: list[dict[str, Any]]
+    ) -> dict[str, float]:
         """Optimize timeouts based on content complexity"""
 
         complexity_score = self._calculate_content_complexity_score(educational_context)
@@ -1260,9 +1258,9 @@ class PerformanceOptimizer:
 
     def _suggest_quality_improvements(
         self,
-        educational_context: Dict[str, Any],
-        historical_performance: List[Dict[str, Any]]
-    ) -> List[str]:
+        educational_context: dict[str, Any],
+        historical_performance: list[dict[str, Any]]
+    ) -> list[str]:
         """Suggest quality improvements based on patterns"""
 
         suggestions = []
@@ -1293,7 +1291,7 @@ class PerformanceOptimizer:
 
         return suggestions
 
-    def _calculate_content_complexity_score(self, educational_context: Dict[str, Any]) -> float:
+    def _calculate_content_complexity_score(self, educational_context: dict[str, Any]) -> float:
         """Calculate complexity score for content"""
         complexity_factors = []
 

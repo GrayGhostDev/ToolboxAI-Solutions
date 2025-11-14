@@ -7,26 +7,23 @@ including unit tests, integration tests, performance tests, and coverage analysi
 
 import asyncio
 import logging
-import subprocess
-import json
 import re
-from typing import Dict, Any, Optional, List, Tuple, Set
-from pathlib import Path
-from datetime import datetime
+import subprocess
 from dataclasses import dataclass
-import coverage
-import pytest
-import unittest
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
+import coverage
 from langchain_core.tools import Tool
 from pydantic import BaseModel, Field
 
 from core.agents.error_handling.base_error_agent import (
     BaseErrorAgent,
     ErrorAgentConfig,
+    ErrorPriority,
     ErrorState,
     ErrorType,
-    ErrorPriority
 )
 
 logger = logging.getLogger(__name__)
@@ -40,9 +37,9 @@ class TestCase(BaseModel):
     function: str = Field(description="Test function name")
     test_type: str = Field(description="Type of test (unit, integration, e2e)")
     priority: int = Field(description="Test priority (1-5)")
-    dependencies: List[str] = Field(default_factory=list, description="Test dependencies")
+    dependencies: list[str] = Field(default_factory=list, description="Test dependencies")
     expected_duration: float = Field(default=1.0, description="Expected duration in seconds")
-    tags: List[str] = Field(default_factory=list, description="Test tags/markers")
+    tags: list[str] = Field(default_factory=list, description="Test tags/markers")
 
 
 class TestResult(BaseModel):
@@ -54,16 +51,16 @@ class TestResult(BaseModel):
     stack_trace: Optional[str] = Field(default=None, description="Stack trace if failed")
     stdout: Optional[str] = Field(default=None, description="Captured stdout")
     stderr: Optional[str] = Field(default=None, description="Captured stderr")
-    coverage_data: Optional[Dict[str, Any]] = Field(default=None, description="Coverage data")
+    coverage_data: Optional[dict[str, Any]] = Field(default=None, description="Coverage data")
 
 
 class TestSuite(BaseModel):
     """Model for test suite"""
     suite_id: str = Field(description="Suite identifier")
     name: str = Field(description="Suite name")
-    test_cases: List[TestCase] = Field(description="Test cases in suite")
-    setup_commands: List[str] = Field(default_factory=list, description="Setup commands")
-    teardown_commands: List[str] = Field(default_factory=list, description="Teardown commands")
+    test_cases: list[TestCase] = Field(description="Test cases in suite")
+    setup_commands: list[str] = Field(default_factory=list, description="Setup commands")
+    teardown_commands: list[str] = Field(default_factory=list, description="Teardown commands")
     parallel_execution: bool = Field(default=True, description="Whether tests can run in parallel")
     max_parallel: int = Field(default=4, description="Maximum parallel test execution")
 
@@ -79,23 +76,23 @@ class TestReport(BaseModel):
     errors: int = Field(description="Number of error tests")
     duration: float = Field(description="Total execution duration")
     coverage_percentage: float = Field(description="Code coverage percentage")
-    test_results: List[TestResult] = Field(description="Individual test results")
-    failed_tests: List[Dict[str, Any]] = Field(description="Details of failed tests")
-    coverage_report: Dict[str, Any] = Field(description="Detailed coverage report")
-    recommendations: List[str] = Field(description="Test improvement recommendations")
+    test_results: list[TestResult] = Field(description="Individual test results")
+    failed_tests: list[dict[str, Any]] = Field(description="Details of failed tests")
+    coverage_report: dict[str, Any] = Field(description="Detailed coverage report")
+    recommendations: list[str] = Field(description="Test improvement recommendations")
 
 
 @dataclass
 class TestingConfig(ErrorAgentConfig):
     """Configuration specific to testing orchestrator"""
-    test_frameworks: List[str] = None
+    test_frameworks: list[str] = None
     coverage_threshold: float = 80.0
     parallel_execution: bool = True
     max_parallel_tests: int = 4
     test_timeout: int = 300  # seconds
     generate_coverage: bool = True
-    test_directories: List[str] = None
-    exclude_patterns: List[str] = None
+    test_directories: list[str] = None
+    exclude_patterns: list[str] = None
 
 
 class TestingOrchestratorAgent(BaseErrorAgent):
@@ -130,10 +127,10 @@ class TestingOrchestratorAgent(BaseErrorAgent):
         self.testing_config = config
 
         # Test execution state
-        self.test_suites: Dict[str, TestSuite] = {}
-        self.test_results: List[TestResult] = []
-        self.coverage_data: Dict[str, Any] = {}
-        self.test_sessions: Dict[str, Any] = {}
+        self.test_suites: dict[str, TestSuite] = {}
+        self.test_results: list[TestResult] = []
+        self.coverage_data: dict[str, Any] = {}
+        self.test_sessions: dict[str, Any] = {}
 
         # Initialize testing tools
         self.tools.extend(self._create_testing_tools())
@@ -166,7 +163,7 @@ Testing principles:
 
 Focus on test quality, coverage, and reliability."""
 
-    def _create_testing_tools(self) -> List[Tool]:
+    def _create_testing_tools(self) -> list[Tool]:
         """Create specialized tools for testing"""
         tools = []
 
@@ -290,7 +287,7 @@ Focus on test quality, coverage, and reliability."""
         self,
         target: Optional[str],
         test_type: Optional[str]
-    ) -> List[TestCase]:
+    ) -> list[TestCase]:
         """Discover all available tests"""
         discovered_tests = []
 
@@ -317,7 +314,7 @@ Focus on test quality, coverage, and reliability."""
 
         return discovered_tests
 
-    def _find_test_files(self, directory: str) -> List[Path]:
+    def _find_test_files(self, directory: str) -> list[Path]:
         """Find all test files in directory"""
         test_patterns = ["test_*.py", "*_test.py", "*_spec.py"]
         test_files = []
@@ -335,13 +332,13 @@ Focus on test quality, coverage, and reliability."""
 
         return filtered_files
 
-    def _discover_tests_in_file(self, file_path: str, test_type: Optional[str]) -> List[TestCase]:
+    def _discover_tests_in_file(self, file_path: str, test_type: Optional[str]) -> list[TestCase]:
         """Discover tests in a specific file"""
         tests = []
 
         try:
             # Parse file to find test functions
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
 
             # Find test functions/methods
@@ -402,7 +399,7 @@ Focus on test quality, coverage, and reliability."""
 
         return priority
 
-    def _extract_test_tags(self, content: str, test_name: str) -> List[str]:
+    def _extract_test_tags(self, content: str, test_name: str) -> list[str]:
         """Extract test tags/markers from test"""
         tags = []
 
@@ -419,7 +416,7 @@ Focus on test quality, coverage, and reliability."""
 
         return tags
 
-    def _organize_test_suites(self, tests: List[TestCase]) -> List[TestSuite]:
+    def _organize_test_suites(self, tests: list[TestCase]) -> list[TestSuite]:
         """Organize tests into logical suites"""
         suites = {}
 
@@ -478,7 +475,7 @@ Focus on test quality, coverage, and reliability."""
 
         return all(validations)
 
-    async def _run_tests_parallel(self, test_suites: List[TestSuite]) -> List[TestResult]:
+    async def _run_tests_parallel(self, test_suites: list[TestSuite]) -> list[TestResult]:
         """Run test suites in parallel"""
         all_results = []
 
@@ -511,7 +508,7 @@ Focus on test quality, coverage, and reliability."""
 
         return all_results
 
-    async def _run_tests_sequential(self, test_suites: List[TestSuite]) -> List[TestResult]:
+    async def _run_tests_sequential(self, test_suites: list[TestSuite]) -> list[TestResult]:
         """Run test suites sequentially"""
         all_results = []
 
@@ -522,7 +519,7 @@ Focus on test quality, coverage, and reliability."""
 
         return all_results
 
-    async def _run_test_batch(self, test_cases: List[TestCase]) -> List[TestResult]:
+    async def _run_test_batch(self, test_cases: list[TestCase]) -> list[TestResult]:
         """Run a batch of tests"""
         results = []
 
@@ -633,7 +630,7 @@ Focus on test quality, coverage, and reliability."""
             return '\n'.join(trace_lines)
         return None
 
-    async def _analyze_test_coverage(self) -> Dict[str, Any]:
+    async def _analyze_test_coverage(self) -> dict[str, Any]:
         """Analyze code coverage from tests"""
         coverage_data = {
             "line_coverage": 0.0,
@@ -681,8 +678,8 @@ Focus on test quality, coverage, and reliability."""
 
     def _generate_test_report(
         self,
-        results: List[TestResult],
-        coverage_data: Dict[str, Any],
+        results: list[TestResult],
+        coverage_data: dict[str, Any],
         total_duration: float,
         session_id: str
     ) -> TestReport:
@@ -723,7 +720,7 @@ Focus on test quality, coverage, and reliability."""
         self,
         report: TestReport,
         error_context: Optional[ErrorState]
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate test recommendations based on report"""
         recommendations = []
 
@@ -802,7 +799,7 @@ Focus on test quality, coverage, and reliability."""
         """Tool: Validate test environment"""
         return "Test environment validation completed"
 
-    async def get_testing_metrics(self) -> Dict[str, Any]:
+    async def get_testing_metrics(self) -> dict[str, Any]:
         """Get metrics specific to testing"""
         base_metrics = await self.get_error_metrics()
 

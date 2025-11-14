@@ -9,12 +9,12 @@ This module provides agents for Roblox/Studio integration including:
 """
 
 from .studio_bridge_agent import (
-    StudioBridgeAgent,
-    StudioSession,
-    StudioConnectionType,
     CommandType,
+    PluginCommand,
     ScriptSync,
-    PluginCommand
+    StudioBridgeAgent,
+    StudioConnectionType,
+    StudioSession,
 )
 
 # Track available exports dynamically
@@ -24,24 +24,27 @@ _available_exports = [
     "StudioConnectionType",
     "CommandType",
     "ScriptSync",
-    "PluginCommand"
+    "PluginCommand",
 ]
 
 # Import other agents when available
 try:
     from .asset_deployment_agent import AssetDeploymentAgent
+
     _available_exports.append("AssetDeploymentAgent")
 except ImportError:
     pass
 
 try:
     from .game_instance_agent import GameInstanceAgent
+
     _available_exports.append("GameInstanceAgent")
 except ImportError:
     pass
 
 try:
     from .educational_content_agent import EducationalContentIntegrationAgent
+
     _available_exports.append("EducationalContentIntegrationAgent")
 except ImportError:
     pass

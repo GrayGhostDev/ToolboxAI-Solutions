@@ -7,7 +7,7 @@ with proper tenant isolation and context management.
 
 import logging
 from datetime import timedelta
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 from uuid import UUID
 
 from sqlalchemy import and_, delete, func, select
@@ -31,7 +31,7 @@ class TenantRepository(Generic[T]):
     Provides CRUD operations with automatic tenant isolation and context management.
     """
 
-    def __init__(self, session: AsyncSession, model_class: Type[T], organization_id: UUID):
+    def __init__(self, session: AsyncSession, model_class: type[T], organization_id: UUID):
         self.session = session
         self.model_class = model_class
         self.organization_id = organization_id
@@ -40,7 +40,8 @@ class TenantRepository(Generic[T]):
         """Get a record by ID with tenant isolation"""
         query = select(self.model_class).where(
             and_(
-                self.model_class.id == id, self.model_class.organization_id == self.organization_id
+                self.model_class.id == id,
+                self.model_class.organization_id == self.organization_id,
             )
         )
 
@@ -56,7 +57,7 @@ class TenantRepository(Generic[T]):
         offset: Optional[int] = None,
         include_deleted: bool = False,
         order_by: Optional[str] = None,
-    ) -> List[T]:
+    ) -> list[T]:
         """Get all records for the current tenant"""
         query = select(self.model_class).where(
             self.model_class.organization_id == self.organization_id
@@ -142,7 +143,8 @@ class TenantRepository(Generic[T]):
         """Hard delete a record with tenant isolation"""
         query = delete(self.model_class).where(
             and_(
-                self.model_class.id == id, self.model_class.organization_id == self.organization_id
+                self.model_class.id == id,
+                self.model_class.organization_id == self.organization_id,
             )
         )
 
@@ -259,7 +261,7 @@ class OrganizationRepository:
         else:
             return True
 
-    async def get_usage_stats(self, org_id: UUID) -> Dict[str, Any]:
+    async def get_usage_stats(self, org_id: UUID) -> dict[str, Any]:
         """Get usage statistics for an organization"""
         org = await self.get_by_id(org_id)
         if not org:
@@ -353,7 +355,7 @@ class TenantContextManager:
         # Clear tenant context
         await self.session.execute(select(func.set_config("app.current_organization_id", "", True)))
 
-    def get_repository(self, model_class: Type[T]) -> TenantRepository[T]:
+    def get_repository(self, model_class: type[T]) -> TenantRepository[T]:
         """Get a tenant-aware repository for the specified model"""
         return TenantRepository(self.session, model_class, self.organization_id)
 

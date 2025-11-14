@@ -10,30 +10,35 @@ This module integrates:
 - Agent coordination for Roblox-specific workflows
 """
 
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 # Import base orchestration components
-from ...agents.base_agent import BaseAgent, TaskResult, AgentState
-from ...agents.master_orchestrator import MasterOrchestrator, AgentSystemType, TaskPriority
+from ...agents.base_agent import AgentState, BaseAgent, TaskResult
+from ...agents.master_orchestrator import (
+    AgentSystemType,
+    MasterOrchestrator,
+    TaskPriority,
+)
 
 # Import existing Roblox orchestrator classes for compatibility
 from ...agents.orchestrator import (
-    WorkflowType,
     OrchestrationRequest,
     OrchestrationResult,
-    Orchestrator as EnvironmentOrchestrator
+    WorkflowType,
 )
+from ...agents.orchestrator import Orchestrator as EnvironmentOrchestrator
 
 logger = logging.getLogger(__name__)
 
 
 class RobloxWorkflowType(Enum):
     """Extended workflow types for Roblox orchestration."""
+
     # Environment workflows (from original orchestrator)
     FULL_ENVIRONMENT = "full_environment"
     CONTENT_ONLY = "content_only"
@@ -56,10 +61,11 @@ class RobloxWorkflowType(Enum):
 @dataclass
 class RobloxTaskRequest:
     """Unified request for Roblox orchestration tasks."""
+
     workflow_type: RobloxWorkflowType
     subject: str
     grade_level: str
-    learning_objectives: List[str]
+    learning_objectives: list[str]
 
     # Environment-specific options
     environment_theme: Optional[str] = None
@@ -73,7 +79,7 @@ class RobloxTaskRequest:
     target_age: Optional[int] = None
 
     # General options
-    custom_requirements: Optional[Dict[str, Any]] = None
+    custom_requirements: Optional[dict[str, Any]] = None
 
 
 class RobloxOrchestrationModule:
@@ -95,7 +101,7 @@ class RobloxOrchestrationModule:
             "environments_created": 0,
             "projects_created": 0,
             "successful_workflows": 0,
-            "failed_workflows": 0
+            "failed_workflows": 0,
         }
 
         logger.info("Roblox Orchestration Module initialized")
@@ -132,7 +138,7 @@ class RobloxOrchestrationModule:
             RobloxWorkflowType.TERRAIN_ONLY,
             RobloxWorkflowType.SCRIPT_ONLY,
             RobloxWorkflowType.REVIEW_OPTIMIZE,
-            RobloxWorkflowType.TESTING_VALIDATION
+            RobloxWorkflowType.TESTING_VALIDATION,
         ]:
             return await self._submit_environment_task(request)
 
@@ -143,7 +149,7 @@ class RobloxOrchestrationModule:
             RobloxWorkflowType.GAMEPLAY_MECHANICS,
             RobloxWorkflowType.SECURITY_VALIDATION,
             RobloxWorkflowType.PERFORMANCE_OPTIMIZATION,
-            RobloxWorkflowType.DEPLOYMENT
+            RobloxWorkflowType.DEPLOYMENT,
         ]:
             return await self._submit_project_task(request)
 
@@ -161,19 +167,19 @@ class RobloxOrchestrationModule:
             environment_theme=request.environment_theme,
             include_quiz=request.include_quiz,
             include_gamification=request.include_gamification,
-            custom_requirements=request.custom_requirements
+            custom_requirements=request.custom_requirements,
         )
 
         # Submit to master orchestrator
         task_data = {
             "orchestration_request": env_request,
-            "type": "environment_generation"
+            "type": "environment_generation",
         }
 
         task_id = await self.master.submit_task(
             agent_type=AgentSystemType.EDUCATIONAL,
             task_data=task_data,
-            priority=TaskPriority.MEDIUM
+            priority=TaskPriority.MEDIUM,
         )
 
         self.metrics["environments_created"] += 1
@@ -184,15 +190,12 @@ class RobloxOrchestrationModule:
         # TODO: Implement project task submission
         # This will be implemented when roblox_orchestrator is integrated
 
-        task_data = {
-            "project_request": request,
-            "type": "project_creation"
-        }
+        task_data = {"project_request": request, "type": "project_creation"}
 
         task_id = await self.master.submit_task(
             agent_type=AgentSystemType.EDUCATIONAL,
             task_data=task_data,
-            priority=TaskPriority.MEDIUM
+            priority=TaskPriority.MEDIUM,
         )
 
         self.metrics["projects_created"] += 1
@@ -234,7 +237,7 @@ class RobloxOrchestrationModule:
 
         return result
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get the status of the Roblox orchestration module."""
         env_status = None
         if self.environment_orchestrator:
@@ -248,14 +251,14 @@ class RobloxOrchestrationModule:
             "initialized": self.environment_orchestrator is not None,
             "environment_orchestrator": env_status,
             "project_orchestrator": "not_implemented",  # TODO
-            "metrics": self.metrics
+            "metrics": self.metrics,
         }
 
     async def cleanup(self):
         """Cleanup the module and its resources."""
         try:
             # Cleanup environment orchestrator if needed
-            if self.environment_orchestrator and hasattr(self.environment_orchestrator, 'cleanup'):
+            if self.environment_orchestrator and hasattr(self.environment_orchestrator, "cleanup"):
                 # Environment orchestrator doesn't have cleanup, but we check anyway
                 pass
 
@@ -274,10 +277,13 @@ __all__ = [
     "WorkflowType",
     "OrchestrationRequest",
     "OrchestrationResult",
-    "EnvironmentOrchestrator"
+    "EnvironmentOrchestrator",
 ]
 
+
 # Convenience factory function
-def create_roblox_orchestrator(master_orchestrator: MasterOrchestrator) -> RobloxOrchestrationModule:
+def create_roblox_orchestrator(
+    master_orchestrator: MasterOrchestrator,
+) -> RobloxOrchestrationModule:
     """Create and initialize a Roblox orchestration module."""
     return RobloxOrchestrationModule(master_orchestrator)

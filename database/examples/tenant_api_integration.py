@@ -6,7 +6,7 @@ with FastAPI endpoints and middleware.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
@@ -26,7 +26,7 @@ security = HTTPBearer()
 # Pydantic models for API requests/responses
 class OrganizationCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=200)
-    admin_email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
+    admin_email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     admin_password: str = Field(..., min_length=8)
     admin_first_name: str = Field(default="", max_length=100)
     admin_last_name: str = Field(default="", max_length=100)
@@ -50,15 +50,15 @@ class OrganizationResponse(BaseModel):
 
 
 class UserInvite(BaseModel):
-    email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
+    email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     role: UserRole
     invitation_message: Optional[str] = Field(default=None, max_length=500)
 
 
 class UsageStats(BaseModel):
-    current_usage: Dict[str, int]
-    limits: Dict[str, int]
-    usage_percentage: Dict[str, float]
+    current_usage: dict[str, int]
+    limits: dict[str, int]
+    usage_percentage: dict[str, float]
     subscription_tier: str
     status: str
 
@@ -80,7 +80,7 @@ async def get_current_user(
     Extract current user from JWT token.
     This is a simplified example - implement proper JWT validation.
     """
-    token = credentials.credentials
+    _token = credentials.credentials  # noqa: F841 - Reserved for JWT validation
 
     # Implement JWT token validation here
     # This should extract user_id and organization_id from the token
@@ -92,13 +92,15 @@ async def get_current_user(
     # return user
 
     raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED, detail="Not implemented - add JWT validation"
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not implemented - add JWT validation",
     )
 
 
 # Dependency to get current organization from user context
 async def get_current_organization(
-    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_db_session)
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Organization:
     """Get current organization from user context"""
     tenant_service = TenantService(session)
@@ -130,9 +132,9 @@ class TenantContextMiddleware:
         # Option 1: From subdomain (e.g., org1.yourapp.com)
         host = request.headers.get("host", "")
         if "." in host:
-            subdomain = host.split(".")[0]
+            _subdomain = host.split(".")[0]  # noqa: F841 - Reserved for future subdomain lookup
             # Look up organization by subdomain/slug
-            # org_id = await get_org_id_by_subdomain(subdomain)
+            # org_id = await get_org_id_by_subdomain(_subdomain)
 
         # Option 2: From custom header
         org_header = request.headers.get("x-organization-id")
@@ -168,7 +170,8 @@ def require_teacher_or_admin(user: User = Depends(get_current_user)):
     """Require user to be teacher or admin"""
     if user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Teacher or admin access required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Teacher or admin access required",
         )
     return user
 
@@ -235,7 +238,7 @@ class TenantAPI:
         org: Organization = Depends(get_current_organization),
         user: User = Depends(require_admin),
         session: AsyncSession = Depends(get_db_session),
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Invite a user to the organization"""
         tenant_service = TenantService(session)
 
@@ -315,7 +318,7 @@ class TenantAPI:
 # Example of how to use tenant context in a repository operation
 async def example_tenant_aware_operation(
     organization_id: UUID, session: AsyncSession
-) -> List[User]:
+) -> list[User]:
     """Example of performing tenant-aware database operations"""
 
     # Method 1: Using context manager

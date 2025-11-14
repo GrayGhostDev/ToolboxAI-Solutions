@@ -8,9 +8,9 @@ This module provides context management for AI agents with:
 - Protocol handlers for Roblox and educational contexts
 """
 
-from .server import MCPServer
 from .context_manager import ContextManager
 from .memory_store import MemoryStore
+from .server import MCPServer
 
 __all__ = ["MCPServer", "ContextManager", "MemoryStore"]
 __version__ = "1.0.0"

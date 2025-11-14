@@ -1,5 +1,9 @@
-import sys, json, threading
+import json
+import sys
+import threading
+
 from core.coordinators.monitor import Monitor
+
 
 def main():
     mon = Monitor()
@@ -7,13 +11,15 @@ def main():
     t.start()
     for line in sys.stdin:
         try:
-            req=json.loads(line)
-            if req.get("method")=="ping":
+            req = json.loads(line)
+            if req.get("method") == "ping":
                 print(json.dumps({"ok": True}))
             else:
-                print(json.dumps({"error":"unknown method"}))
+                print(json.dumps({"error": "unknown method"}))
         except Exception as e:
             print(json.dumps({"error": str(e)}))
         sys.stdout.flush()
 
-if __name__=="__main__": main()
+
+if __name__ == "__main__":
+    main()

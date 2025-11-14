@@ -9,7 +9,7 @@ import hashlib
 import logging
 import secrets
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -48,7 +48,7 @@ class TenantService:
         admin_last_name: str = "",
         organization_type: str = "education",
         subscription_tier: SubscriptionTier = SubscriptionTier.FREE,
-    ) -> Tuple[Organization, User]:
+    ) -> tuple[Organization, User]:
         """
         Create a new organization with an admin user.
 
@@ -170,7 +170,7 @@ class TenantService:
         password: str,
         first_name: str = "",
         last_name: str = "",
-    ) -> Tuple[User, Organization]:
+    ) -> tuple[User, Organization]:
         """
         Accept an organization invitation and create user account.
 
@@ -336,7 +336,7 @@ class TenantService:
             logger.error(f"Failed to upgrade subscription: {e}")
             raise
 
-    async def check_usage_limits(self, organization_id: UUID) -> Dict[str, Any]:
+    async def check_usage_limits(self, organization_id: UUID) -> dict[str, Any]:
         """
         Check current usage against limits for an organization.
 
@@ -376,7 +376,7 @@ class TenantService:
         organization_id: UUID,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate usage report for an organization.
 

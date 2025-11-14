@@ -81,7 +81,7 @@ class TestCustomerManagement:
         mock_create.return_value = mock_customer
 
         # Act
-        result = await stripe_service.create_customer(
+        await stripe_service.create_customer(
             user_id="user_123", email="test@example.com", payment_method_id="pm_123"
         )
 
@@ -224,7 +224,7 @@ class TestSubscriptionManagement:
         mock_modify.return_value = mock_new_subscription
 
         # Act
-        result = await stripe_service.update_subscription("sub_123", price_id="price_new")
+        await stripe_service.update_subscription("sub_123", price_id="price_new")
 
         # Assert
         mock_modify.assert_called_once()
@@ -342,7 +342,10 @@ class TestCheckoutSessions:
 
         # Act
         result = await stripe_service.create_checkout_session(
-            customer_id="cus_123", price_id="price_123", mode="subscription", trial_period_days=14
+            customer_id="cus_123",
+            price_id="price_123",
+            mode="subscription",
+            trial_period_days=14,
         )
 
         # Assert
@@ -501,7 +504,8 @@ class TestErrorHandling:
 
     @pytest.mark.asyncio
     @patch(
-        "stripe.Customer.create", side_effect=stripe.error.CardError("Card declined", None, None)
+        "stripe.Customer.create",
+        side_effect=stripe.error.CardError("Card declined", None, None),
     )
     async def test_create_customer_stripe_error(self, mock_create, stripe_service, mock_cache):
         """Test customer creation with Stripe error."""

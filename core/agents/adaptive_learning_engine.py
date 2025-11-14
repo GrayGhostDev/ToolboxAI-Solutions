@@ -10,42 +10,34 @@ Created: 2025-09-19
 Version: 2.0.0
 """
 
-import asyncio
 import logging
-import numpy as np
-from typing import Dict, Any, List, Optional, Tuple
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from collections import deque
-import json
+from typing import Any, Optional
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
 
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
-from database.content_pipeline_models import (
-    LearningProfile,
-    ContentPersonalizationLog,
-    ContentFeedback,
-    EnhancedContentGeneration
-)
+from core.agents.base_agent import AgentConfig, BaseAgent
+from database.content_pipeline_models import ContentFeedback, EnhancedContentGeneration
 
 logger = logging.getLogger(__name__)
 
 
 class LearningStyle(Enum):
     """Primary learning style categories"""
-    VISUAL = "visual"          # Learns through images, diagrams, videos
-    AUDITORY = "auditory"      # Learns through listening and discussion
+
+    VISUAL = "visual"  # Learns through images, diagrams, videos
+    AUDITORY = "auditory"  # Learns through listening and discussion
     KINESTHETIC = "kinesthetic"  # Learns through hands-on activities
     READING_WRITING = "reading_writing"  # Learns through text
 
 
 class DifficultyLevel(Enum):
     """Content difficulty levels"""
+
     BEGINNER = 1
     ELEMENTARY = 2
     INTERMEDIATE = 3
@@ -55,6 +47,7 @@ class DifficultyLevel(Enum):
 
 class AdaptationType(Enum):
     """Types of content adaptations"""
+
     DIFFICULTY = "difficulty"
     PACE = "pace"
     STYLE = "style"
@@ -66,6 +59,7 @@ class AdaptationType(Enum):
 @dataclass
 class LearnerMetrics:
     """Comprehensive metrics for a learner"""
+
     user_id: str
 
     # Performance metrics
@@ -85,7 +79,7 @@ class LearnerMetrics:
     mastery_level: float = 0.0
     learning_velocity: float = 0.0
     knowledge_retention: float = 0.0
-    skill_progression: Dict[str, float] = field(default_factory=dict)
+    skill_progression: dict[str, float] = field(default_factory=dict)
 
     # Pattern analysis
     peak_performance_time: Optional[int] = None  # Hour of day
@@ -104,6 +98,7 @@ class LearnerMetrics:
 @dataclass
 class AdaptationRecommendation:
     """Recommendation for content adaptation"""
+
     adaptation_type: AdaptationType
     current_value: Any
     recommended_value: Any
@@ -116,6 +111,7 @@ class AdaptationRecommendation:
 @dataclass
 class PersonalizationStrategy:
     """Complete personalization strategy for a learner"""
+
     user_id: str
     learning_style: LearningStyle
     current_difficulty: DifficultyLevel
@@ -127,8 +123,8 @@ class PersonalizationStrategy:
     break_frequency: int  # Minutes between breaks
 
     # Content preferences
-    media_preferences: Dict[str, float]  # media_type -> preference_score
-    interaction_types: List[str]  # Preferred interaction methods
+    media_preferences: dict[str, float]  # media_type -> preference_score
+    interaction_types: list[str]  # Preferred interaction methods
     feedback_style: str  # immediate, delayed, summary
 
     # Scaffolding
@@ -142,7 +138,7 @@ class PersonalizationStrategy:
     narrative_engagement: float  # Story-driven content preference
 
     # Recommendations
-    recommendations: List[AdaptationRecommendation] = field(default_factory=list)
+    recommendations: list[AdaptationRecommendation] = field(default_factory=list)
 
     # Metadata
     strategy_version: str = "2.0"
@@ -174,7 +170,7 @@ class AdaptiveLearningEngine(BaseAgent):
             max_retries=3,
             timeout=300,
             verbose=True,
-            system_prompt=self._get_engine_system_prompt()
+            system_prompt=self._get_engine_system_prompt(),
         )
 
         super().__init__(config)
@@ -192,7 +188,7 @@ class AdaptiveLearningEngine(BaseAgent):
             "struggling": 0.60,
             "frustration": 0.40,
             "boredom": 0.95,
-            "optimal_challenge": (0.70, 0.85)
+            "optimal_challenge": (0.70, 0.85),
         }
 
         # Adaptation parameters
@@ -202,12 +198,12 @@ class AdaptiveLearningEngine(BaseAgent):
             "style_weight": 0.3,  # Weight for style matching
             "history_weight": 0.7,  # Weight for historical performance
             "min_data_points": 5,  # Minimum data for adaptation
-            "adaptation_cooldown": 300  # Seconds between major adaptations
+            "adaptation_cooldown": 300,  # Seconds between major adaptations
         }
 
         # Cache for learner profiles
-        self.profile_cache: Dict[str, LearnerMetrics] = {}
-        self.strategy_cache: Dict[str, PersonalizationStrategy] = {}
+        self.profile_cache: dict[str, LearnerMetrics] = {}
+        self.strategy_cache: dict[str, PersonalizationStrategy] = {}
 
         logger.info("Adaptive Learning Engine initialized")
 
@@ -256,8 +252,13 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         return {
             "visual_indicators": ["diagram", "chart", "image", "video", "animation"],
             "auditory_indicators": ["audio", "discussion", "podcast", "narration"],
-            "kinesthetic_indicators": ["interactive", "hands-on", "simulation", "practice"],
-            "reading_indicators": ["text", "article", "notes", "documentation"]
+            "kinesthetic_indicators": [
+                "interactive",
+                "hands-on",
+                "simulation",
+                "practice",
+            ],
+            "reading_indicators": ["text", "article", "notes", "documentation"],
         }
 
     def _initialize_difficulty_optimizer(self) -> Any:
@@ -268,7 +269,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 DifficultyLevel.ELEMENTARY: (0.75, 0.90),
                 DifficultyLevel.INTERMEDIATE: (0.65, 0.80),
                 DifficultyLevel.ADVANCED: (0.55, 0.70),
-                DifficultyLevel.EXPERT: (0.45, 0.60)
+                DifficultyLevel.EXPERT: (0.45, 0.60),
             }
         }
 
@@ -281,7 +282,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 "completion_rate": 0.25,
                 "return_rate": 0.2,
                 "session_duration": 0.15,
-                "voluntary_practice": 0.1
+                "voluntary_practice": 0.1,
             }
         }
 
@@ -325,7 +326,9 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
 
             # Identify patterns
             metrics.peak_performance_time = self._identify_peak_time(performance_data)
-            metrics.preferred_session_length = self._identify_preferred_session_length(engagement_data)
+            metrics.preferred_session_length = self._identify_preferred_session_length(
+                engagement_data
+            )
             metrics.optimal_difficulty = self._identify_optimal_difficulty(performance_data)
 
         # Cache the metrics
@@ -351,7 +354,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 LearningStyle.VISUAL: 0,
                 LearningStyle.AUDITORY: 0,
                 LearningStyle.KINESTHETIC: 0,
-                LearningStyle.READING_WRITING: 0
+                LearningStyle.READING_WRITING: 0,
             }
 
             # Score based on content preferences and performance
@@ -359,20 +362,28 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 content_type = interaction.get("content_type", "")
                 performance = interaction.get("performance", 0.5)
 
-                if any(indicator in content_type.lower()
-                       for indicator in self.style_classifier["visual_indicators"]):
+                if any(
+                    indicator in content_type.lower()
+                    for indicator in self.style_classifier["visual_indicators"]
+                ):
                     style_scores[LearningStyle.VISUAL] += performance
 
-                if any(indicator in content_type.lower()
-                       for indicator in self.style_classifier["auditory_indicators"]):
+                if any(
+                    indicator in content_type.lower()
+                    for indicator in self.style_classifier["auditory_indicators"]
+                ):
                     style_scores[LearningStyle.AUDITORY] += performance
 
-                if any(indicator in content_type.lower()
-                       for indicator in self.style_classifier["kinesthetic_indicators"]):
+                if any(
+                    indicator in content_type.lower()
+                    for indicator in self.style_classifier["kinesthetic_indicators"]
+                ):
                     style_scores[LearningStyle.KINESTHETIC] += performance
 
-                if any(indicator in content_type.lower()
-                       for indicator in self.style_classifier["reading_indicators"]):
+                if any(
+                    indicator in content_type.lower()
+                    for indicator in self.style_classifier["reading_indicators"]
+                ):
                     style_scores[LearningStyle.READING_WRITING] += performance
 
             # Return highest scoring style
@@ -385,8 +396,8 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         self,
         user_id: str,
         current_performance: float,
-        current_difficulty: DifficultyLevel
-    ) -> Tuple[DifficultyLevel, float]:
+        current_difficulty: DifficultyLevel,
+    ) -> tuple[DifficultyLevel, float]:
         """
         Optimize difficulty level based on performance
 
@@ -432,9 +443,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         return new_difficulty, confidence
 
     async def generate_personalization_strategy(
-        self,
-        user_id: str,
-        content_type: str = "lesson"
+        self, user_id: str, content_type: str = "lesson"
     ) -> PersonalizationStrategy:
         """
         Generate comprehensive personalization strategy
@@ -459,9 +468,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         # Determine difficulty
         current_difficulty = self._estimate_current_difficulty(metrics)
         recommended_difficulty, confidence = await self.optimize_difficulty(
-            user_id,
-            metrics.accuracy_rate,
-            current_difficulty
+            user_id, metrics.accuracy_rate, current_difficulty
         )
 
         # Create strategy
@@ -470,7 +477,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             learning_style=learning_style,
             current_difficulty=current_difficulty,
             recommended_difficulty=recommended_difficulty,
-            confidence_score=confidence
+            confidence_score=confidence,
         )
 
         # Set pacing parameters
@@ -489,7 +496,9 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         strategy.practice_problems = self._determine_practice_count(metrics)
 
         # Set gamification
-        strategy.achievement_sensitivity = metrics.engagement_history[-1] if metrics.engagement_history else 0.5
+        strategy.achievement_sensitivity = (
+            metrics.engagement_history[-1] if metrics.engagement_history else 0.5
+        )
         strategy.competition_preference = self._estimate_competition_preference(metrics)
         strategy.narrative_engagement = self._estimate_narrative_preference(metrics)
 
@@ -502,10 +511,8 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         return strategy
 
     async def adapt_content(
-        self,
-        content: Dict[str, Any],
-        strategy: PersonalizationStrategy
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], strategy: PersonalizationStrategy
+    ) -> dict[str, Any]:
         """
         Adapt content based on personalization strategy
 
@@ -540,16 +547,14 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             "difficulty_level": strategy.recommended_difficulty.value,
             "adaptations_applied": len(strategy.recommendations),
             "confidence_score": strategy.confidence_score,
-            "adapted_at": datetime.now().isoformat()
+            "adapted_at": datetime.now().isoformat(),
         }
 
         return adapted_content
 
     async def predict_performance(
-        self,
-        user_id: str,
-        content_difficulty: DifficultyLevel
-    ) -> Dict[str, float]:
+        self, user_id: str, content_difficulty: DifficultyLevel
+    ) -> dict[str, float]:
         """
         Predict learner performance on content
 
@@ -578,14 +583,12 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             "predicted_engagement": predicted_engagement,
             "confidence": 0.75,  # Simplified confidence
             "risk_of_frustration": 1.0 if difficulty_gap > 2 else 0.0,
-            "risk_of_boredom": 1.0 if difficulty_gap < -2 else 0.0
+            "risk_of_boredom": 1.0 if difficulty_gap < -2 else 0.0,
         }
 
     async def recommend_intervention(
-        self,
-        user_id: str,
-        current_performance: Dict[str, float]
-    ) -> Optional[Dict[str, Any]]:
+        self, user_id: str, current_performance: dict[str, float]
+    ) -> Optional[dict[str, Any]]:
         """
         Recommend intervention if needed
 
@@ -607,9 +610,9 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     "Reduce difficulty",
                     "Provide additional hints",
                     "Offer tutorial review",
-                    "Switch to guided practice"
+                    "Switch to guided practice",
                 ],
-                "urgency": "high"
+                "urgency": "high",
             }
 
         elif accuracy > self.thresholds["boredom"]:
@@ -620,9 +623,9 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     "Increase difficulty",
                     "Skip to advanced topics",
                     "Provide challenge problems",
-                    "Reduce scaffolding"
+                    "Reduce scaffolding",
                 ],
-                "urgency": "medium"
+                "urgency": "medium",
             }
 
         elif accuracy < self.thresholds["struggling"]:
@@ -633,9 +636,9 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     "Add more examples",
                     "Slow down pacing",
                     "Increase hint availability",
-                    "Suggest peer collaboration"
+                    "Suggest peer collaboration",
                 ],
-                "urgency": "medium"
+                "urgency": "medium",
             }
 
         elif engagement < 0.4:
@@ -646,24 +649,27 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     "Switch content format",
                     "Add interactive elements",
                     "Introduce gamification",
-                    "Suggest break"
+                    "Suggest break",
                 ],
-                "urgency": "low"
+                "urgency": "low",
             }
 
         return None  # No intervention needed
 
     # Helper methods
 
-    async def _load_performance_history(self, user_id: str) -> List[Dict]:
+    async def _load_performance_history(self, user_id: str) -> list[dict]:
         """Load performance history from database"""
         if not self.db_session:
             return []
 
         # Query recent content generations and feedback
-        query = select(ContentFeedback).where(
-            ContentFeedback.user_id == user_id
-        ).order_by(ContentFeedback.created_at.desc()).limit(100)
+        query = (
+            select(ContentFeedback)
+            .where(ContentFeedback.user_id == user_id)
+            .order_by(ContentFeedback.created_at.desc())
+            .limit(100)
+        )
 
         result = await self.db_session.execute(query)
         feedback_records = result.scalars().all()
@@ -673,25 +679,28 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 "timestamp": record.created_at,
                 "accuracy": record.rating / 5.0 if record.rating else 0.5,
                 "completion": record.completion_rate or 0.0,
-                "duration": record.session_duration or 0.0
+                "duration": record.session_duration or 0.0,
             }
             for record in feedback_records
         ]
 
-    async def _load_engagement_history(self, user_id: str) -> List[Dict]:
+    async def _load_engagement_history(self, user_id: str) -> list[dict]:
         """Load engagement history from database"""
         # Simplified - would query actual engagement metrics
         return await self._load_performance_history(user_id)
 
-    async def _load_interaction_history(self, user_id: str) -> List[Dict]:
+    async def _load_interaction_history(self, user_id: str) -> list[dict]:
         """Load interaction history"""
         if not self.db_session:
             return []
 
         # Query content generation history
-        query = select(EnhancedContentGeneration).where(
-            EnhancedContentGeneration.user_id == user_id
-        ).order_by(EnhancedContentGeneration.created_at.desc()).limit(50)
+        query = (
+            select(EnhancedContentGeneration)
+            .where(EnhancedContentGeneration.user_id == user_id)
+            .order_by(EnhancedContentGeneration.created_at.desc())
+            .limit(50)
+        )
 
         result = await self.db_session.execute(query)
         generations = result.scalars().all()
@@ -701,12 +710,12 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 "content_type": gen.content_type,
                 "quality_score": gen.quality_score or 0.5,
                 "personalization_applied": gen.personalization_applied,
-                "completion_time": gen.generation_time_seconds
+                "completion_time": gen.generation_time_seconds,
             }
             for gen in generations
         ]
 
-    def _calculate_accuracy(self, performance_data: List[Dict]) -> float:
+    def _calculate_accuracy(self, performance_data: list[dict]) -> float:
         """Calculate average accuracy"""
         if not performance_data:
             return 0.5
@@ -714,7 +723,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         accuracies = [p.get("accuracy", 0.5) for p in performance_data]
         return sum(accuracies) / len(accuracies)
 
-    def _calculate_completion_rate(self, performance_data: List[Dict]) -> float:
+    def _calculate_completion_rate(self, performance_data: list[dict]) -> float:
         """Calculate completion rate"""
         if not performance_data:
             return 0.5
@@ -722,11 +731,11 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         completions = [p.get("completion", 0.0) for p in performance_data]
         return sum(completions) / len(completions)
 
-    def _calculate_error_rate(self, performance_data: List[Dict]) -> float:
+    def _calculate_error_rate(self, performance_data: list[dict]) -> float:
         """Calculate error rate"""
         return 1.0 - self._calculate_accuracy(performance_data)
 
-    def _calculate_interaction_frequency(self, engagement_data: List[Dict]) -> float:
+    def _calculate_interaction_frequency(self, engagement_data: list[dict]) -> float:
         """Calculate interaction frequency"""
         if len(engagement_data) < 2:
             return 0.5
@@ -738,7 +747,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
 
         time_diffs = []
         for i in range(1, len(timestamps)):
-            diff = (timestamps[i-1] - timestamps[i]).total_seconds() / 3600  # Hours
+            diff = (timestamps[i - 1] - timestamps[i]).total_seconds() / 3600  # Hours
             time_diffs.append(diff)
 
         avg_hours_between = sum(time_diffs) / len(time_diffs) if time_diffs else 24
@@ -746,7 +755,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         # Convert to frequency score (0-1, where 1 is very frequent)
         return max(0, min(1, 1 - (avg_hours_between / 168)))  # Normalize by week
 
-    def _calculate_average_session_duration(self, engagement_data: List[Dict]) -> float:
+    def _calculate_average_session_duration(self, engagement_data: list[dict]) -> float:
         """Calculate average session duration in minutes"""
         if not engagement_data:
             return 30.0
@@ -754,12 +763,12 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         durations = [e.get("duration", 30.0) for e in engagement_data if e.get("duration")]
         return sum(durations) / len(durations) if durations else 30.0
 
-    def _calculate_return_rate(self, engagement_data: List[Dict]) -> float:
+    def _calculate_return_rate(self, engagement_data: list[dict]) -> float:
         """Calculate return rate"""
         # Simplified - based on interaction frequency
         return self._calculate_interaction_frequency(engagement_data)
 
-    def _calculate_mastery_level(self, performance_data: List[Dict]) -> float:
+    def _calculate_mastery_level(self, performance_data: list[dict]) -> float:
         """Calculate overall mastery level"""
         accuracy = self._calculate_accuracy(performance_data)
         completion = self._calculate_completion_rate(performance_data)
@@ -767,7 +776,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         # Weighted average
         return accuracy * 0.7 + completion * 0.3
 
-    def _calculate_learning_velocity(self, performance_data: List[Dict]) -> float:
+    def _calculate_learning_velocity(self, performance_data: list[dict]) -> float:
         """Calculate rate of improvement"""
         if len(performance_data) < 10:
             return 0.5
@@ -785,7 +794,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         # Normalize to 0-1 scale
         return max(0, min(1, 0.5 + improvement))
 
-    def _calculate_retention(self, performance_data: List[Dict]) -> float:
+    def _calculate_retention(self, performance_data: list[dict]) -> float:
         """Calculate knowledge retention"""
         # Simplified - based on consistency of performance
         if not performance_data:
@@ -803,7 +812,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         # Convert to retention score (lower variance = higher retention)
         return max(0, min(1, 1 - variance * 2))
 
-    def _identify_peak_time(self, performance_data: List[Dict]) -> Optional[int]:
+    def _identify_peak_time(self, performance_data: list[dict]) -> Optional[int]:
         """Identify peak performance time of day"""
         if not performance_data:
             return None
@@ -824,15 +833,12 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             return None
 
         # Calculate average performance by hour
-        hour_averages = {
-            hour: sum(accs) / len(accs)
-            for hour, accs in hour_performance.items()
-        }
+        hour_averages = {hour: sum(accs) / len(accs) for hour, accs in hour_performance.items()}
 
         # Return hour with best performance
         return max(hour_averages, key=hour_averages.get) if hour_averages else None
 
-    def _identify_preferred_session_length(self, engagement_data: List[Dict]) -> float:
+    def _identify_preferred_session_length(self, engagement_data: list[dict]) -> float:
         """Identify preferred session length in minutes"""
         durations = [e.get("duration", 30.0) for e in engagement_data if e.get("duration")]
 
@@ -844,11 +850,11 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         n = len(sorted_durations)
 
         if n % 2 == 0:
-            return (sorted_durations[n//2 - 1] + sorted_durations[n//2]) / 2
+            return (sorted_durations[n // 2 - 1] + sorted_durations[n // 2]) / 2
         else:
-            return sorted_durations[n//2]
+            return sorted_durations[n // 2]
 
-    def _identify_optimal_difficulty(self, performance_data: List[Dict]) -> float:
+    def _identify_optimal_difficulty(self, performance_data: list[dict]) -> float:
         """Identify optimal difficulty level (0-1 scale)"""
         accuracy = self._calculate_accuracy(performance_data)
 
@@ -905,14 +911,14 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
 
         return max(15, min(60, base_break))
 
-    def _determine_media_preferences(self, learning_style: LearningStyle) -> Dict[str, float]:
+    def _determine_media_preferences(self, learning_style: LearningStyle) -> dict[str, float]:
         """Determine media preferences based on learning style"""
         preferences = {
             "video": 0.5,
             "audio": 0.5,
             "text": 0.5,
             "interactive": 0.5,
-            "diagram": 0.5
+            "diagram": 0.5,
         }
 
         if learning_style == LearningStyle.VISUAL:
@@ -935,10 +941,8 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         return preferences
 
     def _determine_interaction_types(
-        self,
-        learning_style: LearningStyle,
-        metrics: LearnerMetrics
-    ) -> List[str]:
+        self, learning_style: LearningStyle, metrics: LearnerMetrics
+    ) -> list[str]:
         """Determine preferred interaction types"""
         base_types = ["click", "drag", "type"]
 
@@ -987,11 +991,11 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         if metrics.mastery_level < 0.5:
             return 10  # Many practice problems
         elif metrics.mastery_level < 0.7:
-            return 7   # Moderate practice
+            return 7  # Moderate practice
         elif metrics.mastery_level < 0.9:
-            return 5   # Some practice
+            return 5  # Some practice
         else:
-            return 3   # Minimal practice
+            return 3  # Minimal practice
 
     def _estimate_competition_preference(self, metrics: LearnerMetrics) -> float:
         """Estimate preference for competitive elements"""
@@ -1008,10 +1012,8 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
         return min(1.0, 0.3 + engagement_factor * 0.7)
 
     async def _generate_recommendations(
-        self,
-        metrics: LearnerMetrics,
-        strategy: PersonalizationStrategy
-    ) -> List[AdaptationRecommendation]:
+        self, metrics: LearnerMetrics, strategy: PersonalizationStrategy
+    ) -> list[AdaptationRecommendation]:
         """Generate specific adaptation recommendations"""
         recommendations = []
 
@@ -1025,7 +1027,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     confidence=strategy.confidence_score,
                     rationale="Performance indicates difficulty adjustment needed",
                     impact_prediction=0.15,
-                    priority=1
+                    priority=1,
                 )
             )
 
@@ -1039,7 +1041,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     confidence=0.8,
                     rationale="Learning velocity suggests pace adjustment",
                     impact_prediction=0.1,
-                    priority=2
+                    priority=2,
                 )
             )
 
@@ -1053,17 +1055,15 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                     confidence=0.85,
                     rationale="Additional support needed for mastery",
                     impact_prediction=0.2,
-                    priority=1
+                    priority=1,
                 )
             )
 
         return recommendations
 
     def _adapt_difficulty(
-        self,
-        content: Dict[str, Any],
-        difficulty: DifficultyLevel
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], difficulty: DifficultyLevel
+    ) -> dict[str, Any]:
         """Adapt content difficulty"""
         content["difficulty_level"] = difficulty.value
 
@@ -1072,26 +1072,24 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             content["complexity_reduction"] = {
                 "simplify_language": True,
                 "reduce_concepts": True,
-                "increase_guidance": True
+                "increase_guidance": True,
             }
         elif difficulty == DifficultyLevel.EXPERT:
             content["complexity_enhancement"] = {
                 "add_advanced_concepts": True,
                 "reduce_guidance": True,
-                "include_edge_cases": True
+                "include_edge_cases": True,
             }
 
         return content
 
     def _adapt_to_learning_style(
-        self,
-        content: Dict[str, Any],
-        learning_style: LearningStyle
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], learning_style: LearningStyle
+    ) -> dict[str, Any]:
         """Adapt content to learning style"""
         content["learning_style_adaptations"] = {
             "primary_style": learning_style.value,
-            "content_emphasis": {}
+            "content_emphasis": {},
         }
 
         if learning_style == LearningStyle.VISUAL:
@@ -1099,82 +1097,69 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
                 "visuals": "high",
                 "diagrams": "high",
                 "text": "low",
-                "audio": "medium"
+                "audio": "medium",
             }
         elif learning_style == LearningStyle.KINESTHETIC:
             content["learning_style_adaptations"]["content_emphasis"] = {
                 "interactive": "high",
                 "simulations": "high",
-                "passive_content": "low"
+                "passive_content": "low",
             }
 
         return content
 
     def _adapt_pacing(
-        self,
-        content: Dict[str, Any],
-        strategy: PersonalizationStrategy
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], strategy: PersonalizationStrategy
+    ) -> dict[str, Any]:
         """Adapt content pacing"""
         content["pacing"] = {
             "speed_multiplier": strategy.content_pace,
             "assessment_frequency": strategy.assessment_frequency,
-            "break_frequency_minutes": strategy.break_frequency
+            "break_frequency_minutes": strategy.break_frequency,
         }
 
         return content
 
     def _add_scaffolding(
-        self,
-        content: Dict[str, Any],
-        strategy: PersonalizationStrategy
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], strategy: PersonalizationStrategy
+    ) -> dict[str, Any]:
         """Add scaffolding to content"""
         content["scaffolding"] = {
             "hint_level": strategy.hint_level,
             "example_count": int(strategy.example_frequency),
             "practice_problems": strategy.practice_problems,
-            "feedback_timing": strategy.feedback_style
+            "feedback_timing": strategy.feedback_style,
         }
 
         return content
 
     def _add_gamification(
-        self,
-        content: Dict[str, Any],
-        strategy: PersonalizationStrategy
-    ) -> Dict[str, Any]:
+        self, content: dict[str, Any], strategy: PersonalizationStrategy
+    ) -> dict[str, Any]:
         """Add gamification elements"""
         content["gamification"] = {
             "achievements_enabled": strategy.achievement_sensitivity > 0.5,
             "competition_mode": "enabled" if strategy.competition_preference > 0.6 else "disabled",
             "narrative_wrapper": strategy.narrative_engagement > 0.5,
-            "reward_frequency": "high" if strategy.achievement_sensitivity > 0.7 else "normal"
+            "reward_frequency": "high" if strategy.achievement_sensitivity > 0.7 else "normal",
         }
 
         return content
 
-    async def _process_task(self, state: Dict[str, Any]) -> Any:
+    async def _process_task(self, state: dict[str, Any]) -> Any:
         """Process an adaptive learning task"""
         user_id = state.get("user_id", "")
         task_type = state.get("task_type", "analyze")
 
         if task_type == "analyze":
             metrics = await self.analyze_learner(user_id)
-            return {
-                "metrics": metrics.__dict__,
-                "analysis_complete": True
-            }
+            return {"metrics": metrics.__dict__, "analysis_complete": True}
 
         elif task_type == "personalize":
             strategy = await self.generate_personalization_strategy(
-                user_id,
-                state.get("content_type", "lesson")
+                user_id, state.get("content_type", "lesson")
             )
-            return {
-                "strategy": strategy.__dict__,
-                "personalization_complete": True
-            }
+            return {"strategy": strategy.__dict__, "personalization_complete": True}
 
         elif task_type == "adapt":
             content = state.get("content", {})
@@ -1182,7 +1167,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             adapted = await self.adapt_content(content, strategy)
             return {
                 "adapted_content": adapted,
-                "adaptations_applied": len(strategy.recommendations)
+                "adaptations_applied": len(strategy.recommendations),
             }
 
         elif task_type == "predict":
@@ -1195,7 +1180,7 @@ Always prioritize learner success and engagement. Use data-driven decisions whil
             intervention = await self.recommend_intervention(user_id, performance)
             return {
                 "intervention": intervention,
-                "intervention_needed": intervention is not None
+                "intervention_needed": intervention is not None,
             }
 
         return {"status": "unknown_task_type"}

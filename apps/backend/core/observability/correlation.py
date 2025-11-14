@@ -238,7 +238,7 @@ class CorrelationManager:
         )
 
         # Extract trace context
-        trace_ctx = self.propagator.extract_from_headers(dict(request.headers))
+        self.propagator.extract_from_headers(dict(request.headers))
 
         # Get current span information
         current_span = trace.get_current_span()
@@ -280,7 +280,7 @@ class CorrelationManager:
         )
 
         # Extract trace context
-        trace_ctx = self.propagator.extract_from_websocket(websocket)
+        self.propagator.extract_from_websocket(websocket)
 
         # Get current span information
         current_span = trace.get_current_span()
@@ -297,7 +297,10 @@ class CorrelationManager:
             session_id=headers.get("x-session-id"),
             client_ip=websocket.client.host if websocket.client else None,
             user_agent=headers.get("user-agent"),
-            metadata={"path": str(websocket.url.path), "query_params": str(websocket.query_params)},
+            metadata={
+                "path": str(websocket.url.path),
+                "query_params": str(websocket.query_params),
+            },
         )
 
         return context
@@ -326,7 +329,10 @@ class CorrelationManager:
             session_id=parent_context.session_id,
             client_ip=parent_context.client_ip,
             user_agent=parent_context.user_agent,
-            metadata={"operation": operation_name, "parent_type": parent_context.request_type},
+            metadata={
+                "operation": operation_name,
+                "parent_type": parent_context.request_type,
+            },
         )
 
         return child_context

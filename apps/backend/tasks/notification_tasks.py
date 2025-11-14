@@ -318,7 +318,7 @@ def process_webhook_event(
 
             # Could trigger additional actions here
             if channel.startswith("private-classroom-"):
-                classroom_id = channel.replace("private-classroom-", "")
+                channel.replace("private-classroom-", "")
                 # Notify instructor that students have joined
                 # This would typically update classroom status
 

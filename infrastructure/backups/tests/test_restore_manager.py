@@ -4,24 +4,20 @@ Unit Tests for RestoreManager
 Tests backup restoration, decryption, decompression, and validation.
 """
 
-import pytest
-import asyncio
+import gzip
 import json
 import os
-from pathlib import Path
-from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-import tempfile
 import shutil
-import gzip
-
 import sys
+import tempfile
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from restore.restore_manager import (
-    RestoreManager,
-    RestoreResult
-)
+from restore.restore_manager import RestoreManager
 
 
 @pytest.fixture
@@ -37,23 +33,9 @@ def mock_config(temp_restore_dir):
     """Create mock restore configuration."""
     return {
         "version": "1.0.0",
-        "encryption": {
-            "enabled": True,
-            "algorithm": "AES-256-GCM"
-        },
-        "storage": {
-            "local": {
-                "path": str(temp_restore_dir),
-                "enabled": True
-            }
-        },
-        "databases": {
-            "postgresql": {
-                "host": "localhost",
-                "port": 5432,
-                "parallel_jobs": 4
-            }
-        }
+        "encryption": {"enabled": True, "algorithm": "AES-256-GCM"},
+        "storage": {"local": {"path": str(temp_restore_dir), "enabled": True}},
+        "databases": {"postgresql": {"host": "localhost", "port": 5432, "parallel_jobs": 4}},
     }
 
 
@@ -75,15 +57,17 @@ def sample_backup_metadata(temp_restore_dir):
         "compressed": False,
         "status": "completed",
         "duration_seconds": 120.5,
-        "retention_until": "2025-02-10T12:00:00"
+        "retention_until": "2025-02-10T12:00:00",
     }
 
 
 @pytest.fixture
 def restore_manager(mock_config, temp_restore_dir):
     """Create RestoreManager instance with mocked configuration."""
-    with patch.object(RestoreManager, '_load_config', return_value=mock_config):
-        with patch.dict(os.environ, {'BACKUP_ENCRYPTION_KEY': 'test_key_32_bytes_long_for_fernet!'}):
+    with patch.object(RestoreManager, "_load_config", return_value=mock_config):
+        with patch.dict(
+            os.environ, {"BACKUP_ENCRYPTION_KEY": "test_key_32_bytes_long_for_fernet!"}
+        ):
             manager = RestoreManager()
             manager.backup_root = temp_restore_dir
             manager.metadata_dir = temp_restore_dir / "metadata"
@@ -127,7 +111,7 @@ class TestMetadataLoading:
         backup_id = sample_backup_metadata["backup_id"]
         metadata_file = restore_manager.metadata_dir / f"{backup_id}.json"
 
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(sample_backup_metadata, f)
 
         metadata = restore_manager._load_metadata(backup_id)
@@ -160,7 +144,7 @@ class TestListAvailableBackups:
             metadata["timestamp"] = f"2025-01-{10+i:02d}T12:00:00"
 
             metadata_file = restore_manager.metadata_dir / f"{backup_id}.json"
-            with open(metadata_file, 'w') as f:
+            with open(metadata_file, "w") as f:
                 json.dump(metadata, f)
 
         backups = restore_manager.list_available_backups()
@@ -171,7 +155,9 @@ class TestListAvailableBackups:
         assert backups[1]["backup_id"] == "backup_test_1"
         assert backups[2]["backup_id"] == "backup_test_0"
 
-    def test_list_available_backups_filters_incomplete(self, restore_manager, sample_backup_metadata):
+    def test_list_available_backups_filters_incomplete(
+        self, restore_manager, sample_backup_metadata
+    ):
         """Test that failed backups are not listed."""
         # Create completed backup
         metadata1 = sample_backup_metadata.copy()
@@ -179,7 +165,7 @@ class TestListAvailableBackups:
         metadata1["status"] = "completed"
 
         metadata_file1 = restore_manager.metadata_dir / "backup_completed.json"
-        with open(metadata_file1, 'w') as f:
+        with open(metadata_file1, "w") as f:
             json.dump(metadata1, f)
 
         # Create failed backup
@@ -188,7 +174,7 @@ class TestListAvailableBackups:
         metadata2["status"] = "failed"
 
         metadata_file2 = restore_manager.metadata_dir / "backup_failed.json"
-        with open(metadata_file2, 'w') as f:
+        with open(metadata_file2, "w") as f:
             json.dump(metadata2, f)
 
         backups = restore_manager.list_available_backups()
@@ -200,7 +186,9 @@ class TestListAvailableBackups:
 class TestBackupValidation:
     """Test backup integrity validation."""
 
-    def test_validate_backup_success(self, restore_manager, sample_backup_metadata, temp_restore_dir):
+    def test_validate_backup_success(
+        self, restore_manager, sample_backup_metadata, temp_restore_dir
+    ):
         """Test successful backup validation."""
         # Create backup file with known content
         backup_file = temp_restore_dir / "backup_test.dump"
@@ -209,6 +197,7 @@ class TestBackupValidation:
 
         # Calculate correct checksum
         import hashlib
+
         correct_checksum = hashlib.sha256(test_content).hexdigest()
 
         metadata = sample_backup_metadata.copy()
@@ -219,7 +208,9 @@ class TestBackupValidation:
 
         assert result is True
 
-    def test_validate_backup_checksum_mismatch(self, restore_manager, sample_backup_metadata, temp_restore_dir):
+    def test_validate_backup_checksum_mismatch(
+        self, restore_manager, sample_backup_metadata, temp_restore_dir
+    ):
         """Test validation failure with checksum mismatch."""
         backup_file = temp_restore_dir / "backup_test.dump"
         backup_file.write_bytes(b"Test backup content")
@@ -292,7 +283,7 @@ class TestDecompression:
         test_content = b"Compressed backup data"
 
         # Create compressed file
-        with gzip.open(input_file, 'wb') as f:
+        with gzip.open(input_file, "wb") as f:
             f.write(test_content)
 
         restore_manager._decompress_file(input_file, output_file)
@@ -305,7 +296,9 @@ class TestDecompression:
 class TestPrepareBackupFile:
     """Test backup file preparation (decryption + decompression)."""
 
-    def test_prepare_backup_file_plain(self, restore_manager, sample_backup_metadata, temp_restore_dir):
+    def test_prepare_backup_file_plain(
+        self, restore_manager, sample_backup_metadata, temp_restore_dir
+    ):
         """Test preparing plain (unencrypted, uncompressed) backup file."""
         metadata = sample_backup_metadata.copy()
         metadata["encrypted"] = False
@@ -316,7 +309,9 @@ class TestPrepareBackupFile:
         # Should return original file path
         assert prepared_file == Path(metadata["file_path"])
 
-    def test_prepare_backup_file_encrypted(self, restore_manager, sample_backup_metadata, temp_restore_dir):
+    def test_prepare_backup_file_encrypted(
+        self, restore_manager, sample_backup_metadata, temp_restore_dir
+    ):
         """Test preparing encrypted backup file."""
         # Create encrypted backup
         backup_file = temp_restore_dir / "backup_encrypted.enc"
@@ -339,13 +334,15 @@ class TestPrepareBackupFile:
         content = prepared_file.read_bytes()
         assert content == test_content
 
-    def test_prepare_backup_file_compressed(self, restore_manager, sample_backup_metadata, temp_restore_dir):
+    def test_prepare_backup_file_compressed(
+        self, restore_manager, sample_backup_metadata, temp_restore_dir
+    ):
         """Test preparing compressed backup file."""
         # Create compressed backup
         backup_file = temp_restore_dir / "backup_compressed.gz"
         test_content = b"Backup data"
 
-        with gzip.open(backup_file, 'wb') as f:
+        with gzip.open(backup_file, "wb") as f:
             f.write(test_content)
 
         metadata = sample_backup_metadata.copy()
@@ -367,13 +364,16 @@ class TestPrepareBackupFile:
 class TestDatabaseCredentials:
     """Test database credential extraction."""
 
-    @patch.dict(os.environ, {
-        'DATABASE_URL': 'postgresql://restore_user:restore_pass@localhost:5433/restore_db'
-    })
+    @patch.dict(
+        os.environ,
+        {"DATABASE_URL": "postgresql://restore_user:restore_pass@localhost:5433/restore_db"},
+    )
     def test_get_database_credentials(self, restore_manager):
         """Test extracting database credentials."""
-        with patch('restore.restore_manager.settings') as mock_settings:
-            mock_settings.DATABASE_URL = 'postgresql://restore_user:restore_pass@localhost:5433/restore_db'
+        with patch("restore.restore_manager.settings") as mock_settings:
+            mock_settings.DATABASE_URL = (
+                "postgresql://restore_user:restore_pass@localhost:5433/restore_db"
+            )
 
             creds = restore_manager._get_database_credentials()
 
@@ -385,8 +385,8 @@ class TestDatabaseCredentials:
 
     def test_get_database_credentials_with_target(self, restore_manager):
         """Test credentials with custom target database."""
-        with patch('restore.restore_manager.settings') as mock_settings:
-            mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/original_db'
+        with patch("restore.restore_manager.settings") as mock_settings:
+            mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/original_db"
 
             creds = restore_manager._get_database_credentials(target_database="custom_db")
 
@@ -397,12 +397,14 @@ class TestRestoreBackup:
     """Test backup restoration workflow."""
 
     @pytest.mark.asyncio
-    async def test_restore_backup_success(self, restore_manager, sample_backup_metadata, temp_restore_dir):
+    async def test_restore_backup_success(
+        self, restore_manager, sample_backup_metadata, temp_restore_dir
+    ):
         """Test successful backup restoration."""
         # Save metadata
         backup_id = sample_backup_metadata["backup_id"]
         metadata_file = restore_manager.metadata_dir / f"{backup_id}.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(sample_backup_metadata, f)
 
         # Mock pg_restore subprocess
@@ -410,11 +412,11 @@ class TestRestoreBackup:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"Restore success", b""))
 
-        with patch('asyncio.create_subprocess_exec', return_value=mock_process):
-            with patch('restore.restore_manager.settings') as mock_settings:
-                mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+            with patch("restore.restore_manager.settings") as mock_settings:
+                mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
-                with patch.object(restore_manager, '_validate_backup', return_value=True):
+                with patch.object(restore_manager, "_validate_backup", return_value=True):
                     result = await restore_manager.restore_backup(backup_id=backup_id)
 
         assert result.success is True
@@ -426,10 +428,10 @@ class TestRestoreBackup:
         """Test restore failure due to validation."""
         backup_id = sample_backup_metadata["backup_id"]
         metadata_file = restore_manager.metadata_dir / f"{backup_id}.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(sample_backup_metadata, f)
 
-        with patch.object(restore_manager, '_validate_backup', return_value=False):
+        with patch.object(restore_manager, "_validate_backup", return_value=False):
             result = await restore_manager.restore_backup(backup_id=backup_id, validate=True)
 
         assert result.success is False
@@ -440,7 +442,7 @@ class TestRestoreBackup:
         """Test restore failure during pg_restore."""
         backup_id = sample_backup_metadata["backup_id"]
         metadata_file = restore_manager.metadata_dir / f"{backup_id}.json"
-        with open(metadata_file, 'w') as f:
+        with open(metadata_file, "w") as f:
             json.dump(sample_backup_metadata, f)
 
         # Mock failing pg_restore
@@ -448,11 +450,11 @@ class TestRestoreBackup:
         mock_process.returncode = 1
         mock_process.communicate = AsyncMock(return_value=(b"", b"pg_restore error"))
 
-        with patch('asyncio.create_subprocess_exec', return_value=mock_process):
-            with patch('restore.restore_manager.settings') as mock_settings:
-                mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+            with patch("restore.restore_manager.settings") as mock_settings:
+                mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
-                with patch.object(restore_manager, '_validate_backup', return_value=True):
+                with patch.object(restore_manager, "_validate_backup", return_value=True):
                     result = await restore_manager.restore_backup(backup_id=backup_id)
 
         assert result.success is False

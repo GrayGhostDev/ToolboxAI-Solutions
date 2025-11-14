@@ -8,10 +8,10 @@ existing imports (``from core.security_agents import ...``) continue to work.
 """
 
 from core.security_compliance_stub import (  # noqa: F401
-    VulnerabilityScanner,
     ComplianceChecker,
     SecretRotator,
     SecurityCoordinator,
+    VulnerabilityScanner,
 )
 
 __all__ = [

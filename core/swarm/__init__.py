@@ -12,15 +12,15 @@ The system is designed to work seamlessly with the existing agent architecture
 and SPARC framework, providing scalable solutions for educational content creation.
 """
 
-from .swarm_controller import SwarmController, SwarmConfig, SwarmMetrics
-from .worker_pool import WorkerPool, WorkerAgent, WorkerCapability, WorkerStatus
-from .task_distributor import TaskDistributor, Task, TaskPriority, TaskStatus
-from .consensus_engine import ConsensusEngine, ConsensusResult, VotingStrategy
-from .load_balancer import LoadBalancer, ResourceMetrics, LoadBalancingStrategy
-
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
+from typing import Any, Dict, List, Optional
+
+from .consensus_engine import ConsensusEngine, ConsensusResult, VotingStrategy
+from .load_balancer import LoadBalancer, LoadBalancingStrategy, ResourceMetrics
+from .swarm_controller import SwarmConfig, SwarmController, SwarmMetrics
+from .task_distributor import Task, TaskDistributor, TaskPriority, TaskStatus
+from .worker_pool import WorkerAgent, WorkerCapability, WorkerPool, WorkerStatus
 
 __version__ = "1.0.0"
 __author__ = "ToolboxAI Solutions"
@@ -78,12 +78,12 @@ DEFAULT_EDUCATIONAL_CONFIG = {
 }
 
 
-def get_default_config() -> Dict[str, Any]:
+def get_default_config() -> dict[str, Any]:
     """Get default swarm configuration for educational content generation."""
     return DEFAULT_EDUCATIONAL_CONFIG.copy()
 
 
-async def create_swarm(config: Optional[Dict[str, Any]] = None) -> SwarmController:
+async def create_swarm(config: Optional[dict[str, Any]] = None) -> SwarmController:
     """
     Factory function to create a fully configured swarm controller.
 
@@ -166,12 +166,13 @@ async def create_educational_swarm(
 def _setup_logging():
     """Setup default logging configuration for the swarm system."""
     import os
+
     handlers = [logging.StreamHandler()]
 
     # Only add file handler if we can write to the log directory
     try:
-        log_dir = os.environ.get('LOG_DIR', '/tmp')
-        log_file = os.path.join(log_dir, 'swarm.log')
+        log_dir = os.environ.get("LOG_DIR", "/tmp")
+        log_file = os.path.join(log_dir, "swarm.log")
         if os.access(log_dir, os.W_OK):
             handlers.append(logging.FileHandler(log_file))
     except Exception:

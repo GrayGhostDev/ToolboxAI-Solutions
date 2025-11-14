@@ -5,7 +5,7 @@ Configuration settings and utilities for multi-tenant database operations.
 """
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 from database.models.tenant import SubscriptionTier
 
@@ -30,7 +30,12 @@ class TenantConfig:
             "max_storage_gb": 5.0,
             "max_api_calls_per_month": 5000,
             "max_roblox_sessions": 10,
-            "features": ["basic_lessons", "basic_quizzes", "progress_tracking", "basic_analytics"],
+            "features": [
+                "basic_lessons",
+                "basic_quizzes",
+                "progress_tracking",
+                "basic_analytics",
+            ],
             "support_level": "email",
         },
         SubscriptionTier.PROFESSIONAL: {
@@ -134,12 +139,12 @@ class TenantConfig:
     }
 
     @classmethod
-    def get_subscription_limits(cls, tier: SubscriptionTier) -> Dict[str, Any]:
+    def get_subscription_limits(cls, tier: SubscriptionTier) -> dict[str, Any]:
         """Get subscription limits for a tier"""
         return cls.SUBSCRIPTION_LIMITS.get(tier, cls.SUBSCRIPTION_LIMITS[SubscriptionTier.FREE])
 
     @classmethod
-    def get_trial_limits(cls) -> Dict[str, Any]:
+    def get_trial_limits(cls) -> dict[str, Any]:
         """Get limits for trial organizations"""
         return cls.SUBSCRIPTION_LIMITS.get(
             cls.TRIAL_TIER, cls.SUBSCRIPTION_LIMITS[SubscriptionTier.FREE]
@@ -151,7 +156,7 @@ class TenantConfig:
         return cls.FEATURE_FLAGS.get(feature, False)
 
     @classmethod
-    def get_default_settings(cls) -> Dict[str, Any]:
+    def get_default_settings(cls) -> dict[str, Any]:
         """Get default organization settings"""
         return cls.DEFAULT_ORGANIZATION_SETTINGS.copy()
 
@@ -269,9 +274,14 @@ class TenantValidator:
             return False
 
     @staticmethod
-    def validate_usage_limits(limits: Dict[str, Any]) -> bool:
+    def validate_usage_limits(limits: dict[str, Any]) -> bool:
         """Validate usage limits"""
-        required_fields = ["max_users", "max_classes", "max_storage_gb", "max_api_calls_per_month"]
+        required_fields = [
+            "max_users",
+            "max_classes",
+            "max_storage_gb",
+            "max_api_calls_per_month",
+        ]
         for field in required_fields:
             if field not in limits:
                 return False

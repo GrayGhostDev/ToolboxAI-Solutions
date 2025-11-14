@@ -20,20 +20,17 @@ import logging
 import time
 import traceback
 import uuid
-from collections import defaultdict, deque
-from contextlib import asynccontextmanager
-from dataclasses import asdict, dataclass, field
+from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Optional
 
-import redis
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import END, StateGraph
 
 # Database and persistence imports
 try:
@@ -82,7 +79,7 @@ except ImportError as e:
     MCP_AVAILABLE = False
 
 # Base agent imports
-from .base_agent import AgentConfig, AgentPriority, AgentState, BaseAgent, TaskResult
+from .base_agent import AgentConfig, BaseAgent, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -130,10 +127,10 @@ class WorkflowExecution:
     total_agents: int = 0
     completed_agents: int = 0
     failed_agents: int = 0
-    result: Optional[Dict[str, Any]] = None
+    result: Optional[dict[str, Any]] = None
     error: Optional[str] = None
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    context: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     user_id: Optional[str] = None
     session_id: Optional[str] = None
 
@@ -152,7 +149,7 @@ class AgentHealthMetrics:
     last_failure: Optional[datetime] = None
     circuit_open_until: Optional[datetime] = None
     total_requests: int = 0
-    recent_errors: List[str] = field(default_factory=list)
+    recent_errors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -161,9 +158,9 @@ class EnhancedAgentState:
 
     # Core AgentState fields
     task: str
-    messages: List[BaseMessage] = field(default_factory=list)
-    context: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    messages: list[BaseMessage] = field(default_factory=list)
+    context: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     status: str = "pending"
     result: Optional[Any] = None
     error: Optional[str] = None
@@ -177,12 +174,12 @@ class EnhancedAgentState:
     priority: WorkflowPriority = WorkflowPriority.NORMAL
     requires_approval: bool = False
     approval_granted: bool = False
-    checkpoint_data: Dict[str, Any] = field(default_factory=dict)
-    performance_metrics: Dict[str, Any] = field(default_factory=dict)
+    checkpoint_data: dict[str, Any] = field(default_factory=dict)
+    performance_metrics: dict[str, Any] = field(default_factory=dict)
 
     # SPARC integration
-    sparc_state: Optional[Dict[str, Any]] = None
-    environment_context: Optional[Dict[str, Any]] = None
+    sparc_state: Optional[dict[str, Any]] = None
+    environment_context: Optional[dict[str, Any]] = None
 
 
 class AdvancedSupervisorAgent:
@@ -219,14 +216,14 @@ class AdvancedSupervisorAgent:
         )
 
         # Agent registry and management
-        self.agent_registry: Dict[str, BaseAgent] = {}
-        self.agent_health: Dict[str, AgentHealthMetrics] = {}
+        self.agent_registry: dict[str, BaseAgent] = {}
+        self.agent_health: dict[str, AgentHealthMetrics] = {}
         self.agent_load_balancer = defaultdict(list)  # agent_type -> [agent_instances]
 
         # Workflow management
-        self.active_workflows: Dict[str, WorkflowExecution] = {}
-        self.workflow_templates: Dict[str, Dict[str, Any]] = {}
-        self.workflow_history: List[WorkflowExecution] = []
+        self.active_workflows: dict[str, WorkflowExecution] = {}
+        self.workflow_templates: dict[str, dict[str, Any]] = {}
+        self.workflow_history: list[WorkflowExecution] = []
 
         # LangGraph workflow engine
         self.workflow_graph = None
@@ -270,7 +267,7 @@ class AdvancedSupervisorAgent:
         self._initialize_workflow_templates()
 
         # Background tasks
-        self._background_tasks: Set[asyncio.Task] = set()
+        self._background_tasks: set[asyncio.Task] = set()
         self._start_background_tasks()
 
         logger.info("Advanced Supervisor Agent initialized successfully")
@@ -438,7 +435,7 @@ class AdvancedSupervisorAgent:
     async def execute_workflow(
         self,
         task: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         workflow_template: str = "educational_content_generation",
         priority: WorkflowPriority = WorkflowPriority.NORMAL,
         user_id: Optional[str] = None,
@@ -1178,10 +1175,10 @@ class AdvancedSupervisorAgent:
 
     # Helper Methods
 
-    async def _determine_required_agents(self, state: EnhancedAgentState) -> List[str]:
+    async def _determine_required_agents(self, state: EnhancedAgentState) -> list[str]:
         """Determine required agents based on task analysis"""
 
-        task_analysis = state.metadata.get("task_analysis", {})
+        state.metadata.get("task_analysis", {})
 
         # Default agent mapping
         agent_keywords = {
@@ -1558,7 +1555,7 @@ class AdvancedSupervisorAgent:
                     async for session in self.db_session_factory():
                         try:
                             # Clean up old analytics records (keep 30 days)
-                            cutoff_date = datetime.now() - timedelta(days=30)
+                            datetime.now() - timedelta(days=30)
 
                             # This would be the actual cleanup query
                             # await session.execute(
@@ -1611,7 +1608,7 @@ class AdvancedSupervisorAgent:
 
         return False
 
-    async def get_agent_health_report(self) -> Dict[str, Any]:
+    async def get_agent_health_report(self) -> dict[str, Any]:
         """Get comprehensive agent health report"""
 
         report = {
@@ -1644,7 +1641,7 @@ class AdvancedSupervisorAgent:
 
         return report
 
-    async def get_performance_report(self) -> Dict[str, Any]:
+    async def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
 
         return {
@@ -1662,7 +1659,7 @@ class AdvancedSupervisorAgent:
             },
         }
 
-    async def create_workflow_template(self, name: str, config: Dict[str, Any]) -> bool:
+    async def create_workflow_template(self, name: str, config: dict[str, Any]) -> bool:
         """Create a new workflow template"""
 
         required_fields = ["description", "agents", "execution_mode"]

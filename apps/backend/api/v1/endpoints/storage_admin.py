@@ -91,11 +91,11 @@ class StorageUsageResponse(BaseModel):
 class VirusScanRequest(BaseModel):
     """Request for virus scan operation"""
 
-    target_type: str = Field(..., regex="^(organization|file|all_files)$")
+    target_type: str = Field(..., pattern="^(organization|file|all_files)$")
     organization_id: UUID | None = None
     file_id: UUID | None = None
     force_rescan: bool = False
-    scan_priority: str = Field(default="normal", regex="^(low|normal|high|urgent)$")
+    scan_priority: str = Field(default="normal", pattern="^(low|normal|high|urgent)$")
 
     @validator("organization_id")
     def validate_organization_required(cls, v, values):
@@ -132,7 +132,7 @@ class CleanupRequest(BaseModel):
     """Request for cleanup operation"""
 
     cleanup_type: str = Field(
-        ..., regex="^(expired_files|deleted_files|orphaned_shares|temp_files|all)$"
+        ..., pattern="^(expired_files|deleted_files|orphaned_shares|temp_files|all)$"
     )
     organization_id: UUID | None = None
     older_than_days: int = Field(default=30, ge=1, le=365)
@@ -243,9 +243,10 @@ async def get_organization_usage_stats(
 
     try:
         # Parse organization IDs if provided
-        target_org_ids = []
         if organization_ids:
-            target_org_ids = [oid.strip() for oid in organization_ids.split(",")]
+            _target_org_ids = [
+                oid.strip() for oid in organization_ids.split(",")
+            ]  # noqa: F841 - Reserved for organization filtering
 
         # In production, this would query the database for real statistics
         # Mock comprehensive usage data
@@ -458,13 +459,15 @@ async def trigger_virus_scan(
     except Exception as e:
         logger.error(f"Error triggering virus scan: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to trigger virus scan"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to trigger virus scan",
         )
 
 
 @router.get("/scan/{scan_id}/status")
 async def get_virus_scan_status(
-    scan_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    scan_id: str,
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """Get status of a virus scan operation"""
     user, tenant_context = user_tenant
@@ -564,7 +567,8 @@ async def trigger_cleanup_operation(
 
 @router.get("/cleanup/{cleanup_id}/status")
 async def get_cleanup_status(
-    cleanup_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin)
+    cleanup_id: str,
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_admin),
 ):
     """Get status of a cleanup operation"""
     user, tenant_context = user_tenant

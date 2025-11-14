@@ -39,7 +39,11 @@ SERVICE_CONFIG = {
     "fastapi": {"host": "127.0.0.1", "port": 8008, "url": "http://127.0.0.1:8008"},
     "flask": {"host": "127.0.0.1", "port": 5001, "url": "http://127.0.0.1:5001"},
     "mcp": {"host": "127.0.0.1", "port": 9876, "url": "ws://127.0.0.1:9876"},
-    "roblox_plugin": {"host": "127.0.0.1", "port": 64989, "url": "http://127.0.0.1:64989"},
+    "roblox_plugin": {
+        "host": "127.0.0.1",
+        "port": 64989,
+        "url": "http://127.0.0.1:64989",
+    },
 }
 
 # Database configuration
@@ -160,9 +164,8 @@ def configure_mock_llm():
 
     # Import to trigger mock LLM initialization
     try:
-        from core.agents.mock_llm import MockLLM
-
         from core.agents.base_agent import BaseAgent
+        from core.agents.mock_llm import MockLLM
 
         # Force mock LLM usage
         BaseAgent._llm = None  # Reset cached LLM

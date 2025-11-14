@@ -12,26 +12,22 @@ Version: 2.0.0
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Optional
 from uuid import uuid4
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
-from langgraph.graph import StateGraph, END
+from langchain_core.messages import BaseMessage, SystemMessage
+from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentCapability, TaskResult
-from core.agents.master_orchestrator import MasterOrchestrator, AgentSystemType
+from core.agents.base_agent import AgentConfig, BaseAgent
+from core.agents.master_orchestrator import AgentSystemType, MasterOrchestrator
 from core.sparc import SPARCFramework as SPARCOrchestrator
 from database.content_pipeline_models import (
     EnhancedContentGeneration,
-    ContentQualityMetrics,
-    LearningProfile,
-    ContentPersonalizationLog,
-    ContentCache
 )
 
 logger = logging.getLogger(__name__)
@@ -39,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class PipelineStage(Enum):
     """Stages in the enhanced content generation pipeline"""
+
     IDEATION = "ideation"
     GENERATION = "generation"
     VALIDATION = "validation"
@@ -50,6 +47,7 @@ class PipelineStage(Enum):
 
 class ContentType(Enum):
     """Types of educational content"""
+
     LESSON = "lesson"
     QUIZ = "quiz"
     ACTIVITY = "activity"
@@ -62,42 +60,43 @@ class ContentType(Enum):
 @dataclass
 class PipelineState:
     """State management for the content pipeline"""
+
     pipeline_id: str = field(default_factory=lambda: str(uuid4()))
     current_stage: PipelineStage = PipelineStage.IDEATION
     content_type: ContentType = ContentType.LESSON
     user_id: str = ""
 
     # Request and context
-    original_request: Dict[str, Any] = field(default_factory=dict)
-    context: Dict[str, Any] = field(default_factory=dict)
-    messages: List[BaseMessage] = field(default_factory=list)
+    original_request: dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
+    messages: list[BaseMessage] = field(default_factory=list)
 
     # Generated artifacts
-    ideas: List[Dict[str, Any]] = field(default_factory=list)
-    content_draft: Optional[Dict[str, Any]] = None
-    scripts: List[Dict[str, Any]] = field(default_factory=list)
-    assets: List[Dict[str, Any]] = field(default_factory=list)
+    ideas: list[dict[str, Any]] = field(default_factory=list)
+    content_draft: Optional[dict[str, Any]] = None
+    scripts: list[dict[str, Any]] = field(default_factory=list)
+    assets: list[dict[str, Any]] = field(default_factory=list)
 
     # Validation and quality
-    validation_results: Dict[str, Any] = field(default_factory=dict)
-    quality_metrics: Dict[str, Any] = field(default_factory=dict)
-    optimization_suggestions: List[str] = field(default_factory=list)
+    validation_results: dict[str, Any] = field(default_factory=dict)
+    quality_metrics: dict[str, Any] = field(default_factory=dict)
+    optimization_suggestions: list[str] = field(default_factory=list)
 
     # Personalization
-    learning_profile: Optional[Dict[str, Any]] = None
+    learning_profile: Optional[dict[str, Any]] = None
     personalization_applied: bool = False
-    personalization_params: Dict[str, Any] = field(default_factory=dict)
+    personalization_params: dict[str, Any] = field(default_factory=dict)
 
     # Execution metadata
     started_at: datetime = field(default_factory=datetime.now)
     completed_at: Optional[datetime] = None
-    stage_timings: Dict[str, float] = field(default_factory=dict)
+    stage_timings: dict[str, float] = field(default_factory=dict)
     total_tokens_used: int = 0
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
     # Final output
-    final_content: Optional[Dict[str, Any]] = None
-    deployment_info: Optional[Dict[str, Any]] = None
+    final_content: Optional[dict[str, Any]] = None
+    deployment_info: Optional[dict[str, Any]] = None
 
 
 class EnhancedContentPipeline(BaseAgent):
@@ -116,7 +115,7 @@ class EnhancedContentPipeline(BaseAgent):
         self,
         master_orchestrator: Optional[MasterOrchestrator] = None,
         sparc_orchestrator: Optional[SPARCOrchestrator] = None,
-        db_session: Optional[AsyncSession] = None
+        db_session: Optional[AsyncSession] = None,
     ):
         """Initialize the enhanced content pipeline"""
 
@@ -127,7 +126,7 @@ class EnhancedContentPipeline(BaseAgent):
             max_retries=3,
             timeout=600,
             verbose=True,
-            system_prompt=self._get_pipeline_system_prompt()
+            system_prompt=self._get_pipeline_system_prompt(),
         )
 
         super().__init__(config)
@@ -140,12 +139,34 @@ class EnhancedContentPipeline(BaseAgent):
         self.pipeline_graph = self._build_pipeline_graph()
 
         # Agent pools for each stage
-        self.stage_agents: Dict[PipelineStage, List[str]] = {
-            PipelineStage.IDEATION: ["ContentAgent", "CurriculumAgent", "CreativityAgent"],
-            PipelineStage.GENERATION: ["ScriptAgent", "TerrainAgent", "AssetAgent", "NarrativeAgent"],
-            PipelineStage.VALIDATION: ["QualityAgent", "SafetyAgent", "EducationalAgent", "ComplianceAgent"],
-            PipelineStage.OPTIMIZATION: ["PerformanceAgent", "EngagementAgent", "PersonalizationAgent"],
-            PipelineStage.DEPLOYMENT: ["PackagingAgent", "RobloxAgent", "MonitoringAgent"]
+        self.stage_agents: dict[PipelineStage, list[str]] = {
+            PipelineStage.IDEATION: [
+                "ContentAgent",
+                "CurriculumAgent",
+                "CreativityAgent",
+            ],
+            PipelineStage.GENERATION: [
+                "ScriptAgent",
+                "TerrainAgent",
+                "AssetAgent",
+                "NarrativeAgent",
+            ],
+            PipelineStage.VALIDATION: [
+                "QualityAgent",
+                "SafetyAgent",
+                "EducationalAgent",
+                "ComplianceAgent",
+            ],
+            PipelineStage.OPTIMIZATION: [
+                "PerformanceAgent",
+                "EngagementAgent",
+                "PersonalizationAgent",
+            ],
+            PipelineStage.DEPLOYMENT: [
+                "PackagingAgent",
+                "RobloxAgent",
+                "MonitoringAgent",
+            ],
         }
 
         logger.info("Enhanced Content Pipeline initialized")
@@ -211,11 +232,7 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
         workflow.add_conditional_edges(
             "generation",
             self._should_continue_after_generation,
-            {
-                "validation": "validation",
-                "retry": "generation",
-                "failed": "finalize"
-            }
+            {"validation": "validation", "retry": "generation", "failed": "finalize"},
         )
         workflow.add_conditional_edges(
             "validation",
@@ -223,8 +240,8 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
             {
                 "optimization": "optimization",
                 "regenerate": "generation",
-                "failed": "finalize"
-            }
+                "failed": "finalize",
+            },
         )
         workflow.add_edge("optimization", "deployment")
         workflow.add_edge("deployment", "finalize")
@@ -251,12 +268,11 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
                     "subject": subject,
                     "grade_level": grade_level,
                     "objectives": learning_objectives,
-                    "content_type": state.content_type.value
+                    "content_type": state.content_type.value,
                 }
 
                 task_id = await self.master_orchestrator.submit_task(
-                    AgentSystemType.EDUCATIONAL,
-                    task_data
+                    AgentSystemType.EDUCATIONAL, task_data
                 )
 
                 # Wait for completion
@@ -311,10 +327,7 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
 
                 # Execute all generation tasks in parallel
                 results = await asyncio.gather(
-                    content_task,
-                    script_task,
-                    asset_task,
-                    return_exceptions=True
+                    content_task, script_task, asset_task, return_exceptions=True
                 )
 
                 # Process results
@@ -323,7 +336,9 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
                 state.assets = results[2] if not isinstance(results[2], Exception) else []
 
                 state.messages.append(
-                    SystemMessage(content=f"Generated content with {len(state.scripts)} scripts and {len(state.assets)} assets")
+                    SystemMessage(
+                        content=f"Generated content with {len(state.scripts)} scripts and {len(state.assets)} assets"
+                    )
                 )
 
         except Exception as e:
@@ -362,17 +377,35 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
 
             # Aggregate results
             state.validation_results = {
-                "educational": validation_results[0] if not isinstance(validation_results[0], Exception) else {"passed": False},
-                "safety": validation_results[1] if not isinstance(validation_results[1], Exception) else {"passed": False},
-                "technical": validation_results[2] if not isinstance(validation_results[2], Exception) else {"passed": False},
-                "compliance": validation_results[3] if not isinstance(validation_results[3], Exception) else {"passed": False}
+                "educational": (
+                    validation_results[0]
+                    if not isinstance(validation_results[0], Exception)
+                    else {"passed": False}
+                ),
+                "safety": (
+                    validation_results[1]
+                    if not isinstance(validation_results[1], Exception)
+                    else {"passed": False}
+                ),
+                "technical": (
+                    validation_results[2]
+                    if not isinstance(validation_results[2], Exception)
+                    else {"passed": False}
+                ),
+                "compliance": (
+                    validation_results[3]
+                    if not isinstance(validation_results[3], Exception)
+                    else {"passed": False}
+                ),
             }
 
             # Calculate quality metrics
             state.quality_metrics = self._calculate_quality_metrics(state.validation_results)
 
             state.messages.append(
-                SystemMessage(content=f"Validation completed with quality score: {state.quality_metrics.get('overall_score', 0):.2f}")
+                SystemMessage(
+                    content=f"Validation completed with quality score: {state.quality_metrics.get('overall_score', 0):.2f}"
+                )
             )
 
         except Exception as e:
@@ -420,7 +453,9 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
             state.final_content = self._apply_optimizations(state)
 
             state.messages.append(
-                SystemMessage(content=f"Applied {len(state.optimization_suggestions)} optimizations")
+                SystemMessage(
+                    content=f"Applied {len(state.optimization_suggestions)} optimizations"
+                )
             )
 
         except Exception as e:
@@ -452,14 +487,16 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
                     "deployment_id": deployment_result.get("id"),
                     "place_id": deployment_result.get("place_id"),
                     "version": deployment_result.get("version"),
-                    "deployed_at": datetime.now().isoformat()
+                    "deployed_at": datetime.now().isoformat(),
                 }
 
                 # Setup monitoring
                 await self._setup_monitoring(state.deployment_info)
 
                 state.messages.append(
-                    SystemMessage(content=f"Successfully deployed to Roblox (Place ID: {state.deployment_info.get('place_id')})")
+                    SystemMessage(
+                        content=f"Successfully deployed to Roblox (Place ID: {state.deployment_info.get('place_id')})"
+                    )
                 )
 
         except Exception as e:
@@ -512,7 +549,7 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
         else:
             return "optimization"
 
-    async def _generate_fallback_ideas(self, state: PipelineState) -> List[Dict[str, Any]]:
+    async def _generate_fallback_ideas(self, state: PipelineState) -> list[dict[str, Any]]:
         """Generate ideas without external agents"""
         prompt = f"""Generate 3 creative educational ideas for a Roblox experience:
         Subject: {state.original_request.get('subject', 'general')}
@@ -526,7 +563,7 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
         - Engagement features
         """
 
-        response = await self.llm.ainvoke(prompt)
+        await self.llm.ainvoke(prompt)
 
         # Parse response into structured ideas
         # This is a simplified version - real implementation would parse more carefully
@@ -535,12 +572,14 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
                 "title": f"Idea {i+1}",
                 "description": "Educational Roblox experience",
                 "mechanics": ["exploration", "puzzles", "collaboration"],
-                "objectives": state.original_request.get("learning_objectives", [])
+                "objectives": state.original_request.get("learning_objectives", []),
             }
             for i in range(3)
         ]
 
-    async def _generate_content_draft(self, idea: Dict[str, Any], state: PipelineState) -> Dict[str, Any]:
+    async def _generate_content_draft(
+        self, idea: dict[str, Any], state: PipelineState
+    ) -> dict[str, Any]:
         """Generate the main content structure"""
         return {
             "title": idea.get("title"),
@@ -548,62 +587,60 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
             "scenes": [],
             "characters": [],
             "dialogue": [],
-            "learning_checkpoints": []
+            "learning_checkpoints": [],
         }
 
-    async def _generate_scripts(self, idea: Dict[str, Any], state: PipelineState) -> List[Dict[str, Any]]:
+    async def _generate_scripts(
+        self, idea: dict[str, Any], state: PipelineState
+    ) -> list[dict[str, Any]]:
         """Generate Luau scripts for the content"""
         return [
             {
                 "name": "MainGameScript",
                 "type": "ServerScript",
-                "code": "-- Main game logic\nlocal game = {}\nreturn game"
+                "code": "-- Main game logic\nlocal game = {}\nreturn game",
             }
         ]
 
-    async def _generate_assets(self, idea: Dict[str, Any], state: PipelineState) -> List[Dict[str, Any]]:
+    async def _generate_assets(
+        self, idea: dict[str, Any], state: PipelineState
+    ) -> list[dict[str, Any]]:
         """Generate or reference 3D assets"""
-        return [
-            {
-                "name": "MainTerrain",
-                "type": "Terrain",
-                "data": {}
-            }
-        ]
+        return [{"name": "MainTerrain", "type": "Terrain", "data": {}}]
 
-    async def _validate_educational_value(self, state: PipelineState) -> Dict[str, Any]:
+    async def _validate_educational_value(self, state: PipelineState) -> dict[str, Any]:
         """Validate educational value of content"""
         return {
             "passed": True,
             "score": 0.85,
-            "feedback": "Content aligns well with learning objectives"
+            "feedback": "Content aligns well with learning objectives",
         }
 
-    async def _validate_safety(self, state: PipelineState) -> Dict[str, Any]:
+    async def _validate_safety(self, state: PipelineState) -> dict[str, Any]:
         """Validate content safety"""
         return {
             "passed": True,
             "score": 0.95,
-            "feedback": "Content is age-appropriate and safe"
+            "feedback": "Content is age-appropriate and safe",
         }
 
-    async def _validate_technical_quality(self, state: PipelineState) -> Dict[str, Any]:
+    async def _validate_technical_quality(self, state: PipelineState) -> dict[str, Any]:
         """Validate technical quality"""
         return {
             "passed": True,
             "score": 0.80,
-            "feedback": "Scripts are well-structured and performant"
+            "feedback": "Scripts are well-structured and performant",
         }
 
-    async def _validate_compliance(self, state: PipelineState) -> Dict[str, Any]:
+    async def _validate_compliance(self, state: PipelineState) -> dict[str, Any]:
         """Validate compliance with standards"""
         return {
             "passed": True,
             "score": 0.90,
-            "feedback": "Meets COPPA and educational standards"
+            "feedback": "Meets COPPA and educational standards",
         }
 
-    def _calculate_quality_metrics(self, validation_results: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_quality_metrics(self, validation_results: dict[str, Any]) -> dict[str, Any]:
         """Calculate overall quality metrics"""
         scores = []
         for category, result in validation_results.items():
@@ -612,46 +649,46 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
 
         return {
             "overall_score": sum(scores) / len(scores) if scores else 0,
-            "category_scores": validation_results
+            "category_scores": validation_results,
         }
 
-    async def _load_learning_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
+    async def _load_learning_profile(self, user_id: str) -> Optional[dict[str, Any]]:
         """Load user's learning profile from database"""
         # Simplified - would query database
         return None
 
-    async def _optimize_performance(self, state: PipelineState) -> Dict[str, Any]:
+    async def _optimize_performance(self, state: PipelineState) -> dict[str, Any]:
         """Optimize content performance"""
         return {
             "suggestions": [
                 "Optimize texture sizes",
                 "Implement level-of-detail (LOD) for models",
-                "Use efficient data structures"
+                "Use efficient data structures",
             ]
         }
 
-    async def _optimize_engagement(self, state: PipelineState) -> Dict[str, Any]:
+    async def _optimize_engagement(self, state: PipelineState) -> dict[str, Any]:
         """Optimize for engagement"""
         return {
             "suggestions": [
                 "Add achievement system",
                 "Implement progress tracking",
-                "Include collaborative challenges"
+                "Include collaborative challenges",
             ]
         }
 
-    async def _apply_personalization(self, state: PipelineState) -> Dict[str, Any]:
+    async def _apply_personalization(self, state: PipelineState) -> dict[str, Any]:
         """Apply personalization based on learning profile"""
         state.personalization_applied = True
         return {
             "suggestions": [
                 "Adjust difficulty based on profile",
                 "Customize visual style preferences",
-                "Adapt pacing to learning speed"
+                "Adapt pacing to learning speed",
             ]
         }
 
-    def _apply_optimizations(self, state: PipelineState) -> Dict[str, Any]:
+    def _apply_optimizations(self, state: PipelineState) -> dict[str, Any]:
         """Apply all optimizations to create final content"""
         final_content = {
             **state.content_draft,
@@ -659,33 +696,33 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
             "assets": state.assets,
             "optimizations": state.optimization_suggestions,
             "quality_score": state.quality_metrics.get("overall_score", 0),
-            "personalized": state.personalization_applied
+            "personalized": state.personalization_applied,
         }
 
         return final_content
 
-    async def _package_for_roblox(self, state: PipelineState) -> Dict[str, Any]:
+    async def _package_for_roblox(self, state: PipelineState) -> dict[str, Any]:
         """Package content for Roblox deployment"""
         return {
             "id": str(uuid4()),
             "content": state.final_content,
             "metadata": {
                 "pipeline_id": state.pipeline_id,
-                "created_at": datetime.now().isoformat()
-            }
+                "created_at": datetime.now().isoformat(),
+            },
         }
 
-    async def _deploy_to_roblox(self, package: Dict[str, Any]) -> Dict[str, Any]:
+    async def _deploy_to_roblox(self, package: dict[str, Any]) -> dict[str, Any]:
         """Deploy package to Roblox"""
         # This would integrate with Roblox API
         return {
             "id": str(uuid4()),
             "place_id": f"place_{uuid4().hex[:8]}",
             "version": "1.0.0",
-            "status": "deployed"
+            "status": "deployed",
         }
 
-    async def _setup_monitoring(self, deployment_info: Dict[str, Any]) -> None:
+    async def _setup_monitoring(self, deployment_info: dict[str, Any]) -> None:
         """Setup monitoring for deployed content"""
         logger.info(f"Setting up monitoring for deployment {deployment_info.get('deployment_id')}")
 
@@ -711,7 +748,7 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
                 started_at=state.started_at,
                 completed_at=state.completed_at,
                 generation_time_seconds=sum(state.stage_timings.values()),
-                tokens_used=state.total_tokens_used
+                tokens_used=state.total_tokens_used,
             )
 
             self.db_session.add(generation_record)
@@ -723,14 +760,14 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
             logger.error(f"Failed to save generation record: {e}")
             await self.db_session.rollback()
 
-    async def _process_task(self, state: Dict[str, Any]) -> Any:
+    async def _process_task(self, state: dict[str, Any]) -> Any:
         """Process a task through the enhanced pipeline"""
         # Create pipeline state
         pipeline_state = PipelineState(
             user_id=state.get("user_id", ""),
             content_type=ContentType(state.get("content_type", "lesson")),
             original_request=state,
-            context=state.get("context", {})
+            context=state.get("context", {}),
         )
 
         # Run the pipeline
@@ -740,11 +777,8 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
         return final_state.final_content
 
     async def generate_enhanced_content(
-        self,
-        user_id: str,
-        content_type: str,
-        request: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, user_id: str, content_type: str, request: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Main entry point for enhanced content generation
 
@@ -759,28 +793,21 @@ Always prioritize educational value, safety, and engagement. Use the SPARC frame
         logger.info(f"Starting enhanced content generation for user {user_id}")
 
         # Prepare the task
-        task_data = {
-            "user_id": user_id,
-            "content_type": content_type,
-            **request
-        }
+        task_data = {"user_id": user_id, "content_type": content_type, **request}
 
         # Execute through the pipeline
-        result = await self.execute(
-            task="Generate enhanced educational content",
-            context=task_data
-        )
+        result = await self.execute(task="Generate enhanced educational content", context=task_data)
 
         if result.success:
             return {
                 "success": True,
                 "content": result.output,
                 "metadata": result.metadata,
-                "execution_time": result.execution_time
+                "execution_time": result.execution_time,
             }
         else:
             return {
                 "success": False,
                 "error": result.error,
-                "metadata": result.metadata
+                "metadata": result.metadata,
             }

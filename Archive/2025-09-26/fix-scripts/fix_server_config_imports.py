@@ -5,7 +5,6 @@ Fix imports from apps.backend.config to use config.environment
 
 import os
 import re
-import sys
 
 # Get the project root
 PROJECT_ROOT = "/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions"
@@ -29,7 +28,7 @@ def update_file(filepath):
         print(f"  ⚠️  File not found: {filepath}")
         return False
     
-    with open(full_path, 'r') as f:
+    with open(full_path) as f:
         content = f.read()
     
     original_content = content

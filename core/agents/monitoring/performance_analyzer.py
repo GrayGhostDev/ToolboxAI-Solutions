@@ -7,17 +7,17 @@ optimization recommendations for the migration process.
 
 import logging
 import statistics
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-import numpy as np
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class PerformanceMetric(Enum):
     """Types of performance metrics"""
+
     LATENCY = "latency"
     SUCCESS_RATE = "success_rate"
     ERROR_RATE = "error_rate"
@@ -29,17 +29,19 @@ class PerformanceMetric(Enum):
 @dataclass
 class PerformanceDataPoint:
     """Individual performance measurement"""
+
     timestamp: datetime
     metric_type: PerformanceMetric
     value: float
     model: str
     endpoint: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class PerformanceAnomaly:
     """Detected performance anomaly"""
+
     timestamp: datetime
     metric_type: PerformanceMetric
     severity: str  # low, medium, high, critical
@@ -47,20 +49,21 @@ class PerformanceAnomaly:
     expected_value: float
     deviation_percentage: float
     description: str
-    recommendations: List[str] = field(default_factory=list)
+    recommendations: list[str] = field(default_factory=list)
 
 
 @dataclass
 class PerformanceSummary:
     """Summary of performance analysis"""
+
     period_start: datetime
     period_end: datetime
     model: str
-    metrics: Dict[str, float]
-    trends: Dict[str, float]
-    anomalies: List[PerformanceAnomaly]
+    metrics: dict[str, float]
+    trends: dict[str, float]
+    anomalies: list[PerformanceAnomaly]
     overall_score: float
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class PerformanceAnalyzer:
@@ -76,15 +79,35 @@ class PerformanceAnalyzer:
     """
 
     def __init__(self):
-        self.data_points: List[PerformanceDataPoint] = []
-        self.baselines: Dict[str, Dict[PerformanceMetric, float]] = {}  # model -> metric -> baseline
+        self.data_points: list[PerformanceDataPoint] = []
+        self.baselines: dict[str, dict[PerformanceMetric, float]] = (
+            {}
+        )  # model -> metric -> baseline
         self.anomaly_thresholds = {
-            PerformanceMetric.LATENCY: {"warning": 2.0, "critical": 3.0},  # Standard deviations
-            PerformanceMetric.SUCCESS_RATE: {"warning": 0.95, "critical": 0.90},  # Absolute values
-            PerformanceMetric.ERROR_RATE: {"warning": 0.05, "critical": 0.10},  # Absolute values
-            PerformanceMetric.THROUGHPUT: {"warning": 2.0, "critical": 3.0},  # Standard deviations
-            PerformanceMetric.TOKEN_EFFICIENCY: {"warning": 0.8, "critical": 0.7},  # Absolute values
-            PerformanceMetric.COST_EFFICIENCY: {"warning": 0.8, "critical": 0.7}  # Absolute values
+            PerformanceMetric.LATENCY: {
+                "warning": 2.0,
+                "critical": 3.0,
+            },  # Standard deviations
+            PerformanceMetric.SUCCESS_RATE: {
+                "warning": 0.95,
+                "critical": 0.90,
+            },  # Absolute values
+            PerformanceMetric.ERROR_RATE: {
+                "warning": 0.05,
+                "critical": 0.10,
+            },  # Absolute values
+            PerformanceMetric.THROUGHPUT: {
+                "warning": 2.0,
+                "critical": 3.0,
+            },  # Standard deviations
+            PerformanceMetric.TOKEN_EFFICIENCY: {
+                "warning": 0.8,
+                "critical": 0.7,
+            },  # Absolute values
+            PerformanceMetric.COST_EFFICIENCY: {
+                "warning": 0.8,
+                "critical": 0.7,
+            },  # Absolute values
         }
 
         # Performance targets for each model
@@ -94,22 +117,22 @@ class PerformanceAnalyzer:
                 PerformanceMetric.SUCCESS_RATE: 0.98,
                 PerformanceMetric.ERROR_RATE: 0.02,
                 PerformanceMetric.TOKEN_EFFICIENCY: 0.85,
-                PerformanceMetric.COST_EFFICIENCY: 0.70
+                PerformanceMetric.COST_EFFICIENCY: 0.70,
             },
             "gpt-4o": {
                 PerformanceMetric.LATENCY: 2.0,
                 PerformanceMetric.SUCCESS_RATE: 0.99,
                 PerformanceMetric.ERROR_RATE: 0.01,
                 PerformanceMetric.TOKEN_EFFICIENCY: 0.90,
-                PerformanceMetric.COST_EFFICIENCY: 0.85
+                PerformanceMetric.COST_EFFICIENCY: 0.85,
             },
             "gpt-4o-mini": {
                 PerformanceMetric.LATENCY: 1.5,
                 PerformanceMetric.SUCCESS_RATE: 0.98,
                 PerformanceMetric.ERROR_RATE: 0.02,
                 PerformanceMetric.TOKEN_EFFICIENCY: 0.85,
-                PerformanceMetric.COST_EFFICIENCY: 0.95
-            }
+                PerformanceMetric.COST_EFFICIENCY: 0.95,
+            },
         }
 
         logger.info("PerformanceAnalyzer initialized")
@@ -120,7 +143,7 @@ class PerformanceAnalyzer:
         value: float,
         model: str,
         endpoint: str = "",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ) -> None:
         """Record a performance data point"""
 
@@ -130,21 +153,18 @@ class PerformanceAnalyzer:
             value=value,
             model=model,
             endpoint=endpoint,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         self.data_points.append(data_point)
 
         # Keep only last 30 days of data
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
-        self.data_points = [
-            dp for dp in self.data_points
-            if dp.timestamp >= cutoff_date
-        ]
+        self.data_points = [dp for dp in self.data_points if dp.timestamp >= cutoff_date]
 
         logger.debug(f"Recorded {metric_type.value} for {model}: {value}")
 
-    def establish_baseline(self, model: str, days_back: int = 7) -> Dict[PerformanceMetric, float]:
+    def establish_baseline(self, model: str, days_back: int = 7) -> dict[PerformanceMetric, float]:
         """Establish performance baseline for a model"""
 
         end_time = datetime.now(timezone.utc)
@@ -152,7 +172,8 @@ class PerformanceAnalyzer:
 
         # Get data points for the baseline period
         baseline_data = [
-            dp for dp in self.data_points
+            dp
+            for dp in self.data_points
             if dp.model == model and start_time <= dp.timestamp <= end_time
         ]
 
@@ -164,13 +185,13 @@ class PerformanceAnalyzer:
         baseline_metrics = {}
 
         for metric_type in PerformanceMetric:
-            metric_values = [
-                dp.value for dp in baseline_data
-                if dp.metric_type == metric_type
-            ]
+            metric_values = [dp.value for dp in baseline_data if dp.metric_type == metric_type]
 
             if metric_values:
-                if metric_type in [PerformanceMetric.LATENCY, PerformanceMetric.THROUGHPUT]:
+                if metric_type in [
+                    PerformanceMetric.LATENCY,
+                    PerformanceMetric.THROUGHPUT,
+                ]:
                     # For latency and throughput, use median as baseline
                     baseline_metrics[metric_type] = statistics.median(metric_values)
                 else:
@@ -183,11 +204,7 @@ class PerformanceAnalyzer:
         logger.info(f"Established baseline for {model}: {baseline_metrics}")
         return baseline_metrics
 
-    def detect_anomalies(
-        self,
-        model: str,
-        hours_back: int = 1
-    ) -> List[PerformanceAnomaly]:
+    def detect_anomalies(self, model: str, hours_back: int = 1) -> list[PerformanceAnomaly]:
         """Detect performance anomalies for a model"""
 
         end_time = datetime.now(timezone.utc)
@@ -195,7 +212,8 @@ class PerformanceAnalyzer:
 
         # Get recent data points
         recent_data = [
-            dp for dp in self.data_points
+            dp
+            for dp in self.data_points
             if dp.model == model and start_time <= dp.timestamp <= end_time
         ]
 
@@ -209,10 +227,7 @@ class PerformanceAnalyzer:
 
         for metric_type in PerformanceMetric:
             # Get recent values for this metric
-            recent_values = [
-                dp.value for dp in recent_data
-                if dp.metric_type == metric_type
-            ]
+            recent_values = [dp.value for dp in recent_data if dp.metric_type == metric_type]
 
             if not recent_values or metric_type not in baseline:
                 continue
@@ -222,9 +237,7 @@ class PerformanceAnalyzer:
             baseline_value = baseline[metric_type]
 
             # Detect anomaly based on metric type
-            anomaly = self._detect_metric_anomaly(
-                metric_type, current_value, baseline_value, model
-            )
+            anomaly = self._detect_metric_anomaly(metric_type, current_value, baseline_value, model)
 
             if anomaly:
                 anomalies.append(anomaly)
@@ -236,7 +249,7 @@ class PerformanceAnalyzer:
         metric_type: PerformanceMetric,
         current_value: float,
         baseline_value: float,
-        model: str
+        model: str,
     ) -> Optional[PerformanceAnomaly]:
         """Detect anomaly for a specific metric"""
 
@@ -258,11 +271,16 @@ class PerformanceAnalyzer:
                     expected_value=baseline_value,
                     deviation_percentage=deviation * 100,
                     description=f"{metric_type.value} anomaly detected for {model}",
-                    recommendations=self._get_anomaly_recommendations(metric_type, current_value, baseline_value)
+                    recommendations=self._get_anomaly_recommendations(
+                        metric_type, current_value, baseline_value
+                    ),
                 )
 
-        elif metric_type in [PerformanceMetric.SUCCESS_RATE, PerformanceMetric.TOKEN_EFFICIENCY,
-                           PerformanceMetric.COST_EFFICIENCY]:
+        elif metric_type in [
+            PerformanceMetric.SUCCESS_RATE,
+            PerformanceMetric.TOKEN_EFFICIENCY,
+            PerformanceMetric.COST_EFFICIENCY,
+        ]:
             # For rates and efficiencies, check if below threshold
             if current_value < thresholds["critical"]:
                 severity = "critical"
@@ -281,7 +299,9 @@ class PerformanceAnalyzer:
                 expected_value=baseline_value,
                 deviation_percentage=deviation * 100,
                 description=f"{metric_type.value} below threshold for {model}",
-                recommendations=self._get_anomaly_recommendations(metric_type, current_value, baseline_value)
+                recommendations=self._get_anomaly_recommendations(
+                    metric_type, current_value, baseline_value
+                ),
             )
 
         elif metric_type == PerformanceMetric.ERROR_RATE:
@@ -303,7 +323,9 @@ class PerformanceAnalyzer:
                 expected_value=baseline_value,
                 deviation_percentage=deviation * 100,
                 description=f"{metric_type.value} above threshold for {model}",
-                recommendations=self._get_anomaly_recommendations(metric_type, current_value, baseline_value)
+                recommendations=self._get_anomaly_recommendations(
+                    metric_type, current_value, baseline_value
+                ),
             )
 
         return None
@@ -312,65 +334,73 @@ class PerformanceAnalyzer:
         self,
         metric_type: PerformanceMetric,
         current_value: float,
-        baseline_value: float
-    ) -> List[str]:
+        baseline_value: float,
+    ) -> list[str]:
         """Get recommendations for addressing an anomaly"""
 
         recommendations = []
 
         if metric_type == PerformanceMetric.LATENCY:
             if current_value > baseline_value:
-                recommendations.extend([
-                    "Check API endpoint health and status",
-                    "Review request complexity and prompt length",
-                    "Consider request optimization or batching",
-                    "Monitor network connectivity and routing",
-                    "Check for rate limiting or throttling"
-                ])
+                recommendations.extend(
+                    [
+                        "Check API endpoint health and status",
+                        "Review request complexity and prompt length",
+                        "Consider request optimization or batching",
+                        "Monitor network connectivity and routing",
+                        "Check for rate limiting or throttling",
+                    ]
+                )
 
         elif metric_type == PerformanceMetric.SUCCESS_RATE:
-            recommendations.extend([
-                "Review recent API key and authentication status",
-                "Check for rate limiting or quota issues",
-                "Analyze error patterns in failed requests",
-                "Verify request format and parameters",
-                "Consider implementing retry logic with backoff"
-            ])
+            recommendations.extend(
+                [
+                    "Review recent API key and authentication status",
+                    "Check for rate limiting or quota issues",
+                    "Analyze error patterns in failed requests",
+                    "Verify request format and parameters",
+                    "Consider implementing retry logic with backoff",
+                ]
+            )
 
         elif metric_type == PerformanceMetric.ERROR_RATE:
-            recommendations.extend([
-                "Investigate error patterns and types",
-                "Check API key validity and permissions",
-                "Review request format and validation",
-                "Monitor rate limits and quota usage",
-                "Implement better error handling and retry logic"
-            ])
+            recommendations.extend(
+                [
+                    "Investigate error patterns and types",
+                    "Check API key validity and permissions",
+                    "Review request format and validation",
+                    "Monitor rate limits and quota usage",
+                    "Implement better error handling and retry logic",
+                ]
+            )
 
         elif metric_type == PerformanceMetric.TOKEN_EFFICIENCY:
-            recommendations.extend([
-                "Optimize prompt length and structure",
-                "Use more efficient prompting techniques",
-                "Implement response caching for common queries",
-                "Review output length requirements",
-                "Consider using more efficient models for simple tasks"
-            ])
+            recommendations.extend(
+                [
+                    "Optimize prompt length and structure",
+                    "Use more efficient prompting techniques",
+                    "Implement response caching for common queries",
+                    "Review output length requirements",
+                    "Consider using more efficient models for simple tasks",
+                ]
+            )
 
         elif metric_type == PerformanceMetric.COST_EFFICIENCY:
-            recommendations.extend([
-                "Review model selection for different use cases",
-                "Implement request caching and deduplication",
-                "Optimize token usage and prompt efficiency",
-                "Consider downgrading model for non-critical tasks",
-                "Implement cost controls and budgeting"
-            ])
+            recommendations.extend(
+                [
+                    "Review model selection for different use cases",
+                    "Implement request caching and deduplication",
+                    "Optimize token usage and prompt efficiency",
+                    "Consider downgrading model for non-critical tasks",
+                    "Implement cost controls and budgeting",
+                ]
+            )
 
         return recommendations
 
     def analyze_performance_trends(
-        self,
-        model: str,
-        days_back: int = 7
-    ) -> Dict[PerformanceMetric, Dict[str, float]]:
+        self, model: str, days_back: int = 7
+    ) -> dict[PerformanceMetric, dict[str, float]]:
         """Analyze performance trends over time"""
 
         end_time = datetime.now(timezone.utc)
@@ -378,7 +408,8 @@ class PerformanceAnalyzer:
 
         # Get data points for the analysis period
         trend_data = [
-            dp for dp in self.data_points
+            dp
+            for dp in self.data_points
             if dp.model == model and start_time <= dp.timestamp <= end_time
         ]
 
@@ -386,8 +417,7 @@ class PerformanceAnalyzer:
 
         for metric_type in PerformanceMetric:
             metric_data = [
-                (dp.timestamp, dp.value) for dp in trend_data
-                if dp.metric_type == metric_type
+                (dp.timestamp, dp.value) for dp in trend_data if dp.metric_type == metric_type
             ]
 
             if len(metric_data) < 2:
@@ -421,16 +451,12 @@ class PerformanceAnalyzer:
                     "overall_average": statistics.mean(all_values),
                     "min_value": min(all_values),
                     "max_value": max(all_values),
-                    "std_deviation": statistics.stdev(all_values) if len(all_values) > 1 else 0.0
+                    "std_deviation": statistics.stdev(all_values) if len(all_values) > 1 else 0.0,
                 }
 
         return trends
 
-    def generate_performance_summary(
-        self,
-        model: str,
-        days_back: int = 7
-    ) -> PerformanceSummary:
+    def generate_performance_summary(self, model: str, days_back: int = 7) -> PerformanceSummary:
         """Generate comprehensive performance summary"""
 
         end_time = datetime.now(timezone.utc)
@@ -464,31 +490,25 @@ class PerformanceAnalyzer:
             },
             anomalies=anomalies,
             overall_score=overall_score,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
-    def _calculate_current_metrics(
-        self,
-        model: str,
-        hours_back: int = 24
-    ) -> Dict[str, float]:
+    def _calculate_current_metrics(self, model: str, hours_back: int = 24) -> dict[str, float]:
         """Calculate current metric values"""
 
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(hours=hours_back)
 
         recent_data = [
-            dp for dp in self.data_points
+            dp
+            for dp in self.data_points
             if dp.model == model and start_time <= dp.timestamp <= end_time
         ]
 
         metrics = {}
 
         for metric_type in PerformanceMetric:
-            values = [
-                dp.value for dp in recent_data
-                if dp.metric_type == metric_type
-            ]
+            values = [dp.value for dp in recent_data if dp.metric_type == metric_type]
 
             if values:
                 if metric_type == PerformanceMetric.LATENCY:
@@ -500,11 +520,7 @@ class PerformanceAnalyzer:
 
         return metrics
 
-    def _calculate_performance_score(
-        self,
-        model: str,
-        current_metrics: Dict[str, float]
-    ) -> float:
+    def _calculate_performance_score(self, model: str, current_metrics: dict[str, float]) -> float:
         """Calculate overall performance score (0-100)"""
 
         if model not in self.performance_targets:
@@ -561,10 +577,10 @@ class PerformanceAnalyzer:
     def _generate_performance_recommendations(
         self,
         model: str,
-        current_metrics: Dict[str, float],
-        trends: Dict[PerformanceMetric, Dict[str, float]],
-        anomalies: List[PerformanceAnomaly]
-    ) -> List[str]:
+        current_metrics: dict[str, float],
+        trends: dict[PerformanceMetric, dict[str, float]],
+        anomalies: list[PerformanceAnomaly],
+    ) -> list[str]:
         """Generate performance optimization recommendations"""
 
         recommendations = []
@@ -578,11 +594,17 @@ class PerformanceAnalyzer:
             trend_percentage = trend_data.get("trend_percentage", 0.0)
 
             if metric_type == PerformanceMetric.LATENCY and trend_percentage > 20:
-                recommendations.append("Latency increasing - investigate API performance and optimize requests")
+                recommendations.append(
+                    "Latency increasing - investigate API performance and optimize requests"
+                )
             elif metric_type == PerformanceMetric.ERROR_RATE and trend_percentage > 50:
-                recommendations.append("Error rate rising - review error patterns and improve error handling")
+                recommendations.append(
+                    "Error rate rising - review error patterns and improve error handling"
+                )
             elif metric_type == PerformanceMetric.COST_EFFICIENCY and trend_percentage < -20:
-                recommendations.append("Cost efficiency declining - review model usage and implement cost controls")
+                recommendations.append(
+                    "Cost efficiency declining - review model usage and implement cost controls"
+                )
 
         # Recommendations based on current metric values
         if model in self.performance_targets:
@@ -593,10 +615,20 @@ class PerformanceAnalyzer:
                 if metric_key in current_metrics:
                     current_value = current_metrics[metric_key]
 
-                    if metric_type == PerformanceMetric.LATENCY and current_value > target_value * 1.2:
-                        recommendations.append(f"Latency ({current_value:.2f}s) above target - optimize request complexity")
-                    elif metric_type == PerformanceMetric.SUCCESS_RATE and current_value < target_value * 0.95:
-                        recommendations.append(f"Success rate ({current_value:.1%}) below target - improve error handling")
+                    if (
+                        metric_type == PerformanceMetric.LATENCY
+                        and current_value > target_value * 1.2
+                    ):
+                        recommendations.append(
+                            f"Latency ({current_value:.2f}s) above target - optimize request complexity"
+                        )
+                    elif (
+                        metric_type == PerformanceMetric.SUCCESS_RATE
+                        and current_value < target_value * 0.95
+                    ):
+                        recommendations.append(
+                            f"Success rate ({current_value:.1%}) below target - improve error handling"
+                        )
 
         # Remove duplicates while preserving order
         seen = set()
@@ -609,10 +641,8 @@ class PerformanceAnalyzer:
         return unique_recommendations[:10]  # Limit to top 10 recommendations
 
     def compare_model_performance(
-        self,
-        models: List[str],
-        days_back: int = 7
-    ) -> Dict[str, PerformanceSummary]:
+        self, models: list[str], days_back: int = 7
+    ) -> dict[str, PerformanceSummary]:
         """Compare performance across multiple models"""
 
         comparison = {}
@@ -627,20 +657,15 @@ class PerformanceAnalyzer:
         return comparison
 
     def export_performance_data(
-        self,
-        model: Optional[str] = None,
-        days_back: int = 30
-    ) -> Dict[str, Any]:
+        self, model: Optional[str] = None, days_back: int = 30
+    ) -> dict[str, Any]:
         """Export performance data for external analysis"""
 
         end_time = datetime.now(timezone.utc)
         start_time = end_time - timedelta(days=days_back)
 
         # Filter data points
-        filtered_data = [
-            dp for dp in self.data_points
-            if start_time <= dp.timestamp <= end_time
-        ]
+        filtered_data = [dp for dp in self.data_points if start_time <= dp.timestamp <= end_time]
 
         if model:
             filtered_data = [dp for dp in filtered_data if dp.model == model]
@@ -658,7 +683,7 @@ class PerformanceAnalyzer:
                     "value": dp.value,
                     "model": dp.model,
                     "endpoint": dp.endpoint,
-                    "metadata": dp.metadata
+                    "metadata": dp.metadata,
                 }
                 for dp in filtered_data
             ],
@@ -668,12 +693,12 @@ class PerformanceAnalyzer:
                     for metric, baseline_value in baseline_metrics.items()
                 }
                 for model_name, baseline_metrics in self.baselines.items()
-            }
+            },
         }
 
         return export_data
 
-    def get_real_time_metrics(self, model: str) -> Dict[str, Any]:
+    def get_real_time_metrics(self, model: str) -> dict[str, Any]:
         """Get real-time performance metrics for dashboard"""
 
         # Get metrics from last hour
@@ -696,17 +721,15 @@ class PerformanceAnalyzer:
                     "severity": anomaly.severity,
                     "description": anomaly.description,
                     "current_value": anomaly.current_value,
-                    "expected_value": anomaly.expected_value
+                    "expected_value": anomaly.expected_value,
                 }
                 for anomaly in recent_anomalies
             ],
-            "status": self._get_performance_status(performance_score, recent_anomalies)
+            "status": self._get_performance_status(performance_score, recent_anomalies),
         }
 
     def _get_performance_status(
-        self,
-        performance_score: float,
-        anomalies: List[PerformanceAnomaly]
+        self, performance_score: float, anomalies: list[PerformanceAnomaly]
     ) -> str:
         """Get overall performance status"""
 

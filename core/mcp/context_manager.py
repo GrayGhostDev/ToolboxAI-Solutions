@@ -4,15 +4,15 @@ Context Manager for MCP - Handles context optimization and token management
 
 import json
 import logging
-import os
-from typing import Dict, List, Any, Optional, Tuple
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from urllib.parse import urlparse, ParseResult
 from pathlib import Path
-import tiktoken
+from typing import Any, Optional
+from urllib.parse import ParseResult, urlparse
+
 import numpy as np
-from collections import defaultdict
+import tiktoken
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class MCPContextManager:
         self.max_tokens = max_tokens
         self.model = model
         self.encoder = tiktoken.encoding_for_model(model)
-        self.segments: List[ContextSegment] = []
+        self.segments: list[ContextSegment] = []
         self.category_limits = {
             "system": 0.2,  # 20% for system prompts
             "user": 0.3,  # 30% for user context
@@ -55,7 +55,9 @@ class MCPContextManager:
             "workspace": 0.1,  # 10% for current workspace
         }
 
-    def add_context(self, content: str, category: str, source: str, importance: float = 1.0) -> bool:
+    def add_context(
+        self, content: str, category: str, source: str, importance: float = 1.0
+    ) -> bool:
         """Add new context segment"""
         tokens = self.count_tokens(content)
 
@@ -93,7 +95,7 @@ class MCPContextManager:
             TOKEN_ESTIMATE_DIVISOR = 4
             return len(text) // TOKEN_ESTIMATE_DIVISOR
 
-    def _chunk_content(self, content: str, max_chunk_tokens: int) -> List[str]:
+    def _chunk_content(self, content: str, max_chunk_tokens: int) -> list[str]:
         """Split content into chunks respecting token limits"""
         chunks = []
         lines = content.split("\n")
@@ -178,7 +180,7 @@ class MCPContextManager:
 
             segment.importance *= decay
 
-    def get_context(self, categories: Optional[List[str]] = None) -> str:
+    def get_context(self, categories: Optional[list[str]] = None) -> str:
         """Get formatted context for agent consumption"""
         if categories:
             segments = [s for s in self.segments if s.category in categories]
@@ -186,7 +188,13 @@ class MCPContextManager:
             segments = self.segments
 
         # Sort by category priority and importance
-        category_priority = {"system": 1, "user": 2, "workspace": 3, "history": 4, "knowledge": 5}
+        category_priority = {
+            "system": 1,
+            "user": 2,
+            "workspace": 3,
+            "history": 4,
+            "knowledge": 5,
+        }
 
         segments.sort(key=lambda s: (category_priority.get(s.category, 99), -s.importance))
 
@@ -202,7 +210,7 @@ class MCPContextManager:
 
         return "\n".join(formatted_context)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get context statistics"""
         total_tokens = sum(s.tokens for s in self.segments)
 
@@ -218,17 +226,17 @@ class MCPContextManager:
             "utilization": f"{(total_tokens / self.max_tokens) * 100:.1f}%",
             "categories": dict(category_stats),
         }
-    
+
     def add_segment(self, content: str, category: str, source: str, importance: float):
         """Public method to add a segment"""
         return self._add_segment(content, category, source, importance)
-    
+
     def get_segment_by_id(self, segment_id: str):
         """Get segment by ID"""
-        # Since segments don't have IDs in current implementation, 
+        # Since segments don't have IDs in current implementation,
         # we'll return the first matching segment or None
         for segment in self.segments:
-            if hasattr(segment, 'id') and segment.id == segment_id:
+            if hasattr(segment, "id") and segment.id == segment_id:
                 return segment
         return None
 
@@ -255,7 +263,7 @@ class MCPContextManager:
 
     def load_snapshot(self, filepath: str):
         """Load context snapshot.json from file"""
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             snapshot = json.load(f)
 
         self.segments = []
@@ -270,7 +278,7 @@ class MCPContextManager:
             )
             self.segments.append(segment)
 
-    def search(self, query: str, limit: int = 5) -> List[ContextSegment]:
+    def search(self, query: str, limit: int = 5) -> list[ContextSegment]:
         """Search for relevant context segments"""
         # Simple keyword search (can be enhanced with embeddings)
         query_lower = query.lower()
@@ -298,33 +306,39 @@ class MCPContextManager:
             self.segments = [s for s in self.segments if s.category != category]
         else:
             self.segments = []
-    
-    def validate_context_uri(self, uri: str) -> Tuple[bool, Optional[str]]:
+
+    def validate_context_uri(self, uri: str) -> tuple[bool, Optional[str]]:
         """
         Validate URI format and accessibility.
-        
+
         Args:
             uri: URI string to validate
-            
+
         Returns:
             Tuple of (is_valid, error_message)
         """
         if not uri:
             return False, "URI cannot be empty"
-        
+
         try:
             parsed: ParseResult = urlparse(uri)
-            
+
             # Check for valid scheme
-            valid_schemes = ['file', 'http', 'https', 'mcp', 'resource']
+            valid_schemes = ["file", "http", "https", "mcp", "resource"]
             if not parsed.scheme:
-                return False, "URI must have a scheme (e.g., file://, http://, https://)"
-            
+                return (
+                    False,
+                    "URI must have a scheme (e.g., file://, http://, https://)",
+                )
+
             if parsed.scheme not in valid_schemes:
-                return False, f"Invalid URI scheme: {parsed.scheme}. Must be one of {valid_schemes}"
-            
+                return (
+                    False,
+                    f"Invalid URI scheme: {parsed.scheme}. Must be one of {valid_schemes}",
+                )
+
             # Validate file URIs
-            if parsed.scheme == 'file':
+            if parsed.scheme == "file":
                 # Convert file URI to path
                 if parsed.netloc:
                     # Windows UNC path
@@ -332,43 +346,45 @@ class MCPContextManager:
                 else:
                     # Regular file path
                     file_path = parsed.path
-                
+
                 # Check if file exists (for local validation)
                 if not Path(file_path).exists():
                     logger.warning(f"File URI points to non-existent file: {file_path}")
                     # Don't fail validation, just warn
-                    
+
             # Validate HTTP/HTTPS URIs
-            elif parsed.scheme in ['http', 'https']:
+            elif parsed.scheme in ["http", "https"]:
                 if not parsed.netloc:
                     return False, f"{parsed.scheme.upper()} URI must have a host"
-                    
+
             # MCP-specific URI validation
-            elif parsed.scheme == 'mcp':
+            elif parsed.scheme == "mcp":
                 # MCP URIs should have a resource identifier
-                if not parsed.path or parsed.path == '/':
+                if not parsed.path or parsed.path == "/":
                     return False, "MCP URI must specify a resource path"
-                    
+
             # Resource URI validation
-            elif parsed.scheme == 'resource':
+            elif parsed.scheme == "resource":
                 # Resource URIs should have a valid resource identifier
                 if not parsed.path:
                     return False, "Resource URI must specify a resource identifier"
-            
+
             return True, None
-            
+
         except Exception as e:
             return False, f"URI validation error: {str(e)}"
-    
-    def add_context_from_uri(self, uri: str, category: str = "resource", importance: float = 0.7) -> bool:
+
+    def add_context_from_uri(
+        self, uri: str, category: str = "resource", importance: float = 0.7
+    ) -> bool:
         """
         Add context from a URI.
-        
+
         Args:
             uri: URI to load context from
             category: Category for the context
             importance: Importance score
-            
+
         Returns:
             bool: Success status
         """
@@ -376,83 +392,87 @@ class MCPContextManager:
         if not is_valid:
             logger.error(f"Invalid URI: {error_msg}")
             return False
-        
+
         try:
             parsed = urlparse(uri)
-            
-            if parsed.scheme == 'file':
+
+            if parsed.scheme == "file":
                 # Load content from file
                 file_path = parsed.path
                 if Path(file_path).exists():
-                    with open(file_path, 'r', encoding='utf-8') as f:
+                    with open(file_path, encoding="utf-8") as f:
                         content = f.read()
                     self._add_segment(content, category, f"file://{file_path}", importance)
                     return True
-                    
-            elif parsed.scheme in ['http', 'https']:
+
+            elif parsed.scheme in ["http", "https"]:
                 # For HTTP resources, just store the URI reference
                 self._add_segment(f"Resource: {uri}", category, uri, importance)
                 return True
-                
-            elif parsed.scheme == 'mcp':
+
+            elif parsed.scheme == "mcp":
                 # Handle MCP-specific resources
-                resource_id = parsed.path.lstrip('/')
+                resource_id = parsed.path.lstrip("/")
                 self._add_segment(f"MCP Resource: {resource_id}", category, uri, importance)
                 return True
-                
-            elif parsed.scheme == 'resource':
+
+            elif parsed.scheme == "resource":
                 # Handle generic resources
-                resource_id = parsed.path.lstrip('/')
+                resource_id = parsed.path.lstrip("/")
                 self._add_segment(f"Resource: {resource_id}", category, uri, importance)
                 return True
-                
+
         except Exception as e:
             logger.error(f"Failed to add context from URI {uri}: {e}")
             return False
-        
+
         return False
-    
+
     async def __aenter__(self):
         """Async context manager entry - initialize resources."""
         logger.info("Entering MCP context manager")
-        
+
         # Initialize any async resources
         self._cleanup_handlers = []
-        
+
         # Validate all existing segments with URI sources
         for segment in self.segments:
-            if segment.source.startswith(('file://', 'http://', 'https://', 'mcp://', 'resource://')):
+            if segment.source.startswith(
+                ("file://", "http://", "https://", "mcp://", "resource://")
+            ):
                 is_valid, error_msg = self.validate_context_uri(segment.source)
                 if not is_valid:
-                    logger.warning(f"Invalid URI in existing segment: {segment.source} - {error_msg}")
-        
+                    logger.warning(
+                        f"Invalid URI in existing segment: {segment.source} - {error_msg}"
+                    )
+
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit - cleanup resources."""
         logger.info("Exiting MCP context manager")
-        
+
         # Run cleanup handlers
         for handler in self._cleanup_handlers:
             try:
                 await handler()
             except Exception as e:
                 logger.error(f"Cleanup handler failed: {e}")
-        
+
         # Clear temporary data if needed
-        if hasattr(self, '_temp_segments'):
+        if hasattr(self, "_temp_segments"):
             self._temp_segments.clear()
-        
+
         # Log any errors that occurred
         if exc_type is not None:
             logger.error(f"Context manager exiting with error: {exc_type.__name__}: {exc_val}")
-        
+
         # Don't suppress exceptions
         return False
-    
+
     def register_cleanup_handler(self, handler):
         """Register a cleanup handler to be called on context exit."""
-        if not hasattr(self, '_cleanup_handlers'):
+        if not hasattr(self, "_cleanup_handlers"):
             self._cleanup_handlers = []
         self._cleanup_handlers.append(handler)
 

@@ -7,14 +7,13 @@ import json
 import logging
 import os
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import yaml
 
-from core.agents.base_agent import BaseAgent, AgentConfig
+from core.agents.base_agent import AgentConfig, BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
             temperature=0.1,  # Low temperature for deterministic behavior
             verbose=False,
             memory_enabled=False,  # GitHub agents don't need memory
-            system_prompt=f"You are a {self.__class__.__name__} that helps manage GitHub repositories."
+            system_prompt=f"You are a {self.__class__.__name__} that helps manage GitHub repositories.",
         )
         super().__init__(agent_config)
         self.config = self._load_config(config_path)
@@ -43,10 +42,10 @@ class BaseGitHubAgent(BaseAgent, ABC):
             "operations_performed": 0,
             "errors_encountered": 0,
             "files_processed": 0,
-            "start_time": datetime.now()
+            "start_time": datetime.now(),
         }
 
-    def _load_config(self, config_path: Optional[str] = None) -> Dict[str, Any]:
+    def _load_config(self, config_path: Optional[str] = None) -> dict[str, Any]:
         """Load agent configuration from file.
 
         Args:
@@ -57,8 +56,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
         """
         if config_path is None:
             config_path = os.path.join(
-                os.path.dirname(__file__),
-                "../../../config/github_agents.yaml"
+                os.path.dirname(__file__), "../../../config/github_agents.yaml"
             )
 
         if not os.path.exists(config_path):
@@ -66,14 +64,14 @@ class BaseGitHubAgent(BaseAgent, ABC):
             return self._get_default_config()
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
-                return config.get('github_agents', {})
+                return config.get("github_agents", {})
         except Exception as e:
             logger.error(f"Error loading config: {e}")
             return self._get_default_config()
 
-    def _get_default_config(self) -> Dict[str, Any]:
+    def _get_default_config(self) -> dict[str, Any]:
         """Get default configuration.
 
         Returns:
@@ -84,22 +82,14 @@ class BaseGitHubAgent(BaseAgent, ABC):
                 "size_thresholds": {
                     "warning_mb": 25,
                     "critical_mb": 50,
-                    "github_limit_mb": 100
+                    "github_limit_mb": 100,
                 },
-                "exempt_patterns": [
-                    ".git/",
-                    "node_modules/",
-                    "__pycache__/",
-                    "venv/"
-                ]
+                "exempt_patterns": [".git/", "node_modules/", "__pycache__/", "venv/"],
             },
-            "monitoring": {
-                "enabled": True,
-                "log_level": "INFO"
-            }
+            "monitoring": {"enabled": True, "log_level": "INFO"},
         }
 
-    async def execute_git_command(self, command: str) -> Dict[str, Any]:
+    async def execute_git_command(self, command: str) -> dict[str, Any]:
         """Execute a git command and return the result.
 
         Args:
@@ -112,23 +102,19 @@ class BaseGitHubAgent(BaseAgent, ABC):
             process = await asyncio.create_subprocess_shell(
                 f"git {command}",
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await process.communicate()
 
             return {
                 "success": process.returncode == 0,
-                "stdout": stdout.decode('utf-8'),
-                "stderr": stderr.decode('utf-8'),
-                "command": command
+                "stdout": stdout.decode("utf-8"),
+                "stderr": stderr.decode("utf-8"),
+                "command": command,
             }
         except Exception as e:
             logger.error(f"Error executing git command: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "command": command
-            }
+            return {"success": False, "error": str(e), "command": command}
 
     def get_repository_root(self) -> Optional[Path]:
         """Get the root directory of the git repository.
@@ -153,7 +139,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
         Returns:
             Formatted size string
         """
-        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        for unit in ["B", "KB", "MB", "GB", "TB"]:
             if size_bytes < 1024.0:
                 return f"{size_bytes:.2f} {unit}"
             size_bytes /= 1024.0
@@ -172,7 +158,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
                 else:
                     self.metrics[key] = value
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get summary of agent metrics.
 
         Returns:
@@ -184,11 +170,12 @@ class BaseGitHubAgent(BaseAgent, ABC):
             "runtime_seconds": runtime,
             "success_rate": (
                 (self.metrics["operations_performed"] - self.metrics["errors_encountered"])
-                / max(self.metrics["operations_performed"], 1) * 100
-            )
+                / max(self.metrics["operations_performed"], 1)
+                * 100
+            ),
         }
 
-    async def log_operation(self, operation: str, details: Dict[str, Any]):
+    async def log_operation(self, operation: str, details: dict[str, Any]):
         """Log an operation for auditing.
 
         Args:
@@ -199,7 +186,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
             "timestamp": datetime.now().isoformat(),
             "agent": self.__class__.__name__,
             "operation": operation,
-            "details": details
+            "details": details,
         }
         logger.info(f"Operation: {json.dumps(log_entry, indent=2)}")
 
@@ -211,20 +198,20 @@ class BaseGitHubAgent(BaseAgent, ABC):
 
         try:
             if log_file.exists():
-                with open(log_file, 'r') as f:
+                with open(log_file) as f:
                     logs = json.load(f)
             else:
                 logs = []
 
             logs.append(log_entry)
 
-            with open(log_file, 'w') as f:
+            with open(log_file, "w") as f:
                 json.dump(logs, f, indent=2)
         except Exception as e:
             logger.error(f"Error writing to audit log: {e}")
 
     @abstractmethod
-    async def analyze(self, **kwargs) -> Dict[str, Any]:
+    async def analyze(self, **kwargs) -> dict[str, Any]:
         """Perform analysis specific to this agent.
 
         Args:
@@ -236,7 +223,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
         pass
 
     @abstractmethod
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute a specific action.
 
         Args:
@@ -248,7 +235,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
         """
         pass
 
-    async def validate_environment(self) -> Dict[str, bool]:
+    async def validate_environment(self) -> dict[str, bool]:
         """Validate that the environment is properly configured.
 
         Returns:
@@ -270,7 +257,7 @@ class BaseGitHubAgent(BaseAgent, ABC):
 
         return validations
 
-    async def _process_task(self, state: Dict[str, Any]) -> Any:
+    async def _process_task(self, state: dict[str, Any]) -> Any:
         """Process the task - delegates to analyze or execute_action.
 
         Args:

@@ -4,30 +4,31 @@ Manages a pool of educational content generation agents
 """
 
 import asyncio
+import json
 import logging
 import os
 import signal
 import sys
-from typing import Dict, List, Optional, Any
-import json
+from dataclasses import dataclass
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from typing import Any, Optional
 
+import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import redis.asyncio as redis
+
 # WebSocket replaced with Pusher for real-time communication
 # from apps.backend.services.pusher import trigger_event as pusher_trigger
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
-from core.agents.base_agent import BaseAgent, AgentConfig, TaskResult
-from core.agents.educational.curriculum_alignment_agent import CurriculumAlignmentAgent
+from core.agents.base_agent import AgentConfig, BaseAgent
 from core.agents.educational.adaptive_learning_agent import AdaptiveLearningAgent
 from core.agents.educational.assessment_design_agent import AssessmentDesignAgent
+from core.agents.educational.curriculum_alignment_agent import CurriculumAlignmentAgent
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +40,14 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 REGISTRATION_INTERVAL = int(os.getenv("REGISTRATION_INTERVAL", "60"))
 AGENT_PORT = int(os.getenv("AGENT_PORT", "8080"))
 
+
 class TaskRequest(BaseModel):
     task_id: str
     task_type: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     priority: str = "normal"
     timeout: int = 300
+
 
 class AgentStatus(BaseModel):
     agent_id: str
@@ -55,23 +58,25 @@ class AgentStatus(BaseModel):
     uptime: str
     last_heartbeat: str
 
+
 @dataclass
 class AgentInfo:
     agent_id: str
     agent_type: str
-    capabilities: List[str]
+    capabilities: list[str]
     status: str
     created_at: datetime
     last_seen: datetime
     tasks_completed: int = 0
+
 
 class EducationalAgentPool:
     """Pool manager for educational agents"""
 
     def __init__(self):
         self.pool_id = f"educational-pool-{os.getpid()}"
-        self.agents: Dict[str, BaseAgent] = {}
-        self.agent_info: Dict[str, AgentInfo] = {}
+        self.agents: dict[str, BaseAgent] = {}
+        self.agent_info: dict[str, AgentInfo] = {}
         self.redis_client: Optional[redis.Redis] = None
         self.mcp_connection: Optional[Any] = None
         self.running = False
@@ -81,7 +86,7 @@ class EducationalAgentPool:
         self.app = FastAPI(
             title="Educational Agent Pool",
             description="Pool of educational content generation agents",
-            version="1.0.0"
+            version="1.0.0",
         )
 
         self.app.add_middleware(
@@ -103,7 +108,7 @@ class EducationalAgentPool:
                 "status": "healthy",
                 "pool_id": self.pool_id,
                 "agents": len(self.agents),
-                "uptime": str(datetime.now() - self.start_time)
+                "uptime": str(datetime.now() - self.start_time),
             }
 
         @self.app.get("/status")
@@ -112,21 +117,23 @@ class EducationalAgentPool:
             for agent_id, agent in self.agents.items():
                 info = self.agent_info.get(agent_id)
                 if info:
-                    agent_statuses.append(AgentStatus(
-                        agent_id=agent_id,
-                        agent_type=info.agent_type,
-                        status=info.status,
-                        current_task=agent.current_task,
-                        tasks_completed=info.tasks_completed,
-                        uptime=str(datetime.now() - info.created_at),
-                        last_heartbeat=info.last_seen.isoformat()
-                    ))
+                    agent_statuses.append(
+                        AgentStatus(
+                            agent_id=agent_id,
+                            agent_type=info.agent_type,
+                            status=info.status,
+                            current_task=agent.current_task,
+                            tasks_completed=info.tasks_completed,
+                            uptime=str(datetime.now() - info.created_at),
+                            last_heartbeat=info.last_seen.isoformat(),
+                        )
+                    )
 
             return {
                 "pool_id": self.pool_id,
                 "pool_status": "running" if self.running else "stopped",
                 "total_agents": len(self.agents),
-                "agents": agent_statuses
+                "agents": agent_statuses,
             }
 
         @self.app.post("/execute")
@@ -140,7 +147,7 @@ class EducationalAgentPool:
                 # Execute task
                 result = await available_agent.execute(
                     task=f"{request.task_type}: {request.payload}",
-                    context=request.payload
+                    context=request.payload,
                 )
 
                 # Update agent info
@@ -154,7 +161,7 @@ class EducationalAgentPool:
                     "output": result.output,
                     "metadata": result.metadata,
                     "execution_time": result.execution_time,
-                    "agent_id": available_agent.name
+                    "agent_id": available_agent.name,
                 }
 
             except Exception as e:
@@ -192,7 +199,7 @@ class EducationalAgentPool:
         agent_types = [
             ("content-agent", CurriculumAlignmentAgent),
             ("adaptive-agent", AdaptiveLearningAgent),
-            ("assessment-agent", AssessmentDesignAgent)
+            ("assessment-agent", AssessmentDesignAgent),
         ]
 
         for i in range(AGENT_POOL_SIZE):
@@ -206,7 +213,7 @@ class EducationalAgentPool:
                     max_retries=3,
                     timeout=300,
                     verbose=False,
-                    memory_enabled=True
+                    memory_enabled=True,
                 )
 
                 try:
@@ -219,7 +226,7 @@ class EducationalAgentPool:
                         capabilities=self._get_agent_capabilities(agent_type),
                         status="idle",
                         created_at=datetime.now(),
-                        last_seen=datetime.now()
+                        last_seen=datetime.now(),
                     )
 
                     logger.info(f"Created agent: {agent_id}")
@@ -227,12 +234,12 @@ class EducationalAgentPool:
                 except Exception as e:
                     logger.error(f"Failed to create agent {agent_id}: {e}")
 
-    def _get_agent_capabilities(self, agent_type: str) -> List[str]:
+    def _get_agent_capabilities(self, agent_type: str) -> list[str]:
         """Get capabilities for agent type"""
         capabilities_map = {
             "content-agent": ["content-generation", "curriculum-alignment"],
             "adaptive-agent": ["adaptive-learning", "personalization"],
-            "assessment-agent": ["assessment-design", "quiz-creation"]
+            "assessment-agent": ["assessment-design", "quiz-creation"],
         }
         return capabilities_map.get(agent_type, [])
 
@@ -242,25 +249,29 @@ class EducationalAgentPool:
             registration_data = {
                 "pool_id": self.pool_id,
                 "agent_type": "educational",
-                "capabilities": ["content-generation", "assessment-design", "adaptive-learning"],
+                "capabilities": [
+                    "content-generation",
+                    "assessment-design",
+                    "adaptive-learning",
+                ],
                 "agents": [
                     {
                         "agent_id": info.agent_id,
                         "agent_type": info.agent_type,
                         "capabilities": info.capabilities,
-                        "status": info.status
+                        "status": info.status,
                     }
                     for info in self.agent_info.values()
                 ],
                 "endpoint": f"http://educational-agents:{AGENT_PORT}",
-                "health_endpoint": f"http://educational-agents:{AGENT_PORT}/health"
+                "health_endpoint": f"http://educational-agents:{AGENT_PORT}/health",
             }
 
             # Store in Redis for MCP discovery
             await self.redis_client.hset(
                 "mcp:agent_pools",
                 self.pool_id,
-                json.dumps(registration_data, default=str)
+                json.dumps(registration_data, default=str),
             )
 
             # Set TTL for auto-cleanup
@@ -289,7 +300,7 @@ class EducationalAgentPool:
         support_map = {
             "content-agent": ["content-generation", "curriculum-alignment"],
             "adaptive-agent": ["adaptive-learning", "personalization"],
-            "assessment-agent": ["assessment-design", "quiz-creation"]
+            "assessment-agent": ["assessment-design", "quiz-creation"],
         }
 
         supported_tasks = support_map.get(agent_type, [])
@@ -348,13 +359,16 @@ class EducationalAgentPool:
             except Exception as e:
                 logger.error(f"Agent cleanup error: {e}")
 
+
 # Global pool instance
 pool = EducationalAgentPool()
+
 
 def signal_handler(signum, frame):
     """Handle shutdown signals"""
     logger.info(f"Received signal {signum}")
     asyncio.create_task(pool.shutdown())
+
 
 async def main():
     """Main entry point"""
@@ -367,12 +381,7 @@ async def main():
         await pool.initialize()
 
         # Start web server
-        config = uvicorn.Config(
-            app=pool.app,
-            host="0.0.0.0",
-            port=AGENT_PORT,
-            log_level="info"
-        )
+        config = uvicorn.Config(app=pool.app, host="0.0.0.0", port=AGENT_PORT, log_level="info")
         server = uvicorn.Server(config)
         await server.serve()
 
@@ -381,6 +390,7 @@ async def main():
         sys.exit(1)
     finally:
         await pool.shutdown()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -7,17 +7,18 @@ with rollback capabilities and circuit breaker patterns.
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from enum import Enum
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from core.agents.error_handling.base_error_agent import (
     BaseErrorAgent,
     ErrorAgentConfig,
     ErrorState,
-    ErrorType
+    ErrorType,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class RecoveryAction(BaseModel):
     action_id: str = Field(description="Unique action identifier")
     strategy: RecoveryStrategy = Field(description="Recovery strategy to apply")
     target: str = Field(description="Target component/service")
-    parameters: Dict[str, Any] = Field(description="Strategy parameters")
+    parameters: dict[str, Any] = Field(description="Strategy parameters")
     status: str = Field(description="Action status")
     attempts: int = Field(default=0, description="Number of attempts")
     success: bool = Field(default=False, description="Whether recovery succeeded")
@@ -96,10 +97,10 @@ class AutoRecoveryOrchestratorAgent(BaseErrorAgent):
         self.recovery_config = config
 
         # Recovery state
-        self.active_recoveries: Dict[str, RecoveryAction] = {}
-        self.circuit_breakers: Dict[str, CircuitBreakerState] = {}
-        self.recovery_history: List[RecoveryAction] = []
-        self.rollback_points: Dict[str, Any] = {}
+        self.active_recoveries: dict[str, RecoveryAction] = {}
+        self.circuit_breakers: dict[str, CircuitBreakerState] = {}
+        self.recovery_history: list[RecoveryAction] = []
+        self.rollback_points: dict[str, Any] = {}
 
         logger.info("Initialized Auto-Recovery Orchestrator Agent")
 
@@ -193,7 +194,7 @@ class AutoRecoveryOrchestratorAgent(BaseErrorAgent):
         self,
         strategy: RecoveryStrategy,
         error_state: ErrorState
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get parameters for recovery strategy"""
         params = {
             "error_id": error_state["error_id"],
@@ -327,7 +328,7 @@ class AutoRecoveryOrchestratorAgent(BaseErrorAgent):
     async def _execute_rollback(self, recovery_action: RecoveryAction) -> bool:
         """Execute rollback to previous state"""
         if recovery_action.action_id in self.rollback_points:
-            rollback_point = self.rollback_points[recovery_action.action_id]
+            self.rollback_points[recovery_action.action_id]
             logger.info(f"Rolling back {recovery_action.target} to previous state")
             # In production, would restore from rollback point
             await asyncio.sleep(1)  # Simulate rollback
@@ -371,7 +372,7 @@ class AutoRecoveryOrchestratorAgent(BaseErrorAgent):
         import random
         return random.random() > 0.5
 
-    async def _create_rollback_point(self, error_state: ErrorState) -> Dict[str, Any]:
+    async def _create_rollback_point(self, error_state: ErrorState) -> dict[str, Any]:
         """Create a rollback point"""
         return {
             "timestamp": datetime.now().isoformat(),
@@ -391,7 +392,7 @@ class AutoRecoveryOrchestratorAgent(BaseErrorAgent):
             return True
         return False
 
-    async def get_recovery_metrics(self) -> Dict[str, Any]:
+    async def get_recovery_metrics(self) -> dict[str, Any]:
         """Get recovery orchestration metrics"""
         base_metrics = await self.get_error_metrics()
 

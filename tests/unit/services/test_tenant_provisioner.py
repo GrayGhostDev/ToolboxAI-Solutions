@@ -72,17 +72,10 @@ class TestProvisionTenant:
             patch.object(
                 provisioner, "_create_admin_user", new_callable=AsyncMock
             ) as mock_create_admin,
-            patch.object(
-                provisioner, "_initialize_default_settings", new_callable=AsyncMock
-            ) as mock_init_settings,
-            patch.object(
-                provisioner, "_configure_default_features", new_callable=AsyncMock
-            ) as mock_config_features,
-            patch.object(
-                provisioner, "_send_welcome_email", new_callable=AsyncMock
-            ) as mock_send_email,
+            patch.object(provisioner, "_initialize_default_settings", new_callable=AsyncMock),
+            patch.object(provisioner, "_configure_default_features", new_callable=AsyncMock),
+            patch.object(provisioner, "_send_welcome_email", new_callable=AsyncMock),
         ):
-
             mock_create_admin.return_value = {
                 "user_id": 1,
                 "email": "admin@test-org.com",
@@ -167,7 +160,6 @@ class TestProvisionTenant:
                 provisioner, "_send_welcome_email", new_callable=AsyncMock
             ) as mock_send_email,
         ):
-
             # Make admin creation fail
             mock_create_admin.side_effect = Exception("Email service unavailable")
 
@@ -177,7 +169,9 @@ class TestProvisionTenant:
 
             # Act
             result = await provisioner.provision_tenant(
-                organization_id=mock_organization.id, create_admin=True, initialize_defaults=True
+                organization_id=mock_organization.id,
+                create_admin=True,
+                initialize_defaults=True,
             )
 
             # Assert
@@ -202,7 +196,6 @@ class TestProvisionTenant:
                 provisioner, "_configure_default_features", new_callable=AsyncMock
             ) as mock_config_features,
         ):
-
             mock_init_settings.return_value = None
             mock_config_features.return_value = None
 
@@ -283,7 +276,8 @@ class TestCreateAdminUser:
         # Act & Assert
         with pytest.raises(ValueError) as exc_info:
             await provisioner._create_admin_user(
-                org=mock_organization, email=None  # No email provided and org has no email
+                org=mock_organization,
+                email=None,  # No email provided and org has no email
             )
 
         assert "Admin email is required" in str(exc_info.value)

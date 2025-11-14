@@ -104,7 +104,11 @@ class ScanConfiguration:
     notification_webhook: str | None = None
     excluded_extensions: list[str] = field(default_factory=lambda: [".txt", ".md"])
     required_categories: list[str] = field(
-        default_factory=lambda: ["student_submission", "educational_content", "media_resource"]
+        default_factory=lambda: [
+            "student_submission",
+            "educational_content",
+            "media_resource",
+        ]
     )
 
 
@@ -179,7 +183,10 @@ class VirusScanner:
             self.clamd_client = None
 
     async def scan_data(
-        self, file_data: bytes, filename: str | None = None, file_category: str | None = None
+        self,
+        file_data: bytes,
+        filename: str | None = None,
+        file_category: str | None = None,
     ) -> ScanResult:
         """
         Scan file data for viruses.
@@ -326,7 +333,10 @@ class VirusScanner:
             logger.error(f"Async scan submission failed: {e}")
             # Update result with error
             self._scan_results[scan_id] = ScanResult(
-                scan_id=scan_id, status=ScanStatus.ERROR, is_clean=False, details={"error": str(e)}
+                scan_id=scan_id,
+                status=ScanStatus.ERROR,
+                is_clean=False,
+                details={"error": str(e)},
             )
             return scan_id
 
@@ -423,7 +433,7 @@ class VirusScanner:
         Get scanner status and statistics.
 
         Returns:
-            Dict[str, Any]: Scanner status information
+            dict[str, Any]: Scanner status information
         """
         try:
             status = {
@@ -515,7 +525,10 @@ class VirusScanner:
         except Exception as e:
             logger.error(f"ClamAV scan failed: {e}")
             return ScanResult(
-                scan_id=scan_id, status=ScanStatus.ERROR, is_clean=False, details={"error": str(e)}
+                scan_id=scan_id,
+                status=ScanStatus.ERROR,
+                is_clean=False,
+                details={"error": str(e)},
             )
 
     async def _mock_scan(self, scan_id: str, file_data: bytes, filename: str | None) -> ScanResult:

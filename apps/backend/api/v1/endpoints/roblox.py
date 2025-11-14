@@ -619,7 +619,8 @@ async def get_game_instance(
     """
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Game instance {game_id} not found",
         )
 
     game_instance = game_instances[game_id]
@@ -632,7 +633,8 @@ async def get_game_instance(
         # Students can access if they're enrolled in the class (simplified check)
         if user_role != "student":
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this game instance"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this game instance",
             )
 
     return GameInstanceResponse(**game_instance)
@@ -640,7 +642,9 @@ async def get_game_instance(
 
 @roblox_router.put("/game/{game_id}/settings", response_model=GameInstanceResponse)
 async def update_game_settings(
-    game_id: str, request: UpdateGameSettingsRequest, current_user: User = Depends(get_current_user)
+    game_id: str,
+    request: UpdateGameSettingsRequest,
+    current_user: User = Depends(get_current_user),
 ) -> GameInstanceResponse:
     """
     Update game instance settings.
@@ -652,7 +656,8 @@ async def update_game_settings(
     """
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Game instance {game_id} not found",
         )
 
     game_instance = game_instances[game_id]
@@ -706,7 +711,8 @@ async def delete_game_instance(game_id: str, current_user: User = Depends(get_cu
     """
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Game instance {game_id} not found",
         )
 
     game_instance = game_instances[game_id]
@@ -729,7 +735,11 @@ async def delete_game_instance(game_id: str, current_user: User = Depends(get_cu
     # Notify connected clients
     await ws_manager.send_to_room(
         f"game_{game_id}",
-        {"type": "game_archived", "game_id": game_id, "timestamp": datetime.utcnow().isoformat()},
+        {
+            "type": "game_archived",
+            "game_id": game_id,
+            "timestamp": datetime.utcnow().isoformat(),
+        },
     )
 
     logger.info(f"Archived game instance {game_id} by user {current_user.email}")
@@ -827,7 +837,11 @@ async def get_content_templates(
             "category": "educational",
             "subject": "Science",
             "grade_levels": [6, 7, 8, 9],
-            "features": ["Zero Gravity Physics", "Laboratory Equipment", "Planet Observation"],
+            "features": [
+                "Zero Gravity Physics",
+                "Laboratory Equipment",
+                "Planet Observation",
+            ],
             "difficulty": "intermediate",
             "thumbnail_url": "/templates/space_station.png",
             "created_at": datetime.utcnow() - timedelta(days=30),
@@ -853,7 +867,11 @@ async def get_content_templates(
             "category": "adventure",
             "subject": "History",
             "grade_levels": [7, 8, 9, 10],
-            "features": ["Historical Recreations", "Interactive Characters", "Timeline Navigation"],
+            "features": [
+                "Historical Recreations",
+                "Interactive Characters",
+                "Timeline Navigation",
+            ],
             "difficulty": "advanced",
             "thumbnail_url": "/templates/time_machine.png",
             "created_at": datetime.utcnow() - timedelta(days=45),
@@ -910,7 +928,8 @@ async def deploy_content_to_game(
     # Verify content exists
     if request.content_id not in generated_content:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Content {request.content_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Content {request.content_id} not found",
         )
 
     # Verify game exists
@@ -1170,7 +1189,7 @@ async def save_student_checkpoint(
 @roblox_router.get("/progress/leaderboard", response_model=LeaderboardResponse)
 async def get_class_leaderboard(
     game_id: str,
-    leaderboard_type: str = Query("score", regex="^(score|progress|time)$"),
+    leaderboard_type: str = Query("score", pattern="^(score|progress|time)$"),
     limit: int = Query(50, ge=1, le=100),
     current_user: User = Depends(get_current_user),
 ) -> LeaderboardResponse:
@@ -1183,7 +1202,8 @@ async def get_class_leaderboard(
     # Verify game exists
     if game_id not in game_instances:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Game instance {game_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Game instance {game_id} not found",
         )
 
     # Get all progress records for this game
@@ -1468,7 +1488,11 @@ async def get_session_analytics(
             {"minute": i, "activity_level": max(1, 10 - abs(i - 22))}
             for i in range(session.get("duration_minutes", 45))
         ],
-        performance_metrics={"response_time_avg": 1.2, "error_rate": 0.03, "memory_usage": 245.6},
+        performance_metrics={
+            "response_time_avg": 1.2,
+            "error_rate": 0.03,
+            "memory_usage": 245.6,
+        },
     )
 
 
@@ -1686,7 +1710,9 @@ async def deploy_content_async(deployment_id: str, request: ContentDeploymentReq
     """Background task for content deployment"""
     try:
         deployment = deployments[deployment_id]
-        content = generated_content[request.content_id]
+        _content = generated_content[
+            request.content_id
+        ]  # noqa: F841 - Reserved for deployment content data
 
         # Simulate deployment phases
         phases = [
@@ -1773,7 +1799,9 @@ def estimate_generation_time(request: ContentGenerationRequest) -> int:
 
 
 @roblox_router.get("/auth/login")
-async def roblox_oauth_login(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+async def roblox_oauth_login(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """Initiate Roblox OAuth login flow (Legacy endpoint)"""
     state = str(uuid.uuid4())
 

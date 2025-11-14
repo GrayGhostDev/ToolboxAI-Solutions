@@ -4,26 +4,22 @@ Unit Tests for BackupManager
 Tests backup creation, encryption, compression, and metadata handling.
 """
 
-import pytest
-import asyncio
 import json
 import os
-from pathlib import Path
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-import tempfile
 import shutil
 
 # Add parent directory to path for imports
 import sys
+import tempfile
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from backup.backup_manager import (
-    BackupManager,
-    BackupType,
-    BackupStatus,
-    BackupMetadata
-)
+from backup.backup_manager import BackupManager, BackupMetadata, BackupStatus
 
 
 @pytest.fixture
@@ -40,30 +36,20 @@ def mock_config(temp_backup_dir):
     return {
         "version": "1.0.0",
         "backup_strategies": {
-            "full": {
-                "enabled": True,
-                "schedule": "0 2 * * 0",
-                "retention_days": 30
-            },
+            "full": {"enabled": True, "schedule": "0 2 * * 0", "retention_days": 30},
             "incremental": {
                 "enabled": True,
                 "schedule": "0 2 * * 1-6",
-                "retention_days": 7
-            }
+                "retention_days": 7,
+            },
         },
         "encryption": {
             "enabled": True,
             "algorithm": "AES-256-GCM",
             "key_rotation_days": 90,
-            "fernet_enabled": True
+            "fernet_enabled": True,
         },
-        "storage": {
-            "local": {
-                "path": str(temp_backup_dir),
-                "enabled": True,
-                "max_size_gb": 500
-            }
-        },
+        "storage": {"local": {"path": str(temp_backup_dir), "enabled": True, "max_size_gb": 500}},
         "databases": {
             "postgresql": {
                 "host": "localhost",
@@ -72,28 +58,23 @@ def mock_config(temp_backup_dir):
                 "user": "test_user",
                 "backup_format": "custom",
                 "compress_level": 9,
-                "parallel_jobs": 4
+                "parallel_jobs": 4,
             }
         },
-        "compression": {
-            "enabled": True,
-            "algorithm": "gzip",
-            "level": 9
-        },
-        "validation": {
-            "enabled": True,
-            "checksum_algorithm": "SHA256"
-        },
+        "compression": {"enabled": True, "algorithm": "gzip", "level": 9},
+        "validation": {"enabled": True, "checksum_algorithm": "SHA256"},
         "rto_minutes": 30,
-        "rpo_minutes": 60
+        "rpo_minutes": 60,
     }
 
 
 @pytest.fixture
 def backup_manager(mock_config, temp_backup_dir):
     """Create BackupManager instance with mocked configuration."""
-    with patch.object(BackupManager, '_load_config', return_value=mock_config):
-        with patch.dict(os.environ, {'BACKUP_ENCRYPTION_KEY': 'test_key_32_bytes_long_for_fernet!'}):
+    with patch.object(BackupManager, "_load_config", return_value=mock_config):
+        with patch.dict(
+            os.environ, {"BACKUP_ENCRYPTION_KEY": "test_key_32_bytes_long_for_fernet!"}
+        ):
             manager = BackupManager()
             manager.backup_root = temp_backup_dir
             manager.metadata_dir = temp_backup_dir / "metadata"
@@ -170,6 +151,7 @@ class TestChecksumCalculation:
 
         # Calculate expected checksum
         import hashlib
+
         expected = hashlib.sha256(test_content).hexdigest()
         assert checksum == expected
 
@@ -208,7 +190,8 @@ class TestCompression:
 
         # Verify can decompress
         import gzip
-        with gzip.open(output_file, 'rb') as f:
+
+        with gzip.open(output_file, "rb") as f:
             decompressed = f.read()
 
         assert decompressed == test_content
@@ -270,7 +253,7 @@ class TestMetadataManagement:
             compressed=True,
             status="completed",
             duration_seconds=120.5,
-            retention_until=(datetime.now() + timedelta(days=30)).isoformat()
+            retention_until=(datetime.now() + timedelta(days=30)).isoformat(),
         )
 
         backup_manager._save_metadata(metadata)
@@ -280,7 +263,7 @@ class TestMetadataManagement:
         assert metadata_file.exists()
 
         # Verify content
-        with open(metadata_file, 'r') as f:
+        with open(metadata_file) as f:
             saved_data = json.load(f)
 
         assert saved_data["backup_id"] == "test_backup_001"
@@ -292,13 +275,11 @@ class TestMetadataManagement:
 class TestDatabaseCredentials:
     """Test database credential extraction."""
 
-    @patch.dict(os.environ, {
-        'DATABASE_URL': 'postgresql://user:pass@localhost:5432/testdb'
-    })
+    @patch.dict(os.environ, {"DATABASE_URL": "postgresql://user:pass@localhost:5432/testdb"})
     def test_get_database_credentials_from_url(self, backup_manager):
         """Test extracting credentials from DATABASE_URL."""
-        with patch('backup.backup_manager.settings') as mock_settings:
-            mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+        with patch("backup.backup_manager.settings") as mock_settings:
+            mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
             creds = backup_manager._get_database_credentials()
 
@@ -308,15 +289,18 @@ class TestDatabaseCredentials:
             assert creds["password"] == "pass"
             assert creds["database"] == "testdb"
 
-    @patch.dict(os.environ, {
-        'DATABASE_URL': 'postgresql://host:5432/dbname',
-        'DB_USER': 'envuser',
-        'DB_PASSWORD': 'envpass'
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "DATABASE_URL": "postgresql://host:5432/dbname",
+            "DB_USER": "envuser",
+            "DB_PASSWORD": "envpass",
+        },
+    )
     def test_get_database_credentials_from_env(self, backup_manager):
         """Test extracting credentials from environment variables."""
-        with patch('backup.backup_manager.settings') as mock_settings:
-            mock_settings.DATABASE_URL = 'postgresql://host:5432/dbname'
+        with patch("backup.backup_manager.settings") as mock_settings:
+            mock_settings.DATABASE_URL = "postgresql://host:5432/dbname"
 
             creds = backup_manager._get_database_credentials()
 
@@ -335,15 +319,19 @@ class TestFullBackupCreation:
         mock_process.returncode = 0
         mock_process.communicate = AsyncMock(return_value=(b"Success", b""))
 
-        with patch('asyncio.create_subprocess_exec', return_value=mock_process):
-            with patch('backup.backup_manager.settings') as mock_settings:
-                mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+            with patch("backup.backup_manager.settings") as mock_settings:
+                mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
                 # Create dummy backup file
                 backup_file = temp_backup_dir / "backup_full_test.dump"
                 backup_file.write_bytes(b"Mock backup data")
 
-                with patch.object(backup_manager, '_generate_backup_id', return_value='backup_full_test'):
+                with patch.object(
+                    backup_manager,
+                    "_generate_backup_id",
+                    return_value="backup_full_test",
+                ):
                     metadata = await backup_manager.create_full_backup()
 
         assert metadata is not None
@@ -358,9 +346,9 @@ class TestFullBackupCreation:
         mock_process.returncode = 1
         mock_process.communicate = AsyncMock(return_value=(b"", b"pg_dump error"))
 
-        with patch('asyncio.create_subprocess_exec', return_value=mock_process):
-            with patch('backup.backup_manager.settings') as mock_settings:
-                mock_settings.DATABASE_URL = 'postgresql://user:pass@localhost:5432/testdb'
+        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
+            with patch("backup.backup_manager.settings") as mock_settings:
+                mock_settings.DATABASE_URL = "postgresql://user:pass@localhost:5432/testdb"
 
                 with pytest.raises(RuntimeError, match="Backup failed"):
                     await backup_manager.create_full_backup()
@@ -372,7 +360,9 @@ class TestBackupTypeSelection:
     @pytest.mark.asyncio
     async def test_create_backup_full_type(self, backup_manager):
         """Test creating full backup via create_backup method."""
-        with patch.object(backup_manager, 'create_full_backup', new_callable=AsyncMock) as mock_full:
+        with patch.object(
+            backup_manager, "create_full_backup", new_callable=AsyncMock
+        ) as mock_full:
             mock_metadata = BackupMetadata(
                 backup_id="test",
                 backup_type="full",
@@ -385,7 +375,7 @@ class TestBackupTypeSelection:
                 compressed=False,
                 status="completed",
                 duration_seconds=0,
-                retention_until=""
+                retention_until="",
             )
             mock_full.return_value = mock_metadata
 

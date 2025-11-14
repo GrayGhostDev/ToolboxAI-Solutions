@@ -232,7 +232,7 @@ async def health_check():
     """
     try:
         # Test basic functionality
-        test_result = await design_folder_scanner.get_design_summary()
+        await design_folder_scanner.get_design_summary()
 
         return {
             "success": True,

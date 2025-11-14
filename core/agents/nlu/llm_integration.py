@@ -4,18 +4,19 @@ Provides real LLM capabilities to make the NLU agent interactive and context-awa
 addressing the core issue of "robotic flow" and "repeating questions".
 """
 
-import os
 import json
 import logging
-from typing import Dict, Any, List, Optional
+import os
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
 # Try to import LLM libraries
 try:
     from openai import AsyncOpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -23,6 +24,7 @@ except ImportError:
 
 try:
     from anthropic import AsyncAnthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
@@ -31,6 +33,7 @@ except ImportError:
 
 class LLMProvider(Enum):
     """Supported LLM providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     MOCK = "mock"
@@ -39,6 +42,7 @@ class LLMProvider(Enum):
 @dataclass
 class LLMConfig:
     """Configuration for LLM integration."""
+
     provider: LLMProvider = LLMProvider.MOCK
     model: Optional[str] = None
     api_key: Optional[str] = None
@@ -83,9 +87,9 @@ class LLMIntegration:
     async def understand_intent(
         self,
         user_input: str,
-        conversation_history: List[Dict[str, str]],
-        accumulated_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        conversation_history: list[dict[str, str]],
+        accumulated_context: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Use LLM to understand user intent with full context awareness.
 
@@ -95,7 +99,9 @@ class LLMIntegration:
         3. Providing intelligent, context-aware responses
         """
         if self.config.provider == LLMProvider.MOCK:
-            return await self._mock_understand_intent(user_input, conversation_history, accumulated_context)
+            return await self._mock_understand_intent(
+                user_input, conversation_history, accumulated_context
+            )
 
         # Build context-aware prompt
         system_prompt = self._build_system_prompt(accumulated_context)
@@ -107,7 +113,9 @@ class LLMIntegration:
             elif self.config.provider == LLMProvider.ANTHROPIC:
                 response = await self._call_anthropic(system_prompt, user_prompt)
             else:
-                response = await self._mock_understand_intent(user_input, conversation_history, accumulated_context)
+                response = await self._mock_understand_intent(
+                    user_input, conversation_history, accumulated_context
+                )
 
             # Parse the JSON response
             return self._parse_llm_response(response)
@@ -115,9 +123,11 @@ class LLMIntegration:
         except Exception as e:
             logger.error(f"LLM call failed: {e}")
             # Fallback to mock on error
-            return await self._mock_understand_intent(user_input, conversation_history, accumulated_context)
+            return await self._mock_understand_intent(
+                user_input, conversation_history, accumulated_context
+            )
 
-    def _build_system_prompt(self, context: Dict[str, Any]) -> str:
+    def _build_system_prompt(self, context: dict[str, Any]) -> str:
         """Build system prompt with context awareness."""
         return f"""You are an intelligent educational content assistant that helps create Roblox educational experiences.
 
@@ -141,7 +151,7 @@ Respond with a JSON object containing:
 
 Remember: Be intelligent and context-aware. Don't ask for information that's already been provided."""
 
-    def _build_user_prompt(self, user_input: str, history: List[Dict[str, str]]) -> str:
+    def _build_user_prompt(self, user_input: str, history: list[dict[str, str]]) -> str:
         """Build user prompt with conversation history."""
         prompt = "Conversation History:\n"
 
@@ -165,11 +175,11 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
             model=self.config.model,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
-            response_format={"type": "json_object"}
+            response_format={"type": "json_object"},
         )
 
         return response.choices[0].message.content
@@ -184,16 +194,14 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
 
         response = await self.client.messages.create(
             model=self.config.model,
-            messages=[
-                {"role": "user", "content": full_prompt}
-            ],
+            messages=[{"role": "user", "content": full_prompt}],
             temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens
+            max_tokens=self.config.max_tokens,
         )
 
         return response.content[0].text
 
-    def _parse_llm_response(self, response: str) -> Dict[str, Any]:
+    def _parse_llm_response(self, response: str) -> dict[str, Any]:
         """Parse LLM response into structured format."""
         try:
             # Try to parse as JSON
@@ -207,7 +215,7 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
                 "clarifications_needed": data.get("clarifications_needed", []),
                 "suggestions": data.get("suggestions", []),
                 "understood_context": data.get("understood_context", ""),
-                "raw_response": response
+                "raw_response": response,
             }
         except json.JSONDecodeError:
             logger.error(f"Failed to parse LLM response as JSON: {response[:200]}")
@@ -219,15 +227,12 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
                 "clarifications_needed": [],
                 "suggestions": ["Could you please rephrase your request?"],
                 "understood_context": "",
-                "raw_response": response
+                "raw_response": response,
             }
 
     async def _mock_understand_intent(
-        self,
-        user_input: str,
-        history: List[Dict[str, str]],
-        context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, user_input: str, history: list[dict[str, str]], context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Mock implementation for development/testing."""
         # Intelligent mock that demonstrates context awareness
         user_input_lower = user_input.lower()
@@ -274,7 +279,7 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
             suggestions = [
                 "I can help you add interactive elements to make the lesson engaging",
                 "Would you like to include assessment questions?",
-                "Consider adding visual demonstrations for better understanding"
+                "Consider adding visual demonstrations for better understanding",
             ]
 
         understood = "I understand you want to "
@@ -292,13 +297,13 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
             "clarifications_needed": clarifications,
             "suggestions": suggestions,
             "understood_context": understood,
-            "is_followup": is_followup
+            "is_followup": is_followup,
         }
 
     async def generate_response(
         self,
-        intent_result: Dict[str, Any],
-        task_results: Optional[Dict[str, Any]] = None
+        intent_result: dict[str, Any],
+        task_results: Optional[dict[str, Any]] = None,
     ) -> str:
         """Generate a natural language response based on understanding and results."""
         if self.config.provider == LLMProvider.MOCK:
@@ -311,8 +316,8 @@ Remember: Be intelligent and context-aware. Don't ask for information that's alr
 
     def _generate_mock_response(
         self,
-        intent_result: Dict[str, Any],
-        task_results: Optional[Dict[str, Any]] = None
+        intent_result: dict[str, Any],
+        task_results: Optional[dict[str, Any]] = None,
     ) -> str:
         """Generate a mock natural language response."""
         understood = intent_result.get("understood_context", "")

@@ -6,20 +6,19 @@ handles real-time updates, and resolves conflicts in the ToolboxAI Roblox Enviro
 """
 
 import asyncio
-import logging
-from typing import Dict, Any, List, Optional, Set, Callable, Union
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict, field
-from collections import defaultdict, deque
-from enum import Enum
 import json
+import logging
 import uuid
-import weakref
+from collections import defaultdict, deque
+
 # WebSocket import for type hints (Pusher used for actual real-time communication)
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Optional
 
-from fastapi import FastAPI, HTTPException, WebSocket
-from pydantic import BaseModel
+from fastapi import FastAPI, WebSocket
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class Event:
     event_type: str
     source: str
     target: Optional[str]
-    data: Dict[str, Any]
+    data: dict[str, Any]
     priority: EventPriority = EventPriority.NORMAL
     timestamp: datetime = field(default_factory=datetime.now)
     ttl_seconds: int = 3600
@@ -68,7 +67,7 @@ class StateSnapshot:
     """Snapshot of component state"""
 
     component_id: str
-    state_data: Dict[str, Any]
+    state_data: dict[str, Any]
     version: int
     timestamp: datetime = field(default_factory=datetime.now)
     checksum: str = ""
@@ -95,7 +94,7 @@ class ConflictResolution:
     component_b: str
     conflict_type: str
     resolution_strategy: str
-    resolved_state: Dict[str, Any]
+    resolved_state: dict[str, Any]
     resolution_time: datetime = field(default_factory=datetime.now)
 
 
@@ -111,35 +110,33 @@ class SyncCoordinator:
     - State versioning and rollback
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
 
         # Configuration
         self.event_buffer_size = self.config.get("event_buffer_size", 10000)
         self.state_history_size = self.config.get("state_history_size", 100)
         self.sync_interval = self.config.get("sync_interval", 5)  # seconds
-        self.enable_conflict_resolution = self.config.get(
-            "enable_conflict_resolution", True
-        )
+        self.enable_conflict_resolution = self.config.get("enable_conflict_resolution", True)
 
         # Core state
         self.is_initialized = False
-        self.component_states: Dict[str, StateSnapshot] = {}
-        self.state_history: Dict[str, deque] = defaultdict(
+        self.component_states: dict[str, StateSnapshot] = {}
+        self.state_history: dict[str, deque] = defaultdict(
             lambda: deque(maxlen=self.state_history_size)
         )
 
         # Event system
         self.event_queue = asyncio.Queue(maxsize=self.event_buffer_size)
-        self.event_handlers: Dict[str, List[Callable]] = defaultdict(list)
+        self.event_handlers: dict[str, list[Callable]] = defaultdict(list)
         self.event_history = deque(maxlen=1000)
 
         # WebSocket connections
-        self.websocket_connections: Set[WebSocket] = set()
-        self.component_websockets: Dict[str, WebSocket] = {}
+        self.websocket_connections: set[WebSocket] = set()
+        self.component_websockets: dict[str, WebSocket] = {}
 
         # Conflict management
-        self.active_conflicts: Dict[str, ConflictResolution] = {}
+        self.active_conflicts: dict[str, ConflictResolution] = {}
         self.conflict_resolution_strategies = {
             "timestamp_wins": self._resolve_by_timestamp,
             "version_wins": self._resolve_by_version,
@@ -148,8 +145,8 @@ class SyncCoordinator:
         }
 
         # Sync status tracking
-        self.component_sync_status: Dict[str, SyncState] = {}
-        self.last_sync_times: Dict[str, datetime] = {}
+        self.component_sync_status: dict[str, SyncState] = {}
+        self.last_sync_times: dict[str, datetime] = {}
 
         # Background tasks
         self.event_processor_task = None
@@ -188,12 +185,8 @@ class SyncCoordinator:
 
         # State change events
         self.register_event_handler("state_changed", self._handle_state_change)
-        self.register_event_handler(
-            "component_connected", self._handle_component_connect
-        )
-        self.register_event_handler(
-            "component_disconnected", self._handle_component_disconnect
-        )
+        self.register_event_handler("component_connected", self._handle_component_connect)
+        self.register_event_handler("component_disconnected", self._handle_component_disconnect)
 
         # Workflow events
         self.register_event_handler("workflow_started", self._handle_workflow_event)
@@ -207,9 +200,7 @@ class SyncCoordinator:
         # Educational events
         self.register_event_handler("content_generated", self._handle_content_event)
         self.register_event_handler("quiz_completed", self._handle_educational_event)
-        self.register_event_handler(
-            "learning_objective_achieved", self._handle_educational_event
-        )
+        self.register_event_handler("learning_objective_achieved", self._handle_educational_event)
 
         logger.info("Event handlers registered successfully")
 
@@ -228,7 +219,7 @@ class SyncCoordinator:
         self,
         event_type: str,
         source: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         target: Optional[str] = None,
         priority: EventPriority = EventPriority.NORMAL,
     ) -> str:
@@ -303,18 +294,14 @@ class SyncCoordinator:
 
             if handlers:
                 # Execute handlers in parallel
-                handler_tasks = [
-                    asyncio.create_task(handler(event)) for handler in handlers
-                ]
+                handler_tasks = [asyncio.create_task(handler(event)) for handler in handlers]
 
                 results = await asyncio.gather(*handler_tasks, return_exceptions=True)
 
                 # Log handler results
                 for i, result in enumerate(results):
                     if isinstance(result, Exception):
-                        logger.error(
-                            f"Event handler {i} failed for {event.event_id}: {result}"
-                        )
+                        logger.error(f"Event handler {i} failed for {event.event_id}: {result}")
 
             # Broadcast to WebSocket connections
             await self._broadcast_event(event)
@@ -366,7 +353,7 @@ class SyncCoordinator:
     async def update_component_state(
         self,
         component_id: str,
-        state_data: Dict[str, Any],
+        state_data: dict[str, Any],
         version: Optional[int] = None,
     ) -> StateSnapshot:
         """
@@ -395,9 +382,7 @@ class SyncCoordinator:
             if current_state and self.enable_conflict_resolution:
                 conflict = await self._detect_conflict(current_state, new_snapshot)
                 if conflict:
-                    return await self._handle_conflict(
-                        conflict, current_state, new_snapshot
-                    )
+                    return await self._handle_conflict(conflict, current_state, new_snapshot)
 
             # Update state
             self.component_states[component_id] = new_snapshot
@@ -418,9 +403,7 @@ class SyncCoordinator:
                 priority=EventPriority.NORMAL,
             )
 
-            logger.debug(
-                f"Updated state for component {component_id} to version {version}"
-            )
+            logger.debug(f"Updated state for component {component_id} to version {version}")
 
             return new_snapshot
 
@@ -480,9 +463,7 @@ class SyncCoordinator:
             self.component_sync_status[component_id] = SyncState.ERROR
             return False
 
-    async def _fetch_component_state(
-        self, component_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def _fetch_component_state(self, component_id: str) -> Optional[dict[str, Any]]:
         """Fetch current state from a component"""
         try:
             # Try different methods to get component state
@@ -548,15 +529,13 @@ class SyncCoordinator:
             return "concurrent_update"
 
         # Data conflict (incompatible changes)
-        if await self._has_incompatible_changes(
-            current_state.state_data, new_state.state_data
-        ):
+        if await self._has_incompatible_changes(current_state.state_data, new_state.state_data):
             return "data_conflict"
 
         return None
 
     async def _has_incompatible_changes(
-        self, current_data: Dict[str, Any], new_data: Dict[str, Any]
+        self, current_data: dict[str, Any], new_data: dict[str, Any]
     ) -> bool:
         """Check if changes are incompatible and require conflict resolution"""
 
@@ -566,7 +545,7 @@ class SyncCoordinator:
         )
 
     def _compare_data_structures(
-        self, current_data: Dict[str, Any], new_data: Dict[str, Any]
+        self, current_data: dict[str, Any], new_data: dict[str, Any]
     ) -> bool:
         """Compare data structures for conflicts (runs in thread pool)"""
         # Simple conflict detection - check for key deletions or type changes
@@ -595,9 +574,7 @@ class SyncCoordinator:
         """Handle state conflict using resolution strategies"""
         conflict_id = str(uuid.uuid4())
 
-        logger.warning(
-            f"Conflict detected for {new_state.component_id}: {conflict_type}"
-        )
+        logger.warning(f"Conflict detected for {new_state.component_id}: {conflict_type}")
 
         # Select resolution strategy
         strategy = self.config.get("default_conflict_strategy", "timestamp_wins")
@@ -605,9 +582,7 @@ class SyncCoordinator:
             strategy = self.config["conflict_strategies"][conflict_type]
 
         # Apply resolution strategy
-        resolver = self.conflict_resolution_strategies.get(
-            strategy, self._resolve_by_timestamp
-        )
+        resolver = self.conflict_resolution_strategies.get(strategy, self._resolve_by_timestamp)
         resolved_state = await resolver(current_state, new_state)
 
         # Record conflict resolution
@@ -673,8 +648,8 @@ class SyncCoordinator:
         )
 
     def _merge_state_data(
-        self, current_data: Dict[str, Any], new_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, current_data: dict[str, Any], new_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Merge state data (runs in thread pool)"""
         merged = current_data.copy()
 
@@ -704,7 +679,7 @@ class SyncCoordinator:
         self,
         component_id: str,
         websocket: Optional[WebSocket] = None,
-        initial_state: Optional[Dict[str, Any]] = None,
+        initial_state: Optional[dict[str, Any]] = None,
     ) -> bool:
         """
         Register a component for state synchronization
@@ -775,7 +750,7 @@ class SyncCoordinator:
             logger.error(f"Failed to unregister component {component_id}: {e}")
             return False
 
-    async def get_sync_status(self) -> Dict[str, Any]:
+    async def get_sync_status(self) -> dict[str, Any]:
         """Get comprehensive synchronization status"""
 
         # Component status summary
@@ -786,11 +761,7 @@ class SyncCoordinator:
         # Sync health assessment
         total_components = len(self.component_sync_status)
         synced_components = status_counts.get("synced", 0)
-        sync_health = (
-            (synced_components / total_components * 100)
-            if total_components > 0
-            else 100
-        )
+        sync_health = (synced_components / total_components * 100) if total_components > 0 else 100
 
         # Recent sync activity
         recent_syncs = sum(
@@ -813,14 +784,12 @@ class SyncCoordinator:
 
     async def get_component_history(
         self, component_id: str, limit: int = 10
-    ) -> List[StateSnapshot]:
+    ) -> list[StateSnapshot]:
         """Get state history for a component"""
         history = self.state_history.get(component_id, deque())
         return list(history)[-limit:]
 
-    async def rollback_component_state(
-        self, component_id: str, target_version: int
-    ) -> bool:
+    async def rollback_component_state(self, component_id: str, target_version: int) -> bool:
         """
         Rollback component state to a specific version
 
@@ -836,9 +805,7 @@ class SyncCoordinator:
             target_state = await self.get_component_state(component_id, target_version)
 
             if not target_state:
-                raise ValueError(
-                    f"Version {target_version} not found for component {component_id}"
-                )
+                raise ValueError(f"Version {target_version} not found for component {component_id}")
 
             # Create new state with incremented version
             rollback_state = StateSnapshot(
@@ -868,9 +835,7 @@ class SyncCoordinator:
             return True
 
         except Exception as e:
-            logger.error(
-                f"Failed to rollback {component_id} to version {target_version}: {e}"
-            )
+            logger.error(f"Failed to rollback {component_id} to version {target_version}: {e}")
             return False
 
     async def _sync_monitor(self):
@@ -893,9 +858,7 @@ class SyncCoordinator:
                 # Monitor event queue health
                 queue_size = self.event_queue.qsize()
                 if queue_size > self.event_buffer_size * 0.8:
-                    logger.warning(
-                        f"Event queue is {queue_size}/{self.event_buffer_size} full"
-                    )
+                    logger.warning(f"Event queue is {queue_size}/{self.event_buffer_size} full")
 
                 await asyncio.sleep(self.sync_interval)
 
@@ -918,9 +881,7 @@ class SyncCoordinator:
                     del self.active_conflicts[conflict_id]
 
                 if expired_conflicts:
-                    logger.info(
-                        f"Cleaned up {len(expired_conflicts)} expired conflicts"
-                    )
+                    logger.info(f"Cleaned up {len(expired_conflicts)} expired conflicts")
 
                 await asyncio.sleep(3600)  # Cleanup every hour
 
@@ -972,7 +933,7 @@ class SyncCoordinator:
         action = event.data.get("action")  # allocated/released/updated
         component_id = event.data.get("component_id")
         resource_data = event.data.get("resource_data", {})
-        
+
         # Update resource tracking
         if action == "allocated":
             # Track resource allocation
@@ -984,21 +945,18 @@ class SyncCoordinator:
                     "allocated_to": component_id,
                     "allocated_at": datetime.now().isoformat(),
                     "data": resource_data,
-                    "status": "allocated"
-                }
+                    "status": "allocated",
+                },
             )
-            
+
             # Update component resource list
             component_state = await self.get_component_state(component_id)
             if component_state:
                 resources = component_state.state_data.get("resources", [])
                 resources.append(resource_id)
                 component_state.state_data["resources"] = resources
-                await self.update_component_state(
-                    component_id,
-                    component_state.state_data
-                )
-        
+                await self.update_component_state(component_id, component_state.state_data)
+
         elif action == "released":
             # Track resource release
             await self.update_component_state(
@@ -1008,10 +966,10 @@ class SyncCoordinator:
                     "type": resource_type,
                     "released_from": component_id,
                     "released_at": datetime.now().isoformat(),
-                    "status": "available"
-                }
+                    "status": "available",
+                },
             )
-            
+
             # Update component resource list
             component_state = await self.get_component_state(component_id)
             if component_state:
@@ -1019,11 +977,8 @@ class SyncCoordinator:
                 if resource_id in resources:
                     resources.remove(resource_id)
                 component_state.state_data["resources"] = resources
-                await self.update_component_state(
-                    component_id,
-                    component_state.state_data
-                )
-        
+                await self.update_component_state(component_id, component_state.state_data)
+
         elif action == "updated":
             # Update resource state
             await self.update_component_state(
@@ -1034,10 +989,10 @@ class SyncCoordinator:
                     "component_id": component_id,
                     "updated_at": datetime.now().isoformat(),
                     "data": resource_data,
-                    "status": "updated"
-                }
+                    "status": "updated",
+                },
             )
-        
+
         # Notify affected components
         affected_components = event.data.get("affected_components", [])
         for affected_component in affected_components:
@@ -1050,11 +1005,11 @@ class SyncCoordinator:
                     "resource_type": resource_type,
                     "action": action,
                     "component_id": component_id,
-                    "resource_data": resource_data
+                    "resource_data": resource_data,
                 },
-                priority=EventPriority.HIGH
+                priority=EventPriority.HIGH,
             )
-        
+
         # Adjust resource limits if needed
         if resource_type == "memory" or resource_type == "cpu":
             # Check if resource limits need adjustment
@@ -1062,12 +1017,16 @@ class SyncCoordinator:
             for comp_id in self.component_states:
                 if comp_id.startswith("resource_"):
                     resource_state = self.component_states[comp_id]
-                    if (resource_state.state_data.get("type") == resource_type and
-                        resource_state.state_data.get("status") == "allocated"):
-                        total_allocated += resource_state.state_data.get("data", {}).get("amount", 0)
-            
+                    if (
+                        resource_state.state_data.get("type") == resource_type
+                        and resource_state.state_data.get("status") == "allocated"
+                    ):
+                        total_allocated += resource_state.state_data.get("data", {}).get(
+                            "amount", 0
+                        )
+
             # Publish resource limit update if threshold exceeded
-            max_limit = resource_data.get("max_limit", float('inf'))
+            max_limit = resource_data.get("max_limit", float("inf"))
             if total_allocated > max_limit * 0.8:  # 80% threshold
                 await self.publish_event(
                     event_type="resource_limit_warning",
@@ -1076,11 +1035,11 @@ class SyncCoordinator:
                         "resource_type": resource_type,
                         "total_allocated": total_allocated,
                         "max_limit": max_limit,
-                        "percentage_used": (total_allocated / max_limit * 100) if max_limit else 0
+                        "percentage_used": (total_allocated / max_limit * 100) if max_limit else 0,
                     },
-                    priority=EventPriority.HIGH
+                    priority=EventPriority.HIGH,
                 )
-        
+
         # Log resource changes
         logger.info(
             f"Resource event: {action} {resource_type} {resource_id} "
@@ -1114,7 +1073,7 @@ class SyncCoordinator:
             priority=EventPriority.NORMAL,
         )
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get sync coordinator metrics"""
         sync_status = await self.get_sync_status()
 
@@ -1150,7 +1109,7 @@ class SyncCoordinator:
             },
         }
 
-    async def get_health(self) -> Dict[str, Any]:
+    async def get_health(self) -> dict[str, Any]:
         """Get sync coordinator health status"""
         try:
             sync_status = await self.get_sync_status()
@@ -1234,9 +1193,7 @@ class SyncCoordinator:
         @self.app.post("/rollback/{component_id}")
         async def rollback_endpoint(component_id: str, request: dict):
             """Rollback component state"""
-            success = await self.rollback_component_state(
-                component_id, request["target_version"]
-            )
+            success = await self.rollback_component_state(component_id, request["target_version"])
             return {"success": success}
 
         @self.app.post("/events")

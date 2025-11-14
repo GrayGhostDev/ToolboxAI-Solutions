@@ -6,19 +6,13 @@ version tracking, and notification management for deployment rollback scenarios.
 Supports multiple rollback strategies including immediate, canary, and blue-green deployments.
 """
 
-import asyncio
-import json
 import logging
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
-from urllib.parse import urlparse
+from typing import Any, Optional
 
-import aiohttp
-import yaml
 from pydantic import BaseModel, Field
 
 from .base_github_agent import BaseGitHubAgent
@@ -28,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class RollbackStrategy(str, Enum):
     """Supported rollback strategies."""
+
     IMMEDIATE = "immediate"
     CANARY = "canary"
     BLUE_GREEN = "blue_green"
@@ -36,6 +31,7 @@ class RollbackStrategy(str, Enum):
 
 class FailureSeverity(str, Enum):
     """Deployment failure severity levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -44,6 +40,7 @@ class FailureSeverity(str, Enum):
 
 class DeploymentStatus(str, Enum):
     """Deployment status types."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     SUCCESS = "success"
@@ -73,9 +70,15 @@ class DeploymentSnapshot(BaseModel):
     git_commit_hash: str = Field(description="Git commit hash")
     git_branch: str = Field(description="Git branch name")
     environment: str = Field(description="Target environment")
-    deployment_config: Dict[str, Any] = Field(default_factory=dict, description="Deployment configuration")
-    health_metrics: Dict[str, Any] = Field(default_factory=dict, description="Health metrics at snapshot time")
-    service_versions: Dict[str, str] = Field(default_factory=dict, description="Service version mapping")
+    deployment_config: dict[str, Any] = Field(
+        default_factory=dict, description="Deployment configuration"
+    )
+    health_metrics: dict[str, Any] = Field(
+        default_factory=dict, description="Health metrics at snapshot time"
+    )
+    service_versions: dict[str, str] = Field(
+        default_factory=dict, description="Service version mapping"
+    )
     rollback_validated: bool = Field(False, description="Whether rollback was validated")
 
 
@@ -86,7 +89,7 @@ class RollbackCandidate(BaseModel):
     compatibility_score: float = Field(description="Compatibility score (0-1)")
     risk_level: str = Field(description="Risk level: low, medium, high")
     rollback_time_estimate: int = Field(description="Estimated rollback time in seconds")
-    dependencies: List[str] = Field(default_factory=list, description="Required dependencies")
+    dependencies: list[str] = Field(default_factory=list, description="Required dependencies")
     validation_status: str = Field(description="Validation status")
 
 
@@ -97,8 +100,8 @@ class RollbackNotification(BaseModel):
     timestamp: datetime = Field(description="Notification time")
     severity: FailureSeverity = Field(description="Notification severity")
     message: str = Field(description="Notification message")
-    channels: List[str] = Field(default_factory=list, description="Notification channels")
-    recipients: List[str] = Field(default_factory=list, description="Notification recipients")
+    channels: list[str] = Field(default_factory=list, description="Notification channels")
+    recipients: list[str] = Field(default_factory=list, description="Notification recipients")
     action_required: bool = Field(False, description="Whether action is required")
 
 
@@ -109,15 +112,19 @@ class RollbackReport(BaseModel):
     timestamp: datetime = Field(description="Report generation time")
     rollback_id: str = Field(description="Rollback operation identifier")
     trigger_reason: str = Field(description="Reason for rollback")
-    failure_details: Dict[str, Any] = Field(default_factory=dict, description="Failure analysis")
+    failure_details: dict[str, Any] = Field(default_factory=dict, description="Failure analysis")
     rollback_strategy: RollbackStrategy = Field(description="Strategy used")
     source_snapshot: DeploymentSnapshot = Field(description="Failed deployment snapshot")
     target_snapshot: DeploymentSnapshot = Field(description="Rollback target snapshot")
-    execution_timeline: List[Dict[str, Any]] = Field(default_factory=list, description="Execution timeline")
+    execution_timeline: list[dict[str, Any]] = Field(
+        default_factory=list, description="Execution timeline"
+    )
     success: bool = Field(description="Whether rollback was successful")
-    validation_results: Dict[str, Any] = Field(default_factory=dict, description="Post-rollback validation")
-    lessons_learned: List[str] = Field(default_factory=list, description="Lessons learned")
-    recommendations: List[str] = Field(default_factory=list, description="Future recommendations")
+    validation_results: dict[str, Any] = Field(
+        default_factory=dict, description="Post-rollback validation"
+    )
+    lessons_learned: list[str] = Field(default_factory=list, description="Lessons learned")
+    recommendations: list[str] = Field(default_factory=list, description="Future recommendations")
 
 
 class RollbackManagementAgent(BaseGitHubAgent):
@@ -131,8 +138,8 @@ class RollbackManagementAgent(BaseGitHubAgent):
         """
         super().__init__(config_path)
         self.failure_criteria = self._load_failure_criteria()
-        self.rollback_history: List[DeploymentSnapshot] = []
-        self.active_deployments: Dict[str, Dict[str, Any]] = {}
+        self.rollback_history: list[DeploymentSnapshot] = []
+        self.active_deployments: dict[str, dict[str, Any]] = {}
         self.notification_channels = self._setup_notification_channels()
         self.monitoring_active = False
 
@@ -146,7 +153,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
         criteria_config = self.config.get(config_key, {})
         return FailureCriteria(**criteria_config)
 
-    def _setup_notification_channels(self) -> Dict[str, Dict[str, Any]]:
+    def _setup_notification_channels(self) -> dict[str, dict[str, Any]]:
         """Setup notification channels for rollback alerts.
 
         Returns:
@@ -159,26 +166,31 @@ class RollbackManagementAgent(BaseGitHubAgent):
             "slack": {
                 "enabled": notification_config.get("slack", {}).get("enabled", False),
                 "webhook_url": os.getenv("SLACK_WEBHOOK_URL"),
-                "channels": notification_config.get("slack", {}).get("channels", ["#deployments"])
+                "channels": notification_config.get("slack", {}).get("channels", ["#deployments"]),
             },
             "email": {
                 "enabled": notification_config.get("email", {}).get("enabled", False),
                 "smtp_host": os.getenv("SMTP_HOST"),
-                "recipients": notification_config.get("email", {}).get("recipients", [])
+                "recipients": notification_config.get("email", {}).get("recipients", []),
             },
             "github": {
                 "enabled": notification_config.get("github", {}).get("enabled", True),
                 "token": os.getenv("GITHUB_TOKEN"),
-                "create_issues": notification_config.get("github", {}).get("create_issues", True)
+                "create_issues": notification_config.get("github", {}).get("create_issues", True),
             },
             "render": {
                 "enabled": notification_config.get("render", {}).get("enabled", False),
                 "api_key": os.getenv("RENDER_API_KEY"),
-                "service_id": os.getenv("RENDER_SERVICE_ID")
-            }
+                "service_id": os.getenv("RENDER_SERVICE_ID"),
+            },
         }
 
-    async def analyze(self, deployment_id: Optional[str] = None, environment: str = "production", **kwargs) -> Dict[str, Any]:
+    async def analyze(
+        self,
+        deployment_id: Optional[str] = None,
+        environment: str = "production",
+        **kwargs,
+    ) -> dict[str, Any]:
         """Analyze deployment health and determine rollback necessity.
 
         Args:
@@ -190,15 +202,14 @@ class RollbackManagementAgent(BaseGitHubAgent):
             Analysis results with rollback recommendations
         """
         try:
-            await self.log_operation("analyze_deployment_health", {
-                "deployment_id": deployment_id,
-                "environment": environment
-            })
+            await self.log_operation(
+                "analyze_deployment_health",
+                {"deployment_id": deployment_id, "environment": environment},
+            )
 
             # Detect deployment failures
             failure_analysis = await self.detect_deployment_failure(
-                deployment_id=deployment_id,
-                environment=environment
+                deployment_id=deployment_id, environment=environment
             )
 
             # Get rollback candidates if failures detected
@@ -206,7 +217,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
             if failure_analysis["failure_detected"]:
                 rollback_candidates = await self.get_rollback_candidates(
                     environment=environment,
-                    failure_type=failure_analysis.get("failure_type")
+                    failure_type=failure_analysis.get("failure_type"),
                 )
 
             # Determine recommended strategy
@@ -218,13 +229,17 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 "timestamp": datetime.now().isoformat(),
                 "deployment_id": deployment_id,
                 "environment": environment,
-                "health_status": "healthy" if not failure_analysis["failure_detected"] else "unhealthy",
+                "health_status": (
+                    "healthy" if not failure_analysis["failure_detected"] else "unhealthy"
+                ),
                 "failure_analysis": failure_analysis,
                 "rollback_needed": failure_analysis["failure_detected"],
                 "recommended_strategy": recommended_strategy,
                 "rollback_candidates": [candidate.dict() for candidate in rollback_candidates],
-                "risk_assessment": self._assess_rollback_risk(failure_analysis, rollback_candidates),
-                "estimated_impact": self._estimate_rollback_impact(failure_analysis)
+                "risk_assessment": self._assess_rollback_risk(
+                    failure_analysis, rollback_candidates
+                ),
+                "estimated_impact": self._estimate_rollback_impact(failure_analysis),
             }
 
             self.update_metrics(operations_performed=1)
@@ -236,10 +251,12 @@ class RollbackManagementAgent(BaseGitHubAgent):
             return {
                 "error": str(e),
                 "timestamp": datetime.now().isoformat(),
-                "rollback_needed": False
+                "rollback_needed": False,
             }
 
-    async def detect_deployment_failure(self, deployment_id: Optional[str] = None, environment: str = "production") -> Dict[str, Any]:
+    async def detect_deployment_failure(
+        self, deployment_id: Optional[str] = None, environment: str = "production"
+    ) -> dict[str, Any]:
         """Detect deployment failures based on configured criteria.
 
         Args:
@@ -255,44 +272,52 @@ class RollbackManagementAgent(BaseGitHubAgent):
 
             # Check error rate
             if metrics.get("error_rate", 0) > self.failure_criteria.error_rate_threshold:
-                failure_indicators.append({
-                    "type": "error_rate",
-                    "value": metrics["error_rate"],
-                    "threshold": self.failure_criteria.error_rate_threshold,
-                    "severity": "high"
-                })
+                failure_indicators.append(
+                    {
+                        "type": "error_rate",
+                        "value": metrics["error_rate"],
+                        "threshold": self.failure_criteria.error_rate_threshold,
+                        "severity": "high",
+                    }
+                )
 
             # Check response time
             if metrics.get("avg_response_time", 0) > self.failure_criteria.response_time_threshold:
-                failure_indicators.append({
-                    "type": "response_time",
-                    "value": metrics["avg_response_time"],
-                    "threshold": self.failure_criteria.response_time_threshold,
-                    "severity": "medium"
-                })
+                failure_indicators.append(
+                    {
+                        "type": "response_time",
+                        "value": metrics["avg_response_time"],
+                        "threshold": self.failure_criteria.response_time_threshold,
+                        "severity": "medium",
+                    }
+                )
 
             # Check availability
             if metrics.get("availability", 1.0) < self.failure_criteria.availability_threshold:
-                failure_indicators.append({
-                    "type": "availability",
-                    "value": metrics["availability"],
-                    "threshold": self.failure_criteria.availability_threshold,
-                    "severity": "critical"
-                })
+                failure_indicators.append(
+                    {
+                        "type": "availability",
+                        "value": metrics["availability"],
+                        "threshold": self.failure_criteria.availability_threshold,
+                        "severity": "critical",
+                    }
+                )
 
             # Check resource usage
             for resource, threshold in [
                 ("memory_usage", self.failure_criteria.memory_usage_threshold),
                 ("cpu_usage", self.failure_criteria.cpu_usage_threshold),
-                ("disk_usage", self.failure_criteria.disk_usage_threshold)
+                ("disk_usage", self.failure_criteria.disk_usage_threshold),
             ]:
                 if metrics.get(resource, 0) > threshold:
-                    failure_indicators.append({
-                        "type": resource,
-                        "value": metrics[resource],
-                        "threshold": threshold,
-                        "severity": "medium"
-                    })
+                    failure_indicators.append(
+                        {
+                            "type": resource,
+                            "value": metrics[resource],
+                            "threshold": threshold,
+                            "severity": "medium",
+                        }
+                    )
 
             # Determine overall failure status
             failure_detected = len(failure_indicators) > 0
@@ -304,7 +329,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 "failure_indicators": failure_indicators,
                 "failure_type": self._categorize_failure_type(failure_indicators),
                 "metrics": metrics,
-                "check_timestamp": datetime.now().isoformat()
+                "check_timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -312,10 +337,12 @@ class RollbackManagementAgent(BaseGitHubAgent):
             return {
                 "failure_detected": True,  # Assume failure if we can't check
                 "failure_severity": "unknown",
-                "error": str(e)
+                "error": str(e),
             }
 
-    async def create_deployment_snapshot(self, deployment_id: str, environment: str) -> DeploymentSnapshot:
+    async def create_deployment_snapshot(
+        self, deployment_id: str, environment: str
+    ) -> DeploymentSnapshot:
         """Create a snapshot of the current deployment state.
 
         Args:
@@ -342,21 +369,23 @@ class RollbackManagementAgent(BaseGitHubAgent):
             snapshot = DeploymentSnapshot(
                 snapshot_id=f"snapshot_{int(time.time())}_{environment}",
                 timestamp=datetime.now(),
-                git_commit_hash=git_commit["stdout"].strip() if git_commit["success"] else "unknown",
+                git_commit_hash=(
+                    git_commit["stdout"].strip() if git_commit["success"] else "unknown"
+                ),
                 git_branch=git_branch["stdout"].strip() if git_branch["success"] else "unknown",
                 environment=environment,
                 deployment_config=deployment_config,
                 health_metrics=health_metrics,
-                service_versions=service_versions
+                service_versions=service_versions,
             )
 
             # Store snapshot
             await self._store_snapshot(snapshot)
 
-            await self.log_operation("create_deployment_snapshot", {
-                "snapshot_id": snapshot.snapshot_id,
-                "environment": environment
-            })
+            await self.log_operation(
+                "create_deployment_snapshot",
+                {"snapshot_id": snapshot.snapshot_id, "environment": environment},
+            )
 
             return snapshot
 
@@ -364,7 +393,11 @@ class RollbackManagementAgent(BaseGitHubAgent):
             logger.error(f"Error creating deployment snapshot: {e}")
             raise
 
-    async def execute_rollback(self, target_snapshot: DeploymentSnapshot, strategy: RollbackStrategy = RollbackStrategy.IMMEDIATE) -> Dict[str, Any]:
+    async def execute_rollback(
+        self,
+        target_snapshot: DeploymentSnapshot,
+        strategy: RollbackStrategy = RollbackStrategy.IMMEDIATE,
+    ) -> dict[str, Any]:
         """Execute a rollback to a previous deployment state.
 
         Args:
@@ -377,17 +410,20 @@ class RollbackManagementAgent(BaseGitHubAgent):
         rollback_id = f"rollback_{int(time.time())}_{target_snapshot.environment}"
 
         try:
-            await self.log_operation("execute_rollback", {
-                "rollback_id": rollback_id,
-                "target_snapshot": target_snapshot.snapshot_id,
-                "strategy": strategy
-            })
+            await self.log_operation(
+                "execute_rollback",
+                {
+                    "rollback_id": rollback_id,
+                    "target_snapshot": target_snapshot.snapshot_id,
+                    "strategy": strategy,
+                },
+            )
 
             # Send notification that rollback is starting
             await self.send_rollback_notifications(
                 severity=FailureSeverity.HIGH,
                 message=f"Starting rollback {rollback_id} to snapshot {target_snapshot.snapshot_id}",
-                action_required=False
+                action_required=False,
             )
 
             execution_timeline = []
@@ -395,12 +431,14 @@ class RollbackManagementAgent(BaseGitHubAgent):
 
             # Step 1: Validate rollback target
             validation_result = await self._validate_rollback_target(target_snapshot)
-            execution_timeline.append({
-                "step": "validation",
-                "timestamp": datetime.now().isoformat(),
-                "status": "success" if validation_result["valid"] else "failed",
-                "details": validation_result
-            })
+            execution_timeline.append(
+                {
+                    "step": "validation",
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "success" if validation_result["valid"] else "failed",
+                    "details": validation_result,
+                }
+            )
 
             if not validation_result["valid"]:
                 raise Exception(f"Rollback target validation failed: {validation_result['reason']}")
@@ -408,35 +446,41 @@ class RollbackManagementAgent(BaseGitHubAgent):
             # Step 2: Create pre-rollback snapshot
             current_snapshot = await self.create_deployment_snapshot(
                 deployment_id=f"pre_rollback_{rollback_id}",
-                environment=target_snapshot.environment
+                environment=target_snapshot.environment,
             )
-            execution_timeline.append({
-                "step": "pre_rollback_snapshot",
-                "timestamp": datetime.now().isoformat(),
-                "status": "success",
-                "snapshot_id": current_snapshot.snapshot_id
-            })
+            execution_timeline.append(
+                {
+                    "step": "pre_rollback_snapshot",
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "success",
+                    "snapshot_id": current_snapshot.snapshot_id,
+                }
+            )
 
             # Step 3: Execute rollback based on strategy
             rollback_result = await self._execute_rollback_strategy(target_snapshot, strategy)
-            execution_timeline.append({
-                "step": "rollback_execution",
-                "timestamp": datetime.now().isoformat(),
-                "status": "success" if rollback_result["success"] else "failed",
-                "details": rollback_result
-            })
+            execution_timeline.append(
+                {
+                    "step": "rollback_execution",
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "success" if rollback_result["success"] else "failed",
+                    "details": rollback_result,
+                }
+            )
 
             if not rollback_result["success"]:
                 raise Exception(f"Rollback execution failed: {rollback_result['error']}")
 
             # Step 4: Validate rollback success
             validation_result = await self.validate_rollback(target_snapshot)
-            execution_timeline.append({
-                "step": "rollback_validation",
-                "timestamp": datetime.now().isoformat(),
-                "status": "success" if validation_result["valid"] else "failed",
-                "details": validation_result
-            })
+            execution_timeline.append(
+                {
+                    "step": "rollback_validation",
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "success" if validation_result["valid"] else "failed",
+                    "details": validation_result,
+                }
+            )
 
             rollback_duration = (datetime.now() - rollback_start).total_seconds()
 
@@ -448,14 +492,16 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 target_snapshot=target_snapshot,
                 strategy=strategy,
                 execution_timeline=execution_timeline,
-                success=validation_result["valid"]
+                success=validation_result["valid"],
             )
 
             # Send completion notification
             await self.send_rollback_notifications(
-                severity=FailureSeverity.MEDIUM if validation_result["valid"] else FailureSeverity.HIGH,
+                severity=(
+                    FailureSeverity.MEDIUM if validation_result["valid"] else FailureSeverity.HIGH
+                ),
                 message=f"Rollback {rollback_id} {'completed successfully' if validation_result['valid'] else 'failed'}",
-                action_required=not validation_result["valid"]
+                action_required=not validation_result["valid"],
             )
 
             return {
@@ -466,7 +512,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 "duration_seconds": rollback_duration,
                 "execution_timeline": execution_timeline,
                 "validation_result": validation_result,
-                "report": report.dict()
+                "report": report.dict(),
             }
 
         except Exception as e:
@@ -476,17 +522,19 @@ class RollbackManagementAgent(BaseGitHubAgent):
             await self.send_rollback_notifications(
                 severity=FailureSeverity.CRITICAL,
                 message=f"Rollback {rollback_id} failed: {str(e)}",
-                action_required=True
+                action_required=True,
             )
 
             return {
                 "success": False,
                 "rollback_id": rollback_id,
                 "error": str(e),
-                "execution_timeline": execution_timeline if 'execution_timeline' in locals() else []
+                "execution_timeline": (
+                    execution_timeline if "execution_timeline" in locals() else []
+                ),
             }
 
-    async def validate_rollback(self, target_snapshot: DeploymentSnapshot) -> Dict[str, Any]:
+    async def validate_rollback(self, target_snapshot: DeploymentSnapshot) -> dict[str, Any]:
         """Validate that a rollback was successful.
 
         Args:
@@ -500,40 +548,50 @@ class RollbackManagementAgent(BaseGitHubAgent):
 
             # Check service health
             health_check = await self._check_service_health(target_snapshot.environment)
-            validation_checks.append({
-                "check": "service_health",
-                "status": "pass" if health_check["healthy"] else "fail",
-                "details": health_check
-            })
+            validation_checks.append(
+                {
+                    "check": "service_health",
+                    "status": "pass" if health_check["healthy"] else "fail",
+                    "details": health_check,
+                }
+            )
 
             # Verify deployment configuration
             config_check = await self._verify_deployment_config(target_snapshot)
-            validation_checks.append({
-                "check": "deployment_config",
-                "status": "pass" if config_check["matches"] else "fail",
-                "details": config_check
-            })
+            validation_checks.append(
+                {
+                    "check": "deployment_config",
+                    "status": "pass" if config_check["matches"] else "fail",
+                    "details": config_check,
+                }
+            )
 
             # Check git commit hash
             current_commit = await self.execute_git_command("rev-parse HEAD")
             commit_matches = (
-                current_commit["success"] and
-                current_commit["stdout"].strip() == target_snapshot.git_commit_hash
+                current_commit["success"]
+                and current_commit["stdout"].strip() == target_snapshot.git_commit_hash
             )
-            validation_checks.append({
-                "check": "git_commit",
-                "status": "pass" if commit_matches else "fail",
-                "expected": target_snapshot.git_commit_hash,
-                "actual": current_commit["stdout"].strip() if current_commit["success"] else "unknown"
-            })
+            validation_checks.append(
+                {
+                    "check": "git_commit",
+                    "status": "pass" if commit_matches else "fail",
+                    "expected": target_snapshot.git_commit_hash,
+                    "actual": (
+                        current_commit["stdout"].strip() if current_commit["success"] else "unknown"
+                    ),
+                }
+            )
 
             # Check service versions
             version_check = await self._verify_service_versions(target_snapshot)
-            validation_checks.append({
-                "check": "service_versions",
-                "status": "pass" if version_check["matches"] else "fail",
-                "details": version_check
-            })
+            validation_checks.append(
+                {
+                    "check": "service_versions",
+                    "status": "pass" if version_check["matches"] else "fail",
+                    "details": version_check,
+                }
+            )
 
             # Overall validation result
             failed_checks = [check for check in validation_checks if check["status"] == "fail"]
@@ -543,7 +601,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 "valid": is_valid,
                 "checks": validation_checks,
                 "failed_checks": failed_checks,
-                "validation_timestamp": datetime.now().isoformat()
+                "validation_timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -551,10 +609,12 @@ class RollbackManagementAgent(BaseGitHubAgent):
             return {
                 "valid": False,
                 "error": str(e),
-                "validation_timestamp": datetime.now().isoformat()
+                "validation_timestamp": datetime.now().isoformat(),
             }
 
-    async def get_rollback_candidates(self, environment: str, failure_type: Optional[str] = None) -> List[RollbackCandidate]:
+    async def get_rollback_candidates(
+        self, environment: str, failure_type: Optional[str] = None
+    ) -> list[RollbackCandidate]:
         """Get list of available rollback candidates.
 
         Args:
@@ -599,7 +659,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
                     risk_level=risk_level,
                     rollback_time_estimate=rollback_time,
                     dependencies=dependencies,
-                    validation_status=validation_status
+                    validation_status=validation_status,
                 )
 
                 candidates.append(candidate)
@@ -613,7 +673,9 @@ class RollbackManagementAgent(BaseGitHubAgent):
             logger.error(f"Error getting rollback candidates: {e}")
             return []
 
-    async def send_rollback_notifications(self, severity: FailureSeverity, message: str, action_required: bool = False) -> List[RollbackNotification]:
+    async def send_rollback_notifications(
+        self, severity: FailureSeverity, message: str, action_required: bool = False
+    ) -> list[RollbackNotification]:
         """Send rollback notifications through configured channels.
 
         Args:
@@ -657,11 +719,14 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 )
                 notifications.append(render_notification)
 
-            await self.log_operation("send_rollback_notifications", {
-                "notification_id": notification_id,
-                "severity": severity,
-                "channels": len(notifications)
-            })
+            await self.log_operation(
+                "send_rollback_notifications",
+                {
+                    "notification_id": notification_id,
+                    "severity": severity,
+                    "channels": len(notifications),
+                },
+            )
 
             return notifications
 
@@ -669,7 +734,16 @@ class RollbackManagementAgent(BaseGitHubAgent):
             logger.error(f"Error sending rollback notifications: {e}")
             return []
 
-    async def generate_rollback_report(self, rollback_id: str, trigger_reason: str, source_snapshot: DeploymentSnapshot, target_snapshot: DeploymentSnapshot, strategy: RollbackStrategy, execution_timeline: List[Dict[str, Any]], success: bool) -> RollbackReport:
+    async def generate_rollback_report(
+        self,
+        rollback_id: str,
+        trigger_reason: str,
+        source_snapshot: DeploymentSnapshot,
+        target_snapshot: DeploymentSnapshot,
+        strategy: RollbackStrategy,
+        execution_timeline: list[dict[str, Any]],
+        success: bool,
+    ) -> RollbackReport:
         """Generate a comprehensive rollback report.
 
         Args:
@@ -697,9 +771,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
             )
 
             # Generate recommendations
-            recommendations = self._generate_recommendations(
-                failure_details, strategy, success
-            )
+            recommendations = self._generate_recommendations(failure_details, strategy, success)
 
             report = RollbackReport(
                 report_id=f"report_{rollback_id}",
@@ -714,7 +786,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 success=success,
                 validation_results=validation_results,
                 lessons_learned=lessons_learned,
-                recommendations=recommendations
+                recommendations=recommendations,
             )
 
             # Store report
@@ -737,10 +809,10 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 success=success,
                 failure_details={"error": str(e)},
                 lessons_learned=["Error occurred during report generation"],
-                recommendations=["Investigate report generation failure"]
+                recommendations=["Investigate report generation failure"],
             )
 
-    async def execute_action(self, action: str, **kwargs) -> Dict[str, Any]:
+    async def execute_action(self, action: str, **kwargs) -> dict[str, Any]:
         """Execute rollback management actions.
 
         Args:
@@ -786,7 +858,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 candidates = await self.get_rollback_candidates(environment, failure_type)
                 return {
                     "success": True,
-                    "candidates": [candidate.dict() for candidate in candidates]
+                    "candidates": [candidate.dict() for candidate in candidates],
                 }
 
             elif action == "send_notification":
@@ -794,10 +866,12 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 message = kwargs.get("message", "Test notification")
                 action_required = kwargs.get("action_required", False)
 
-                notifications = await self.send_rollback_notifications(severity, message, action_required)
+                notifications = await self.send_rollback_notifications(
+                    severity, message, action_required
+                )
                 return {
                     "success": True,
-                    "notifications": [notification.dict() for notification in notifications]
+                    "notifications": [notification.dict() for notification in notifications],
                 }
 
             else:
@@ -809,7 +883,9 @@ class RollbackManagementAgent(BaseGitHubAgent):
 
     # Helper methods for internal operations
 
-    def _determine_rollback_strategy(self, failure_analysis: Dict[str, Any], candidates: List[RollbackCandidate]) -> RollbackStrategy:
+    def _determine_rollback_strategy(
+        self, failure_analysis: dict[str, Any], candidates: list[RollbackCandidate]
+    ) -> RollbackStrategy:
         """Determine the best rollback strategy based on failure analysis."""
         severity = failure_analysis.get("failure_severity", "unknown")
 
@@ -822,7 +898,9 @@ class RollbackManagementAgent(BaseGitHubAgent):
         else:
             return RollbackStrategy.GRADUAL
 
-    def _assess_rollback_risk(self, failure_analysis: Dict[str, Any], candidates: List[RollbackCandidate]) -> str:
+    def _assess_rollback_risk(
+        self, failure_analysis: dict[str, Any], candidates: list[RollbackCandidate]
+    ) -> str:
         """Assess the risk level of performing a rollback."""
         if not candidates:
             return "high"
@@ -835,16 +913,18 @@ class RollbackManagementAgent(BaseGitHubAgent):
         else:
             return "high"
 
-    def _estimate_rollback_impact(self, failure_analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def _estimate_rollback_impact(self, failure_analysis: dict[str, Any]) -> dict[str, Any]:
         """Estimate the impact of performing a rollback."""
         return {
             "estimated_downtime_minutes": 5,  # Configurable
             "affected_services": ["main_api", "dashboard"],
             "user_impact": "temporary service degradation",
-            "data_impact": "none"
+            "data_impact": "none",
         }
 
-    async def _collect_deployment_metrics(self, deployment_id: Optional[str], environment: str) -> Dict[str, Any]:
+    async def _collect_deployment_metrics(
+        self, deployment_id: Optional[str], environment: str
+    ) -> dict[str, Any]:
         """Collect deployment health metrics."""
         # Mock implementation - integrate with actual monitoring systems
         return {
@@ -855,10 +935,10 @@ class RollbackManagementAgent(BaseGitHubAgent):
             "cpu_usage": 0.65,  # 65%
             "disk_usage": 0.45,  # 45%
             "request_count": 1000,
-            "active_connections": 50
+            "active_connections": 50,
         }
 
-    def _calculate_failure_severity(self, failure_indicators: List[Dict[str, Any]]) -> str:
+    def _calculate_failure_severity(self, failure_indicators: list[dict[str, Any]]) -> str:
         """Calculate overall failure severity from indicators."""
         if not failure_indicators:
             return "none"
@@ -874,7 +954,7 @@ class RollbackManagementAgent(BaseGitHubAgent):
         else:
             return "low"
 
-    def _categorize_failure_type(self, failure_indicators: List[Dict[str, Any]]) -> str:
+    def _categorize_failure_type(self, failure_indicators: list[dict[str, Any]]) -> str:
         """Categorize the type of failure based on indicators."""
         if not failure_indicators:
             return "none"
@@ -890,36 +970,34 @@ class RollbackManagementAgent(BaseGitHubAgent):
         else:
             return "resource"
 
-    async def _collect_deployment_config(self, environment: str) -> Dict[str, Any]:
+    async def _collect_deployment_config(self, environment: str) -> dict[str, Any]:
         """Collect current deployment configuration."""
         # Mock implementation
         return {
             "environment": environment,
             "replicas": 3,
             "memory_limit": "512Mi",
-            "cpu_limit": "500m"
+            "cpu_limit": "500m",
         }
 
-    async def _get_service_versions(self, environment: str) -> Dict[str, str]:
+    async def _get_service_versions(self, environment: str) -> dict[str, str]:
         """Get current service versions."""
         # Mock implementation
-        return {
-            "backend": "v1.2.3",
-            "frontend": "v1.1.0",
-            "database": "v13.8"
-        }
+        return {"backend": "v1.2.3", "frontend": "v1.1.0", "database": "v13.8"}
 
     async def _store_snapshot(self, snapshot: DeploymentSnapshot):
         """Store deployment snapshot."""
         # Implementation would store to database or file system
         self.rollback_history.append(snapshot)
 
-    async def _load_historical_snapshots(self, environment: str) -> List[DeploymentSnapshot]:
+    async def _load_historical_snapshots(self, environment: str) -> list[DeploymentSnapshot]:
         """Load historical snapshots for environment."""
         # Filter by environment and return recent snapshots
         return [s for s in self.rollback_history if s.environment == environment]
 
-    async def _calculate_compatibility_score(self, snapshot: DeploymentSnapshot, failure_type: Optional[str]) -> float:
+    async def _calculate_compatibility_score(
+        self, snapshot: DeploymentSnapshot, failure_type: Optional[str]
+    ) -> float:
         """Calculate compatibility score for rollback candidate."""
         # Mock implementation - would analyze compatibility
         base_score = 0.8
@@ -930,7 +1008,9 @@ class RollbackManagementAgent(BaseGitHubAgent):
 
         return max(base_score - age_penalty, 0.1)
 
-    def _assess_candidate_risk(self, snapshot: DeploymentSnapshot, failure_type: Optional[str]) -> str:
+    def _assess_candidate_risk(
+        self, snapshot: DeploymentSnapshot, failure_type: Optional[str]
+    ) -> str:
         """Assess risk level of rollback candidate."""
         # Mock implementation
         age_days = (datetime.now() - snapshot.timestamp).days
@@ -942,12 +1022,14 @@ class RollbackManagementAgent(BaseGitHubAgent):
         else:
             return "high"
 
-    def _estimate_rollback_time(self, snapshot: DeploymentSnapshot, failure_type: Optional[str]) -> int:
+    def _estimate_rollback_time(
+        self, snapshot: DeploymentSnapshot, failure_type: Optional[str]
+    ) -> int:
         """Estimate rollback time in seconds."""
         # Mock implementation
         return 300  # 5 minutes
 
-    async def _check_rollback_dependencies(self, snapshot: DeploymentSnapshot) -> List[str]:
+    async def _check_rollback_dependencies(self, snapshot: DeploymentSnapshot) -> list[str]:
         """Check rollback dependencies."""
         # Mock implementation
         return []
@@ -957,7 +1039,13 @@ class RollbackManagementAgent(BaseGitHubAgent):
         # Mock implementation
         return "valid"
 
-    async def _send_slack_notification(self, notification_id: str, severity: FailureSeverity, message: str, action_required: bool) -> RollbackNotification:
+    async def _send_slack_notification(
+        self,
+        notification_id: str,
+        severity: FailureSeverity,
+        message: str,
+        action_required: bool,
+    ) -> RollbackNotification:
         """Send Slack notification."""
         # Mock implementation
         return RollbackNotification(
@@ -967,10 +1055,16 @@ class RollbackManagementAgent(BaseGitHubAgent):
             message=message,
             channels=["slack"],
             recipients=["#deployments"],
-            action_required=action_required
+            action_required=action_required,
         )
 
-    async def _send_email_notification(self, notification_id: str, severity: FailureSeverity, message: str, action_required: bool) -> RollbackNotification:
+    async def _send_email_notification(
+        self,
+        notification_id: str,
+        severity: FailureSeverity,
+        message: str,
+        action_required: bool,
+    ) -> RollbackNotification:
         """Send email notification."""
         # Mock implementation
         return RollbackNotification(
@@ -980,10 +1074,16 @@ class RollbackManagementAgent(BaseGitHubAgent):
             message=message,
             channels=["email"],
             recipients=["devops@example.com"],
-            action_required=action_required
+            action_required=action_required,
         )
 
-    async def _send_github_notification(self, notification_id: str, severity: FailureSeverity, message: str, action_required: bool) -> RollbackNotification:
+    async def _send_github_notification(
+        self,
+        notification_id: str,
+        severity: FailureSeverity,
+        message: str,
+        action_required: bool,
+    ) -> RollbackNotification:
         """Send GitHub notification."""
         # Mock implementation
         return RollbackNotification(
@@ -993,10 +1093,16 @@ class RollbackManagementAgent(BaseGitHubAgent):
             message=message,
             channels=["github"],
             recipients=["github_issues"],
-            action_required=action_required
+            action_required=action_required,
         )
 
-    async def _send_render_notification(self, notification_id: str, severity: FailureSeverity, message: str, action_required: bool) -> RollbackNotification:
+    async def _send_render_notification(
+        self,
+        notification_id: str,
+        severity: FailureSeverity,
+        message: str,
+        action_required: bool,
+    ) -> RollbackNotification:
         """Send Render.com notification."""
         # Mock implementation
         return RollbackNotification(
@@ -1006,30 +1112,37 @@ class RollbackManagementAgent(BaseGitHubAgent):
             message=message,
             channels=["render"],
             recipients=["render_api"],
-            action_required=action_required
+            action_required=action_required,
         )
 
-    async def _validate_rollback_target(self, target_snapshot: DeploymentSnapshot) -> Dict[str, Any]:
+    async def _validate_rollback_target(
+        self, target_snapshot: DeploymentSnapshot
+    ) -> dict[str, Any]:
         """Validate rollback target snapshot."""
         # Mock implementation
         return {"valid": True, "reason": "Snapshot is valid"}
 
-    async def _execute_rollback_strategy(self, target_snapshot: DeploymentSnapshot, strategy: RollbackStrategy) -> Dict[str, Any]:
+    async def _execute_rollback_strategy(
+        self, target_snapshot: DeploymentSnapshot, strategy: RollbackStrategy
+    ) -> dict[str, Any]:
         """Execute rollback using specified strategy."""
         # Mock implementation
-        return {"success": True, "message": f"Rollback executed using {strategy} strategy"}
+        return {
+            "success": True,
+            "message": f"Rollback executed using {strategy} strategy",
+        }
 
-    async def _check_service_health(self, environment: str) -> Dict[str, Any]:
+    async def _check_service_health(self, environment: str) -> dict[str, Any]:
         """Check service health after rollback."""
         # Mock implementation
         return {"healthy": True, "services": ["api", "database", "cache"]}
 
-    async def _verify_deployment_config(self, snapshot: DeploymentSnapshot) -> Dict[str, Any]:
+    async def _verify_deployment_config(self, snapshot: DeploymentSnapshot) -> dict[str, Any]:
         """Verify deployment configuration matches snapshot."""
         # Mock implementation
         return {"matches": True, "differences": []}
 
-    async def _verify_service_versions(self, snapshot: DeploymentSnapshot) -> Dict[str, Any]:
+    async def _verify_service_versions(self, snapshot: DeploymentSnapshot) -> dict[str, Any]:
         """Verify service versions match snapshot."""
         # Mock implementation
         return {"matches": True, "differences": []}
@@ -1041,16 +1154,21 @@ class RollbackManagementAgent(BaseGitHubAgent):
                 return snapshot
         return None
 
-    async def _analyze_failure_details(self, source_snapshot: DeploymentSnapshot) -> Dict[str, Any]:
+    async def _analyze_failure_details(self, source_snapshot: DeploymentSnapshot) -> dict[str, Any]:
         """Analyze failure details from source snapshot."""
         # Mock implementation
         return {
             "failure_type": "performance_degradation",
             "root_cause": "Memory leak in background process",
-            "affected_components": ["backend_service"]
+            "affected_components": ["backend_service"],
         }
 
-    def _extract_lessons_learned(self, failure_details: Dict[str, Any], execution_timeline: List[Dict[str, Any]], success: bool) -> List[str]:
+    def _extract_lessons_learned(
+        self,
+        failure_details: dict[str, Any],
+        execution_timeline: list[dict[str, Any]],
+        success: bool,
+    ) -> list[str]:
         """Extract lessons learned from rollback operation."""
         lessons = []
 
@@ -1064,7 +1182,9 @@ class RollbackManagementAgent(BaseGitHubAgent):
 
         return lessons
 
-    def _generate_recommendations(self, failure_details: Dict[str, Any], strategy: RollbackStrategy, success: bool) -> List[str]:
+    def _generate_recommendations(
+        self, failure_details: dict[str, Any], strategy: RollbackStrategy, success: bool
+    ) -> list[str]:
         """Generate recommendations based on rollback results."""
         recommendations = []
 

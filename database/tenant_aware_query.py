@@ -31,7 +31,7 @@ Models Supported:
 import logging
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar, Union
 from uuid import UUID
 
 from sqlalchemy import inspect
@@ -59,7 +59,7 @@ class TenantAwareQuery(Generic[T]):
     def __init__(
         self,
         session: Session,
-        model: Type[T],
+        model: type[T],
         organization_id: UUID,
         bypass_tenant_check: bool = False,
     ):
@@ -140,7 +140,7 @@ class TenantAwareQuery(Generic[T]):
         self._query = self._query.offset(offset)
         return self
 
-    def all(self) -> List[T]:
+    def all(self) -> list[T]:
         """Execute query and return all results"""
         if self._query is None:
             self._query = self._get_base_query()
@@ -207,7 +207,7 @@ class TenantAwareQuery(Generic[T]):
         return deleted_count
 
     def update(
-        self, values: Dict[str, Any], synchronize_session: Union[str, bool] = "fetch"
+        self, values: dict[str, Any], synchronize_session: Union[str, bool] = "fetch"
     ) -> int:
         """Update matching records"""
         if self._query is None:
@@ -339,7 +339,7 @@ class TenantAwareSessionMixin:
         self.execute("RESET app.current_organization_id")
         logger.debug("Session: Reset organization context")
 
-    def query_tenant(self, model: Type[T], **kwargs) -> TenantAwareQuery[T]:
+    def query_tenant(self, model: type[T], **kwargs) -> TenantAwareQuery[T]:
         """Create tenant-aware query for model"""
         if not self._current_organization_id:
             raise ValueError("Organization not set. Call session.set_organization(org_id) first.")
@@ -352,7 +352,10 @@ class TenantAwareSessionMixin:
 
 
 def verify_tenant_isolation(
-    session: Session, model: Type[T], organization_id: UUID, expected_count: Optional[int] = None
+    session: Session,
+    model: type[T],
+    organization_id: UUID,
+    expected_count: Optional[int] = None,
 ) -> bool:
     """
     Verify tenant isolation for a model
@@ -404,8 +407,8 @@ def verify_tenant_isolation(
 
 def batch_update_organization(
     session: Session,
-    model: Type[T],
-    records: List[Any],
+    model: type[T],
+    records: list[Any],
     organization_id: UUID,
     batch_size: int = 100,
 ) -> int:

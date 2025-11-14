@@ -7,30 +7,27 @@ memory profiling, and state inspection.
 """
 
 import asyncio
+import gc
+import json
 import logging
-import traceback
-import inspect
-import sys
 import os
 import re
-import json
-from typing import Dict, Any, Optional, List, Tuple, Set
-from pathlib import Path
-from datetime import datetime
-from dataclasses import dataclass
 import subprocess
-import psutil
-import gc
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
+import psutil
 from langchain_core.tools import Tool
 from pydantic import BaseModel, Field
 
 from core.agents.error_handling.base_error_agent import (
     BaseErrorAgent,
     ErrorAgentConfig,
+    ErrorPriority,
     ErrorState,
     ErrorType,
-    ErrorPriority
 )
 
 logger = logging.getLogger(__name__)
@@ -38,41 +35,45 @@ logger = logging.getLogger(__name__)
 
 class DebugInfo(BaseModel):
     """Model for debugging information"""
+
     error_id: str = Field(description="ID of the error being debugged")
     root_cause: str = Field(description="Identified root cause of the issue")
-    call_stack: List[Dict[str, Any]] = Field(description="Analyzed call stack")
-    variables_snapshot: Dict[str, Any] = Field(description="Variable values at error time")
-    memory_state: Dict[str, Any] = Field(description="Memory usage information")
-    thread_state: Dict[str, Any] = Field(description="Thread and async task information")
-    dependencies_checked: List[str] = Field(description="Dependencies that were verified")
+    call_stack: list[Dict[str, Any]] = Field(description="Analyzed call stack")
+    variables_snapshot: dict[str, Any] = Field(description="Variable values at error time")
+    memory_state: dict[str, Any] = Field(description="Memory usage information")
+    thread_state: dict[str, Any] = Field(description="Thread and async task information")
+    dependencies_checked: list[str] = Field(description="Dependencies that were verified")
     hypothesis: str = Field(description="Hypothesis about the bug")
-    evidence: List[str] = Field(description="Evidence supporting the hypothesis")
-    recommended_actions: List[str] = Field(description="Recommended debugging actions")
+    evidence: list[str] = Field(description="Evidence supporting the hypothesis")
+    recommended_actions: list[str] = Field(description="Recommended debugging actions")
     complexity_score: float = Field(description="Estimated complexity of the bug (0-1)")
 
 
 class BreakpointInfo(BaseModel):
     """Model for breakpoint information"""
+
     file_path: str = Field(description="File where breakpoint should be set")
     line_number: int = Field(description="Line number for breakpoint")
     condition: Optional[str] = Field(description="Conditional expression for breakpoint")
-    watch_variables: List[str] = Field(description="Variables to watch at this breakpoint")
+    watch_variables: list[str] = Field(description="Variables to watch at this breakpoint")
     reason: str = Field(description="Reason for setting this breakpoint")
 
 
 class MemoryProfile(BaseModel):
     """Model for memory profiling data"""
+
     total_memory_mb: float = Field(description="Total memory usage in MB")
     process_memory_mb: float = Field(description="Process memory usage in MB")
-    object_counts: Dict[str, int] = Field(description="Count of objects by type")
-    largest_objects: List[Dict[str, Any]] = Field(description="Largest objects in memory")
-    potential_leaks: List[str] = Field(description="Potential memory leaks detected")
-    gc_stats: Dict[str, Any] = Field(description="Garbage collection statistics")
+    object_counts: dict[str, int] = Field(description="Count of objects by type")
+    largest_objects: list[Dict[str, Any]] = Field(description="Largest objects in memory")
+    potential_leaks: list[str] = Field(description="Potential memory leaks detected")
+    gc_stats: dict[str, Any] = Field(description="Garbage collection statistics")
 
 
 @dataclass
 class DebuggerConfig(ErrorAgentConfig):
     """Configuration specific to debugging agent"""
+
     enable_memory_profiling: bool = True
     enable_thread_analysis: bool = True
     max_stack_depth: int = 50
@@ -105,17 +106,17 @@ class AdvancedDebuggingAgent(BaseErrorAgent):
                 temperature=0.2,  # Very low temperature for precise analysis
                 enable_memory_profiling=True,
                 enable_thread_analysis=True,
-                max_stack_depth=50
+                max_stack_depth=50,
             )
 
         super().__init__(config)
         self.debugger_config = config
 
         # Debugging state
-        self.active_breakpoints: List[BreakpointInfo] = []
-        self.watch_list: Dict[str, Any] = {}
-        self.debug_sessions: Dict[str, Dict[str, Any]] = {}
-        self.memory_snapshots: List[MemoryProfile] = []
+        self.active_breakpoints: list[BreakpointInfo] = []
+        self.watch_list: dict[str, Any] = {}
+        self.debug_sessions: dict[str, dict[str, Any]] = {}
+        self.memory_snapshots: list[MemoryProfile] = []
 
         # Initialize debugging tools
         self.tools.extend(self._create_debugging_tools())
@@ -144,51 +145,65 @@ Debugging principles:
 
 Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
-    def _create_debugging_tools(self) -> List[Tool]:
+    def _create_debugging_tools(self) -> list[Tool]:
         """Create specialized tools for debugging"""
         tools = []
 
-        tools.append(Tool(
-            name="analyze_stack_trace",
-            description="Deep analysis of stack traces",
-            func=self._analyze_stack_trace_deep
-        ))
+        tools.append(
+            Tool(
+                name="analyze_stack_trace",
+                description="Deep analysis of stack traces",
+                func=self._analyze_stack_trace_deep,
+            )
+        )
 
-        tools.append(Tool(
-            name="profile_memory",
-            description="Profile memory usage and detect leaks",
-            func=self._profile_memory
-        ))
+        tools.append(
+            Tool(
+                name="profile_memory",
+                description="Profile memory usage and detect leaks",
+                func=self._profile_memory,
+            )
+        )
 
-        tools.append(Tool(
-            name="inspect_variables",
-            description="Inspect variable values at specific points",
-            func=self._inspect_variables
-        ))
+        tools.append(
+            Tool(
+                name="inspect_variables",
+                description="Inspect variable values at specific points",
+                func=self._inspect_variables,
+            )
+        )
 
-        tools.append(Tool(
-            name="set_breakpoint",
-            description="Set strategic breakpoints for debugging",
-            func=self._set_breakpoint
-        ))
+        tools.append(
+            Tool(
+                name="set_breakpoint",
+                description="Set strategic breakpoints for debugging",
+                func=self._set_breakpoint,
+            )
+        )
 
-        tools.append(Tool(
-            name="analyze_threads",
-            description="Analyze thread and async task states",
-            func=self._analyze_threads
-        ))
+        tools.append(
+            Tool(
+                name="analyze_threads",
+                description="Analyze thread and async task states",
+                func=self._analyze_threads,
+            )
+        )
 
-        tools.append(Tool(
-            name="trace_execution",
-            description="Trace code execution path",
-            func=self._trace_execution
-        ))
+        tools.append(
+            Tool(
+                name="trace_execution",
+                description="Trace code execution path",
+                func=self._trace_execution,
+            )
+        )
 
-        tools.append(Tool(
-            name="check_dependencies",
-            description="Verify dependency versions and conflicts",
-            func=self._check_dependencies
-        ))
+        tools.append(
+            Tool(
+                name="check_dependencies",
+                description="Verify dependency versions and conflicts",
+                func=self._check_dependencies,
+            )
+        )
 
         return tools
 
@@ -209,7 +224,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         self.debug_sessions[session_id] = {
             "start_time": datetime.now(),
             "error_state": error_state,
-            "findings": []
+            "findings": [],
         }
 
         # Analyze stack trace
@@ -233,11 +248,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         # Generate hypothesis
         hypothesis = await self._generate_hypothesis(
-            error_state,
-            stack_analysis,
-            memory_state,
-            thread_state,
-            variables
+            error_state, stack_analysis, memory_state, thread_state, variables
         )
 
         # Gather evidence
@@ -248,10 +259,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         # Generate recommendations
         recommendations = await self._generate_recommendations(
-            error_state,
-            hypothesis,
-            evidence,
-            complexity
+            error_state, hypothesis, evidence, complexity
         )
 
         # Create debug info
@@ -266,7 +274,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             hypothesis=hypothesis["description"],
             evidence=evidence,
             recommended_actions=recommendations,
-            complexity_score=complexity
+            complexity_score=complexity,
         )
 
         # Store in session
@@ -275,7 +283,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         return debug_info
 
-    async def _analyze_stack_deeply(self, error_state: ErrorState) -> Dict[str, Any]:
+    async def _analyze_stack_deeply(self, error_state: ErrorState) -> dict[str, Any]:
         """Perform deep analysis of the stack trace"""
         stack_trace = error_state.get("stack_trace", "")
 
@@ -285,14 +293,14 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             "call_sequence": [],
             "recursive_calls": [],
             "external_calls": [],
-            "suspicious_patterns": []
+            "suspicious_patterns": [],
         }
 
         if not stack_trace:
             return analysis
 
         # Parse stack trace
-        lines = stack_trace.split('\n')
+        lines = stack_trace.split("\n")
         current_frame = {}
 
         for line in lines:
@@ -308,13 +316,13 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                     "function": file_match.group(3),
                     "code": "",
                     "local_vars": {},
-                    "is_library": not file_match.group(1).startswith(("/", "./"))
+                    "is_library": not file_match.group(1).startswith(("/", "./")),
                 }
 
                 # Read actual code if file exists
                 try:
                     if Path(current_frame["file"]).exists():
-                        with open(current_frame["file"], 'r') as f:
+                        with open(current_frame["file"]) as f:
                             lines = f.readlines()
                             line_idx = current_frame["line"] - 1
                             if 0 <= line_idx < len(lines):
@@ -342,22 +350,23 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         function_calls = [f["function"] for f in analysis["frames"]]
         for func in set(function_calls):
             if function_calls.count(func) > 2:
-                analysis["recursive_calls"].append({
-                    "function": func,
-                    "count": function_calls.count(func)
-                })
+                analysis["recursive_calls"].append(
+                    {"function": func, "count": function_calls.count(func)}
+                )
 
         # Identify external calls
         for frame in analysis["frames"]:
             if frame["is_library"]:
-                analysis["external_calls"].append({
-                    "library": frame["file"].split("/")[-1].split(".")[0],
-                    "function": frame["function"]
-                })
+                analysis["external_calls"].append(
+                    {
+                        "library": frame["file"].split("/")[-1].split(".")[0],
+                        "function": frame["function"],
+                    }
+                )
 
         return analysis
 
-    def _detect_suspicious_patterns(self, frames: List[Dict[str, Any]]) -> List[str]:
+    def _detect_suspicious_patterns(self, frames: list[Dict[str, Any]]) -> list[str]:
         """Detect suspicious patterns in stack frames"""
         patterns = []
 
@@ -383,7 +392,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         return patterns
 
-    async def _profile_memory_state(self) -> Dict[str, Any]:
+    async def _profile_memory_state(self) -> dict[str, Any]:
         """Profile current memory state"""
         process = psutil.Process(os.getpid())
 
@@ -397,17 +406,13 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             object_counts[obj_type] = object_counts.get(obj_type, 0) + 1
 
         # Sort by count
-        top_objects = sorted(
-            object_counts.items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:10]
+        top_objects = sorted(object_counts.items(), key=lambda x: x[1], reverse=True)[:10]
 
         # Get garbage collection stats
         gc_stats = {
             "collections": gc.get_count(),
             "collected": gc.collect(),
-            "threshold": gc.get_threshold()
+            "threshold": gc.get_threshold(),
         }
 
         return {
@@ -416,10 +421,10 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             "virtual_memory_mb": memory_info.vms / 1024 / 1024,
             "top_object_types": dict(top_objects),
             "total_objects": len(gc.get_objects()),
-            "gc_stats": gc_stats
+            "gc_stats": gc_stats,
         }
 
-    async def _analyze_thread_state(self) -> Dict[str, Any]:
+    async def _analyze_thread_state(self) -> dict[str, Any]:
         """Analyze current thread and async task states"""
         import threading
 
@@ -427,7 +432,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             "active_threads": threading.active_count(),
             "current_thread": threading.current_thread().name,
             "all_threads": [],
-            "async_tasks": []
+            "async_tasks": [],
         }
 
         # Get all threads
@@ -436,7 +441,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                 "name": thread.name,
                 "daemon": thread.daemon,
                 "alive": thread.is_alive(),
-                "ident": thread.ident
+                "ident": thread.ident,
             }
             thread_info["all_threads"].append(thread_data)
 
@@ -447,7 +452,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                 task_data = {
                     "name": task.get_name(),
                     "done": task.done(),
-                    "cancelled": task.cancelled()
+                    "cancelled": task.cancelled(),
                 }
                 if task.done() and not task.cancelled():
                     try:
@@ -462,10 +467,8 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         return thread_info
 
     async def _capture_variables(
-        self,
-        error_state: ErrorState,
-        stack_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, error_state: ErrorState, stack_analysis: dict[str, Any]
+    ) -> dict[str, Any]:
         """Capture variable values at error point"""
         variables = {}
 
@@ -482,12 +485,12 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             variables["error_location"] = {
                 "file": frame["file"],
                 "line": frame["line"],
-                "function": frame["function"]
+                "function": frame["function"],
             }
 
         return variables
 
-    async def _verify_dependencies(self, error_state: ErrorState) -> List[str]:
+    async def _verify_dependencies(self, error_state: ErrorState) -> list[str]:
         """Verify dependency versions and check for conflicts"""
         deps_checked = []
 
@@ -497,7 +500,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                 ["pip", "list", "--format=json"],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
 
             if result.returncode == 0:
@@ -519,17 +522,17 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
     async def _generate_hypothesis(
         self,
         error_state: ErrorState,
-        stack_analysis: Dict[str, Any],
-        memory_state: Dict[str, Any],
-        thread_state: Dict[str, Any],
-        variables: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        stack_analysis: dict[str, Any],
+        memory_state: dict[str, Any],
+        thread_state: dict[str, Any],
+        variables: dict[str, Any],
+    ) -> dict[str, Any]:
         """Generate hypothesis about the bug's root cause"""
         hypothesis = {
             "root_cause": "Unknown",
             "description": "",
             "confidence": 0.0,
-            "supporting_evidence": []
+            "supporting_evidence": [],
         }
 
         error_type = error_state["error_type"]
@@ -539,21 +542,29 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         if error_type == ErrorType.MEMORY_LEAK:
             if memory_state.get("memory_percent", 0) > 80:
                 hypothesis["root_cause"] = "Memory exhaustion"
-                hypothesis["description"] = "System running out of memory due to leak or excessive allocation"
+                hypothesis["description"] = (
+                    "System running out of memory due to leak or excessive allocation"
+                )
                 hypothesis["confidence"] = 0.9
-                hypothesis["supporting_evidence"].append(f"Memory usage: {memory_state['memory_percent']}%")
+                hypothesis["supporting_evidence"].append(
+                    f"Memory usage: {memory_state['memory_percent']}%"
+                )
 
         elif error_type == ErrorType.DEADLOCK:
             if thread_state.get("active_threads", 0) > 10:
                 hypothesis["root_cause"] = "Thread deadlock"
                 hypothesis["description"] = "Multiple threads waiting on each other's resources"
                 hypothesis["confidence"] = 0.8
-                hypothesis["supporting_evidence"].append(f"Active threads: {thread_state['active_threads']}")
+                hypothesis["supporting_evidence"].append(
+                    f"Active threads: {thread_state['active_threads']}"
+                )
 
         elif error_type == ErrorType.RUNTIME:
             if "NoneType" in error_msg:
                 hypothesis["root_cause"] = "Null reference"
-                hypothesis["description"] = "Attempting to access attribute or method on None object"
+                hypothesis["description"] = (
+                    "Attempting to access attribute or method on None object"
+                )
                 hypothesis["confidence"] = 0.95
                 hypothesis["supporting_evidence"].append("NoneType error in stack trace")
 
@@ -563,8 +574,10 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                 hypothesis["description"] = "Performance degradation due to recursive calls"
                 hypothesis["confidence"] = 0.85
                 hypothesis["supporting_evidence"].extend(
-                    [f"Recursive call: {r['function']} ({r['count']} times)"
-                     for r in stack_analysis["recursive_calls"]]
+                    [
+                        f"Recursive call: {r['function']} ({r['count']} times)"
+                        for r in stack_analysis["recursive_calls"]
+                    ]
                 )
 
         # Pattern-based hypothesis
@@ -576,16 +589,16 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         # Default hypothesis if none matched
         if hypothesis["root_cause"] == "Unknown":
-            hypothesis["description"] = f"Error of type {error_type.value} requires further investigation"
+            hypothesis["description"] = (
+                f"Error of type {error_type.value} requires further investigation"
+            )
             hypothesis["confidence"] = 0.3
 
         return hypothesis
 
     async def _gather_evidence(
-        self,
-        hypothesis: Dict[str, Any],
-        error_state: ErrorState
-    ) -> List[str]:
+        self, hypothesis: dict[str, Any], error_state: ErrorState
+    ) -> list[str]:
         """Gather evidence to support or refute hypothesis"""
         evidence = []
 
@@ -608,9 +621,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         return evidence
 
     def _calculate_bug_complexity(
-        self,
-        error_state: ErrorState,
-        stack_analysis: Dict[str, Any]
+        self, error_state: ErrorState, stack_analysis: dict[str, Any]
     ) -> float:
         """Calculate estimated complexity of the bug (0-1)"""
         complexity = 0.0
@@ -624,7 +635,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             ErrorType.DEADLOCK,
             ErrorType.RACE_CONDITION,
             ErrorType.MEMORY_LEAK,
-            ErrorType.PERFORMANCE
+            ErrorType.PERFORMANCE,
         ]
         if error_state["error_type"] in complex_types:
             complexity += 0.2
@@ -646,10 +657,10 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
     async def _generate_recommendations(
         self,
         error_state: ErrorState,
-        hypothesis: Dict[str, Any],
-        evidence: List[str],
-        complexity: float
-    ) -> List[str]:
+        hypothesis: dict[str, Any],
+        evidence: list[str],
+        complexity: float,
+    ) -> list[str]:
         """Generate debugging recommendations"""
         recommendations = []
 
@@ -665,29 +676,37 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         error_type = error_state["error_type"]
 
         if error_type == ErrorType.MEMORY_LEAK:
-            recommendations.extend([
-                "Use memory profiler to track allocations",
-                "Check for circular references",
-                "Verify proper resource cleanup in finally blocks"
-            ])
+            recommendations.extend(
+                [
+                    "Use memory profiler to track allocations",
+                    "Check for circular references",
+                    "Verify proper resource cleanup in finally blocks",
+                ]
+            )
         elif error_type == ErrorType.DEADLOCK:
-            recommendations.extend([
-                "Use thread dump analysis",
-                "Check lock acquisition order",
-                "Consider using timeouts on locks"
-            ])
+            recommendations.extend(
+                [
+                    "Use thread dump analysis",
+                    "Check lock acquisition order",
+                    "Consider using timeouts on locks",
+                ]
+            )
         elif error_type == ErrorType.RUNTIME:
-            recommendations.extend([
-                "Add null checks before object access",
-                "Validate input parameters",
-                "Use defensive programming techniques"
-            ])
+            recommendations.extend(
+                [
+                    "Add null checks before object access",
+                    "Validate input parameters",
+                    "Use defensive programming techniques",
+                ]
+            )
         elif error_type == ErrorType.PERFORMANCE:
-            recommendations.extend([
-                "Profile code to identify bottlenecks",
-                "Check for O(n²) or worse algorithms",
-                "Consider caching frequently accessed data"
-            ])
+            recommendations.extend(
+                [
+                    "Profile code to identify bottlenecks",
+                    "Check for O(n²) or worse algorithms",
+                    "Consider caching frequently accessed data",
+                ]
+            )
 
         # Hypothesis-based recommendations
         if hypothesis["confidence"] > 0.7:
@@ -697,7 +716,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
         return recommendations[:7]  # Return top 7 recommendations
 
-    async def set_strategic_breakpoints(self, error_state: ErrorState) -> List[BreakpointInfo]:
+    async def set_strategic_breakpoints(self, error_state: ErrorState) -> list[BreakpointInfo]:
         """Set strategic breakpoints for debugging"""
         breakpoints = []
 
@@ -707,38 +726,44 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
         # Set breakpoint at error origin
         if stack_analysis.get("error_origin"):
             origin = stack_analysis["error_origin"]
-            breakpoints.append(BreakpointInfo(
-                file_path=origin["file"],
-                line_number=origin["line"],
-                condition=None,
-                watch_variables=["self", "args", "kwargs"],
-                reason="Error origin point"
-            ))
+            breakpoints.append(
+                BreakpointInfo(
+                    file_path=origin["file"],
+                    line_number=origin["line"],
+                    condition=None,
+                    watch_variables=["self", "args", "kwargs"],
+                    reason="Error origin point",
+                )
+            )
 
         # Set breakpoints at suspicious patterns
         for i, frame in enumerate(stack_analysis.get("frames", [])):
             for pattern in stack_analysis.get("suspicious_patterns", []):
                 if frame["function"] in pattern:
-                    breakpoints.append(BreakpointInfo(
-                        file_path=frame["file"],
-                        line_number=frame["line"],
-                        condition=None,
-                        watch_variables=["locals()"],
-                        reason=f"Suspicious pattern: {pattern}"
-                    ))
+                    breakpoints.append(
+                        BreakpointInfo(
+                            file_path=frame["file"],
+                            line_number=frame["line"],
+                            condition=None,
+                            watch_variables=["locals()"],
+                            reason=f"Suspicious pattern: {pattern}",
+                        )
+                    )
 
         # Set breakpoints for recursive calls
         for recursive in stack_analysis.get("recursive_calls", []):
             # Find first occurrence
             for frame in stack_analysis["frames"]:
                 if frame["function"] == recursive["function"]:
-                    breakpoints.append(BreakpointInfo(
-                        file_path=frame["file"],
-                        line_number=frame["line"],
-                        condition=f"recursion_depth > {recursive['count']}",
-                        watch_variables=["recursion_depth", "args"],
-                        reason=f"Recursive function: {recursive['function']}"
-                    ))
+                    breakpoints.append(
+                        BreakpointInfo(
+                            file_path=frame["file"],
+                            line_number=frame["line"],
+                            condition=f"recursion_depth > {recursive['count']}",
+                            watch_variables=["recursion_depth", "args"],
+                            reason=f"Recursive function: {recursive['function']}",
+                        )
+                    )
                     break
 
         self.active_breakpoints.extend(breakpoints)
@@ -747,8 +772,8 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
     # Tool implementations
     def _analyze_stack_trace_deep(self, stack_trace: str) -> str:
         """Tool: Deep stack trace analysis"""
-        lines = stack_trace.split('\n')
-        frame_count = len([l for l in lines if 'File' in l])
+        lines = stack_trace.split("\n")
+        frame_count = len([l for l in lines if "File" in l])
         return f"Analyzed {frame_count} stack frames"
 
     def _profile_memory(self, process_name: Optional[str] = None) -> str:
@@ -770,6 +795,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
     def _analyze_threads(self, check_deadlock: bool = True) -> str:
         """Tool: Analyze thread states"""
         import threading
+
         thread_count = threading.active_count()
         return f"Active threads: {thread_count}"
 
@@ -784,7 +810,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             return f"Checking {package_name} version and dependencies"
         return "Dependency check completed"
 
-    async def get_debugging_metrics(self) -> Dict[str, Any]:
+    async def get_debugging_metrics(self) -> dict[str, Any]:
         """Get metrics specific to debugging"""
         base_metrics = await self.get_error_metrics()
 
@@ -794,7 +820,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
             "memory_snapshots": len(self.memory_snapshots),
             "average_complexity": 0.0,
             "hypothesis_accuracy": 0.0,
-            "root_causes_identified": {}
+            "root_causes_identified": {},
         }
 
         # Calculate average complexity
@@ -825,7 +851,9 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
 
             if task_type == "debug_error":
                 error = task.get("error", {})
-                session_id = task.get("session_id", f"debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+                session_id = task.get(
+                    "session_id", f"debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                )
 
                 # Convert dict error to ErrorState format if needed
                 if isinstance(error, dict):
@@ -844,7 +872,7 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                     "status": "completed",
                     "result": result,
                     "session_id": session_id,
-                    "debug_complexity": result.complexity_score if result else 0.0
+                    "debug_complexity": result.complexity_score if result else 0.0,
                 }
 
             elif task_type == "analyze_stack_trace":
@@ -856,42 +884,32 @@ Use scientific method: Observe → Hypothesize → Test → Conclude"""
                 return {
                     "status": "completed",
                     "result": analysis,
-                    "root_cause_identified": analysis.root_cause if analysis else None
+                    "root_cause_identified": analysis.root_cause if analysis else None,
                 }
 
             elif task_type == "get_session_status":
                 session_id = task.get("session_id")
                 if session_id and session_id in self.debug_sessions:
                     session = self.debug_sessions[session_id]
-                    return {
-                        "status": "completed",
-                        "result": session
-                    }
+                    return {"status": "completed", "result": session}
                 else:
                     return {
                         "status": "error",
                         "error": f"Session {session_id} not found",
-                        "result": None
+                        "result": None,
                     }
 
             elif task_type == "get_metrics":
                 metrics = await self.get_performance_metrics()
-                return {
-                    "status": "completed",
-                    "result": metrics
-                }
+                return {"status": "completed", "result": metrics}
 
             else:
                 return {
                     "status": "error",
                     "error": f"Unknown task type: {task_type}",
-                    "result": None
+                    "result": None,
                 }
 
         except Exception as e:
             logger.error(f"Error processing debugging task: {e}")
-            return {
-                "status": "error",
-                "error": str(e),
-                "result": None
-            }
+            return {"status": "error", "error": str(e), "result": None}

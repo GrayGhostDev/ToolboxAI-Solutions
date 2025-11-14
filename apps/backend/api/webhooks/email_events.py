@@ -116,7 +116,8 @@ async def verify_sendgrid_webhook(
     if not x_twilio_email_event_webhook_signature or not x_twilio_email_event_webhook_timestamp:
         logger.error("Missing SendGrid webhook headers")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing webhook signature headers"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing webhook signature headers",
         )
 
     if not validator.validate_signature(
@@ -175,7 +176,8 @@ async def handle_sendgrid_events(body: bytes = Depends(verify_sendgrid_webhook))
     except Exception as e:
         logger.error(f"Error handling SendGrid webhook: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
         )
 
 
@@ -189,7 +191,7 @@ async def process_email_event(event: EmailEvent):
     try:
         event_type = event.event.lower()
         email_address = event.email
-        timestamp = datetime.fromtimestamp(event.timestamp)
+        datetime.fromtimestamp(event.timestamp)
 
         logger.info(f"Processing {event_type} event for {email_address}")
 
@@ -268,7 +270,11 @@ async def handle_spam_report_event(event: EmailEvent):
     await email_queue.handle_complaint(
         email_address=event.email,
         complaint_type="spam",
-        details={"timestamp": event.timestamp, "ip": event.ip, "useragent": event.useragent},
+        details={
+            "timestamp": event.timestamp,
+            "ip": event.ip,
+            "useragent": event.useragent,
+        },
     )
 
     logger.warning(f"Spam report: {event.email}")
@@ -384,7 +390,11 @@ async def get_email_stats(email: EmailStr):
         Email statistics including bounces, complaints, opens, clicks
     """
     try:
-        stats = {"email": email, "suppressed": await email_queue.is_suppressed(email), "events": {}}
+        stats = {
+            "email": email,
+            "suppressed": await email_queue.is_suppressed(email),
+            "events": {},
+        }
 
         if email_queue.redis_client:
             # Get bounce information

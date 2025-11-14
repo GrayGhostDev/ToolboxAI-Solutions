@@ -291,7 +291,7 @@ class AdvancedAnalytics:
             )
 
         # Prepare time series
-        dates = [row.date for row in engagement_data]
+        [row.date for row in engagement_data]
         counts = [row.engagement_count for row in engagement_data]
 
         # Calculate moving averages

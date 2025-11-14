@@ -248,9 +248,10 @@ class TestTaskEnqueue:
 
         with patch("time.time", return_value=1234.5):
             with patch(
-                "uuid.uuid4", return_value=uuid.UUID("12345678-1234-5678-1234-567812345678")
+                "uuid.uuid4",
+                return_value=uuid.UUID("12345678-1234-5678-1234-567812345678"),
             ):
-                tid = task_registry.enqueue(payload, priority=5.0)
+                task_registry.enqueue(payload, priority=5.0)
 
         # Verify pipeline calls
         pipeline = task_registry.r.r.pipeline.return_value
@@ -274,7 +275,7 @@ class TestTaskEnqueue:
         payload = {"type": "test"}
 
         with patch("time.time", return_value=1000.0):
-            tid = task_registry.enqueue(payload)
+            task_registry.enqueue(payload)
 
         pipeline = task_registry.r.r.pipeline.return_value
         pipeline.zadd.assert_called_once()
@@ -358,7 +359,11 @@ class TestTaskClaim:
     def test_claim_wildcard_capability(self, task_registry, mock_redis):
         """Test claiming accepts wildcard capability"""
         tid = "task-wild"
-        task_data = {"id": tid, "state": TaskState.QUEUED.value, "payload": {"capability": "*"}}
+        task_data = {
+            "id": tid,
+            "state": TaskState.QUEUED.value,
+            "payload": {"capability": "*"},
+        }
 
         mock_redis.zrange.return_value = [tid.encode()]
         mock_redis.get.return_value = json.dumps(task_data).encode()
@@ -388,7 +393,7 @@ class TestTaskClaim:
         mock_redis.zrange.return_value = [tid.encode()]
         mock_redis.get.return_value = None  # Task doesn't exist
 
-        result = task_registry.claim("worker-1")
+        task_registry.claim("worker-1")
 
         # Should remove from zset
         mock_redis.zrem.assert_called()
@@ -514,7 +519,11 @@ class TestTaskStateTransitions:
     def test_complete_task(self, task_registry, mock_redis):
         """Test completing a task"""
         tid = "task-complete"
-        task_data = {"id": tid, "state": TaskState.IN_PROGRESS.value, "updated_at": 1000.0}
+        task_data = {
+            "id": tid,
+            "state": TaskState.IN_PROGRESS.value,
+            "updated_at": 1000.0,
+        }
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
@@ -572,7 +581,11 @@ class TestTaskStateTransitions:
     def test_fail_task_max_retries_exceeded(self, task_registry, mock_redis):
         """Test failing task when max retries exceeded"""
         tid = "task-max-retries"
-        task_data = {"id": tid, "state": TaskState.IN_PROGRESS.value, "retries": MAX_RETRIES}
+        task_data = {
+            "id": tid,
+            "state": TaskState.IN_PROGRESS.value,
+            "retries": MAX_RETRIES,
+        }
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 
@@ -607,7 +620,11 @@ class TestTaskStateTransitions:
     def test_requeue_clears_claimed_by(self, task_registry, mock_redis):
         """Test requeue clears claimed_by field"""
         tid = "task-clear"
-        task_data = {"id": tid, "state": TaskState.FAILED.value, "claimed_by": "worker-1"}
+        task_data = {
+            "id": tid,
+            "state": TaskState.FAILED.value,
+            "claimed_by": "worker-1",
+        }
 
         mock_redis.get.return_value = json.dumps(task_data).encode()
 

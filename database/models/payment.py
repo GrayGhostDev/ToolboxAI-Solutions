@@ -11,9 +11,19 @@ Multi-tenant: All models use organization_id for tenant isolation
 
 from enum import Enum
 
-from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -293,7 +303,12 @@ class CustomerPaymentMethod(TenantBaseModel):
     __table_args__ = (
         Index("idx_payment_method_org_customer", "organization_id", "customer_id"),
         Index("idx_payment_method_stripe", "stripe_payment_method_id"),
-        Index("idx_payment_method_org_default", "organization_id", "customer_id", "is_default"),
+        Index(
+            "idx_payment_method_org_default",
+            "organization_id",
+            "customer_id",
+            "is_default",
+        ),
     )
 
 

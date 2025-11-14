@@ -7,18 +7,16 @@ with parallel processing, consensus mechanisms, and adaptive routing.
 
 import asyncio
 import logging
-from typing import Dict, Any, List, TypedDict, Annotated, Sequence, Optional
+from collections.abc import Sequence
 from datetime import datetime
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolExecutor, ToolInvocation
+from typing import Any, Optional, TypedDict
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import MemorySaver
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from pydantic import BaseModel, Field
+from langgraph.graph import END, StateGraph
 
 from core.agents.error_handling.swarm_coordinator import (
     ErrorHandlingSwarmCoordinator,
-    SwarmState,
-    SwarmAction
 )
 
 logger = logging.getLogger(__name__)
@@ -26,25 +24,26 @@ logger = logging.getLogger(__name__)
 
 class ErrorHandlingWorkflowState(TypedDict):
     """Extended state for the error handling workflow"""
+
     # Core state
-    errors: List[Dict[str, Any]]
-    agents: List[str]
-    decisions: List[Dict[str, Any]]
-    consensus: Dict[str, Any]
+    errors: list[dict[str, Any]]
+    agents: list[str]
+    decisions: list[dict[str, Any]]
+    consensus: dict[str, Any]
 
     # Workflow control
     phase: str
-    parallel_tasks: List[Dict[str, Any]]
-    completed_tasks: List[str]
+    parallel_tasks: list[dict[str, Any]]
+    completed_tasks: list[str]
 
     # Results
-    fixes_applied: List[Dict[str, Any]]
+    fixes_applied: list[dict[str, Any]]
     tests_passed: bool
     recovery_success: bool
 
     # Monitoring
-    metrics: Dict[str, Any]
-    alerts: List[Dict[str, Any]]
+    metrics: dict[str, Any]
+    alerts: list[dict[str, Any]]
 
     # Messages
     messages: Sequence[BaseMessage]
@@ -99,8 +98,8 @@ class ErrorHandlingWorkflow:
                 "debug": "parallel_debug",
                 "correct": "parallel_correct",
                 "recover": "orchestrate_recovery",
-                "monitor": "monitor_results"
-            }
+                "monitor": "monitor_results",
+            },
         )
 
         # Parallel branches merge
@@ -114,7 +113,9 @@ class ErrorHandlingWorkflow:
 
         return workflow
 
-    async def _collect_errors(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _collect_errors(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Collect errors from multiple sources"""
         logger.info("Collecting errors from all sources")
 
@@ -131,7 +132,9 @@ class ErrorHandlingWorkflow:
 
         return state
 
-    async def _initial_analysis(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _initial_analysis(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Perform initial analysis on collected errors"""
         logger.info("Performing initial error analysis")
 
@@ -150,15 +153,19 @@ class ErrorHandlingWorkflow:
         # Generate alerts for critical patterns
         if analysis.get("insights"):
             for insight in analysis["insights"][:3]:
-                state["alerts"].append({
-                    "type": "pattern_detected",
-                    "severity": "high",
-                    "description": insight.description
-                })
+                state["alerts"].append(
+                    {
+                        "type": "pattern_detected",
+                        "severity": "high",
+                        "description": insight.description,
+                    }
+                )
 
         return state
 
-    async def _assign_agents_with_consensus(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _assign_agents_with_consensus(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Assign agents using consensus mechanism"""
         logger.info("Assigning agents with consensus")
 
@@ -182,14 +189,14 @@ class ErrorHandlingWorkflow:
 
         state["consensus"] = {
             "recommendations": recommendations,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         state["phase"] = "assigned"
 
         return state
 
-    def _calculate_agent_confidence(self, agent_name: str, error: Dict[str, Any]) -> float:
+    def _calculate_agent_confidence(self, agent_name: str, error: dict[str, Any]) -> float:
         """Calculate agent's confidence in handling an error"""
         error_type = error.get("error_type", "unknown")
 
@@ -197,27 +204,18 @@ class ErrorHandlingWorkflow:
             "correction": {
                 "syntax_error": 0.9,
                 "type_error": 0.8,
-                "runtime_error": 0.7
+                "runtime_error": 0.7,
             },
-            "debugging": {
-                "runtime_error": 0.9,
-                "memory_leak": 0.8,
-                "deadlock": 0.9
-            },
-            "recovery": {
-                "network_error": 0.9,
-                "api_error": 0.8,
-                "database_error": 0.7
-            },
-            "testing": {
-                "logic_error": 0.8,
-                "integration_error": 0.9
-            }
+            "debugging": {"runtime_error": 0.9, "memory_leak": 0.8, "deadlock": 0.9},
+            "recovery": {"network_error": 0.9, "api_error": 0.8, "database_error": 0.7},
+            "testing": {"logic_error": 0.8, "integration_error": 0.9},
         }
 
         return confidence_map.get(agent_name, {}).get(error_type, 0.5)
 
-    async def _parallel_debug(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _parallel_debug(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Debug errors in parallel"""
         logger.info("Running parallel debugging")
 
@@ -236,15 +234,14 @@ class ErrorHandlingWorkflow:
 
             for result in debug_results:
                 if not isinstance(result, Exception):
-                    state["decisions"].append({
-                        "type": "debug_info",
-                        "data": result.model_dump()
-                    })
+                    state["decisions"].append({"type": "debug_info", "data": result.model_dump()})
 
         state["completed_tasks"].append("debugging")
         return state
 
-    async def _parallel_correct(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _parallel_correct(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Apply corrections in parallel"""
         logger.info("Applying parallel corrections")
 
@@ -263,10 +260,12 @@ class ErrorHandlingWorkflow:
 
             for result in correction_results:
                 if not isinstance(result, Exception) and result.validation_passed:
-                    state["fixes_applied"].append({
-                        "fix_id": f"fix_{len(state['fixes_applied'])}",
-                        "data": result.model_dump()
-                    })
+                    state["fixes_applied"].append(
+                        {
+                            "fix_id": f"fix_{len(state['fixes_applied'])}",
+                            "data": result.model_dump(),
+                        }
+                    )
 
         state["completed_tasks"].append("correction")
         return state
@@ -286,7 +285,7 @@ class ErrorHandlingWorkflow:
         if affected_components:
             test_report = await tester.orchestrate_testing(
                 target=list(affected_components)[0] if len(affected_components) == 1 else None,
-                test_type="unit"
+                test_type="unit",
             )
 
             state["tests_passed"] = test_report.passed == test_report.total_tests
@@ -295,7 +294,9 @@ class ErrorHandlingWorkflow:
         state["completed_tasks"].append("testing")
         return state
 
-    async def _orchestrate_recovery(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _orchestrate_recovery(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Orchestrate system recovery"""
         logger.info("Orchestrating recovery")
 
@@ -311,10 +312,7 @@ class ErrorHandlingWorkflow:
 
                 if recovery.success:
                     state["recovery_success"] = True
-                    state["decisions"].append({
-                        "type": "recovery",
-                        "data": recovery.model_dump()
-                    })
+                    state["decisions"].append({"type": "recovery", "data": recovery.model_dump()})
 
         if not recovery_needed:
             state["recovery_success"] = True
@@ -322,13 +320,15 @@ class ErrorHandlingWorkflow:
         state["completed_tasks"].append("recovery")
         return state
 
-    async def _monitor_results(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _monitor_results(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Monitor results and system health"""
         logger.info("Monitoring results")
 
         # Collect metrics from all agents
         for agent_name, agent in self.coordinator.agents.items():
-            if hasattr(agent, 'get_error_metrics'):
+            if hasattr(agent, "get_error_metrics"):
                 metrics = await agent.get_error_metrics()
                 state["metrics"][f"{agent_name}_metrics"] = metrics
 
@@ -337,21 +337,25 @@ class ErrorHandlingWorkflow:
         state["metrics"]["health_score"] = health_score
 
         if health_score < 0.5:
-            state["alerts"].append({
-                "type": "low_health",
-                "severity": "critical",
-                "description": f"System health score: {health_score:.2f}"
-            })
+            state["alerts"].append(
+                {
+                    "type": "low_health",
+                    "severity": "critical",
+                    "description": f"System health score: {health_score:.2f}",
+                }
+            )
 
         state["completed_tasks"].append("monitoring")
         return state
 
-    async def _learn_from_results(self, state: ErrorHandlingWorkflowState) -> ErrorHandlingWorkflowState:
+    async def _learn_from_results(
+        self, state: ErrorHandlingWorkflowState
+    ) -> ErrorHandlingWorkflowState:
         """Learn from the results for future improvements"""
         logger.info("Learning from results")
 
         # Update pattern database
-        pattern_analyzer = self.coordinator.agents["pattern_analysis"]
+        self.coordinator.agents["pattern_analysis"]
 
         # Learn from successful fixes
         for fix in state["fixes_applied"]:
@@ -379,15 +383,17 @@ class ErrorHandlingWorkflow:
             "health_score": state["metrics"].get("health_score", 0),
             "alerts_generated": len(state["alerts"]),
             "agents_used": list(set(state["agents"])),
-            "recommendations": self._generate_recommendations(state)
+            "recommendations": self._generate_recommendations(state),
         }
 
         state["metrics"]["final_report"] = report
         state["phase"] = "completed"
 
         state["messages"].append(
-            AIMessage(content=f"Workflow completed. Processed {report['errors_processed']} errors, "
-                           f"applied {report['fixes_applied']} fixes.")
+            AIMessage(
+                content=f"Workflow completed. Processed {report['errors_processed']} errors, "
+                f"applied {report['fixes_applied']} fixes."
+            )
         )
 
         return state
@@ -407,12 +413,12 @@ class ErrorHandlingWorkflow:
         routing_map = {
             "debugging": "debug",
             "correction": "correct",
-            "recovery": "recover"
+            "recovery": "recover",
         }
 
         return routing_map.get(most_common, "monitor")
 
-    def _dict_to_error_state(self, error_dict: Dict[str, Any]) -> Any:
+    def _dict_to_error_state(self, error_dict: dict[str, Any]) -> Any:
         """Convert dictionary to ErrorState (simplified)"""
         # In production, would properly convert to ErrorState
         return error_dict
@@ -438,7 +444,7 @@ class ErrorHandlingWorkflow:
 
         return max(0, min(1, score))
 
-    def _generate_recommendations(self, state: ErrorHandlingWorkflowState) -> List[str]:
+    def _generate_recommendations(self, state: ErrorHandlingWorkflowState) -> list[str]:
         """Generate recommendations based on workflow results"""
         recommendations = []
 
@@ -458,10 +464,8 @@ class ErrorHandlingWorkflow:
         return recommendations
 
     async def execute(
-        self,
-        errors: List[Dict[str, Any]],
-        context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, errors: list[dict[str, Any]], context: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """Execute the complete workflow"""
         initial_state: ErrorHandlingWorkflowState = {
             "errors": errors,
@@ -476,11 +480,13 @@ class ErrorHandlingWorkflow:
             "recovery_success": False,
             "metrics": {},
             "alerts": [],
-            "messages": [HumanMessage(content=f"Processing {len(errors)} errors")]
+            "messages": [HumanMessage(content=f"Processing {len(errors)} errors")],
         }
 
         app = self.workflow.compile(checkpointer=self.memory)
-        config = {"configurable": {"thread_id": f"thread_{datetime.now().strftime('%Y%m%d_%H%M%S')}"}}
+        config = {
+            "configurable": {"thread_id": f"thread_{datetime.now().strftime('%Y%m%d_%H%M%S')}"}
+        }
 
         final_state = await app.ainvoke(initial_state, config)
 

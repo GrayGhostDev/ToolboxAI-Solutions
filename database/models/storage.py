@@ -40,7 +40,12 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
 
-from database.models.base import AuditMixin, GlobalBaseModel, TenantBaseModel, TimestampMixin
+from database.models.base import (
+    AuditMixin,
+    GlobalBaseModel,
+    TenantBaseModel,
+    TimestampMixin,
+)
 
 
 class FileStatus(enum.Enum):

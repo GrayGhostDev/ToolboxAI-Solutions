@@ -20,16 +20,20 @@ Environment Variables:
     AUTO_MIGRATE_DB - Set to 'true' to auto-run database migrations
 """
 
+import argparse
 import os
 import sys
-import argparse
-import time
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github import GitHubHelper, EducationalPlatformHelper, setup_logging, load_config, notify_team
+from github import (
+    EducationalPlatformHelper,
+    GitHubHelper,
+    load_config,
+    notify_team,
+    setup_logging,
+)
 
 logger = setup_logging()
 
@@ -43,7 +47,7 @@ class PostMergeHook:
         self.send_notifications = send_notifications
         self.dry_run = dry_run
         self.repo_root = self.github_helper.repo_root
-        self.actions_performed: List[str] = []
+        self.actions_performed: list[str] = []
         
         # Get merge information
         self.merge_commit = self._get_merge_commit()
@@ -103,7 +107,7 @@ class PostMergeHook:
             return stdout.strip()
         return 'unknown'
     
-    def _get_merge_changes(self) -> List[str]:
+    def _get_merge_changes(self) -> list[str]:
         """Get files changed in the merge"""
         exit_code, stdout, stderr = self.github_helper.run_command(['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'])
         if exit_code == 0:
@@ -435,7 +439,7 @@ class PostMergeHook:
                 self.actions_performed.append(f"Created {target_file.name}")
             else:
                 # Check for new variables in example
-                with open(example_file, 'r') as f:
+                with open(example_file) as f:
                     example_vars = set()
                     for line in f:
                         line = line.strip()
@@ -443,7 +447,7 @@ class PostMergeHook:
                             var_name = line.split('=')[0]
                             example_vars.add(var_name)
                 
-                with open(target_file, 'r') as f:
+                with open(target_file) as f:
                     current_vars = set()
                     for line in f:
                         line = line.strip()
@@ -491,7 +495,7 @@ class PostMergeHook:
             import json
             import re
             
-            with open(package_file, 'r') as f:
+            with open(package_file) as f:
                 package_data = json.load(f)
             
             current_version = package_data.get('version', '1.0.0')

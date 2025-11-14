@@ -100,7 +100,7 @@ class TestDockerServicesIntegration:
     @pytest.mark.asyncio
     async def test_all_services_running(self):
         """Test that all Docker services are running and healthy."""
-        compose_file = Path("infrastructure/docker/docker-compose.dev.yml")
+        Path("infrastructure/docker/docker-compose.dev.yml")
 
         # Get all running containers
         containers = self.docker_client.containers.list()
@@ -151,7 +151,8 @@ class TestDockerServicesIntegration:
 
             # Test database exists
             db_exists = await conn.fetchval(
-                "SELECT 1 FROM pg_database WHERE datname = $1", "educational_platform_dev"
+                "SELECT 1 FROM pg_database WHERE datname = $1",
+                "educational_platform_dev",
             )
             assert db_exists == 1
 
@@ -159,7 +160,7 @@ class TestDockerServicesIntegration:
             tables = await conn.fetch(
                 "SELECT tablename FROM pg_tables WHERE schemaname = 'public';"
             )
-            table_names = [row["tablename"] for row in tables]
+            [row["tablename"] for row in tables]
 
             # Should have at least some core tables
             expected_tables = ["users", "classes", "lessons", "assessments"]
@@ -188,7 +189,9 @@ class TestDockerServicesIntegration:
         redis_client = None
         try:
             redis_client = await redis.from_url(
-                "redis://localhost:6381/0", decode_responses=True, socket_connect_timeout=10
+                "redis://localhost:6381/0",
+                decode_responses=True,
+                socket_connect_timeout=10,
             )
 
             # Test ping
@@ -238,7 +241,6 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:8009"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test health endpoint
             async with session.get(f"{base_url}/health") as response:
                 assert response.status == 200
@@ -292,7 +294,6 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:9877"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test health endpoint
             async with session.get(f"{base_url}/health") as response:
                 assert response.status == 200
@@ -311,7 +312,6 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:8888"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test health endpoint
             async with session.get(f"{base_url}/health") as response:
                 assert response.status == 200
@@ -330,7 +330,6 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:5179"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test main page
             async with session.get(f"{base_url}/") as response:
                 assert response.status == 200
@@ -357,7 +356,6 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:5001"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test status endpoint
             async with session.get(f"{base_url}/status") as response:
                 assert response.status == 200
@@ -369,7 +367,11 @@ class TestDockerServicesIntegration:
             for endpoint in roblox_endpoints:
                 try:
                     async with session.get(f"{base_url}{endpoint}") as response:
-                        assert response.status in [200, 404, 422]  # 404 if not implemented yet
+                        assert response.status in [
+                            200,
+                            404,
+                            422,
+                        ]  # 404 if not implemented yet
                 except Exception:
                     pass  # May not be implemented yet
 
@@ -380,7 +382,6 @@ class TestDockerServicesIntegration:
         # Test FastAPI to Redis communication
         fastapi_url = "http://localhost:8009"
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test cache endpoint (if exists)
             try:
                 async with session.get(f"{fastapi_url}/api/v1/cache/status") as response:
@@ -405,9 +406,11 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:8009"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test Pusher auth endpoint
-            auth_data = {"socket_id": "123456.789", "channel_name": "private-test-channel"}
+            auth_data = {
+                "socket_id": "123456.789",
+                "channel_name": "private-test-channel",
+            }
 
             try:
                 async with session.post(
@@ -476,7 +479,11 @@ class TestDockerServicesIntegration:
                 inspect_data = self.docker_client.api.inspect_container(container.id)
                 created_time = inspect_data["Created"]
                 container_info.append(
-                    {"name": container.name, "created": created_time, "status": container.status}
+                    {
+                        "name": container.name,
+                        "created": created_time,
+                        "status": container.status,
+                    }
                 )
 
         # Sort by creation time
@@ -772,7 +779,12 @@ class TestDockerServicesIntegration:
 
                         # Check for our services
                         target_jobs = [t.get("job") for t in targets if "job" in t]
-                        expected_jobs = ["prometheus", "fastapi-backend", "postgres", "redis"]
+                        expected_jobs = [
+                            "prometheus",
+                            "fastapi-backend",
+                            "postgres",
+                            "redis",
+                        ]
 
                         for job in expected_jobs:
                             if job in target_jobs:
@@ -857,7 +869,6 @@ class TestDockerServicesIntegration:
         base_url = "http://localhost:8009"
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             # Test health endpoint should handle database issues gracefully
             async with session.get(f"{base_url}/health") as response:
                 data = await response.json()
@@ -956,7 +967,6 @@ class TestDockerPerformanceIntegration:
         ]
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-
             for url, max_time in services_to_test:
                 try:
                     start_time = time.time()

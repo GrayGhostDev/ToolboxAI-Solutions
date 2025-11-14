@@ -13,7 +13,7 @@ import logging
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import Any, Set
+from typing import Any
 
 import redis.asyncio as redis
 from fastapi import Request
@@ -398,7 +398,7 @@ class ConnectionPool:
         """
         self.max_connections = max_connections
         self.connections: dict[str, list[Any]] = {}
-        self.in_use: dict[str, Set[Any]] = {}
+        self.in_use: dict[str, set[Any]] = {}
         self.stats = {"acquired": 0, "released": 0, "created": 0, "destroyed": 0}
 
     async def acquire(self, service: str, factory: Callable, timeout: float = 5.0) -> Any:

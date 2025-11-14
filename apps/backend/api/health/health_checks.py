@@ -517,7 +517,10 @@ async def check_agent_orchestration() -> dict:
                 "modules": ["state_manager"],
             }
         except ImportError as e:
-            checks["sparc_framework"] = {"healthy": False, "error": f"Import error: {str(e)}"}
+            checks["sparc_framework"] = {
+                "healthy": False,
+                "error": f"Import error: {str(e)}",
+            }
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
@@ -543,7 +546,7 @@ async def check_realtime_services() -> dict:
                 )
 
                 # Test channel info to verify connection
-                channel_info = pusher_client.channel_info("test-channel")
+                pusher_client.channel_info("test-channel")
 
                 checks["pusher"] = {
                     "healthy": True,
@@ -600,7 +603,11 @@ async def check_roblox_integration() -> dict:
         try:
             import os
 
-            roblox_paths = ["roblox/src/client", "roblox/src/server", "roblox/src/shared"]
+            roblox_paths = [
+                "roblox/src/client",
+                "roblox/src/server",
+                "roblox/src/shared",
+            ]
 
             structure_valid = all(
                 os.path.exists(os.path.join(os.getcwd(), path)) for path in roblox_paths
@@ -626,7 +633,10 @@ async def check_roblox_integration() -> dict:
                 "agents": ["RobloxContentGenerationAgent"],
             }
         except ImportError as e:
-            checks["roblox_agents"] = {"healthy": False, "error": f"Agent import error: {str(e)}"}
+            checks["roblox_agents"] = {
+                "healthy": False,
+                "error": f"Agent import error: {str(e)}",
+            }
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 

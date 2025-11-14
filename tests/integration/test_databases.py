@@ -52,13 +52,13 @@ async def test_databases():
             conn = await asyncpg.connect(connection_string)
 
             # Test basic connectivity
-            version = await conn.fetchval("SELECT version()")
+            await conn.fetchval("SELECT version()")
 
             # Get table count
             table_count = await conn.fetchval(
                 """
-                SELECT COUNT(*) 
-                FROM information_schema.tables 
+                SELECT COUNT(*)
+                FROM information_schema.tables
                 WHERE table_schema = 'public'
             """
             )

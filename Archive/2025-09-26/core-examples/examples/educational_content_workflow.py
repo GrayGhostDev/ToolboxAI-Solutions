@@ -14,40 +14,30 @@ Workflow steps:
 
 import asyncio
 import logging
-from typing import Dict, Any
 from datetime import datetime
+from typing import Any
 
 # Import integration agents
-from core.agents.integration import (
-    IntegrationPlatform,
-    IntegrationEvent
-)
+from core.agents.integration import IntegrationPlatform
 from core.agents.integration.backend import (
-    APIGatewayAgent,
-    DatabaseSyncAgent,
     APIEndpoint,
-    APIVersion
-)
-from core.agents.integration.frontend import (
-    UISyncAgent,
-    RealtimeUpdateAgent,
-    ComponentType,
-    UIUpdateStrategy,
-    ChannelType
-)
-from core.agents.integration.roblox import (
-    StudioBridgeAgent,
-    StudioConnectionType
-)
-from core.agents.integration.orchestration import (
-    IntegrationCoordinator,
-    TaskPriority
+    APIGatewayAgent,
+    APIVersion,
+    DatabaseSyncAgent,
 )
 from core.agents.integration.data_flow import (
-    SchemaValidatorAgent,
     SchemaType,
-    ValidationLevel
+    SchemaValidatorAgent,
 )
+from core.agents.integration.frontend import (
+    ChannelType,
+    ComponentType,
+    RealtimeUpdateAgent,
+    UISyncAgent,
+    UIUpdateStrategy,
+)
+from core.agents.integration.orchestration import IntegrationCoordinator
+from core.agents.integration.roblox import StudioBridgeAgent, StudioConnectionType
 
 logger = logging.getLogger(__name__)
 
@@ -313,8 +303,8 @@ class EducationalContentWorkflow:
 
     async def deploy_educational_content(
         self,
-        content: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        content: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Deploy educational content across all platforms
 
@@ -446,7 +436,7 @@ class EducationalContentWorkflow:
                 "workflow_id": workflow.workflow_id
             }
 
-    def _generate_roblox_script(self, content: Dict[str, Any]) -> str:
+    def _generate_roblox_script(self, content: dict[str, Any]) -> str:
         """Generate Roblox Lua script from content"""
         script = f"""
 -- Educational Content: {content['title']}

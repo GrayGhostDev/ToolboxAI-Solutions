@@ -5,31 +5,29 @@ Specialized agent for learning from error patterns and predicting issues
 using machine learning techniques and pattern recognition.
 """
 
-import asyncio
-import logging
-import json
-import pickle
-from typing import Dict, Any, Optional, List, Tuple, Set
-from pathlib import Path
-from datetime import datetime, timedelta
-from collections import Counter, defaultdict
-import numpy as np
-from dataclasses import dataclass
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
-from sklearn.ensemble import RandomForestClassifier
 import hashlib
+import logging
+import pickle
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Optional
 
+import numpy as np
 from langchain_core.tools import Tool
 from pydantic import BaseModel, Field
+from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from core.agents.error_handling.base_error_agent import (
     BaseErrorAgent,
     ErrorAgentConfig,
+    ErrorPattern,
+    ErrorPriority,
     ErrorState,
     ErrorType,
-    ErrorPriority,
-    ErrorPattern
 )
 
 logger = logging.getLogger(__name__)
@@ -37,29 +35,32 @@ logger = logging.getLogger(__name__)
 
 class PatternCluster(BaseModel):
     """Model for error pattern cluster"""
+
     cluster_id: str = Field(description="Unique cluster identifier")
-    centroid: List[float] = Field(description="Cluster centroid in feature space")
-    patterns: List[ErrorPattern] = Field(description="Patterns in this cluster")
+    centroid: list[float] = Field(description="Cluster centroid in feature space")
+    patterns: list[ErrorPattern] = Field(description="Patterns in this cluster")
     error_count: int = Field(description="Total errors in cluster")
     avg_resolution_time: float = Field(description="Average time to resolve")
-    common_fixes: List[str] = Field(description="Common fixes for this cluster")
+    common_fixes: list[str] = Field(description="Common fixes for this cluster")
     risk_score: float = Field(description="Risk score for this pattern cluster")
 
 
 class PredictedError(BaseModel):
     """Model for predicted error"""
+
     prediction_id: str = Field(description="Unique prediction identifier")
     error_type: ErrorType = Field(description="Predicted error type")
     probability: float = Field(description="Prediction probability (0-1)")
     expected_timeframe: str = Field(description="When error is expected")
-    affected_components: List[str] = Field(description="Components likely affected")
-    prevention_steps: List[str] = Field(description="Steps to prevent the error")
+    affected_components: list[str] = Field(description="Components likely affected")
+    prevention_steps: list[str] = Field(description="Steps to prevent the error")
     confidence: float = Field(description="Confidence in prediction")
-    evidence: List[str] = Field(description="Evidence supporting prediction")
+    evidence: list[str] = Field(description="Evidence supporting prediction")
 
 
 class ErrorTrend(BaseModel):
     """Model for error trends"""
+
     trend_id: str = Field(description="Unique trend identifier")
     error_type: ErrorType = Field(description="Error type showing trend")
     direction: str = Field(description="Trend direction (increasing/decreasing/stable)")
@@ -71,18 +72,20 @@ class ErrorTrend(BaseModel):
 
 class PatternInsight(BaseModel):
     """Model for pattern-based insights"""
+
     insight_id: str = Field(description="Unique insight identifier")
     description: str = Field(description="Insight description")
-    pattern_ids: List[str] = Field(description="Related pattern IDs")
+    pattern_ids: list[str] = Field(description="Related pattern IDs")
     actionable_recommendation: str = Field(description="Actionable recommendation")
     priority: ErrorPriority = Field(description="Priority of the insight")
     estimated_impact: str = Field(description="Estimated impact if actioned")
-    supporting_data: Dict[str, Any] = Field(description="Supporting data")
+    supporting_data: dict[str, Any] = Field(description="Supporting data")
 
 
 @dataclass
 class PatternAnalysisConfig(ErrorAgentConfig):
     """Configuration for pattern analysis agent"""
+
     min_pattern_frequency: int = 3
     clustering_threshold: float = 0.7
     prediction_window_hours: int = 24
@@ -113,16 +116,16 @@ class ErrorPatternAnalysisAgent(BaseErrorAgent):
                 model="gpt-4",
                 temperature=0.2,
                 min_pattern_frequency=3,
-                enable_ml_predictions=True
+                enable_ml_predictions=True,
             )
 
         super().__init__(config)
         self.analysis_config = config
 
         # Pattern storage
-        self.pattern_clusters: List[PatternCluster] = []
-        self.error_sequences: List[List[str]] = []
-        self.pattern_features: Dict[str, np.ndarray] = {}
+        self.pattern_clusters: list[PatternCluster] = []
+        self.error_sequences: list[List[str]] = []
+        self.pattern_features: dict[str, np.ndarray] = {}
 
         # ML models
         self.vectorizer = TfidfVectorizer(max_features=1000)
@@ -131,9 +134,9 @@ class ErrorPatternAnalysisAgent(BaseErrorAgent):
         self.models_trained = False
 
         # Analysis results
-        self.predictions: List[PredictedError] = []
-        self.trends: List[ErrorTrend] = []
-        self.insights: List[PatternInsight] = []
+        self.predictions: list[PredictedError] = []
+        self.trends: list[ErrorTrend] = []
+        self.insights: list[PatternInsight] = []
 
         # Initialize analysis tools
         self.tools.extend(self._create_analysis_tools())
@@ -164,45 +167,57 @@ Analysis principles:
 
 Use statistical and machine learning techniques to provide accurate predictions."""
 
-    def _create_analysis_tools(self) -> List[Tool]:
+    def _create_analysis_tools(self) -> list[Tool]:
         """Create specialized tools for pattern analysis"""
         tools = []
 
-        tools.append(Tool(
-            name="analyze_pattern",
-            description="Analyze error pattern for insights",
-            func=self._analyze_pattern_tool
-        ))
+        tools.append(
+            Tool(
+                name="analyze_pattern",
+                description="Analyze error pattern for insights",
+                func=self._analyze_pattern_tool,
+            )
+        )
 
-        tools.append(Tool(
-            name="predict_errors",
-            description="Predict future errors based on patterns",
-            func=self._predict_errors_tool
-        ))
+        tools.append(
+            Tool(
+                name="predict_errors",
+                description="Predict future errors based on patterns",
+                func=self._predict_errors_tool,
+            )
+        )
 
-        tools.append(Tool(
-            name="detect_anomalies",
-            description="Detect anomalous error patterns",
-            func=self._detect_anomalies_tool
-        ))
+        tools.append(
+            Tool(
+                name="detect_anomalies",
+                description="Detect anomalous error patterns",
+                func=self._detect_anomalies_tool,
+            )
+        )
 
-        tools.append(Tool(
-            name="analyze_trends",
-            description="Analyze error trends over time",
-            func=self._analyze_trends_tool
-        ))
+        tools.append(
+            Tool(
+                name="analyze_trends",
+                description="Analyze error trends over time",
+                func=self._analyze_trends_tool,
+            )
+        )
 
-        tools.append(Tool(
-            name="cluster_errors",
-            description="Cluster similar errors together",
-            func=self._cluster_errors_tool
-        ))
+        tools.append(
+            Tool(
+                name="cluster_errors",
+                description="Cluster similar errors together",
+                func=self._cluster_errors_tool,
+            )
+        )
 
-        tools.append(Tool(
-            name="generate_insights",
-            description="Generate insights from patterns",
-            func=self._generate_insights_tool
-        ))
+        tools.append(
+            Tool(
+                name="generate_insights",
+                description="Generate insights from patterns",
+                func=self._generate_insights_tool,
+            )
+        )
 
         return tools
 
@@ -215,7 +230,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
         vectorizer_path = model_path / "vectorizer.pkl"
         if vectorizer_path.exists():
             try:
-                with open(vectorizer_path, 'rb') as f:
+                with open(vectorizer_path, "rb") as f:
                     self.vectorizer = pickle.load(f)
                 logger.info("Loaded vectorizer model")
             except Exception as e:
@@ -225,7 +240,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
         clustering_path = model_path / "clustering_model.pkl"
         if clustering_path.exists():
             try:
-                with open(clustering_path, 'rb') as f:
+                with open(clustering_path, "rb") as f:
                     self.clustering_model = pickle.load(f)
                 logger.info("Loaded clustering model")
             except Exception as e:
@@ -235,7 +250,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
         prediction_path = model_path / "prediction_model.pkl"
         if prediction_path.exists():
             try:
-                with open(prediction_path, 'rb') as f:
+                with open(prediction_path, "rb") as f:
                     self.prediction_model = pickle.load(f)
                 self.models_trained = True
                 logger.info("Loaded prediction model")
@@ -249,14 +264,14 @@ Use statistical and machine learning techniques to provide accurate predictions.
 
         # Save vectorizer
         try:
-            with open(model_path / "vectorizer.pkl", 'wb') as f:
+            with open(model_path / "vectorizer.pkl", "wb") as f:
                 pickle.dump(self.vectorizer, f)
         except Exception as e:
             logger.error(f"Failed to save vectorizer: {e}")
 
         # Save clustering model
         try:
-            with open(model_path / "clustering_model.pkl", 'wb') as f:
+            with open(model_path / "clustering_model.pkl", "wb") as f:
                 pickle.dump(self.clustering_model, f)
         except Exception as e:
             logger.error(f"Failed to save clustering model: {e}")
@@ -264,16 +279,14 @@ Use statistical and machine learning techniques to provide accurate predictions.
         # Save prediction model
         if self.models_trained:
             try:
-                with open(model_path / "prediction_model.pkl", 'wb') as f:
+                with open(model_path / "prediction_model.pkl", "wb") as f:
                     pickle.dump(self.prediction_model, f)
             except Exception as e:
                 logger.error(f"Failed to save prediction model: {e}")
 
     async def analyze_error_patterns(
-        self,
-        error_history: List[ErrorState],
-        timeframe_days: int = 7
-    ) -> Dict[str, Any]:
+        self, error_history: list[ErrorState], timeframe_days: int = 7
+    ) -> dict[str, Any]:
         """
         Analyze error patterns from historical data.
 
@@ -289,8 +302,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
         # Filter errors by timeframe
         cutoff_date = datetime.now() - timedelta(days=timeframe_days)
         recent_errors = [
-            e for e in error_history
-            if datetime.fromisoformat(e["timestamp"]) > cutoff_date
+            e for e in error_history if datetime.fromisoformat(e["timestamp"]) > cutoff_date
         ]
 
         # Extract features from errors
@@ -328,10 +340,10 @@ Use statistical and machine learning techniques to provide accurate predictions.
             "trends": trends,
             "predictions": predictions,
             "insights": insights,
-            "summary": self._generate_analysis_summary(patterns, trends, predictions)
+            "summary": self._generate_analysis_summary(patterns, trends, predictions),
         }
 
-    def _extract_error_features(self, errors: List[ErrorState]) -> np.ndarray:
+    def _extract_error_features(self, errors: list[ErrorState]) -> np.ndarray:
         """Extract features from errors for ML analysis"""
         if not errors:
             return np.array([])
@@ -345,7 +357,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
 
         # Vectorize using TF-IDF
         try:
-            if not hasattr(self.vectorizer, 'vocabulary_'):
+            if not hasattr(self.vectorizer, "vocabulary_"):
                 # First time - fit the vectorizer
                 features = self.vectorizer.fit_transform(error_texts)
             else:
@@ -358,10 +370,8 @@ Use statistical and machine learning techniques to provide accurate predictions.
             return np.array([])
 
     async def _cluster_similar_errors(
-        self,
-        features: np.ndarray,
-        errors: List[ErrorState]
-    ) -> List[PatternCluster]:
+        self, features: np.ndarray, errors: list[ErrorState]
+    ) -> list[PatternCluster]:
         """Cluster similar errors together"""
         if len(features) < 2:
             return []
@@ -388,16 +398,23 @@ Use statistical and machine learning techniques to provide accurate predictions.
                 # Find common fixes
                 fixes = []
                 for e in cluster_errors:
-                    fixes.extend([f["fix"] for f in e.get("attempted_fixes", []) if f.get("success")])
+                    fixes.extend(
+                        [f["fix"] for f in e.get("attempted_fixes", []) if f.get("success")]
+                    )
 
                 common_fixes = [fix for fix, _ in Counter(fixes).most_common(3)]
 
                 # Calculate risk score
-                priority_scores = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4, "EMERGENCY": 5}
-                avg_priority = np.mean([
-                    priority_scores.get(e["priority"].name, 2)
-                    for e in cluster_errors
-                ])
+                priority_scores = {
+                    "LOW": 1,
+                    "MEDIUM": 2,
+                    "HIGH": 3,
+                    "CRITICAL": 4,
+                    "EMERGENCY": 5,
+                }
+                avg_priority = np.mean(
+                    [priority_scores.get(e["priority"].name, 2) for e in cluster_errors]
+                )
                 risk_score = avg_priority / 5.0
 
                 cluster = PatternCluster(
@@ -407,7 +424,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
                     error_count=len(cluster_errors),
                     avg_resolution_time=0.0,  # Calculate from resolution times
                     common_fixes=common_fixes,
-                    risk_score=risk_score
+                    risk_score=risk_score,
                 )
                 clusters.append(cluster)
 
@@ -417,10 +434,8 @@ Use statistical and machine learning techniques to provide accurate predictions.
         return clusters
 
     def _identify_patterns(
-        self,
-        errors: List[ErrorState],
-        clusters: List[PatternCluster]
-    ) -> List[ErrorPattern]:
+        self, errors: list[ErrorState], clusters: list[PatternCluster]
+    ) -> list[ErrorPattern]:
         """Identify recurring patterns in errors"""
         patterns = []
         pattern_map = defaultdict(list)
@@ -451,13 +466,13 @@ Use statistical and machine learning techniques to provide accurate predictions.
 
                 pattern = ErrorPattern(
                     pattern_id=hashlib.md5(pattern_key.encode()).hexdigest()[:8],
-                    regex=self._generate_pattern_regex(descriptions),
+                    pattern=self._generate_pattern_regex(descriptions),
                     error_type=error_type,
                     priority=self._calculate_pattern_priority(pattern_errors),
                     suggested_fix=self._extract_common_fix(pattern_errors),
                     frequency=len(pattern_errors),
                     success_rate=success_rate,
-                    last_seen=max(e["timestamp"] for e in pattern_errors)
+                    last_seen=max(e["timestamp"] for e in pattern_errors),
                 )
                 patterns.append(pattern)
 
@@ -468,13 +483,13 @@ Use statistical and machine learning techniques to provide accurate predictions.
         # Use error type and key parts of description
         desc = error.get("description", "").lower()
         # Remove specific values to generalize
-        desc = re.sub(r'\b\d+\b', 'NUM', desc)  # Replace numbers
-        desc = re.sub(r'"[^"]*"', 'STR', desc)  # Replace quoted strings
-        desc = re.sub(r"'[^']*'", 'STR', desc)  # Replace single quoted strings
+        desc = re.sub(r"\b\d+\b", "NUM", desc)  # Replace numbers
+        desc = re.sub(r'"[^"]*"', "STR", desc)  # Replace quoted strings
+        desc = re.sub(r"'[^']*'", "STR", desc)  # Replace single quoted strings
 
         return f"{error['error_type'].value}_{desc[:50]}"
 
-    def _generate_pattern_regex(self, descriptions: List[str]) -> str:
+    def _generate_pattern_regex(self, descriptions: list[str]) -> str:
         """Generate regex pattern from error descriptions"""
         if not descriptions:
             return ".*"
@@ -495,14 +510,14 @@ Use statistical and machine learning techniques to provide accurate predictions.
 
         return ".*"
 
-    def _calculate_pattern_priority(self, errors: List[ErrorState]) -> ErrorPriority:
+    def _calculate_pattern_priority(self, errors: list[ErrorState]) -> ErrorPriority:
         """Calculate priority for a pattern based on its errors"""
         priorities = [e["priority"] for e in errors]
         # Return most common priority
         priority_counts = Counter(priorities)
         return priority_counts.most_common(1)[0][0]
 
-    def _extract_common_fix(self, errors: List[ErrorState]) -> Optional[str]:
+    def _extract_common_fix(self, errors: list[ErrorState]) -> Optional[str]:
         """Extract most common successful fix from errors"""
         successful_fixes = []
         for error in errors:
@@ -516,10 +531,8 @@ Use statistical and machine learning techniques to provide accurate predictions.
         return None
 
     def _analyze_error_trends(
-        self,
-        errors: List[ErrorState],
-        timeframe_days: int
-    ) -> List[ErrorTrend]:
+        self, errors: list[ErrorState], timeframe_days: int
+    ) -> list[ErrorTrend]:
         """Analyze trends in error occurrences"""
         trends = []
 
@@ -564,18 +577,13 @@ Use statistical and machine learning techniques to provide accurate predictions.
                     rate=float(slope),
                     timeframe=f"{timeframe_days} days",
                     significance=significance,
-                    projected_impact=self._project_trend_impact(direction, slope, error_type)
+                    projected_impact=self._project_trend_impact(direction, slope, error_type),
                 )
                 trends.append(trend)
 
         return trends
 
-    def _project_trend_impact(
-        self,
-        direction: str,
-        rate: float,
-        error_type: ErrorType
-    ) -> str:
+    def _project_trend_impact(self, direction: str, rate: float, error_type: ErrorType) -> str:
         """Project the impact of a trend"""
         if direction == "increasing":
             if rate > 2:
@@ -588,10 +596,8 @@ Use statistical and machine learning techniques to provide accurate predictions.
             return f"Stable: {error_type.value} errors remain constant"
 
     async def _generate_predictions(
-        self,
-        features: np.ndarray,
-        errors: List[ErrorState]
-    ) -> List[PredictedError]:
+        self, features: np.ndarray, errors: list[ErrorState]
+    ) -> list[PredictedError]:
         """Generate predictions for future errors"""
         predictions = []
 
@@ -621,10 +627,12 @@ Use statistical and machine learning techniques to provide accurate predictions.
                         error_type=ErrorType[predicted_class.upper()],
                         probability=confidence,
                         expected_timeframe=f"Next {self.analysis_config.prediction_window_hours} hours",
-                        affected_components=self._predict_affected_components(errors, predicted_class),
+                        affected_components=self._predict_affected_components(
+                            errors, predicted_class
+                        ),
                         prevention_steps=self._generate_prevention_steps(predicted_class),
                         confidence=confidence,
-                        evidence=self._gather_prediction_evidence(errors, predicted_class)
+                        evidence=self._gather_prediction_evidence(errors, predicted_class),
                     )
                     predictions.append(prediction)
 
@@ -634,10 +642,8 @@ Use statistical and machine learning techniques to provide accurate predictions.
         return predictions
 
     def _predict_affected_components(
-        self,
-        errors: List[ErrorState],
-        predicted_type: str
-    ) -> List[str]:
+        self, errors: list[ErrorState], predicted_type: str
+    ) -> list[str]:
         """Predict which components will be affected"""
         affected = set()
         for error in errors:
@@ -645,37 +651,35 @@ Use statistical and machine learning techniques to provide accurate predictions.
                 affected.update(error.get("affected_components", []))
         return list(affected)[:5]  # Top 5 components
 
-    def _generate_prevention_steps(self, error_type: str) -> List[str]:
+    def _generate_prevention_steps(self, error_type: str) -> list[str]:
         """Generate prevention steps for predicted error"""
         prevention_map = {
             "MEMORY_LEAK": [
                 "Review memory allocation patterns",
                 "Implement proper resource cleanup",
-                "Add memory monitoring"
+                "Add memory monitoring",
             ],
             "PERFORMANCE": [
                 "Optimize database queries",
                 "Implement caching strategies",
-                "Review algorithm complexity"
+                "Review algorithm complexity",
             ],
             "DEPENDENCY": [
                 "Update dependencies to latest stable versions",
                 "Review dependency compatibility",
-                "Implement dependency health checks"
+                "Implement dependency health checks",
             ],
             "RUNTIME": [
                 "Add input validation",
                 "Implement error boundaries",
-                "Increase test coverage"
-            ]
+                "Increase test coverage",
+            ],
         }
         return prevention_map.get(error_type.upper(), ["Review code for potential issues"])
 
     def _gather_prediction_evidence(
-        self,
-        errors: List[ErrorState],
-        predicted_type: str
-    ) -> List[str]:
+        self, errors: list[ErrorState], predicted_type: str
+    ) -> list[str]:
         """Gather evidence supporting the prediction"""
         evidence = []
         recent_count = sum(1 for e in errors[-10:] if e["error_type"].value == predicted_type)
@@ -697,10 +701,10 @@ Use statistical and machine learning techniques to provide accurate predictions.
 
     def _generate_pattern_insights(
         self,
-        patterns: List[ErrorPattern],
-        trends: List[ErrorTrend],
-        clusters: List[PatternCluster]
-    ) -> List[PatternInsight]:
+        patterns: list[ErrorPattern],
+        trends: list[ErrorTrend],
+        clusters: list[PatternCluster],
+    ) -> list[PatternInsight]:
         """Generate actionable insights from patterns"""
         insights = []
 
@@ -714,7 +718,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
                 actionable_recommendation="Prioritize fixing these recurring issues",
                 priority=ErrorPriority.HIGH,
                 estimated_impact=f"Could prevent {sum(p.frequency for p in high_freq_patterns)} errors",
-                supporting_data={"pattern_count": len(high_freq_patterns)}
+                supporting_data={"pattern_count": len(high_freq_patterns)},
             )
             insights.append(insight)
 
@@ -729,7 +733,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
                 actionable_recommendation="Investigate root cause immediately",
                 priority=ErrorPriority.CRITICAL,
                 estimated_impact=most_critical.projected_impact,
-                supporting_data={"trend_rate": most_critical.rate}
+                supporting_data={"trend_rate": most_critical.rate},
             )
             insights.append(insight)
 
@@ -743,13 +747,13 @@ Use statistical and machine learning techniques to provide accurate predictions.
                 actionable_recommendation="Implement cluster-specific solutions",
                 priority=ErrorPriority.HIGH,
                 estimated_impact=f"Affects {sum(c.error_count for c in large_clusters)} errors",
-                supporting_data={"cluster_count": len(large_clusters)}
+                supporting_data={"cluster_count": len(large_clusters)},
             )
             insights.append(insight)
 
         return insights[:5]  # Return top 5 insights
 
-    def _update_pattern_database(self, new_patterns: List[ErrorPattern]):
+    def _update_pattern_database(self, new_patterns: list[ErrorPattern]):
         """Update the stored pattern database"""
         # Merge with existing patterns
         existing_ids = {p.pattern_id for p in self.error_patterns}
@@ -768,17 +772,17 @@ Use statistical and machine learning techniques to provide accurate predictions.
         if len(self.error_patterns) > self.analysis_config.max_patterns_stored:
             # Keep most frequent and recent patterns
             self.error_patterns.sort(key=lambda p: (p.frequency, p.last_seen), reverse=True)
-            self.error_patterns = self.error_patterns[:self.analysis_config.max_patterns_stored]
+            self.error_patterns = self.error_patterns[: self.analysis_config.max_patterns_stored]
 
         # Save patterns
         self._save_patterns()
 
     def _generate_analysis_summary(
         self,
-        patterns: List[ErrorPattern],
-        trends: List[ErrorTrend],
-        predictions: List[PredictedError]
-    ) -> Dict[str, Any]:
+        patterns: list[ErrorPattern],
+        trends: list[ErrorTrend],
+        predictions: list[PredictedError],
+    ) -> dict[str, Any]:
         """Generate summary of the analysis"""
         return {
             "total_patterns": len(patterns),
@@ -786,15 +790,15 @@ Use statistical and machine learning techniques to provide accurate predictions.
             "high_confidence_predictions": len([p for p in predictions if p.confidence > 0.8]),
             "most_frequent_pattern": patterns[0].pattern_id if patterns else None,
             "most_significant_trend": trends[0].trend_id if trends else None,
-            "action_required": len(patterns) > 5 or any(t.direction == "increasing" for t in trends)
+            "action_required": len(patterns) > 5
+            or any(t.direction == "increasing" for t in trends),
         }
 
     # Tool implementations
     def _analyze_pattern_tool(self, pattern_description: str) -> str:
         """Tool: Analyze a specific pattern"""
         matching_patterns = [
-            p for p in self.error_patterns
-            if pattern_description.lower() in p.regex.lower()
+            p for p in self.error_patterns if pattern_description.lower() in p.regex.lower()
         ]
         return f"Found {len(matching_patterns)} matching patterns"
 
@@ -818,7 +822,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
         """Tool: Generate insights"""
         return f"Generated insights{f' for {focus_area}' if focus_area else ''}"
 
-    async def get_pattern_analysis_metrics(self) -> Dict[str, Any]:
+    async def get_pattern_analysis_metrics(self) -> dict[str, Any]:
         """Get metrics specific to pattern analysis"""
         base_metrics = await self.get_error_metrics()
 
@@ -829,7 +833,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
             "trends_detected": len(self.trends),
             "insights_generated": len(self.insights),
             "model_accuracy": 0.0,
-            "prediction_confidence_avg": 0.0
+            "prediction_confidence_avg": 0.0,
         }
 
         if self.predictions:
@@ -877,7 +881,7 @@ Use statistical and machine learning techniques to provide accurate predictions.
                     "status": "completed",
                     "result": result,
                     "patterns_found": len(result.get("patterns", [])),
-                    "insights_generated": len(result.get("insights", []))
+                    "insights_generated": len(result.get("insights", [])),
                 }
 
             elif task_type == "predict_errors":
@@ -887,27 +891,20 @@ Use statistical and machine learning techniques to provide accurate predictions.
                 return {
                     "status": "completed",
                     "result": prediction,
-                    "prediction_confidence": prediction.confidence if prediction else 0.0
+                    "prediction_confidence": prediction.confidence if prediction else 0.0,
                 }
 
             elif task_type == "get_metrics":
                 metrics = await self.get_performance_metrics()
-                return {
-                    "status": "completed",
-                    "result": metrics
-                }
+                return {"status": "completed", "result": metrics}
 
             else:
                 return {
                     "status": "error",
                     "error": f"Unknown task type: {task_type}",
-                    "result": None
+                    "result": None,
                 }
 
         except Exception as e:
             logger.error(f"Error processing pattern analysis task: {e}")
-            return {
-                "status": "error",
-                "error": str(e),
-                "result": None
-            }
+            return {"status": "error", "error": str(e), "result": None}

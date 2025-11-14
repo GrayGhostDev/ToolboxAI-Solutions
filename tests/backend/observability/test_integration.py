@@ -153,7 +153,7 @@ class TestObservabilityIntegration:
 
             # Check error metrics
             error_metrics = anomaly_engine.get_metric_summary("error_operation_error")
-            success_error_metrics = anomaly_engine.get_metric_summary("error_operation_success")
+            anomaly_engine.get_metric_summary("error_operation_success")
             success_success_metrics = anomaly_engine.get_metric_summary("success_operation_success")
 
             # Error operation should have recorded an error

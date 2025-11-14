@@ -25,7 +25,11 @@ from core.coordinators.workflow_coordinator import (
 @pytest.fixture
 def workflow_config():
     """Workflow coordinator configuration"""
-    return {"max_concurrent_workflows": 3, "cleanup_days": 7, "optimization_interval": 300}
+    return {
+        "max_concurrent_workflows": 3,
+        "cleanup_days": 7,
+        "optimization_interval": 300,
+    }
 
 
 @pytest.fixture
@@ -38,7 +42,7 @@ def workflow_coordinator(workflow_config):
 async def initialized_coordinator(workflow_coordinator):
     """Create and initialize workflow coordinator"""
     with patch.object(workflow_coordinator, "_setup_executors", new_callable=AsyncMock):
-        with patch("asyncio.create_task") as mock_create_task:
+        with patch("asyncio.create_task"):
             await workflow_coordinator.initialize()
             workflow_coordinator.is_initialized = True
             yield workflow_coordinator
@@ -148,7 +152,8 @@ class TestWorkflowCreation:
     async def test_create_workflow_queues_execution(self, initialized_coordinator):
         """Test workflow is queued for execution"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         assert workflow_id in initialized_coordinator.workflow_queue
@@ -179,7 +184,8 @@ class TestWorkflowCreation:
     async def test_create_workflow_updates_metrics(self, initialized_coordinator):
         """Test workflow creation updates metrics"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         assert len(initialized_coordinator.execution_metrics["workflows_created"]) == 1
@@ -282,7 +288,6 @@ class TestStepExecution:
         await initialized_coordinator._execute_step(sample_workflow_step, sample_workflow)
 
         # Performance should be recorded if duration is available
-        step_key = f"{sample_workflow_step.executor}_{sample_workflow_step.name}"
         # Duration is calculated in step execution
 
 
@@ -294,7 +299,8 @@ class TestWorkflowExecution:
     async def test_execute_workflow_success(self, initialized_coordinator):
         """Test successful workflow execution"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         # Mock all executors
@@ -324,10 +330,11 @@ class TestWorkflowExecution:
         """Test workflow execution respects step dependencies"""
         # Create a workflow with dependencies
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "science"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "science"},
         )
 
-        workflow = initialized_coordinator.workflows[workflow_id]
+        initialized_coordinator.workflows[workflow_id]
         execution_order = []
 
         async def tracking_executor(step):
@@ -354,7 +361,8 @@ class TestWorkflowExecution:
     async def test_execute_workflow_with_failed_step(self, initialized_coordinator):
         """Test workflow execution with failed step"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         # Make one executor fail
@@ -381,7 +389,8 @@ class TestWorkflowExecution:
     async def test_execute_workflow_parallel_steps(self, initialized_coordinator):
         """Test parallel execution of independent steps"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "history"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "history"},
         )
 
         concurrent_steps = []
@@ -405,7 +414,8 @@ class TestWorkflowExecution:
     async def test_execute_workflow_marks_as_running(self, initialized_coordinator):
         """Test workflow is marked as running during execution"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "biology"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "biology"},
         )
 
         execution_started = asyncio.Event()
@@ -436,7 +446,8 @@ class TestWorkflowExecution:
     async def test_execute_workflow_records_metrics(self, initialized_coordinator):
         """Test workflow execution records metrics"""
         workflow_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "chemistry"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "chemistry"},
         )
 
         for executor_name in ["agent_system", "swarm_controller", "sparc_manager"]:
@@ -627,14 +638,13 @@ class TestBackgroundTasks:
         initialized_coordinator.max_concurrent_workflows = 2
 
         # Create workflows
-        wf1_id = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+        await initialized_coordinator.create_workflow(
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         # Mock execute_workflow
-        with patch.object(
-            initialized_coordinator, "execute_workflow", new_callable=AsyncMock
-        ) as mock_execute:
+        with patch.object(initialized_coordinator, "execute_workflow", new_callable=AsyncMock):
             # Run one iteration of executor
             with patch("asyncio.sleep", new_callable=AsyncMock):
                 task = asyncio.create_task(initialized_coordinator._workflow_executor())
@@ -661,12 +671,11 @@ class TestBackgroundTasks:
 
         # Create workflow
         await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "science"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "science"},
         )
 
-        with patch.object(
-            initialized_coordinator, "execute_workflow", new_callable=AsyncMock
-        ) as mock_execute:
+        with patch.object(initialized_coordinator, "execute_workflow", new_callable=AsyncMock):
             with patch("asyncio.sleep", new_callable=AsyncMock):
                 # Run one iteration - should not execute because at limit
                 task = asyncio.create_task(initialized_coordinator._workflow_executor())
@@ -685,13 +694,13 @@ class TestBackgroundTasks:
 
         with patch.object(
             initialized_coordinator, "_analyze_step_performance", new_callable=AsyncMock
-        ) as mock_analyze:
+        ):
             with patch.object(
                 initialized_coordinator, "_optimize_templates", new_callable=AsyncMock
-            ) as mock_optimize:
+            ):
                 with patch.object(
                     initialized_coordinator, "_cleanup_old_data", new_callable=AsyncMock
-                ) as mock_cleanup:
+                ):
                     with patch("asyncio.sleep", new_callable=AsyncMock):
                         task = asyncio.create_task(initialized_coordinator._workflow_optimizer())
 
@@ -715,7 +724,8 @@ class TestMetricsAndOptimization:
         """Test metrics retrieval"""
         # Create some workflows
         wf1 = await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         workflow = initialized_coordinator.workflows[wf1]
@@ -918,7 +928,8 @@ class TestHealthCheck:
         """Test health check includes queue information"""
         # Add some workflows
         await initialized_coordinator.create_workflow(
-            workflow_type="educational_content_generation", parameters={"subject": "math"}
+            workflow_type="educational_content_generation",
+            parameters={"subject": "math"},
         )
 
         for executor_name in ["agent_system", "swarm_controller", "sparc_manager"]:
@@ -981,7 +992,11 @@ class TestDataClasses:
     def test_workflow_step_duration_none_without_times(self):
         """Test duration is None without start/end times"""
         step = WorkflowStep(
-            step_id="test", name="Test", description="Test", executor="agent", parameters={}
+            step_id="test",
+            name="Test",
+            description="Test",
+            executor="agent",
+            parameters={},
         )
 
         assert step.duration is None

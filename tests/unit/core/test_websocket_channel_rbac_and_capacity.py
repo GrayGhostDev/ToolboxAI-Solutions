@@ -63,7 +63,8 @@ async def test_websocket_channel_rbac_by_prefix():
         await manager.handle_message(
             c1,
             json.dumps(
-                {"type": "subscribe", "channels": ["admin_updates"]}, default=make_json_serializable
+                {"type": "subscribe", "channels": ["admin_updates"]},
+                default=make_json_serializable,
             ),
         )
         # Expect an error about role requirement
@@ -93,12 +94,12 @@ async def test_ws_capacity_enforcement(monkeypatch):
         ws2.client_state = WebSocketState.CONNECTED
 
         manager = WebSocketManager()
-        c1 = await manager.connect(ws1, client_id="a", user_id="uA", user_role="student")
+        await manager.connect(ws1, client_id="a", user_id="uA", user_role="student")
         # Active connections should be 1
         assert manager._stats["active_connections"] == 1
 
         # Second connect should be rejected and not increase active count
-        c2 = await manager.connect(ws2, client_id="b", user_id="uB", user_role="student")
+        await manager.connect(ws2, client_id="b", user_id="uB", user_role="student")
         assert manager._stats["active_connections"] == 1
         # Should have rejected at least one connection
         assert manager._stats.get("connections_rejected", 0) >= 1

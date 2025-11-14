@@ -18,14 +18,14 @@ from enum import Enum
 
 import httpx
 import redis.asyncio as aioredis
-from apps.backend.core.websocket_cluster import get_websocket_cluster
-from database.replica_router import get_replica_router
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from apps.backend.core.circuit_breaker import CircuitBreakerState, get_circuit_breaker
 from apps.backend.core.edge_cache import CacheTier, EdgeCache
 from apps.backend.core.rate_limiter import RateLimiter
+from apps.backend.core.websocket_cluster import get_websocket_cluster
+from database.replica_router import get_replica_router
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +192,10 @@ class LoadBalancingHealthChecker:
                     "requests_allowed": allowed_count,
                     "requests_rejected": rejected_count,
                 },
-                "redis_status": {"connected": True, "connected_clients": connected_clients},
+                "redis_status": {
+                    "connected": True,
+                    "connected_clients": connected_clients,
+                },
             }
 
         except Exception as e:
@@ -491,7 +494,8 @@ async def get_health_checker() -> LoadBalancingHealthChecker:
 
 @router.get("/status")
 async def get_overall_status(
-    detailed: bool = False, health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    detailed: bool = False,
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Get overall load balancing health status"""
 
@@ -581,7 +585,8 @@ async def get_global_lb_health(
 
 @router.post("/test-failover")
 async def test_failover_scenario(
-    component: str, health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)
+    component: str,
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
 ):
     """Test failover scenario for a component"""
 
@@ -631,7 +636,9 @@ async def liveness_probe():
 
 # Readiness probe for Kubernetes
 @router.get("/ready")
-async def readiness_probe(health_checker: LoadBalancingHealthChecker = Depends(get_health_checker)):
+async def readiness_probe(
+    health_checker: LoadBalancingHealthChecker = Depends(get_health_checker),
+):
     """Readiness probe that checks critical components"""
 
     # Check only critical components for readiness

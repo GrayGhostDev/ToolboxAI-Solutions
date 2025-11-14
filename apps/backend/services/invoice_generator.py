@@ -198,7 +198,7 @@ class InvoiceGenerator:
 
             # Generate PDF
             if PDF_GENERATION_AVAILABLE:
-                pdf_bytes = await self.generate_invoice_pdf(invoice.id, db)
+                await self.generate_invoice_pdf(invoice.id, db)
                 # Store PDF (would upload to storage in production)
                 invoice.metadata["pdf_generated"] = True
 
@@ -342,7 +342,10 @@ class InvoiceGenerator:
 
             # Invoice title
             title_style = ParagraphStyle(
-                "InvoiceTitle", parent=styles["Heading1"], fontSize=20, alignment=TA_CENTER
+                "InvoiceTitle",
+                parent=styles["Heading1"],
+                fontSize=20,
+                alignment=TA_CENTER,
             )
             elements.append(Paragraph("INVOICE", title_style))
             elements.append(Spacer(1, 0.3 * inch))
@@ -512,7 +515,10 @@ class InvoiceGenerator:
                 auto_advance=False,  # Don't automatically charge
                 collection_method="charge_automatically",
                 description=f"Invoice {invoice.number}",
-                metadata={"invoice_id": str(invoice.id), "invoice_number": invoice.number},
+                metadata={
+                    "invoice_id": str(invoice.id),
+                    "invoice_number": invoice.number,
+                },
             )
 
             # Add invoice items

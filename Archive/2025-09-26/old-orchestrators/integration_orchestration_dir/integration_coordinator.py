@@ -12,22 +12,21 @@ This agent coordinates:
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Set, Callable
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-import json
 import uuid
 from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+
+from core.agents.base_agent import AgentConfig
 
 from ..base_integration_agent import (
     BaseIntegrationAgent,
-    IntegrationPlatform,
     IntegrationEvent,
-    TaskResult
+    IntegrationPlatform,
+    TaskResult,
 )
-from core.agents.base_agent import AgentConfig
-from core.agents.orchestrator import WorkflowType
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +56,8 @@ class IntegrationTask:
     task_type: str
     agent_type: str  # Which agent should handle this
     platform: IntegrationPlatform
-    parameters: Dict[str, Any]
-    dependencies: Set[str] = field(default_factory=set)
+    parameters: dict[str, Any]
+    dependencies: set[str] = field(default_factory=set)
     priority: TaskPriority = TaskPriority.MEDIUM
     status: str = "pending"
     result: Optional[Any] = None
@@ -75,14 +74,14 @@ class IntegrationWorkflow:
     workflow_id: str
     name: str
     description: str
-    tasks: Dict[str, IntegrationTask]
+    tasks: dict[str, IntegrationTask]
     status: WorkflowStatus = WorkflowStatus.PENDING
     created_at: datetime = field(default_factory=datetime.utcnow)
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def get_ready_tasks(self) -> List[IntegrationTask]:
+    def get_ready_tasks(self) -> list[IntegrationTask]:
         """Get tasks that are ready to execute"""
         ready = []
         for task in self.tasks.values():
@@ -120,24 +119,24 @@ class IntegrationCoordinator(BaseIntegrationAgent):
         super().__init__(config)
 
         # Workflow management
-        self.workflows: Dict[str, IntegrationWorkflow] = {}
-        self.active_workflows: Set[str] = set()
+        self.workflows: dict[str, IntegrationWorkflow] = {}
+        self.active_workflows: set[str] = set()
 
         # Agent registry
-        self.agent_registry: Dict[str, Any] = {}
-        self.agent_availability: Dict[str, bool] = defaultdict(lambda: True)
+        self.agent_registry: dict[str, Any] = {}
+        self.agent_availability: dict[str, bool] = defaultdict(lambda: True)
 
         # Task execution
         self.task_queue: asyncio.Queue = asyncio.Queue()
-        self.executing_tasks: Dict[str, asyncio.Task] = {}
+        self.executing_tasks: dict[str, asyncio.Task] = {}
 
         # Workflow templates
-        self.workflow_templates: Dict[str, Dict[str, Any]] = self._init_workflow_templates()
+        self.workflow_templates: dict[str, dict[str, Any]] = self._init_workflow_templates()
 
         # Performance tracking
-        self.workflow_metrics: Dict[str, Dict[str, Any]] = {}
+        self.workflow_metrics: dict[str, dict[str, Any]] = {}
 
-    def _init_workflow_templates(self) -> Dict[str, Dict[str, Any]]:
+    def _init_workflow_templates(self) -> dict[str, dict[str, Any]]:
         """Initialize predefined workflow templates"""
         return {
             "full_sync": {
@@ -234,7 +233,7 @@ class IntegrationCoordinator(BaseIntegrationAgent):
         name: str,
         description: str,
         template: Optional[str] = None,
-        custom_tasks: Optional[List[Dict[str, Any]]] = None
+        custom_tasks: Optional[list[dict[str, Any]]] = None
     ) -> IntegrationWorkflow:
         """Create a new integration workflow"""
         workflow_id = f"workflow_{uuid.uuid4().hex[:8]}"
@@ -291,7 +290,7 @@ class IntegrationCoordinator(BaseIntegrationAgent):
     async def execute_workflow(
         self,
         workflow_id: str,
-        parameters: Optional[Dict[str, Any]] = None
+        parameters: Optional[dict[str, Any]] = None
     ) -> TaskResult:
         """Execute an integration workflow"""
         try:
@@ -512,7 +511,7 @@ class IntegrationCoordinator(BaseIntegrationAgent):
 
         return TaskResult(success=True, output={"workflow_id": workflow_id, "status": "cancelled"})
 
-    async def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
+    async def get_workflow_status(self, workflow_id: str) -> dict[str, Any]:
         """Get detailed workflow status"""
         if workflow_id not in self.workflows:
             return {"error": "Workflow not found"}
@@ -579,7 +578,7 @@ class IntegrationCoordinator(BaseIntegrationAgent):
                 correlation_id=event.correlation_id
             ))
 
-    async def execute_task(self, task: str, context: Optional[Dict[str, Any]] = None) -> TaskResult:
+    async def execute_task(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
         """Execute coordinator-specific tasks"""
         if task == "create_workflow":
             workflow = await self.create_workflow(

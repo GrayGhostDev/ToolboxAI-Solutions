@@ -14,24 +14,19 @@ This component provides the memory and continuity that enables
 personalized and adaptive educational experiences.
 """
 
-import asyncio
+import gzip
 import json
 import logging
-import gzip
 import os
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple, Union
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-from collections import defaultdict, deque
-import numpy as np
-from pathlib import Path
-import hashlib
 import uuid
+from collections import deque
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
 
-from .state_manager import EnvironmentState, StateType
-from .action_executor import ActionResult
-from .reward_calculator import RewardSignal
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +64,9 @@ class ContextEntry:
     scope: ContextScope = ContextScope.IMMEDIATE
 
     # Content
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     summary: str = ""
-    keywords: List[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
 
     # Temporal information
     timestamp: datetime = field(default_factory=datetime.now)
@@ -85,7 +80,7 @@ class ContextEntry:
     importance: float = 0.5  # 0-1 importance for future decisions
 
     # Relationships
-    related_entries: List[str] = field(default_factory=list)
+    related_entries: list[str] = field(default_factory=list)
     derived_from: Optional[str] = None
 
     # Educational metadata
@@ -117,7 +112,7 @@ class ContextEntry:
         self.last_accessed = datetime.now()
         self.access_count += 1
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
         result["context_type"] = self.context_type.value
@@ -142,11 +137,11 @@ class UserContext:
     session_id: str
 
     # Context entries by scope
-    immediate_context: List[ContextEntry] = field(default_factory=list)
-    session_context: List[ContextEntry] = field(default_factory=list)
-    short_term_context: List[ContextEntry] = field(default_factory=list)
-    long_term_context: List[ContextEntry] = field(default_factory=list)
-    persistent_context: List[ContextEntry] = field(default_factory=list)
+    immediate_context: list[ContextEntry] = field(default_factory=list)
+    session_context: list[ContextEntry] = field(default_factory=list)
+    short_term_context: list[ContextEntry] = field(default_factory=list)
+    long_term_context: list[ContextEntry] = field(default_factory=list)
+    persistent_context: list[ContextEntry] = field(default_factory=list)
 
     # Session information
     session_start: datetime = field(default_factory=datetime.now)
@@ -156,25 +151,25 @@ class UserContext:
     # Learning profile
     learning_style: str = "unknown"
     preferred_difficulty: float = 0.5
-    dominant_subjects: List[str] = field(default_factory=list)
-    strengths: List[str] = field(default_factory=list)
-    areas_for_improvement: List[str] = field(default_factory=list)
+    dominant_subjects: list[str] = field(default_factory=list)
+    strengths: list[str] = field(default_factory=list)
+    areas_for_improvement: list[str] = field(default_factory=list)
 
     # Behavioral patterns
-    engagement_patterns: Dict[str, Any] = field(default_factory=dict)
-    performance_trends: Dict[str, List[float]] = field(default_factory=dict)
+    engagement_patterns: dict[str, Any] = field(default_factory=dict)
+    performance_trends: dict[str, list[float]] = field(default_factory=dict)
     learning_velocity: float = 0.0
 
     # Social context
-    peer_interactions: Dict[str, Any] = field(default_factory=dict)
-    collaboration_history: List[Dict[str, Any]] = field(default_factory=list)
+    peer_interactions: dict[str, Any] = field(default_factory=dict)
+    collaboration_history: list[dict[str, Any]] = field(default_factory=list)
 
     # Metadata
     context_version: str = "1.0"
     last_updated: datetime = field(default_factory=datetime.now)
     compression_ratio: float = 1.0  # How much context has been compressed
 
-    def get_all_entries(self) -> List[ContextEntry]:
+    def get_all_entries(self) -> list[ContextEntry]:
         """Get all context entries across all scopes"""
         all_entries = []
         all_entries.extend(self.immediate_context)
@@ -186,9 +181,9 @@ class UserContext:
 
     def get_relevant_context(
         self,
-        context_types: Optional[List[ContextType]] = None,
+        context_types: Optional[list[ContextType]] = None,
         min_relevance: float = 0.3,
-    ) -> List[ContextEntry]:
+    ) -> list[ContextEntry]:
         """Get relevant context entries based on filters"""
 
         all_entries = self.get_all_entries()
@@ -217,7 +212,7 @@ class UserContext:
 
         return relevant_entries
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         result = asdict(self)
 
@@ -227,19 +222,11 @@ class UserContext:
         result["last_updated"] = self.last_updated.isoformat()
 
         # Convert context entries
-        result["immediate_context"] = [
-            entry.to_dict() for entry in self.immediate_context
-        ]
+        result["immediate_context"] = [entry.to_dict() for entry in self.immediate_context]
         result["session_context"] = [entry.to_dict() for entry in self.session_context]
-        result["short_term_context"] = [
-            entry.to_dict() for entry in self.short_term_context
-        ]
-        result["long_term_context"] = [
-            entry.to_dict() for entry in self.long_term_context
-        ]
-        result["persistent_context"] = [
-            entry.to_dict() for entry in self.persistent_context
-        ]
+        result["short_term_context"] = [entry.to_dict() for entry in self.short_term_context]
+        result["long_term_context"] = [entry.to_dict() for entry in self.long_term_context]
+        result["persistent_context"] = [entry.to_dict() for entry in self.persistent_context]
 
         return result
 
@@ -258,7 +245,7 @@ class LearningPatternRecognizer:
             "collaboration_tendencies": self._detect_collaboration_tendencies,
         }
 
-    def analyze_patterns(self, context: UserContext) -> Dict[str, Any]:
+    def analyze_patterns(self, context: UserContext) -> dict[str, Any]:
         """Analyze learning patterns from user context"""
 
         patterns = {}
@@ -273,14 +260,13 @@ class LearningPatternRecognizer:
 
         return patterns
 
-    def _detect_performance_cycles(self, context: UserContext) -> Dict[str, Any]:
+    def _detect_performance_cycles(self, context: UserContext) -> dict[str, Any]:
         """Detect cyclical patterns in performance"""
 
         performance_entries = [
             entry
             for entry in context.get_all_entries()
-            if entry.context_type == ContextType.PERFORMANCE_HISTORY
-            and "score" in entry.data
+            if entry.context_type == ContextType.PERFORMANCE_HISTORY and "score" in entry.data
         ]
 
         if len(performance_entries) < 10:
@@ -300,9 +286,7 @@ class LearningPatternRecognizer:
                 return 0
 
             mean_data = np.mean(data)
-            numerator = sum(
-                (data[i] - mean_data) * (data[i + lag] - mean_data) for i in range(n)
-            )
+            numerator = sum((data[i] - mean_data) * (data[i + lag] - mean_data) for i in range(n))
             denominator = sum((x - mean_data) ** 2 for x in data)
 
             return numerator / denominator if denominator != 0 else 0
@@ -328,7 +312,7 @@ class LearningPatternRecognizer:
             "trend": "improving" if best_correlation > 0 else "declining",
         }
 
-    def _detect_engagement_patterns(self, context: UserContext) -> Dict[str, Any]:
+    def _detect_engagement_patterns(self, context: UserContext) -> dict[str, Any]:
         """Detect patterns in student engagement"""
 
         engagement_entries = [
@@ -342,9 +326,7 @@ class LearningPatternRecognizer:
             return {"status": "insufficient_data", "confidence": 0.0}
 
         engagement_entries.sort(key=lambda e: e.timestamp)
-        engagement_levels = [
-            entry.data["engagement_level"] for entry in engagement_entries
-        ]
+        engagement_levels = [entry.data["engagement_level"] for entry in engagement_entries]
 
         # Calculate engagement statistics
         avg_engagement = np.mean(engagement_levels)
@@ -364,14 +346,8 @@ class LearningPatternRecognizer:
                 if i < len(engagement_levels):
                     hour_engagement[hour].append(engagement_levels[-(len(hours) - i)])
 
-            hour_averages = {
-                hour: np.mean(levels) for hour, levels in hour_engagement.items()
-            }
-            peak_hour = (
-                max(hour_averages.items(), key=lambda x: x[1])[0]
-                if hour_averages
-                else None
-            )
+            hour_averages = {hour: np.mean(levels) for hour, levels in hour_engagement.items()}
+            peak_hour = max(hour_averages.items(), key=lambda x: x[1])[0] if hour_averages else None
         else:
             peak_hour = None
 
@@ -388,16 +364,12 @@ class LearningPatternRecognizer:
             "average_engagement": avg_engagement,
             "engagement_consistency": 1.0 - min(1.0, engagement_std),
             "peak_hour": peak_hour,
-            "trend": (
-                "increasing"
-                if trend > 0.1
-                else "decreasing" if trend < -0.1 else "stable"
-            ),
+            "trend": ("increasing" if trend > 0.1 else "decreasing" if trend < -0.1 else "stable"),
             "trend_magnitude": abs(trend),
             "confidence": min(1.0, len(engagement_entries) / 20.0),
         }
 
-    def _detect_difficulty_preferences(self, context: UserContext) -> Dict[str, Any]:
+    def _detect_difficulty_preferences(self, context: UserContext) -> dict[str, Any]:
         """Detect preferred difficulty levels"""
 
         difficulty_entries = [
@@ -444,14 +416,13 @@ class LearningPatternRecognizer:
             "confidence": min(1.0, len(difficulty_entries) / 15.0),
         }
 
-    def _calculate_learning_velocity(self, context: UserContext) -> Dict[str, Any]:
+    def _calculate_learning_velocity(self, context: UserContext) -> dict[str, Any]:
         """Calculate learning velocity (rate of improvement)"""
 
         performance_entries = [
             entry
             for entry in context.get_all_entries()
-            if entry.context_type == ContextType.PERFORMANCE_HISTORY
-            and "score" in entry.data
+            if entry.context_type == ContextType.PERFORMANCE_HISTORY and "score" in entry.data
         ]
 
         if len(performance_entries) < 5:
@@ -495,18 +466,14 @@ class LearningPatternRecognizer:
             "status": "calculated",
             "velocity": velocity,
             "r_squared": r_squared,
-            "confidence": min(
-                1.0, r_squared * (n / 10.0)
-            ),  # More data = higher confidence
+            "confidence": min(1.0, r_squared * (n / 10.0)),  # More data = higher confidence
             "trend": (
-                "improving"
-                if velocity > 0.01
-                else "declining" if velocity < -0.01 else "stable"
+                "improving" if velocity > 0.01 else "declining" if velocity < -0.01 else "stable"
             ),
             "data_points": n,
         }
 
-    def _detect_subject_preferences(self, context: UserContext) -> Dict[str, Any]:
+    def _detect_subject_preferences(self, context: UserContext) -> dict[str, Any]:
         """Detect subject area preferences and performance"""
 
         subject_entries = [
@@ -538,9 +505,7 @@ class LearningPatternRecognizer:
         subject_avg_performance = {
             subj: np.mean(perfs) for subj, perfs in subject_performance.items()
         }
-        subject_avg_engagement = {
-            subj: np.mean(engs) for subj, engs in subject_engagement.items()
-        }
+        subject_avg_engagement = {subj: np.mean(engs) for subj, engs in subject_engagement.items()}
 
         # Find preferred subjects (high engagement and performance)
         subject_scores = {}
@@ -550,9 +515,7 @@ class LearningPatternRecognizer:
             subject_scores[subject] = (perf + eng) / 2
 
         # Sort by preference score
-        preferred_subjects = sorted(
-            subject_scores.items(), key=lambda x: x[1], reverse=True
-        )
+        preferred_subjects = sorted(subject_scores.items(), key=lambda x: x[1], reverse=True)
 
         return {
             "status": "detected",
@@ -563,7 +526,7 @@ class LearningPatternRecognizer:
             "confidence": min(1.0, len(subject_entries) / 20.0),
         }
 
-    def _detect_time_patterns(self, context: UserContext) -> Dict[str, Any]:
+    def _detect_time_patterns(self, context: UserContext) -> dict[str, Any]:
         """Detect time-based learning patterns"""
 
         timed_entries = [
@@ -608,9 +571,7 @@ class LearningPatternRecognizer:
             else None
         )
         best_engagement_hour = (
-            max(hour_avg_engagement.items(), key=lambda x: x[1])[0]
-            if hour_avg_engagement
-            else None
+            max(hour_avg_engagement.items(), key=lambda x: x[1])[0] if hour_avg_engagement else None
         )
 
         return {
@@ -623,7 +584,7 @@ class LearningPatternRecognizer:
             "confidence": min(1.0, len(timed_entries) / 30.0),
         }
 
-    def _detect_collaboration_tendencies(self, context: UserContext) -> Dict[str, Any]:
+    def _detect_collaboration_tendencies(self, context: UserContext) -> dict[str, Any]:
         """Detect collaboration patterns and preferences"""
 
         collab_entries = [
@@ -659,25 +620,17 @@ class LearningPatternRecognizer:
             prefers_collaboration = collaboration_benefit > 0.05  # 5% threshold
 
         # Analyze peer interaction frequency
-        peer_interactions = sum(
-            1 for entry in collab_entries if "peer_interaction" in entry.data
-        )
+        peer_interactions = sum(1 for entry in collab_entries if "peer_interaction" in entry.data)
 
         return {
             "status": "detected",
             "prefers_collaboration": prefers_collaboration,
             "collaboration_benefit": collaboration_benefit,
-            "solo_avg_performance": (
-                np.mean(solo_performance) if solo_performance else None
-            ),
-            "group_avg_performance": (
-                np.mean(group_performance) if group_performance else None
-            ),
+            "solo_avg_performance": (np.mean(solo_performance) if solo_performance else None),
+            "group_avg_performance": (np.mean(group_performance) if group_performance else None),
             "peer_interaction_frequency": peer_interactions,
             "social_learning_tendency": (
-                "high"
-                if peer_interactions > 5
-                else "medium" if peer_interactions > 2 else "low"
+                "high" if peer_interactions > 5 else "medium" if peer_interactions > 2 else "low"
             ),
             "confidence": min(1.0, len(collab_entries) / 10.0),
         }
@@ -690,8 +643,8 @@ class ContextCompressor:
         self.compression_threshold = compression_threshold
 
     def compress_context_scope(
-        self, entries: List[ContextEntry]
-    ) -> Tuple[List[ContextEntry], float]:
+        self, entries: list[ContextEntry]
+    ) -> tuple[list[ContextEntry], float]:
         """Compress a list of context entries"""
 
         if len(entries) <= self.compression_threshold:
@@ -717,7 +670,7 @@ class ContextCompressor:
 
         return compressed_entries, compression_ratio
 
-    def _create_summaries(self, entries: List[ContextEntry]) -> List[ContextEntry]:
+    def _create_summaries(self, entries: list[ContextEntry]) -> list[ContextEntry]:
         """Create summary entries from detailed entries"""
 
         # Group by context type and time period
@@ -749,9 +702,7 @@ class ContextCompressor:
                 data=summary_data,
                 summary=f"Summary of {len(group_entries)} {context_type.value} entries from {date}",
                 timestamp=max(entry.timestamp for entry in group_entries),
-                relevance_score=np.mean(
-                    [entry.relevance_score for entry in group_entries]
-                ),
+                relevance_score=np.mean([entry.relevance_score for entry in group_entries]),
                 confidence=np.mean([entry.confidence for entry in group_entries])
                 * 0.8,  # Slightly lower confidence
                 importance=max(entry.importance for entry in group_entries),
@@ -762,7 +713,7 @@ class ContextCompressor:
 
         return summary_entries
 
-    def _summarize_entries(self, entries: List[ContextEntry]) -> Dict[str, Any]:
+    def _summarize_entries(self, entries: list[ContextEntry]) -> dict[str, Any]:
         """Summarize a group of similar entries"""
 
         summary = {
@@ -805,9 +756,7 @@ class ContextCompressor:
                     value_counts[value] = value_counts.get(value, 0) + 1
 
                 summary[f"{field}_distribution"] = value_counts
-                summary[f"{field}_most_common"] = max(
-                    value_counts.items(), key=lambda x: x[1]
-                )[0]
+                summary[f"{field}_most_common"] = max(value_counts.items(), key=lambda x: x[1])[0]
 
         # Extract common keywords
         all_keywords = []
@@ -820,9 +769,7 @@ class ContextCompressor:
                 keyword_counts[keyword] = keyword_counts.get(keyword, 0) + 1
 
             # Top keywords
-            top_keywords = sorted(
-                keyword_counts.items(), key=lambda x: x[1], reverse=True
-            )[:5]
+            top_keywords = sorted(keyword_counts.items(), key=lambda x: x[1], reverse=True)[:5]
             summary["top_keywords"] = [kw for kw, _ in top_keywords]
 
         return summary
@@ -859,8 +806,8 @@ class ContextTracker:
         self.retention_days = retention_days
 
         # Context storage
-        self.user_contexts: Dict[str, UserContext] = {}
-        self.active_sessions: Dict[str, str] = {}  # user_id -> session_id
+        self.user_contexts: dict[str, UserContext] = {}
+        self.active_sessions: dict[str, str] = {}  # user_id -> session_id
 
         # Pattern recognition and compression
         self.pattern_recognizer = LearningPatternRecognizer()
@@ -875,7 +822,7 @@ class ContextTracker:
         }
 
         # Persistence - use environment-aware path for Docker compatibility
-        data_dir = os.environ.get('DATA_DIR', '/tmp' if os.path.exists('/tmp') else 'data')
+        data_dir = os.environ.get("DATA_DIR", "/tmp" if os.path.exists("/tmp") else "data")
         self.persistence_path = Path(data_dir) / "context_tracker"
         try:
             self.persistence_path.mkdir(parents=True, exist_ok=True)
@@ -890,7 +837,7 @@ class ContextTracker:
 
         logger.info(f"ContextTracker initialized with window_size={window_size}")
 
-    async def update_context(self, update_data: Dict[str, Any]):
+    async def update_context(self, update_data: dict[str, Any]):
         """
         Update user context with new information.
 
@@ -939,9 +886,7 @@ class ContextTracker:
         except Exception as e:
             logger.error(f"Failed to update context: {e}")
 
-    async def get_current_context(
-        self, user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_current_context(self, user_id: Optional[str] = None) -> dict[str, Any]:
         """Get current context for a user or all users"""
 
         if user_id:
@@ -977,7 +922,7 @@ class ContextTracker:
                 ),
             }
 
-    async def get_context_summary(self) -> Dict[str, Any]:
+    async def get_context_summary(self) -> dict[str, Any]:
         """Get summary of context tracking system"""
 
         return {
@@ -997,7 +942,7 @@ class ContextTracker:
             },
         }
 
-    async def get_learning_patterns(self, user_id: str) -> Optional[Dict[str, Any]]:
+    async def get_learning_patterns(self, user_id: str) -> Optional[dict[str, Any]]:
         """Get detected learning patterns for a user"""
 
         if user_id not in self.user_contexts:
@@ -1022,9 +967,7 @@ class ContextTracker:
             context = self.user_contexts[user_id]
 
             # Check if session has expired
-            if (
-                datetime.now() - context.last_activity
-            ).total_seconds() > self.session_timeout:
+            if (datetime.now() - context.last_activity).total_seconds() > self.session_timeout:
                 # Start new session
                 context.session_id = str(uuid.uuid4())
                 context.session_start = datetime.now()
@@ -1047,9 +990,7 @@ class ContextTracker:
         logger.info(f"Created new context for user {user_id}")
         return context
 
-    async def _create_context_entries(
-        self, update_data: Dict[str, Any]
-    ) -> List[ContextEntry]:
+    async def _create_context_entries(self, update_data: dict[str, Any]) -> list[ContextEntry]:
         """Create context entries from update data"""
 
         entries = []
@@ -1062,17 +1003,13 @@ class ContextTracker:
                 scope=ContextScope.IMMEDIATE,
                 data={
                     "state_type": (
-                        state.state_type.value
-                        if hasattr(state, "state_type")
-                        else "unknown"
+                        state.state_type.value if hasattr(state, "state_type") else "unknown"
                     ),
                     "subject_area": state.subject_area,
                     "grade_level": state.grade_level,
                     "learning_objective": state.learning_objective,
                     "confidence": state.confidence,
-                    "quality": (
-                        state.quality.value if hasattr(state, "quality") else "unknown"
-                    ),
+                    "quality": (state.quality.value if hasattr(state, "quality") else "unknown"),
                 },
                 summary=f"Learning state in {state.subject_area or 'unknown subject'}",
                 keywords=[state.subject_area] if state.subject_area else [],
@@ -1190,9 +1127,7 @@ class ContextTracker:
         # Update derived information
         await self._update_derived_context(user_context, entry)
 
-    async def _update_derived_context(
-        self, user_context: UserContext, new_entry: ContextEntry
-    ):
+    async def _update_derived_context(self, user_context: UserContext, new_entry: ContextEntry):
         """Update derived context information from new entry"""
 
         # Update learning style inference
@@ -1207,7 +1142,7 @@ class ContextTracker:
 
         # Update preferred difficulty
         if "difficulty" in new_entry.data and "performance" in new_entry.data:
-            difficulty = new_entry.data["difficulty"]
+            new_entry.data["difficulty"]
             performance = new_entry.data["performance"]
 
             # Simple adaptive adjustment
@@ -1221,10 +1156,7 @@ class ContextTracker:
                 )
 
         # Update subject tracking
-        if (
-            new_entry.subject_area
-            and new_entry.subject_area not in user_context.dominant_subjects
-        ):
+        if new_entry.subject_area and new_entry.subject_area not in user_context.dominant_subjects:
             user_context.dominant_subjects.append(new_entry.subject_area)
             if len(user_context.dominant_subjects) > 5:
                 user_context.dominant_subjects = user_context.dominant_subjects[-5:]
@@ -1240,9 +1172,7 @@ class ContextTracker:
                 if indicator in new_entry.data:
                     if indicator not in user_context.engagement_patterns:
                         user_context.engagement_patterns[indicator] = deque(maxlen=20)
-                    user_context.engagement_patterns[indicator].append(
-                        new_entry.data[indicator]
-                    )
+                    user_context.engagement_patterns[indicator].append(new_entry.data[indicator])
 
         # Update performance trends
         if new_entry.context_type == ContextType.PERFORMANCE_HISTORY:
@@ -1250,16 +1180,14 @@ class ContextTracker:
             if subject not in user_context.performance_trends:
                 user_context.performance_trends[subject] = []
 
-            performance = new_entry.data.get(
-                "performance", new_entry.data.get("total_reward", 0.5)
-            )
+            performance = new_entry.data.get("performance", new_entry.data.get("total_reward", 0.5))
             user_context.performance_trends[subject].append(performance)
 
             # Keep only recent trends
             if len(user_context.performance_trends[subject]) > 20:
-                user_context.performance_trends[subject] = (
-                    user_context.performance_trends[subject][-20:]
-                )
+                user_context.performance_trends[subject] = user_context.performance_trends[subject][
+                    -20:
+                ]
 
     async def _update_learning_patterns(self, user_context: UserContext):
         """Update learning patterns for the user"""
@@ -1279,9 +1207,7 @@ class ContextTracker:
                     optimal_diff = pattern_data.get("optimal_difficulty")
                     if optimal_diff is not None:
                         # Gradual adjustment toward optimal
-                        adjustment = (
-                            optimal_diff - user_context.preferred_difficulty
-                        ) * 0.1
+                        adjustment = (optimal_diff - user_context.preferred_difficulty) * 0.1
                         user_context.preferred_difficulty += adjustment
 
                 elif pattern_name == "subject_preferences":
@@ -1313,8 +1239,8 @@ class ContextTracker:
 
         for scope_name, scope_entries in scopes_to_compress:
             if len(scope_entries) > self.window_size:
-                compressed_entries, compression_ratio = (
-                    self.compressor.compress_context_scope(scope_entries)
+                compressed_entries, compression_ratio = self.compressor.compress_context_scope(
+                    scope_entries
                 )
 
                 # Update the scope with compressed entries
@@ -1358,9 +1284,7 @@ class ContextTracker:
                 ]
 
             # Remove inactive user contexts
-            if (
-                datetime.now() - context.last_activity
-            ).total_seconds() > self.session_timeout * 3:
+            if (datetime.now() - context.last_activity).total_seconds() > self.session_timeout * 3:
                 # Move to long-term storage before removing
                 await self._save_persistent_context(context)
                 del self.user_contexts[user_id]
@@ -1374,36 +1298,24 @@ class ContextTracker:
         """Load persistent context for a user"""
 
         try:
-            persistent_file = (
-                self.persistence_path / f"{context.user_id}_persistent.json.gz"
-            )
+            persistent_file = self.persistence_path / f"{context.user_id}_persistent.json.gz"
 
             if persistent_file.exists():
                 with gzip.open(persistent_file, "rt", encoding="utf-8") as f:
                     persistent_data = json.load(f)
 
                 # Restore persistent context entries
-                context.persistent_context = persistent_data.get(
-                    "persistent_context", []
-                )
-                context.learning_style = persistent_data.get(
-                    "learning_style", "unknown"
-                )
-                context.preferred_difficulty = persistent_data.get(
-                    "preferred_difficulty", 0.5
-                )
+                context.persistent_context = persistent_data.get("persistent_context", [])
+                context.learning_style = persistent_data.get("learning_style", "unknown")
+                context.preferred_difficulty = persistent_data.get("preferred_difficulty", 0.5)
                 context.dominant_subjects = persistent_data.get("dominant_subjects", [])
                 context.strengths = persistent_data.get("strengths", [])
-                context.areas_for_improvement = persistent_data.get(
-                    "areas_for_improvement", []
-                )
+                context.areas_for_improvement = persistent_data.get("areas_for_improvement", [])
 
                 logger.debug(f"Loaded persistent context for user {context.user_id}")
 
         except Exception as e:
-            logger.error(
-                f"Failed to load persistent context for {context.user_id}: {e}"
-            )
+            logger.error(f"Failed to load persistent context for {context.user_id}: {e}")
 
     async def _save_persistent_context(self, context: UserContext):
         """Save persistent context for a user"""
@@ -1420,9 +1332,7 @@ class ContextTracker:
                 "last_saved": datetime.now().isoformat(),
             }
 
-            persistent_file = (
-                self.persistence_path / f"{context.user_id}_persistent.json.gz"
-            )
+            persistent_file = self.persistence_path / f"{context.user_id}_persistent.json.gz"
 
             with gzip.open(persistent_file, "wt", encoding="utf-8") as f:
                 json.dump(persistent_data, f, indent=2, default=str)
@@ -1430,11 +1340,9 @@ class ContextTracker:
             logger.debug(f"Saved persistent context for user {context.user_id}")
 
         except Exception as e:
-            logger.error(
-                f"Failed to save persistent context for {context.user_id}: {e}"
-            )
+            logger.error(f"Failed to save persistent context for {context.user_id}: {e}")
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of ContextTracker"""
 
         context_distribution = {}

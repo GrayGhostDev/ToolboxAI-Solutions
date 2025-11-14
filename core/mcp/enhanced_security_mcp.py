@@ -19,11 +19,12 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 # Optional imports with fallbacks
 try:
     import jwt
+
     JWT_AVAILABLE = True
 except ImportError:
     JWT_AVAILABLE = False
@@ -34,6 +35,7 @@ try:
 
     import pyotp
     import qrcode
+
     MFA_AVAILABLE = True
 except ImportError:
     MFA_AVAILABLE = False
@@ -43,6 +45,7 @@ logger = logging.getLogger(__name__)
 
 class AuthProvider(Enum):
     """Supported OAuth providers"""
+
     GOOGLE = "google"
     MICROSOFT = "microsoft"
     GITHUB = "github"
@@ -52,6 +55,7 @@ class AuthProvider(Enum):
 
 class MFAMethod(Enum):
     """Multi-factor authentication methods"""
+
     TOTP = "totp"  # Time-based One-Time Password
     SMS = "sms"
     EMAIL = "email"
@@ -61,6 +65,7 @@ class MFAMethod(Enum):
 
 class RateLimitType(Enum):
     """Rate limiting types"""
+
     STANDARD = "standard"
     ADAPTIVE = "adaptive"
     ML_BASED = "ml_based"
@@ -70,12 +75,13 @@ class RateLimitType(Enum):
 @dataclass
 class OAuthCredentials:
     """OAuth provider credentials"""
+
     provider: AuthProvider
     client_id: str
     client_secret: str
     redirect_uri: str
-    scope: List[str]
-    additional_params: Dict[str, Any] = None
+    scope: list[str]
+    additional_params: dict[str, Any] = None
 
     def __post_init__(self):
         if self.additional_params is None:
@@ -85,10 +91,11 @@ class OAuthCredentials:
 @dataclass
 class MFASetup:
     """Multi-factor authentication setup"""
+
     user_id: str
     method: MFAMethod
     secret: str
-    backup_codes: List[str]
+    backup_codes: list[str]
     created_at: datetime
     last_used: Optional[datetime] = None
     is_active: bool = True
@@ -102,8 +109,7 @@ class MFASetup:
             return "QR_CODE_NOT_AVAILABLE_MISSING_DEPENDENCIES"
 
         totp_uri = pyotp.totp.TOTP(self.secret).provisioning_uri(
-            name=account_name,
-            issuer_name=issuer
+            name=account_name, issuer_name=issuer
         )
 
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -112,7 +118,7 @@ class MFASetup:
 
         img = qr.make_image(fill_color="black", back_color="white")
         buffer = BytesIO()
-        img.save(buffer, format='PNG')
+        img.save(buffer, format="PNG")
         buffer.seek(0)
 
         return base64.b64encode(buffer.getvalue()).decode()
@@ -121,6 +127,7 @@ class MFASetup:
 @dataclass
 class RateLimitRule:
     """Rate limiting rule"""
+
     rule_id: str
     resource: str
     limit_type: RateLimitType
@@ -131,7 +138,7 @@ class RateLimitRule:
     window_size_seconds: int
     penalty_duration_seconds: int
     ml_model_path: Optional[str] = None
-    behavior_patterns: List[str] = None
+    behavior_patterns: list[str] = None
 
     def __post_init__(self):
         if self.behavior_patterns is None:
@@ -151,34 +158,34 @@ class EnhancedSecurityMCP:
     - Audit logging and compliance
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
 
         # OAuth configuration
-        self.oauth_providers: Dict[AuthProvider, OAuthCredentials] = {}
-        self.oauth_sessions: Dict[str, Dict[str, Any]] = {}
+        self.oauth_providers: dict[AuthProvider, OAuthCredentials] = {}
+        self.oauth_sessions: dict[str, dict[str, Any]] = {}
 
         # MFA configuration
-        self.mfa_setups: Dict[str, MFASetup] = {}
-        self.mfa_sessions: Dict[str, Dict[str, Any]] = {}
+        self.mfa_setups: dict[str, MFASetup] = {}
+        self.mfa_sessions: dict[str, dict[str, Any]] = {}
 
         # Rate limiting configuration
-        self.rate_limit_rules: Dict[str, RateLimitRule] = {}
-        self.rate_limit_counters: Dict[str, Dict[str, Any]] = {}
-        self.rate_limit_violations: List[Dict[str, Any]] = []
+        self.rate_limit_rules: dict[str, RateLimitRule] = {}
+        self.rate_limit_counters: dict[str, dict[str, Any]] = {}
+        self.rate_limit_violations: list[dict[str, Any]] = []
 
         # Security monitoring
-        self.security_events: List[Dict[str, Any]] = []
-        self.threat_patterns: Dict[str, Any] = {}
+        self.security_events: list[dict[str, Any]] = []
+        self.threat_patterns: dict[str, Any] = {}
         self.anomaly_detector = None
 
         # Session management
-        self.active_sessions: Dict[str, Dict[str, Any]] = {}
+        self.active_sessions: dict[str, dict[str, Any]] = {}
         self.session_config = {
             "max_session_duration": timedelta(hours=24),
             "idle_timeout": timedelta(minutes=30),
             "concurrent_sessions_limit": 5,
-            "session_rotation_interval": timedelta(hours=4)
+            "session_rotation_interval": timedelta(hours=4),
         }
 
         # Initialize default configurations
@@ -199,7 +206,7 @@ class EnhancedSecurityMCP:
                 requests_per_day=10000,
                 burst_limit=10,
                 window_size_seconds=60,
-                penalty_duration_seconds=300
+                penalty_duration_seconds=300,
             ),
             RateLimitRule(
                 rule_id="auth_endpoints",
@@ -210,7 +217,7 @@ class EnhancedSecurityMCP:
                 requests_per_day=500,
                 burst_limit=3,
                 window_size_seconds=60,
-                penalty_duration_seconds=600
+                penalty_duration_seconds=600,
             ),
             RateLimitRule(
                 rule_id="content_generation",
@@ -221,8 +228,8 @@ class EnhancedSecurityMCP:
                 requests_per_day=1000,
                 burst_limit=5,
                 window_size_seconds=60,
-                penalty_duration_seconds=180
-            )
+                penalty_duration_seconds=180,
+            ),
         ]
 
         for rule in default_rules:
@@ -234,23 +241,25 @@ class EnhancedSecurityMCP:
                 "pattern": "multiple_failed_logins",
                 "threshold": 5,
                 "window_minutes": 15,
-                "action": "temporary_ban"
+                "action": "temporary_ban",
             },
             "credential_stuffing": {
                 "pattern": "rapid_login_attempts",
                 "threshold": 20,
                 "window_minutes": 5,
-                "action": "captcha_required"
+                "action": "captcha_required",
             },
             "suspicious_behavior": {
                 "pattern": "unusual_access_pattern",
                 "threshold": 3,
                 "window_minutes": 60,
-                "action": "additional_verification"
-            }
+                "action": "additional_verification",
+            },
         }
 
-    async def setup_oauth_provider(self, provider: AuthProvider, credentials: OAuthCredentials) -> Dict[str, Any]:
+    async def setup_oauth_provider(
+        self, provider: AuthProvider, credentials: OAuthCredentials
+    ) -> dict[str, Any]:
         """Setup OAuth provider configuration"""
         try:
             # Validate credentials
@@ -259,7 +268,7 @@ class EnhancedSecurityMCP:
             if not validation_result["valid"]:
                 return {
                     "success": False,
-                    "error": f"Invalid OAuth credentials: {validation_result['errors']}"
+                    "error": f"Invalid OAuth credentials: {validation_result['errors']}",
                 }
 
             # Store provider configuration
@@ -271,18 +280,23 @@ class EnhancedSecurityMCP:
                 "success": True,
                 "provider": provider.value,
                 "redirect_uri": credentials.redirect_uri,
-                "scopes": credentials.scope
+                "scopes": credentials.scope,
             }
 
         except Exception as e:
             logger.error("Failed to setup OAuth provider %s: %s", provider.value, str(e))
             return {"success": False, "error": str(e)}
 
-    async def authenticate_with_oauth(self, provider: AuthProvider, auth_code: str, state: str) -> Dict[str, Any]:
+    async def authenticate_with_oauth(
+        self, provider: AuthProvider, auth_code: str, state: str
+    ) -> dict[str, Any]:
         """Authenticate user with OAuth provider"""
         try:
             if provider not in self.oauth_providers:
-                return {"success": False, "error": f"OAuth provider {provider.value} not configured"}
+                return {
+                    "success": False,
+                    "error": f"OAuth provider {provider.value} not configured",
+                }
 
             credentials = self.oauth_providers[provider]
 
@@ -310,40 +324,53 @@ class EnhancedSecurityMCP:
                 "created_at": datetime.now(timezone.utc),
                 "last_activity": datetime.now(timezone.utc),
                 "mfa_required": self._check_mfa_requirement(user_info["user_id"]),
-                "mfa_verified": False
+                "mfa_verified": False,
             }
 
             self.active_sessions[session_id] = session_data
 
             # Log security event
-            await self._log_security_event("oauth_login", {
-                "user_id": user_info["user_id"],
-                "provider": provider.value,
-                "session_id": session_id
-            })
+            await self._log_security_event(
+                "oauth_login",
+                {
+                    "user_id": user_info["user_id"],
+                    "provider": provider.value,
+                    "session_id": session_id,
+                },
+            )
 
-            logger.info("OAuth authentication successful for user %s via %s",
-                       user_info["user_id"], provider.value)
+            logger.info(
+                "OAuth authentication successful for user %s via %s",
+                user_info["user_id"],
+                provider.value,
+            )
 
             return {
                 "success": True,
                 "session_id": session_id,
                 "user_id": user_info["user_id"],
                 "mfa_required": session_data["mfa_required"],
-                "session_expires_at": (session_data["created_at"] + self.session_config["max_session_duration"]).isoformat()
+                "session_expires_at": (
+                    session_data["created_at"] + self.session_config["max_session_duration"]
+                ).isoformat(),
             }
 
         except Exception as e:
             logger.error("OAuth authentication failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def setup_mfa(self, user_id: str, method: MFAMethod, contact_info: str = None) -> Dict[str, Any]:
+    async def setup_mfa(
+        self, user_id: str, method: MFAMethod, contact_info: str = None
+    ) -> dict[str, Any]:
         """Setup multi-factor authentication for user"""
         try:
             # Generate secret for TOTP or validation code for other methods
             if method == MFAMethod.TOTP:
                 if not MFA_AVAILABLE:
-                    return {"success": False, "error": "TOTP not available - missing pyotp dependency"}
+                    return {
+                        "success": False,
+                        "error": "TOTP not available - missing pyotp dependency",
+                    }
 
                 secret = pyotp.random_base32()
                 backup_codes = [secrets.token_hex(4) for _ in range(10)]
@@ -353,7 +380,7 @@ class EnhancedSecurityMCP:
                     method=method,
                     secret=secret,
                     backup_codes=backup_codes,
-                    created_at=datetime.now(timezone.utc)
+                    created_at=datetime.now(timezone.utc),
                 )
 
                 # Generate QR code for TOTP setup
@@ -368,12 +395,15 @@ class EnhancedSecurityMCP:
                     "method": method.value,
                     "qr_code": qr_code,
                     "backup_codes": backup_codes,
-                    "secret": secret  # Only return for initial setup
+                    "secret": secret,  # Only return for initial setup
                 }
 
             elif method in [MFAMethod.SMS, MFAMethod.EMAIL]:
                 if not contact_info:
-                    return {"success": False, "error": f"{method.value} requires contact information"}
+                    return {
+                        "success": False,
+                        "error": f"{method.value} requires contact information",
+                    }
 
                 # Generate verification code
                 verification_code = secrets.randbelow(1000000)
@@ -387,7 +417,7 @@ class EnhancedSecurityMCP:
                     "contact_info": contact_info,
                     "verification_code": verification_code_str,
                     "created_at": datetime.now(timezone.utc),
-                    "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10)
+                    "expires_at": datetime.now(timezone.utc) + timedelta(minutes=10),
                 }
 
                 # Send verification code (simulated)
@@ -400,17 +430,22 @@ class EnhancedSecurityMCP:
                     "method": method.value,
                     "setup_id": temp_setup_id,
                     "contact_info": self._mask_contact_info(contact_info),
-                    "expires_in_minutes": 10
+                    "expires_in_minutes": 10,
                 }
 
             else:
-                return {"success": False, "error": f"MFA method {method.value} not yet implemented"}
+                return {
+                    "success": False,
+                    "error": f"MFA method {method.value} not yet implemented",
+                }
 
         except Exception as e:
             logger.error("MFA setup failed for user %s: %s", user_id, str(e))
             return {"success": False, "error": str(e)}
 
-    async def verify_mfa(self, user_id: str, verification_code: str, session_id: str = None) -> Dict[str, Any]:
+    async def verify_mfa(
+        self, user_id: str, verification_code: str, session_id: str = None
+    ) -> dict[str, Any]:
         """Verify multi-factor authentication code"""
         try:
             if user_id not in self.mfa_setups:
@@ -432,14 +467,17 @@ class EnhancedSecurityMCP:
             else:
                 # For SMS/Email, check against stored verification code
                 temp_sessions = [
-                    session for session in self.mfa_sessions.values()
+                    session
+                    for session in self.mfa_sessions.values()
                     if session["user_id"] == user_id and session["method"] == mfa_setup.method
                 ]
 
                 is_valid = False
                 for session in temp_sessions:
-                    if (session["verification_code"] == verification_code and
-                        datetime.now(timezone.utc) < session["expires_at"]):
+                    if (
+                        session["verification_code"] == verification_code
+                        and datetime.now(timezone.utc) < session["expires_at"]
+                    ):
                         is_valid = True
                         # Clean up used session
                         for session_id, session_data in list(self.mfa_sessions.items()):
@@ -457,11 +495,14 @@ class EnhancedSecurityMCP:
                     self.active_sessions[session_id]["mfa_verified_at"] = datetime.now(timezone.utc)
 
                 # Log security event
-                await self._log_security_event("mfa_verified", {
-                    "user_id": user_id,
-                    "method": mfa_setup.method.value,
-                    "session_id": session_id
-                })
+                await self._log_security_event(
+                    "mfa_verified",
+                    {
+                        "user_id": user_id,
+                        "method": mfa_setup.method.value,
+                        "session_id": session_id,
+                    },
+                )
 
                 logger.info("MFA verification successful for user %s", user_id)
 
@@ -469,15 +510,18 @@ class EnhancedSecurityMCP:
                     "success": True,
                     "user_id": user_id,
                     "method": mfa_setup.method.value,
-                    "verified_at": datetime.now(timezone.utc).isoformat()
+                    "verified_at": datetime.now(timezone.utc).isoformat(),
                 }
             else:
                 # Log failed attempt
-                await self._log_security_event("mfa_failed", {
-                    "user_id": user_id,
-                    "method": mfa_setup.method.value,
-                    "session_id": session_id
-                })
+                await self._log_security_event(
+                    "mfa_failed",
+                    {
+                        "user_id": user_id,
+                        "method": mfa_setup.method.value,
+                        "session_id": session_id,
+                    },
+                )
 
                 return {"success": False, "error": "Invalid verification code"}
 
@@ -485,13 +529,13 @@ class EnhancedSecurityMCP:
             logger.error("MFA verification failed for user %s: %s", user_id, str(e))
             return {"success": False, "error": str(e)}
 
-    async def apply_advanced_rate_limiting(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def apply_advanced_rate_limiting(self, request: dict[str, Any]) -> dict[str, Any]:
         """Apply advanced rate limiting with ML-based detection"""
         try:
             resource = request.get("resource", "/api/unknown")
             user_id = request.get("user_id", "anonymous")
             ip_address = request.get("ip_address", "unknown")
-            user_agent = request.get("user_agent", "unknown")
+            request.get("user_agent", "unknown")
 
             # Find applicable rate limit rule
             applicable_rule = self._find_applicable_rate_limit_rule(resource)
@@ -502,16 +546,24 @@ class EnhancedSecurityMCP:
 
             # Check rate limits based on rule type
             if applicable_rule.limit_type == RateLimitType.STANDARD:
-                limit_result = await self._check_standard_rate_limit(user_id, ip_address, applicable_rule)
+                limit_result = await self._check_standard_rate_limit(
+                    user_id, ip_address, applicable_rule
+                )
 
             elif applicable_rule.limit_type == RateLimitType.ADAPTIVE:
-                limit_result = await self._check_adaptive_rate_limit(user_id, ip_address, applicable_rule, request)
+                limit_result = await self._check_adaptive_rate_limit(
+                    user_id, ip_address, applicable_rule, request
+                )
 
             elif applicable_rule.limit_type == RateLimitType.ML_BASED:
-                limit_result = await self._check_ml_based_rate_limit(user_id, request, applicable_rule)
+                limit_result = await self._check_ml_based_rate_limit(
+                    user_id, request, applicable_rule
+                )
 
             elif applicable_rule.limit_type == RateLimitType.BEHAVIOR_BASED:
-                limit_result = await self._check_behavior_based_rate_limit(user_id, request, applicable_rule)
+                limit_result = await self._check_behavior_based_rate_limit(
+                    user_id, request, applicable_rule
+                )
 
             else:
                 limit_result = {"allowed": True, "reason": "unknown_limit_type"}
@@ -529,7 +581,9 @@ class EnhancedSecurityMCP:
             logger.error("Rate limiting check failed: %s", str(e))
             return {"allowed": True, "error": str(e)}  # Fail open for availability
 
-    async def _check_standard_rate_limit(self, user_id: str, ip_address: str, rule: RateLimitRule) -> Dict[str, Any]:
+    async def _check_standard_rate_limit(
+        self, user_id: str, ip_address: str, rule: RateLimitRule
+    ) -> dict[str, Any]:
         """Check standard rate limiting"""
         current_time = time.time()
         window_start = current_time - rule.window_size_seconds
@@ -540,13 +594,15 @@ class EnhancedSecurityMCP:
             self.rate_limit_counters[counter_key] = {
                 "requests": [],
                 "burst_count": 0,
-                "last_reset": current_time
+                "last_reset": current_time,
             }
 
         counter = self.rate_limit_counters[counter_key]
 
         # Clean old requests
-        counter["requests"] = [req_time for req_time in counter["requests"] if req_time > window_start]
+        counter["requests"] = [
+            req_time for req_time in counter["requests"] if req_time > window_start
+        ]
 
         # Check limits
         requests_in_window = len(counter["requests"])
@@ -558,11 +614,13 @@ class EnhancedSecurityMCP:
                 "limit_type": "standard",
                 "requests_in_window": requests_in_window,
                 "limit": rule.requests_per_minute,
-                "retry_after": rule.window_size_seconds
+                "retry_after": rule.window_size_seconds,
             }
 
         # Check burst limit
-        recent_requests = [req_time for req_time in counter["requests"] if req_time > current_time - 10]  # Last 10 seconds
+        recent_requests = [
+            req_time for req_time in counter["requests"] if req_time > current_time - 10
+        ]  # Last 10 seconds
         if len(recent_requests) >= rule.burst_limit:
             return {
                 "allowed": False,
@@ -570,7 +628,7 @@ class EnhancedSecurityMCP:
                 "limit_type": "standard",
                 "burst_requests": len(recent_requests),
                 "burst_limit": rule.burst_limit,
-                "retry_after": 10
+                "retry_after": 10,
             }
 
         # Allow request and update counter
@@ -580,10 +638,16 @@ class EnhancedSecurityMCP:
             "allowed": True,
             "reason": "within_limits",
             "requests_remaining": rule.requests_per_minute - requests_in_window - 1,
-            "window_reset_in": rule.window_size_seconds - (current_time - min(counter["requests"]))
+            "window_reset_in": rule.window_size_seconds - (current_time - min(counter["requests"])),
         }
 
-    async def _check_adaptive_rate_limit(self, user_id: str, ip_address: str, rule: RateLimitRule, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def _check_adaptive_rate_limit(
+        self,
+        user_id: str,
+        ip_address: str,
+        rule: RateLimitRule,
+        request: dict[str, Any],
+    ) -> dict[str, Any]:
         """Check adaptive rate limiting based on user behavior"""
         # Get user's recent behavior
         user_behavior = await self._analyze_user_behavior(user_id)
@@ -615,7 +679,7 @@ class EnhancedSecurityMCP:
             requests_per_day=rule.requests_per_day,
             burst_limit=adjusted_burst,
             window_size_seconds=rule.window_size_seconds,
-            penalty_duration_seconds=rule.penalty_duration_seconds
+            penalty_duration_seconds=rule.penalty_duration_seconds,
         )
 
         # Check with adjusted limits
@@ -627,7 +691,9 @@ class EnhancedSecurityMCP:
 
         return result
 
-    async def _check_ml_based_rate_limit(self, user_id: str, request: Dict[str, Any], rule: RateLimitRule) -> Dict[str, Any]:
+    async def _check_ml_based_rate_limit(
+        self, user_id: str, request: dict[str, Any], rule: RateLimitRule
+    ) -> dict[str, Any]:
         """Check ML-based rate limiting using anomaly detection"""
         try:
             # Extract features for ML model
@@ -650,7 +716,7 @@ class EnhancedSecurityMCP:
                     "limit_type": "ml_based",
                     "anomaly_score": anomaly_score,
                     "threshold": anomaly_threshold,
-                    "features": features
+                    "features": features,
                 }
             else:
                 # Apply standard rate limiting with ML-adjusted limits
@@ -665,10 +731,12 @@ class EnhancedSecurityMCP:
                     requests_per_day=rule.requests_per_day,
                     burst_limit=rule.burst_limit,
                     window_size_seconds=rule.window_size_seconds,
-                    penalty_duration_seconds=rule.penalty_duration_seconds
+                    penalty_duration_seconds=rule.penalty_duration_seconds,
                 )
 
-                result = await self._check_standard_rate_limit(user_id, request.get("ip_address", "unknown"), adjusted_rule)
+                result = await self._check_standard_rate_limit(
+                    user_id, request.get("ip_address", "unknown"), adjusted_rule
+                )
                 result["limit_type"] = "ml_based"
                 result["anomaly_score"] = anomaly_score
 
@@ -677,13 +745,16 @@ class EnhancedSecurityMCP:
         except Exception as e:
             logger.error("ML-based rate limiting failed: %s", str(e))
             # Fallback to standard rate limiting
-            return await self._check_standard_rate_limit(user_id, request.get("ip_address", "unknown"), rule)
+            return await self._check_standard_rate_limit(
+                user_id, request.get("ip_address", "unknown"), rule
+            )
 
-    async def _analyze_user_behavior(self, user_id: str) -> Dict[str, Any]:
+    async def _analyze_user_behavior(self, user_id: str) -> dict[str, Any]:
         """Analyze user behavior for adaptive rate limiting"""
         # Get recent security events for user
         user_events = [
-            event for event in self.security_events
+            event
+            for event in self.security_events
             if event.get("data", {}).get("user_id") == user_id
             and event["timestamp"] > datetime.now(timezone.utc) - timedelta(days=7)
         ]
@@ -703,7 +774,9 @@ class EnhancedSecurityMCP:
 
         # Negative indicators
         failed_attempts = len([e for e in user_events if e["event_type"] == "mfa_failed"])
-        security_violations = len([e for e in user_events if e["event_type"] == "security_violation"])
+        security_violations = len(
+            [e for e in user_events if e["event_type"] == "security_violation"]
+        )
 
         if failed_attempts > 0:
             trust_score -= min(0.3, failed_attempts * 0.1)
@@ -720,10 +793,12 @@ class EnhancedSecurityMCP:
             "mfa_verifications": mfa_verifications,
             "failed_attempts": failed_attempts,
             "security_violations": security_violations,
-            "analysis_period_days": 7
+            "analysis_period_days": 7,
         }
 
-    async def _extract_request_features(self, user_id: str, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def _extract_request_features(
+        self, user_id: str, request: dict[str, Any]
+    ) -> dict[str, Any]:
         """Extract features for ML-based analysis"""
         return {
             "user_id_hash": hashlib.sha256(user_id.encode()).hexdigest()[:16],
@@ -735,10 +810,10 @@ class EnhancedSecurityMCP:
             "ip_reputation": await self._get_ip_reputation(request.get("ip_address", "")),
             "user_agent_category": self._categorize_user_agent(request.get("user_agent", "")),
             "session_age_minutes": self._get_session_age(request.get("session_id", "")),
-            "recent_request_frequency": await self._get_recent_request_frequency(user_id)
+            "recent_request_frequency": await self._get_recent_request_frequency(user_id),
         }
 
-    async def _heuristic_anomaly_detection(self, features: Dict[str, Any]) -> float:
+    async def _heuristic_anomaly_detection(self, features: dict[str, Any]) -> float:
         """Heuristic-based anomaly detection as ML fallback"""
         anomaly_score = 0.0
 
@@ -786,7 +861,7 @@ class EnhancedSecurityMCP:
         # Return general API rule if available
         return self.rate_limit_rules.get("api_general")
 
-    async def _validate_oauth_credentials(self, credentials: OAuthCredentials) -> Dict[str, Any]:
+    async def _validate_oauth_credentials(self, credentials: OAuthCredentials) -> dict[str, Any]:
         """Validate OAuth provider credentials"""
         validation_result = {"valid": True, "errors": []}
 
@@ -804,7 +879,9 @@ class EnhancedSecurityMCP:
             validation_result["errors"].append("Redirect URI is required")
 
         # Validate redirect URI format
-        if credentials.redirect_uri and not credentials.redirect_uri.startswith(("http://", "https://")):
+        if credentials.redirect_uri and not credentials.redirect_uri.startswith(
+            ("http://", "https://")
+        ):
             validation_result["valid"] = False
             validation_result["errors"].append("Redirect URI must be a valid HTTP/HTTPS URL")
 
@@ -814,7 +891,9 @@ class EnhancedSecurityMCP:
 
         return validation_result
 
-    async def _exchange_oauth_code(self, credentials: OAuthCredentials, auth_code: str, state: str) -> Dict[str, Any]:
+    async def _exchange_oauth_code(
+        self, credentials: OAuthCredentials, auth_code: str, state: str
+    ) -> dict[str, Any]:
         """Exchange OAuth authorization code for access token"""
         # In production, this would make actual HTTP requests to OAuth provider
         # For testing, simulate successful token exchange
@@ -826,10 +905,12 @@ class EnhancedSecurityMCP:
             "access_token": f"oauth_token_{secrets.token_hex(16)}",
             "refresh_token": f"refresh_token_{secrets.token_hex(16)}",
             "expires_in": 3600,
-            "token_type": "Bearer"
+            "token_type": "Bearer",
         }
 
-    async def _get_oauth_user_info(self, provider: AuthProvider, access_token: str) -> Dict[str, Any]:
+    async def _get_oauth_user_info(
+        self, provider: AuthProvider, access_token: str
+    ) -> dict[str, Any]:
         """Get user information from OAuth provider"""
         # In production, this would make actual API calls to get user info
         # For testing, simulate user info retrieval
@@ -843,8 +924,8 @@ class EnhancedSecurityMCP:
                 "email": f"user@{provider.value}.com",
                 "name": "Test User",
                 "provider": provider.value,
-                "verified": True
-            }
+                "verified": True,
+            },
         }
 
     def _check_mfa_requirement(self, user_id: str) -> bool:
@@ -858,8 +939,12 @@ class EnhancedSecurityMCP:
         # In production, this would send actual SMS/Email
         # For testing, just log the action
 
-        logger.info("Verification code sent via %s to %s: %s",
-                   method.value, self._mask_contact_info(contact_info), code)
+        logger.info(
+            "Verification code sent via %s to %s: %s",
+            method.value,
+            self._mask_contact_info(contact_info),
+            code,
+        )
 
     def _mask_contact_info(self, contact_info: str) -> str:
         """Mask contact information for logging"""
@@ -871,14 +956,14 @@ class EnhancedSecurityMCP:
         else:
             return "***"
 
-    async def _log_security_event(self, event_type: str, data: Dict[str, Any]):
+    async def _log_security_event(self, event_type: str, data: dict[str, Any]):
         """Log security event for audit trail"""
         event = {
             "event_id": str(uuid.uuid4()),
             "event_type": event_type,
             "timestamp": datetime.now(timezone.utc),
             "data": data,
-            "source": "enhanced_security_mcp"
+            "source": "enhanced_security_mcp",
         }
 
         self.security_events.append(event)
@@ -889,16 +974,21 @@ class EnhancedSecurityMCP:
 
         logger.debug("Security event logged: %s", event_type)
 
-    async def _log_rate_limit_decision(self, user_id: str, resource: str, decision: Dict[str, Any], rule: RateLimitRule):
+    async def _log_rate_limit_decision(
+        self, user_id: str, resource: str, decision: dict[str, Any], rule: RateLimitRule
+    ):
         """Log rate limiting decision"""
-        await self._log_security_event("rate_limit_decision", {
-            "user_id": user_id,
-            "resource": resource,
-            "allowed": decision.get("allowed", False),
-            "reason": decision.get("reason", "unknown"),
-            "rule_id": rule.rule_id,
-            "limit_type": rule.limit_type.value
-        })
+        await self._log_security_event(
+            "rate_limit_decision",
+            {
+                "user_id": user_id,
+                "resource": resource,
+                "allowed": decision.get("allowed", False),
+                "reason": decision.get("reason", "unknown"),
+                "rule_id": rule.rule_id,
+                "limit_type": rule.limit_type.value,
+            },
+        )
 
     async def _apply_rate_limit_penalty(self, user_id: str, ip_address: str, rule: RateLimitRule):
         """Apply penalty for rate limit violation"""
@@ -907,16 +997,20 @@ class EnhancedSecurityMCP:
             "ip_address": ip_address,
             "rule_id": rule.rule_id,
             "penalty_start": datetime.now(timezone.utc),
-            "penalty_end": datetime.now(timezone.utc) + timedelta(seconds=rule.penalty_duration_seconds),
-            "penalty_type": "temporary_ban"
+            "penalty_end": datetime.now(timezone.utc)
+            + timedelta(seconds=rule.penalty_duration_seconds),
+            "penalty_type": "temporary_ban",
         }
 
         self.rate_limit_violations.append(penalty)
 
         await self._log_security_event("rate_limit_violation", penalty)
 
-        logger.warning("Rate limit penalty applied to user %s for %d seconds",
-                      user_id, rule.penalty_duration_seconds)
+        logger.warning(
+            "Rate limit penalty applied to user %s for %d seconds",
+            user_id,
+            rule.penalty_duration_seconds,
+        )
 
     def _categorize_resource(self, resource: str) -> str:
         """Categorize API resource for analysis"""
@@ -937,9 +1031,17 @@ class EnhancedSecurityMCP:
 
         if "bot" in user_agent_lower or "crawler" in user_agent_lower:
             return "bot"
-        elif "mobile" in user_agent_lower or "android" in user_agent_lower or "iphone" in user_agent_lower:
+        elif (
+            "mobile" in user_agent_lower
+            or "android" in user_agent_lower
+            or "iphone" in user_agent_lower
+        ):
             return "mobile"
-        elif "chrome" in user_agent_lower or "firefox" in user_agent_lower or "safari" in user_agent_lower:
+        elif (
+            "chrome" in user_agent_lower
+            or "firefox" in user_agent_lower
+            or "safari" in user_agent_lower
+        ):
             return "browser"
         else:
             return "unknown"
@@ -970,22 +1072,24 @@ class EnhancedSecurityMCP:
         """Get recent request frequency for user"""
         # Count requests in last 5 minutes
         recent_events = [
-            event for event in self.security_events
-            if (event.get("data", {}).get("user_id") == user_id and
-                event["timestamp"] > datetime.now(timezone.utc) - timedelta(minutes=5))
+            event
+            for event in self.security_events
+            if (
+                event.get("data", {}).get("user_id") == user_id
+                and event["timestamp"] > datetime.now(timezone.utc) - timedelta(minutes=5)
+            )
         ]
 
         return len(recent_events)
 
-    def get_security_metrics(self) -> Dict[str, Any]:
+    def get_security_metrics(self) -> dict[str, Any]:
         """Get comprehensive security metrics"""
         current_time = datetime.now(timezone.utc)
 
         # Active sessions metrics
         active_sessions_count = len(self.active_sessions)
         mfa_verified_sessions = sum(
-            1 for session in self.active_sessions.values()
-            if session.get("mfa_verified", False)
+            1 for session in self.active_sessions.values() if session.get("mfa_verified", False)
         )
 
         # OAuth metrics
@@ -997,15 +1101,13 @@ class EnhancedSecurityMCP:
 
         # Rate limiting metrics
         rate_limit_rules_count = len(self.rate_limit_rules)
-        recent_violations = len([
-            v for v in self.rate_limit_violations
-            if v["penalty_end"] > current_time
-        ])
+        recent_violations = len(
+            [v for v in self.rate_limit_violations if v["penalty_end"] > current_time]
+        )
 
         # Security events metrics
         recent_events = [
-            e for e in self.security_events
-            if e["timestamp"] > current_time - timedelta(hours=24)
+            e for e in self.security_events if e["timestamp"] > current_time - timedelta(hours=24)
         ]
 
         event_types = {}
@@ -1017,32 +1119,36 @@ class EnhancedSecurityMCP:
             "sessions": {
                 "active_sessions": active_sessions_count,
                 "mfa_verified_sessions": mfa_verified_sessions,
-                "mfa_verification_rate": mfa_verified_sessions / active_sessions_count if active_sessions_count > 0 else 0
+                "mfa_verification_rate": (
+                    mfa_verified_sessions / active_sessions_count
+                    if active_sessions_count > 0
+                    else 0
+                ),
             },
             "oauth": {
                 "providers_configured": oauth_providers_configured,
-                "providers": [p.value for p in self.oauth_providers.keys()]
+                "providers": [p.value for p in self.oauth_providers.keys()],
             },
             "mfa": {
                 "users_with_mfa": mfa_users,
                 "active_mfa_users": active_mfa_users,
-                "mfa_adoption_rate": active_mfa_users / mfa_users if mfa_users > 0 else 0
+                "mfa_adoption_rate": active_mfa_users / mfa_users if mfa_users > 0 else 0,
             },
             "rate_limiting": {
                 "rules_configured": rate_limit_rules_count,
                 "active_violations": recent_violations,
-                "violation_rate": recent_violations / max(len(recent_events), 1)
+                "violation_rate": recent_violations / max(len(recent_events), 1),
             },
             "security_events": {
                 "events_last_24h": len(recent_events),
                 "event_types": event_types,
-                "total_events_stored": len(self.security_events)
+                "total_events_stored": len(self.security_events),
             },
             "system_health": {
                 "security_score": self._calculate_security_score(),
                 "threat_level": self._assess_threat_level(),
-                "compliance_status": self._check_compliance_status()
-            }
+                "compliance_status": self._check_compliance_status(),
+            },
         }
 
     def _calculate_security_score(self) -> float:
@@ -1062,17 +1168,17 @@ class EnhancedSecurityMCP:
             score += 0.1
 
         # Recent violations penalty
-        recent_violations = len([
-            v for v in self.rate_limit_violations
-            if v["penalty_end"] > datetime.now(timezone.utc)
-        ])
+        recent_violations = len(
+            [v for v in self.rate_limit_violations if v["penalty_end"] > datetime.now(timezone.utc)]
+        )
 
         if recent_violations > 0:
             score -= min(0.3, recent_violations * 0.1)
 
         # Security events analysis
         recent_events = [
-            e for e in self.security_events
+            e
+            for e in self.security_events
             if e["timestamp"] > datetime.now(timezone.utc) - timedelta(hours=24)
         ]
 
@@ -1086,10 +1192,9 @@ class EnhancedSecurityMCP:
     def _assess_threat_level(self) -> str:
         """Assess current threat level"""
         security_score = self._calculate_security_score()
-        recent_violations = len([
-            v for v in self.rate_limit_violations
-            if v["penalty_end"] > datetime.now(timezone.utc)
-        ])
+        recent_violations = len(
+            [v for v in self.rate_limit_violations if v["penalty_end"] > datetime.now(timezone.utc)]
+        )
 
         if security_score < 0.3 or recent_violations > 10:
             return "high"
@@ -1107,7 +1212,7 @@ class EnhancedSecurityMCP:
             "mfa_available": len(self.mfa_setups) > 0,
             "rate_limiting_active": len(self.rate_limit_rules) > 0,
             "audit_logging_enabled": len(self.security_events) > 0,
-            "session_management": len(self.active_sessions) >= 0
+            "session_management": len(self.active_sessions) >= 0,
         }
 
         compliance_score = sum(compliance_checks.values()) / len(compliance_checks)

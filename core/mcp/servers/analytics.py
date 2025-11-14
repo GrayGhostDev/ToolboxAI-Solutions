@@ -3,16 +3,17 @@ MCP Server for Analytics
 Provides analytics and reporting capabilities via MCP protocol
 """
 
-import sys
-import json
 import asyncio
+import json
 import logging
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 
 # Add parent directory to path for imports
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../..'))
+import sys
+from datetime import datetime, timedelta
+from typing import Any
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,10 +36,10 @@ class AnalyticsMCPServer:
         }
         self.metrics_cache = {}
 
-    async def handle_get_metrics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_get_metrics(self, params: dict[str, Any]) -> dict[str, Any]:
         """Get general metrics"""
         try:
-            metric_type = params.get("type", "overview")
+            params.get("type", "overview")
             time_range = params.get("time_range", "24h")
 
             # Calculate time boundaries
@@ -62,27 +63,21 @@ class AnalyticsMCPServer:
                     "active_users": 423,
                     "content_created": 89,
                     "assessments_completed": 342,
-                    "average_score": 78.5
+                    "average_score": 78.5,
                 },
                 "trends": {
                     "user_growth": 12.5,
                     "engagement_rate": 67.8,
-                    "completion_rate": 85.2
-                }
+                    "completion_rate": 85.2,
+                },
             }
 
-            return {
-                "status": "success",
-                "metrics": metrics
-            }
+            return {"status": "success", "metrics": metrics}
         except Exception as e:
             logger.error(f"Error getting metrics: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_user_analytics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_user_analytics(self, params: dict[str, Any]) -> dict[str, Any]:
         """Get user-specific analytics"""
         try:
             user_id = params.get("user_id")
@@ -95,43 +90,37 @@ class AnalyticsMCPServer:
                     "total_sessions": 45,
                     "average_session_duration": "23 minutes",
                     "content_viewed": 123,
-                    "assessments_taken": 28
+                    "assessments_taken": 28,
                 },
                 "performance": {
                     "average_score": 82.3,
                     "improvement_rate": 15.7,
                     "strengths": ["Math", "Science"],
-                    "areas_for_improvement": ["Writing", "History"]
+                    "areas_for_improvement": ["Writing", "History"],
                 },
                 "engagement": {
                     "daily_streak": 7,
                     "total_points": 3450,
                     "badges_earned": 12,
-                    "rank": "Advanced"
-                }
+                    "rank": "Advanced",
+                },
             }
 
             # Filter based on requested metrics
             if isinstance(metric_types, list):
                 filtered_analytics = {
                     "user_id": user_id,
-                    **{k: v for k, v in analytics.items() if k in metric_types}
+                    **{k: v for k, v in analytics.items() if k in metric_types},
                 }
             else:
                 filtered_analytics = analytics
 
-            return {
-                "status": "success",
-                "analytics": filtered_analytics
-            }
+            return {"status": "success", "analytics": filtered_analytics}
         except Exception as e:
             logger.error(f"Error getting user analytics: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_content_analytics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_content_analytics(self, params: dict[str, Any]) -> dict[str, Any]:
         """Get content-specific analytics"""
         try:
             content_id = params.get("content_id")
@@ -146,33 +135,27 @@ class AnalyticsMCPServer:
                     "average_time_spent": "18 minutes",
                     "completion_rate": 76.4,
                     "rating": 4.3,
-                    "feedback_count": 45
+                    "feedback_count": 45,
                 },
                 "engagement": {
                     "likes": 234,
                     "shares": 56,
                     "comments": 78,
-                    "bookmarks": 123
+                    "bookmarks": 123,
                 },
                 "performance": {
                     "average_score": 79.8,
                     "pass_rate": 88.2,
-                    "difficulty_rating": "Medium"
-                }
+                    "difficulty_rating": "Medium",
+                },
             }
 
-            return {
-                "status": "success",
-                "analytics": analytics
-            }
+            return {"status": "success", "analytics": analytics}
         except Exception as e:
             logger.error(f"Error getting content analytics: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_performance_metrics(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_performance_metrics(self, params: dict[str, Any]) -> dict[str, Any]:
         """Get system performance metrics"""
         try:
             service = params.get("service", "all")
@@ -185,45 +168,39 @@ class AnalyticsMCPServer:
                         "response_time_ms": 45,
                         "requests_per_minute": 234,
                         "error_rate": 0.2,
-                        "uptime_percent": 99.95
+                        "uptime_percent": 99.95,
                     },
                     "database": {
                         "status": "healthy",
                         "query_time_ms": 12,
                         "connections": 45,
-                        "cache_hit_rate": 89.5
+                        "cache_hit_rate": 89.5,
                     },
                     "agents": {
                         "status": "healthy",
                         "active_agents": 8,
                         "tasks_completed": 1234,
                         "average_processing_time": "3.2 seconds",
-                        "success_rate": 96.8
-                    }
-                }
+                        "success_rate": 96.8,
+                    },
+                },
             }
 
             if service != "all" and service in metrics["services"]:
                 filtered_metrics = {
                     "timestamp": metrics["timestamp"],
                     "service": service,
-                    "metrics": metrics["services"][service]
+                    "metrics": metrics["services"][service],
                 }
             else:
                 filtered_metrics = metrics
 
-            return {
-                "status": "success",
-                "metrics": filtered_metrics
-            }
+            return {"status": "success", "metrics": filtered_metrics}
         except Exception as e:
             logger.error(f"Error getting performance metrics: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_engagement_stats(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_engagement_stats(self, params: dict[str, Any]) -> dict[str, Any]:
         """Get engagement statistics"""
         try:
             entity_type = params.get("entity_type", "platform")  # platform, course, user
@@ -240,39 +217,33 @@ class AnalyticsMCPServer:
                     "average_session_duration": "26 minutes",
                     "bounce_rate": 12.4,
                     "page_views": 18934,
-                    "unique_visitors": 3421
+                    "unique_visitors": 3421,
                 },
                 "interactions": {
                     "content_created": 145,
                     "assessments_completed": 567,
                     "discussions_started": 89,
-                    "collaborations": 234
+                    "collaborations": 234,
                 },
                 "retention": {
                     "day_1": 85.6,
                     "day_7": 62.3,
                     "day_30": 45.8,
-                    "churn_rate": 8.2
-                }
+                    "churn_rate": 8.2,
+                },
             }
 
-            return {
-                "status": "success",
-                "statistics": stats
-            }
+            return {"status": "success", "statistics": stats}
         except Exception as e:
             logger.error(f"Error getting engagement stats: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_generate_report(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_report(self, params: dict[str, Any]) -> dict[str, Any]:
         """Generate an analytics report"""
         try:
             report_type = params.get("report_type", "summary")
             time_range = params.get("time_range", "30d")
-            format_type = params.get("format", "json")
+            params.get("format", "json")
 
             # Generate comprehensive report
             report = {
@@ -285,41 +256,35 @@ class AnalyticsMCPServer:
                     "active_users": 892,
                     "content_pieces": 456,
                     "total_engagement_time": "15,234 hours",
-                    "average_satisfaction": 4.2
+                    "average_satisfaction": 4.2,
                 },
                 "highlights": [
                     "User engagement increased by 23% this period",
                     "Content completion rate improved to 78%",
-                    "Average assessment scores up by 12 points"
+                    "Average assessment scores up by 12 points",
                 ],
                 "recommendations": [
                     "Focus on Math content - highest engagement",
                     "Improve History content - lowest completion rate",
-                    "Add more interactive elements to Science modules"
-                ]
+                    "Add more interactive elements to Science modules",
+                ],
             }
 
-            return {
-                "status": "success",
-                "report": report
-            }
+            return {"status": "success", "report": report}
         except Exception as e:
             logger.error(f"Error generating report: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    async def handle_health(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_health(self, params: dict[str, Any]) -> dict[str, Any]:
         """Health check endpoint"""
         return {
             "status": "healthy",
             "service": "analytics",
             "cache_size": len(self.metrics_cache),
-            "uptime": "24h 13m"
+            "uptime": "24h 13m",
         }
 
-    async def handle_capabilities(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_capabilities(self, params: dict[str, Any]) -> dict[str, Any]:
         """Return server capabilities"""
         return {
             "capabilities": [
@@ -328,19 +293,21 @@ class AnalyticsMCPServer:
                 "get_content_analytics",
                 "get_performance_metrics",
                 "get_engagement_stats",
-                "generate_report"
+                "generate_report",
             ],
             "metric_types": [
-                "overview", "user", "content", "performance", "engagement"
+                "overview",
+                "user",
+                "content",
+                "performance",
+                "engagement",
             ],
-            "report_types": [
-                "summary", "detailed", "executive", "custom"
-            ],
+            "report_types": ["summary", "detailed", "executive", "custom"],
             "time_ranges": ["1h", "24h", "7d", "30d", "90d", "1y"],
-            "export_formats": ["json", "csv", "pdf"]
+            "export_formats": ["json", "csv", "pdf"],
         }
 
-    async def process_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def process_request(self, request: dict[str, Any]) -> dict[str, Any]:
         """Process incoming MCP request"""
         method = request.get("method")
         params = request.get("params", {})
@@ -349,29 +316,19 @@ class AnalyticsMCPServer:
         if method in self.methods:
             try:
                 result = await self.methods[method](params)
-                return {
-                    "jsonrpc": "2.0",
-                    "result": result,
-                    "id": request_id
-                }
+                return {"jsonrpc": "2.0", "result": result, "id": request_id}
             except Exception as e:
                 logger.error(f"Error processing request: {e}")
                 return {
                     "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32603,
-                        "message": str(e)
-                    },
-                    "id": request_id
+                    "error": {"code": -32603, "message": str(e)},
+                    "id": request_id,
                 }
         else:
             return {
                 "jsonrpc": "2.0",
-                "error": {
-                    "code": -32601,
-                    "message": f"Method not found: {method}"
-                },
-                "id": request_id
+                "error": {"code": -32601, "message": f"Method not found: {method}"},
+                "id": request_id,
             }
 
     async def run_stdio(self):
@@ -399,11 +356,8 @@ class AnalyticsMCPServer:
                 logger.error(f"Invalid JSON: {e}")
                 error_response = {
                     "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32700,
-                        "message": "Parse error"
-                    },
-                    "id": None
+                    "error": {"code": -32700, "message": "Parse error"},
+                    "id": None,
                 }
                 sys.stdout.write(json.dumps(error_response) + "\n")
                 sys.stdout.flush()

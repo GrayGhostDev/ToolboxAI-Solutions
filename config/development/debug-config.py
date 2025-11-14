@@ -8,7 +8,7 @@ It includes settings for logging, profiling, testing, and debugging tools.
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -68,27 +68,24 @@ class DebugConfig:
     RATE_LIMIT_LOG_ATTEMPTS = True
 
     @classmethod
-    def get_logging_config(cls) -> Dict[str, Any]:
+    def get_logging_config(cls) -> dict[str, Any]:
         """Get logging configuration dictionary"""
         return {
             "version": 1,
             "disable_existing_loggers": False,
             "formatters": {
-                "standard": {
-                    "format": cls.LOG_FORMAT,
-                    "datefmt": cls.LOG_DATE_FORMAT
-                },
+                "standard": {"format": cls.LOG_FORMAT, "datefmt": cls.LOG_DATE_FORMAT},
                 "detailed": {
                     "format": "%(asctime)s [%(levelname)8s] %(name)s:%(lineno)d: %(message)s",
-                    "datefmt": cls.LOG_DATE_FORMAT
-                }
+                    "datefmt": cls.LOG_DATE_FORMAT,
+                },
             },
             "handlers": {
                 "console": {
                     "class": "logging.StreamHandler",
                     "level": cls.LOG_LEVEL,
                     "formatter": "standard",
-                    "stream": "ext://sys.stdout"
+                    "stream": "ext://sys.stdout",
                 },
                 "file": {
                     "class": "logging.handlers.RotatingFileHandler",
@@ -96,35 +93,35 @@ class DebugConfig:
                     "formatter": "detailed",
                     "filename": cls.LOG_FILE,
                     "maxBytes": cls.LOG_MAX_SIZE,
-                    "backupCount": cls.LOG_BACKUP_COUNT
-                }
+                    "backupCount": cls.LOG_BACKUP_COUNT,
+                },
             },
             "loggers": {
                 "": {
                     "handlers": ["console", "file"],
                     "level": cls.LOG_LEVEL,
-                    "propagate": False
+                    "propagate": False,
                 },
                 "uvicorn": {
                     "handlers": ["console", "file"],
                     "level": "INFO",
-                    "propagate": False
+                    "propagate": False,
                 },
                 "fastapi": {
                     "handlers": ["console", "file"],
                     "level": "INFO",
-                    "propagate": False
+                    "propagate": False,
                 },
                 "sqlalchemy": {
                     "handlers": ["console", "file"],
                     "level": "WARNING",
-                    "propagate": False
-                }
-            }
+                    "propagate": False,
+                },
+            },
         }
 
     @classmethod
-    def get_pytest_config(cls) -> Dict[str, Any]:
+    def get_pytest_config(cls) -> dict[str, Any]:
         """Get pytest configuration dictionary"""
         return {
             "testpaths": ["tests"],
@@ -146,7 +143,8 @@ class DebugConfig:
                 "--asyncio-mode=auto",
                 "--strict-markers",
                 "--disable-warnings",
-                "-p", "no:unraisableexception"
+                "-p",
+                "no:unraisableexception",
             ],
             "markers": [
                 "unit: Unit tests",
@@ -161,7 +159,7 @@ class DebugConfig:
                 "requires_db: Tests requiring database connection",
                 "debug: Debug-specific tests",
                 "profiling: Performance profiling tests",
-                "memory: Memory usage tests"
+                "memory: Memory usage tests",
             ],
             "log_cli": True,
             "log_cli_level": "DEBUG",
@@ -170,40 +168,42 @@ class DebugConfig:
             "capture": "no",
             "timeout": cls.TEST_TIMEOUT,
             "timeout_method": "thread",
-            "asyncio_mode": "auto"
+            "asyncio_mode": "auto",
         }
-    
+
     @classmethod
     def setup_pytest_debugpy(cls) -> None:
         """Setup debugpy for pytest debugging"""
         if not cls.DEBUG:
             return
-            
+
         try:
             import debugpy
             import pytest
-            
+
             # Setup debugpy for pytest
             if not debugpy.is_client_connected():
                 debugpy.listen((cls.DEBUGPY_HOST, cls.DEBUGPY_PORT))
-                print(f"Debugpy listening on {cls.DEBUGPY_HOST}:{cls.DEBUGPY_PORT} for pytest debugging")
-            
+                print(
+                    f"Debugpy listening on {cls.DEBUGPY_HOST}:{cls.DEBUGPY_PORT} for pytest debugging"
+                )
+
             # Configure pytest to use debugpy
             pytest_config = cls.get_pytest_config()
-            
+
             # Add debugpy integration to pytest
             if "--pdbcls=debugpy:Debugger" not in pytest_config["addopts"]:
                 pytest_config["addopts"].append("--pdbcls=debugpy:Debugger")
-            
+
             print("Pytest debugpy integration configured")
-            
+
         except ImportError:
             print("debugpy not available for pytest debugging")
         except Exception as e:
             print(f"Failed to setup pytest debugpy: {e}")
 
     @classmethod
-    def get_coverage_config(cls) -> Dict[str, Any]:
+    def get_coverage_config(cls) -> dict[str, Any]:
         """Get coverage configuration dictionary"""
         return {
             "source": ["."],
@@ -217,7 +217,7 @@ class DebugConfig:
                 "*/__pycache__/*",
                 "*/.*",
                 "setup.py",
-                "conftest.py"
+                "conftest.py",
             ],
             "exclude_lines": [
                 "pragma: no cover",
@@ -229,8 +229,8 @@ class DebugConfig:
                 "if 0:",
                 "if __name__ == .__main__.:",
                 "class .*\\bProtocol\\):",
-                "@(abc\\.)?abstractmethod"
-            ]
+                "@(abc\\.)?abstractmethod",
+            ],
         }
 
     @classmethod
@@ -241,6 +241,7 @@ class DebugConfig:
 
         try:
             import debugpy
+
             debugpy.listen((cls.DEBUGPY_HOST, cls.DEBUGPY_PORT))
             print(f"Debugpy listening on {cls.DEBUGPY_HOST}:{cls.DEBUGPY_PORT}")
 
@@ -293,7 +294,9 @@ class DebugConfig:
 
             # Monitor memory usage
             process = psutil.Process()
-            print(f"Memory profiling enabled. Initial memory: {process.memory_info().rss / 1024 / 1024:.2f} MB")
+            print(
+                f"Memory profiling enabled. Initial memory: {process.memory_info().rss / 1024 / 1024:.2f} MB"
+            )
 
         except ImportError:
             print("memory_profiler or psutil not installed")

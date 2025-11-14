@@ -5,12 +5,11 @@ This agent analyzes Roblox Luau scripts for performance bottlenecks,
 memory leaks, and inefficient patterns, providing optimized versions.
 """
 
-import json
 import logging
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,61 +18,96 @@ try:
     from langchain_core.messages import HumanMessage, SystemMessage
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
     from langchain_openai import ChatOpenAI
+
     LANGCHAIN_CORE_AVAILABLE = True
 except ImportError:
     LANGCHAIN_CORE_AVAILABLE = False
+
     # Create mock classes
     class ChatPromptTemplate:
         @classmethod
-        def from_messages(cls, messages): return cls()
+        def from_messages(cls, messages):
+            return cls()
+
     class MessagesPlaceholder:
-        def __init__(self, variable_name): pass
+        def __init__(self, variable_name):
+            pass
+
     class SystemMessage:
-        def __init__(self, content): self.content = content
+        def __init__(self, content):
+            self.content = content
+
     class HumanMessage:
-        def __init__(self, content): self.content = content
+        def __init__(self, content):
+            self.content = content
+
     class Tool:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
     class StructuredTool:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
     class ChatOpenAI:
-        def __init__(self, **kwargs): pass
+        def __init__(self, **kwargs):
+            pass
+
 
 # Use LangChain 0.3.26+ LCEL compatibility layer
 try:
     from core.langchain_lcel_compat import (
-        LLMChain, AgentExecutor, create_lcel_chain, create_chat_chain, 
-        get_compatible_llm, LANGCHAIN_CORE_AVAILABLE
+        LANGCHAIN_CORE_AVAILABLE,
+        AgentExecutor,
+        LLMChain,
+        create_chat_chain,
+        create_lcel_chain,
+        get_compatible_llm,
     )
+
     LANGCHAIN_AGENTS_AVAILABLE = True
     logger.info("LangChain LCEL compatibility layer imported successfully")
 except ImportError as e:
     logger.error(f"LCEL compatibility layer import failed: {e}")
     LANGCHAIN_AGENTS_AVAILABLE = False
-    
+
     # Fallback mock classes
     class LLMChain:
-        def __init__(self, **kwargs): pass
-        def run(self, *args, **kwargs): return "Mock optimization result"
-        async def arun(self, *args, **kwargs): return "Mock optimization result"
-    
-    class AgentExecutor:
-        def __init__(self, **kwargs): pass
-        def run(self, *args, **kwargs): return "Mock agent result"
-        async def arun(self, *args, **kwargs): return "Mock agent result"
+        def __init__(self, **kwargs):
+            pass
 
-def format_to_openai_function_messages(*args, **kwargs): 
+        def run(self, *args, **kwargs):
+            return "Mock optimization result"
+
+        async def arun(self, *args, **kwargs):
+            return "Mock optimization result"
+
+    class AgentExecutor:
+        def __init__(self, **kwargs):
+            pass
+
+        def run(self, *args, **kwargs):
+            return "Mock agent result"
+
+        async def arun(self, *args, **kwargs):
+            return "Mock agent result"
+
+
+def format_to_openai_function_messages(*args, **kwargs):
     return []
 
+
 class OpenAIFunctionsAgentOutputParser:
-    def parse(self, text): 
+    def parse(self, text):
         return {"output": text, "optimized_code": text}
+
 
 from core.agents.base_agent import AgentConfig, AgentState, BaseAgent, TaskResult
 
 
 class OptimizationLevel(Enum):
     """Optimization aggressiveness levels"""
+
     CONSERVATIVE = "conservative"  # Safe optimizations only
     BALANCED = "balanced"  # Balance between safety and performance
     AGGRESSIVE = "aggressive"  # Maximum performance, may change behavior
@@ -82,6 +116,7 @@ class OptimizationLevel(Enum):
 @dataclass
 class PerformanceIssue:
     """Represents a performance issue in code"""
+
     severity: str  # "critical", "high", "medium", "low"
     location: str  # Line number or code section
     issue_type: str  # Type of issue
@@ -93,12 +128,13 @@ class PerformanceIssue:
 @dataclass
 class OptimizationResult:
     """Result of code optimization"""
+
     original_code: str
     optimized_code: str
-    issues_found: List[PerformanceIssue]
-    metrics: Dict[str, Any]
+    issues_found: list[PerformanceIssue]
+    metrics: dict[str, Any]
     optimization_level: OptimizationLevel
-    compatibility_notes: List[str]
+    compatibility_notes: list[str]
 
 
 class RobloxScriptOptimizationAgent(BaseAgent):
@@ -108,7 +144,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
         self,
         config: Optional[AgentConfig] = None,
         llm: Optional[Any] = None,
-        optimization_level: OptimizationLevel = OptimizationLevel.BALANCED
+        optimization_level: OptimizationLevel = OptimizationLevel.BALANCED,
     ):
         # Create default config if not provided
         if not config:
@@ -120,22 +156,19 @@ class RobloxScriptOptimizationAgent(BaseAgent):
                 You understand performance optimization, memory management, and Roblox-specific best practices.
                 Optimize scripts for performance while maintaining functionality.""",
                 verbose=True,
-                memory_enabled=True
+                memory_enabled=True,
             )
         super().__init__(config)
         # Override llm if provided
         if llm is not None:
             self.llm = llm
-        elif not hasattr(self, 'llm') or not self.llm:
+        elif not hasattr(self, "llm") or not self.llm:
             # Use the new LCEL compatibility layer
-            self.llm = get_compatible_llm(
-                model_name="gpt-4",
-                temperature=0.1
-            )
+            self.llm = get_compatible_llm(model_name="gpt-4", temperature=0.1)
         self.optimization_level = optimization_level
         self.pattern_database = self._load_optimization_patterns()
 
-    def _load_optimization_patterns(self) -> Dict[str, Any]:
+    def _load_optimization_patterns(self) -> dict[str, Any]:
         """Load database of common optimization patterns"""
         return {
             "loop_optimizations": {
@@ -143,122 +176,162 @@ class RobloxScriptOptimizationAgent(BaseAgent):
                     "pattern": r"for\s+\w+,\s*\w+\s+in\s+pairs\(([^)]+)\)\s+do",
                     "condition": "array_iteration",
                     "replacement": "for i, v in ipairs({0}) do",
-                    "description": "Use ipairs for array iteration (faster)"
+                    "description": "Use ipairs for array iteration (faster)",
                 },
                 "cache_table_length": {
                     "pattern": r"for\s+i\s*=\s*1,\s*#(\w+)\s+do",
                     "optimization": "local len = #{0}\nfor i = 1, len do",
-                    "description": "Cache table length outside loop"
+                    "description": "Cache table length outside loop",
                 },
                 "avoid_table_insert": {
                     "pattern": r"table\.insert\((\w+),\s*(.+)\)",
                     "optimization": "{0}[#{0} + 1] = {1}",
-                    "description": "Direct indexing is faster than table.insert"
-                }
+                    "description": "Direct indexing is faster than table.insert",
+                },
             },
             "memory_optimizations": {
                 "localize_globals": {
                     "pattern": r"(\w+)\.([\w\.]+)",
                     "check": "repeated_access",
                     "optimization": "local {1}_{2} = {0}.{1}",
-                    "description": "Localize frequently accessed globals"
+                    "description": "Localize frequently accessed globals",
                 },
                 "reuse_tables": {
                     "pattern": r"local\s+(\w+)\s*=\s*\{\}",
                     "check": "in_loop",
                     "optimization": "table.clear({0}) -- reuse existing table",
-                    "description": "Reuse tables instead of creating new ones"
+                    "description": "Reuse tables instead of creating new ones",
                 },
                 "weak_references": {
                     "pattern": r"cache\[(.+)\]\s*=\s*(.+)",
                     "suggestion": "setmetatable(cache, {__mode = 'v'}) -- weak values",
-                    "description": "Use weak tables for caches"
-                }
+                    "description": "Use weak tables for caches",
+                },
             },
             "event_optimizations": {
                 "debounce_connections": {
                     "pattern": r"\.(\w+):Connect\(function",
                     "check": "high_frequency_event",
                     "optimization": "Add debounce for high-frequency events",
-                    "description": "Debounce high-frequency events"
+                    "description": "Debounce high-frequency events",
                 },
                 "disconnect_unused": {
                     "pattern": r"(\w+):Connect\(",
                     "suggestion": "Store and disconnect when not needed",
-                    "description": "Disconnect unused event connections"
-                }
+                    "description": "Disconnect unused event connections",
+                },
             },
             "roblox_specific": {
                 "batch_property_changes": {
                     "pattern": r"(\w+)\.(\w+)\s*=\s*(.+)\n\s*\1\.(\w+)\s*=",
                     "optimization": "Batch property changes together",
-                    "description": "Batch Instance property changes"
+                    "description": "Batch Instance property changes",
                 },
                 "use_heartbeat": {
                     "pattern": r"while\s+true\s+do.*?wait\(",
                     "optimization": "RunService.Heartbeat:Connect()",
-                    "description": "Use Heartbeat instead of while-wait loops"
+                    "description": "Use Heartbeat instead of while-wait loops",
                 },
                 "cache_findchild": {
                     "pattern": r":FindFirstChild\([\"'](\w+)[\"']\)",
                     "check": "repeated_access",
                     "optimization": "Cache FindFirstChild results",
-                    "description": "Cache frequently accessed children"
-                }
-            }
+                    "description": "Cache frequently accessed children",
+                },
+            },
         }
 
-    def _analyze_script_performance(self, code: str) -> List[PerformanceIssue]:
+    def _analyze_script_performance(self, code: str) -> list[PerformanceIssue]:
         """Analyze script for performance issues"""
         issues = []
-        lines = code.split('\n')
+        lines = code.split("\n")
 
         # Check for common performance issues
         performance_checks = [
-            (r"wait\(\)", "critical", "Using wait() without arguments",
-             "Use task.wait() or specify wait time"),
-            (r"while true do", "high", "Infinite loop without yielding",
-             "Use RunService events instead"),
-            (r"Instance\.new.*Parent\s*=", "high", "Setting Parent in constructor",
-             "Set Parent after configuring properties"),
-            (r"GetChildren\(\)", "medium", "GetChildren in loops",
-             "Cache GetChildren result if used multiple times"),
-            (r"workspace\.", "low", "Direct workspace access",
-             "Consider caching workspace references"),
-            (r"_G\[", "high", "Using _G global table",
-             "Use ModuleScripts for shared data"),
-            (r"getfenv|setfenv|loadstring", "critical", "Using dangerous functions",
-             "These functions are deprecated/dangerous"),
-            (r"spawn\(", "medium", "Using spawn for threading",
-             "Use task.spawn() instead"),
-            (r"delay\(", "medium", "Using delay for scheduling",
-             "Use task.delay() instead")
+            (
+                r"wait\(\)",
+                "critical",
+                "Using wait() without arguments",
+                "Use task.wait() or specify wait time",
+            ),
+            (
+                r"while true do",
+                "high",
+                "Infinite loop without yielding",
+                "Use RunService events instead",
+            ),
+            (
+                r"Instance\.new.*Parent\s*=",
+                "high",
+                "Setting Parent in constructor",
+                "Set Parent after configuring properties",
+            ),
+            (
+                r"GetChildren\(\)",
+                "medium",
+                "GetChildren in loops",
+                "Cache GetChildren result if used multiple times",
+            ),
+            (
+                r"workspace\.",
+                "low",
+                "Direct workspace access",
+                "Consider caching workspace references",
+            ),
+            (
+                r"_G\[",
+                "high",
+                "Using _G global table",
+                "Use ModuleScripts for shared data",
+            ),
+            (
+                r"getfenv|setfenv|loadstring",
+                "critical",
+                "Using dangerous functions",
+                "These functions are deprecated/dangerous",
+            ),
+            (
+                r"spawn\(",
+                "medium",
+                "Using spawn for threading",
+                "Use task.spawn() instead",
+            ),
+            (
+                r"delay\(",
+                "medium",
+                "Using delay for scheduling",
+                "Use task.delay() instead",
+            ),
         ]
 
         for i, line in enumerate(lines, 1):
             for pattern, severity, issue_type, suggestion in performance_checks:
                 if re.search(pattern, line, re.IGNORECASE):
-                    issues.append(PerformanceIssue(
-                        severity=severity,
-                        location=f"Line {i}",
-                        issue_type=issue_type,
-                        description=f"Found: {line.strip()}",
-                        suggestion=suggestion,
-                        estimated_impact="5-20% performance improvement"
-                    ))
+                    issues.append(
+                        PerformanceIssue(
+                            severity=severity,
+                            location=f"Line {i}",
+                            issue_type=issue_type,
+                            description=f"Found: {line.strip()}",
+                            suggestion=suggestion,
+                            estimated_impact="5-20% performance improvement",
+                        )
+                    )
 
         # Check for memory leaks
         connection_count = len(re.findall(r":Connect\(", code))
         disconnect_count = len(re.findall(r":Disconnect\(\)", code))
         if connection_count > disconnect_count + 2:
-            issues.append(PerformanceIssue(
-                severity="high",
-                location="Global",
-                issue_type="Potential memory leak",
-                description=f"{connection_count} connections but only {disconnect_count} disconnects",
-                suggestion="Store and disconnect event connections when no longer needed",
-                estimated_impact="Prevents memory leaks"
-            ))
+            issues.append(
+                PerformanceIssue(
+                    severity="high",
+                    location="Global",
+                    issue_type="Potential memory leak",
+                    description=f"{connection_count} connections but only {disconnect_count} disconnects",
+                    suggestion="Store and disconnect event connections when no longer needed",
+                    estimated_impact="Prevents memory leaks",
+                )
+            )
 
         return issues
 
@@ -276,13 +349,14 @@ class RobloxScriptOptimizationAgent(BaseAgent):
             if code.count(f"#{table_name}") > 1:
                 # Add length caching
                 replacement = f"local {table_name}_len = #{table_name}\nfor {var_name} = 1, {table_name}_len do"
-                optimized = optimized[:match.start()] + replacement + optimized[match.end():]
+                optimized = optimized[: match.start()] + replacement + optimized[match.end() :]
 
         # Replace pairs with ipairs for arrays
         pattern = r"for\s+(\w+),\s*(\w+)\s+in\s+pairs\((\w+)\)\s+do"
+
         def replace_pairs(match):
             # Check if it's likely an array (heuristic)
-            context = optimized[max(0, match.start()-100):match.end()+100]
+            context = optimized[max(0, match.start() - 100) : match.end() + 100]
             if "[1]" in context or "#" + match.group(3) in context:
                 return f"for {match.group(1)}, {match.group(2)} in ipairs({match.group(3)}) do"
             return match.group(0)
@@ -297,6 +371,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
 
         # Replace table.insert with direct indexing for append operations
         pattern = r"table\.insert\((\w+),\s*([^,)]+)\)"
+
         def replace_insert(match):
             table_name = match.group(1)
             value = match.group(2)
@@ -305,21 +380,23 @@ class RobloxScriptOptimizationAgent(BaseAgent):
         optimized = re.sub(pattern, replace_insert, optimized)
 
         # Add table.clear for reused tables
-        lines = optimized.split('\n')
+        lines = optimized.split("\n")
         optimized_lines = []
         for i, line in enumerate(lines):
             if "local" in line and "= {}" in line:
                 # Check if this table is in a loop
                 indent = len(line) - len(line.lstrip())
-                if i > 0 and ("for " in lines[i-1] or "while " in lines[i-1]):
+                if i > 0 and ("for " in lines[i - 1] or "while " in lines[i - 1]):
                     var_name = re.search(r"local\s+(\w+)\s*=\s*\{\}", line)
                     if var_name:
                         # Add table declaration outside loop
-                        optimized_lines.insert(-1, " " * (indent - 4) + f"local {var_name.group(1)} = {{}}")
+                        optimized_lines.insert(
+                            -1, " " * (indent - 4) + f"local {var_name.group(1)} = {{}}"
+                        )
                         line = " " * indent + f"table.clear({var_name.group(1)})"
             optimized_lines.append(line)
 
-        optimized = '\n'.join(optimized_lines)
+        optimized = "\n".join(optimized_lines)
         return optimized
 
     def _optimize_roblox_specific(self, code: str) -> str:
@@ -337,21 +414,23 @@ class RobloxScriptOptimizationAgent(BaseAgent):
 
         # Optimize Instance.new with Parent setting
         pattern = r"local\s+(\w+)\s*=\s*Instance\.new\([\"'](\w+)[\"'],\s*([^)]+)\)"
+
         def optimize_instance_new(match):
             var_name = match.group(1)
             class_name = match.group(2)
             parent = match.group(3)
-            return f"local {var_name} = Instance.new(\"{class_name}\")\n{var_name}.Parent = {parent}"
+            return f'local {var_name} = Instance.new("{class_name}")\n{var_name}.Parent = {parent}'
 
         optimized = re.sub(pattern, optimize_instance_new, optimized)
 
         # Replace while true loops with Heartbeat
         pattern = r"while\s+true\s+do(.*?)wait\(([\d\.]*)\)(.*?)end"
+
         def replace_while_loop(match):
             body = match.group(1) + match.group(3)
             wait_time = match.group(2) or "0"
             if float(wait_time) < 0.1:
-                return f"game:GetService(\"RunService\").Heartbeat:Connect(function()\n{body}\nend)"
+                return f'game:GetService("RunService").Heartbeat:Connect(function()\n{body}\nend)'
             return match.group(0)
 
         optimized = re.sub(pattern, replace_while_loop, optimized, flags=re.DOTALL)
@@ -361,7 +440,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
     def _add_caching(self, code: str) -> str:
         """Add caching for frequently accessed values"""
         optimized = code
-        lines = optimized.split('\n')
+        lines = optimized.split("\n")
 
         # Find frequently accessed services
         service_pattern = r"game:GetService\([\"'](\w+)[\"']\)"
@@ -376,11 +455,11 @@ class RobloxScriptOptimizationAgent(BaseAgent):
             cache_lines = ["-- Cached Services"]
             for service, count in services.items():
                 if count > 1:
-                    cache_lines.append(f"local {service} = game:GetService(\"{service}\")")
+                    cache_lines.append(f'local {service} = game:GetService("{service}")')
 
             # Add cache lines at the beginning
             if len(cache_lines) > 1:
-                optimized = '\n'.join(cache_lines) + '\n\n' + optimized
+                optimized = "\n".join(cache_lines) + "\n\n" + optimized
 
                 # Replace GetService calls with cached versions
                 for service in services:
@@ -394,7 +473,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
         self,
         code: str,
         optimization_level: Optional[OptimizationLevel] = None,
-        preserve_comments: bool = True
+        preserve_comments: bool = True,
     ) -> OptimizationResult:
         """
         Optimize a Roblox Luau script
@@ -424,8 +503,8 @@ class RobloxScriptOptimizationAgent(BaseAgent):
             optimized = self._optimize_roblox_specific(optimized)
 
         # Calculate metrics
-        original_lines = len(code.split('\n'))
-        optimized_lines = len(optimized.split('\n'))
+        original_lines = len(code.split("\n"))
+        optimized_lines = len(optimized.split("\n"))
 
         metrics = {
             "original_lines": original_lines,
@@ -433,7 +512,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
             "issues_found": len(issues),
             "critical_issues": sum(1 for i in issues if i.severity == "critical"),
             "estimated_performance_gain": f"{len(issues) * 5}-{len(issues) * 15}%",
-            "memory_optimizations": len(re.findall(r"table\.clear|weak.*table|cache", optimized))
+            "memory_optimizations": len(re.findall(r"table\.clear|weak.*table|cache", optimized)),
         }
 
         compatibility_notes = []
@@ -448,10 +527,10 @@ class RobloxScriptOptimizationAgent(BaseAgent):
             issues_found=issues,
             metrics=metrics,
             optimization_level=level,
-            compatibility_notes=compatibility_notes
+            compatibility_notes=compatibility_notes,
         )
 
-    def benchmark_script(self, code: str) -> Dict[str, Any]:
+    def benchmark_script(self, code: str) -> dict[str, Any]:
         """
         Generate benchmark code for performance testing
 
@@ -461,7 +540,7 @@ class RobloxScriptOptimizationAgent(BaseAgent):
         Returns:
             Benchmark harness code and instructions
         """
-        benchmark_template = '''
+        benchmark_template = """
 -- Performance Benchmark Harness
 local RunService = game:GetService("RunService")
 
@@ -534,7 +613,7 @@ local results = {}
 -- end, 10000))
 
 return results
-'''
+"""
 
         return {
             "benchmark_code": benchmark_template.format(code=code),
@@ -543,20 +622,18 @@ return results
                 "2. Add your specific test cases in the benchmark section",
                 "3. Run in Studio's command bar or as a Script",
                 "4. Compare results between original and optimized versions",
-                "5. Test on different devices for comprehensive results"
+                "5. Test on different devices for comprehensive results",
             ],
             "metrics_to_track": [
                 "Execution time",
                 "Memory usage",
                 "Frame rate impact",
-                "Operations per second"
-            ]
+                "Operations per second",
+            ],
         }
 
     def generate_optimization_report(
-        self,
-        original_code: str,
-        optimized_result: OptimizationResult
+        self, original_code: str, optimized_result: OptimizationResult
     ) -> str:
         """Generate a detailed optimization report"""
         report = f"""
@@ -616,11 +693,12 @@ return results
 ## Compatibility Notes
 
 """.format(
-            original_lines=optimized_result.metrics['original_lines'],
-            optimized_lines=optimized_result.metrics['optimized_lines'],
-            line_change=optimized_result.metrics['optimized_lines'] - optimized_result.metrics['original_lines'],
-            memory_opts=optimized_result.metrics.get('memory_optimizations', 0),
-            issues_found=len(optimized_result.issues_found)
+            original_lines=optimized_result.metrics["original_lines"],
+            optimized_lines=optimized_result.metrics["optimized_lines"],
+            line_change=optimized_result.metrics["optimized_lines"]
+            - optimized_result.metrics["original_lines"],
+            memory_opts=optimized_result.metrics.get("memory_optimizations", 0),
+            issues_found=len(optimized_result.issues_found),
         )
 
         if optimized_result.compatibility_notes:
@@ -669,7 +747,7 @@ return results
         level_map = {
             "conservative": OptimizationLevel.CONSERVATIVE,
             "balanced": OptimizationLevel.BALANCED,
-            "aggressive": OptimizationLevel.AGGRESSIVE
+            "aggressive": OptimizationLevel.AGGRESSIVE,
         }
         opt_level = level_map.get(optimization_level.lower(), OptimizationLevel.BALANCED)
 
@@ -677,7 +755,7 @@ return results
             return TaskResult(
                 success=False,
                 error="No script provided for optimization",
-                message="Script code is required"
+                message="Script code is required",
             )
 
         try:
@@ -685,7 +763,7 @@ return results
             result = self.optimize_script(
                 script_code,
                 optimization_level=opt_level,
-                preserve_comments=preserve_comments
+                preserve_comments=preserve_comments,
             )
 
             return TaskResult(
@@ -700,22 +778,18 @@ return results
                             "type": issue.issue_type,
                             "description": issue.description,
                             "suggestion": issue.suggestion,
-                            "impact": issue.estimated_impact
+                            "impact": issue.estimated_impact,
                         }
                         for issue in result.issues_found
                     ],
                     "metrics": result.metrics,
                     "optimization_level": result.optimization_level.value,
-                    "performance_gain": result.metrics.get("estimated_performance_gain", "Unknown")
+                    "performance_gain": result.metrics.get("estimated_performance_gain", "Unknown"),
                 },
-                message=f"Script optimized with {len(result.issues_found)} issues found"
+                message=f"Script optimized with {len(result.issues_found)} issues found",
             )
         except Exception as e:
-            return TaskResult(
-                success=False,
-                error=str(e),
-                message="Optimization failed"
-            )
+            return TaskResult(success=False, error=str(e), message="Optimization failed")
 
 
 # Example usage
@@ -756,8 +830,7 @@ if __name__ == "__main__":
 
     optimizer = RobloxScriptOptimizationAgent()
     result = optimizer.optimize_script(
-        example_script,
-        optimization_level=OptimizationLevel.AGGRESSIVE
+        example_script, optimization_level=OptimizationLevel.AGGRESSIVE
     )
 
     print("Optimized Code:")

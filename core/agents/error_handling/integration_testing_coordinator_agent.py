@@ -6,49 +6,62 @@ the ToolBoxAI platform, ensuring proper testing workflows and coverage.
 """
 
 import asyncio
+import json
 import logging
-from typing import Dict, Any, List, Optional, Set
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-import json
+from typing import Any, Optional, Set
 
 from langchain_core.tools import Tool
 from pydantic import BaseModel, Field
 
-from .base_error_agent import BaseErrorAgent, ErrorAgentConfig, ErrorState, ErrorType, ErrorPriority
 from core.agents.base_agent import TaskResult
+
+from .base_error_agent import (
+    BaseErrorAgent,
+    ErrorAgentConfig,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class TestSuite(BaseModel):
     """Model for test suite configuration"""
+
     suite_id: str = Field(description="Unique identifier for the test suite")
     name: str = Field(description="Human-readable name of the test suite")
-    test_files: List[str] = Field(default_factory=list, description="List of test files in the suite")
-    dependencies: List[str] = Field(default_factory=list, description="Dependencies required for this suite")
+    test_files: list[str] = Field(
+        default_factory=list, description="List of test files in the suite"
+    )
+    dependencies: list[str] = Field(
+        default_factory=list, description="Dependencies required for this suite"
+    )
     environment: str = Field(default="testing", description="Environment for running tests")
     timeout_minutes: int = Field(default=30, description="Timeout for the entire suite")
     priority: int = Field(default=1, description="Priority level (1-5)")
-    tags: List[str] = Field(default_factory=list, description="Tags for categorizing tests")
+    tags: list[str] = Field(default_factory=list, description="Tags for categorizing tests")
 
 
 class TestResult(BaseModel):
     """Model for test execution results"""
+
     test_id: str = Field(description="Unique identifier for the test")
     suite_id: str = Field(description="ID of the test suite this belongs to")
     status: str = Field(description="Test status: passed, failed, skipped, error")
     duration_seconds: float = Field(description="Execution time in seconds")
     error_message: Optional[str] = Field(default=None, description="Error message if test failed")
     stack_trace: Optional[str] = Field(default=None, description="Stack trace for failed tests")
-    coverage_percentage: Optional[float] = Field(default=None, description="Code coverage percentage")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional test metadata")
+    coverage_percentage: Optional[float] = Field(
+        default=None, description="Code coverage percentage"
+    )
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional test metadata")
 
 
 @dataclass
 class IntegrationTestConfig(ErrorAgentConfig):
     """Configuration specific to integration testing coordination"""
+
     test_suites_path: str = "tests/integration"
     test_results_path: str = "test_results"
     max_parallel_suites: int = 3
@@ -77,14 +90,14 @@ class IntegrationTestingCoordinatorAgent(BaseErrorAgent):
         if config is None:
             config = IntegrationTestConfig(
                 name="IntegrationTestingCoordinator",
-                description="Coordinates integration testing activities"
+                description="Coordinates integration testing activities",
             )
 
         super().__init__(config)
         self.test_config = config
-        self.test_suites: List[TestSuite] = []
-        self.test_results: List[TestResult] = []
-        self.running_tests: Dict[str, Dict[str, Any]] = {}
+        self.test_suites: list[TestSuite] = []
+        self.test_results: list[TestResult] = []
+        self.running_tests: dict[str, dict[str, Any]] = {}
         self.flaky_tests: Set[str] = set()
 
         # Load test suites
@@ -118,44 +131,54 @@ Key principles:
 You have access to specialized tools for test orchestration and analysis.
 Always provide detailed test reports and actionable recommendations."""
 
-    def _create_testing_tools(self) -> List[Tool]:
+    def _create_testing_tools(self) -> list[Tool]:
         """Create specialized tools for integration testing"""
         tools = []
 
         # Test suite executor
-        tools.append(Tool(
-            name="execute_test_suite",
-            description="Execute a specific test suite",
-            func=self._execute_test_suite_tool
-        ))
+        tools.append(
+            Tool(
+                name="execute_test_suite",
+                description="Execute a specific test suite",
+                func=self._execute_test_suite_tool,
+            )
+        )
 
         # Test result analyzer
-        tools.append(Tool(
-            name="analyze_test_results",
-            description="Analyze test results and generate report",
-            func=self._analyze_test_results_tool
-        ))
+        tools.append(
+            Tool(
+                name="analyze_test_results",
+                description="Analyze test results and generate report",
+                func=self._analyze_test_results_tool,
+            )
+        )
 
         # Coverage calculator
-        tools.append(Tool(
-            name="calculate_coverage",
-            description="Calculate code coverage from test results",
-            func=self._calculate_coverage_tool
-        ))
+        tools.append(
+            Tool(
+                name="calculate_coverage",
+                description="Calculate code coverage from test results",
+                func=self._calculate_coverage_tool,
+            )
+        )
 
         # Flaky test detector
-        tools.append(Tool(
-            name="detect_flaky_tests",
-            description="Detect flaky or unreliable tests",
-            func=self._detect_flaky_tests_tool
-        ))
+        tools.append(
+            Tool(
+                name="detect_flaky_tests",
+                description="Detect flaky or unreliable tests",
+                func=self._detect_flaky_tests_tool,
+            )
+        )
 
         # Test environment validator
-        tools.append(Tool(
-            name="validate_test_environment",
-            description="Validate test environment configuration",
-            func=self._validate_test_environment_tool
-        ))
+        tools.append(
+            Tool(
+                name="validate_test_environment",
+                description="Validate test environment configuration",
+                func=self._validate_test_environment_tool,
+            )
+        )
 
         return tools
 
@@ -171,7 +194,7 @@ Always provide detailed test reports and actionable recommendations."""
         # Load from JSON files
         for suite_file in suites_path.glob("*.json"):
             try:
-                with open(suite_file, 'r') as f:
+                with open(suite_file) as f:
                     suite_data = json.load(f)
                     self.test_suites.append(TestSuite(**suite_data))
                 logger.info(f"Loaded test suite from {suite_file}")
@@ -192,7 +215,7 @@ Always provide detailed test reports and actionable recommendations."""
                 environment="testing",
                 timeout_minutes=20,
                 priority=1,
-                tags=["api", "integration", "critical"]
+                tags=["api", "integration", "critical"],
             ),
             TestSuite(
                 suite_id="database_integration",
@@ -202,7 +225,7 @@ Always provide detailed test reports and actionable recommendations."""
                 environment="testing",
                 timeout_minutes=15,
                 priority=2,
-                tags=["database", "integration"]
+                tags=["database", "integration"],
             ),
             TestSuite(
                 suite_id="roblox_integration",
@@ -212,18 +235,21 @@ Always provide detailed test reports and actionable recommendations."""
                 environment="testing",
                 timeout_minutes=30,
                 priority=1,
-                tags=["roblox", "integration", "content"]
+                tags=["roblox", "integration", "content"],
             ),
             TestSuite(
                 suite_id="agent_integration",
                 name="Agent System Integration Tests",
-                test_files=["test_agent_communication.py", "test_swarm_coordination.py"],
+                test_files=[
+                    "test_agent_communication.py",
+                    "test_swarm_coordination.py",
+                ],
                 dependencies=["pytest", "langchain", "asyncio"],
                 environment="testing",
                 timeout_minutes=25,
                 priority=1,
-                tags=["agents", "swarm", "integration"]
-            )
+                tags=["agents", "swarm", "integration"],
+            ),
         ]
 
         self.test_suites = default_suites
@@ -237,12 +263,14 @@ Always provide detailed test reports and actionable recommendations."""
         for suite in self.test_suites:
             suite_file = suites_path / f"{suite.suite_id}.json"
             try:
-                with open(suite_file, 'w') as f:
+                with open(suite_file, "w") as f:
                     json.dump(suite.model_dump(), f, indent=2)
             except Exception as e:
                 logger.error(f"Failed to save test suite {suite.suite_id}: {e}")
 
-    async def execute_integration_tests(self, suite_ids: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def execute_integration_tests(
+        self, suite_ids: Optional[List[str]] = None
+    ) -> dict[str, Any]:
         """
         Execute integration tests for specified suites or all suites.
 
@@ -287,11 +315,13 @@ Always provide detailed test reports and actionable recommendations."""
         for i, result in enumerate(suite_results):
             if isinstance(result, Exception):
                 logger.error(f"Suite execution failed: {result}")
-                execution_results.append({
-                    "suite_id": suites_to_run[i].suite_id,
-                    "status": "error",
-                    "error": str(result)
-                })
+                execution_results.append(
+                    {
+                        "suite_id": suites_to_run[i].suite_id,
+                        "status": "error",
+                        "error": str(result),
+                    }
+                )
             else:
                 execution_results.append(result)
                 if "metrics" in result:
@@ -317,7 +347,7 @@ Always provide detailed test reports and actionable recommendations."""
             "success_rate": passed_tests / total_tests if total_tests > 0 else 0,
             "average_coverage": total_coverage / len(execution_results) if execution_results else 0,
             "results": execution_results,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Detect and handle failures
@@ -329,12 +359,14 @@ Always provide detailed test reports and actionable recommendations."""
 
         return summary
 
-    async def _execute_suite_with_semaphore(self, semaphore: asyncio.Semaphore, suite: TestSuite) -> Dict[str, Any]:
+    async def _execute_suite_with_semaphore(
+        self, semaphore: asyncio.Semaphore, suite: TestSuite
+    ) -> dict[str, Any]:
         """Execute a test suite with semaphore control"""
         async with semaphore:
             return await self._execute_single_suite(suite)
 
-    async def _execute_single_suite(self, suite: TestSuite) -> Dict[str, Any]:
+    async def _execute_single_suite(self, suite: TestSuite) -> dict[str, Any]:
         """Execute a single test suite"""
         logger.info(f"Executing test suite: {suite.name}")
 
@@ -342,7 +374,7 @@ Always provide detailed test reports and actionable recommendations."""
         self.running_tests[suite.suite_id] = {
             "suite": suite,
             "start_time": start_time,
-            "status": "running"
+            "status": "running",
         }
 
         try:
@@ -360,11 +392,13 @@ Always provide detailed test reports and actionable recommendations."""
             end_time = datetime.now()
             execution_time = (end_time - start_time).total_seconds()
 
-            result.update({
-                "suite_id": suite.suite_id,
-                "execution_time_seconds": execution_time,
-                "status": "completed"
-            })
+            result.update(
+                {
+                    "suite_id": suite.suite_id,
+                    "execution_time_seconds": execution_time,
+                    "status": "completed",
+                }
+            )
 
             # Store results
             self._store_test_results(suite.suite_id, result)
@@ -377,12 +411,12 @@ Always provide detailed test reports and actionable recommendations."""
                 "suite_id": suite.suite_id,
                 "status": "error",
                 "error": str(e),
-                "execution_time_seconds": (datetime.now() - start_time).total_seconds()
+                "execution_time_seconds": (datetime.now() - start_time).total_seconds(),
             }
         finally:
             self.running_tests.pop(suite.suite_id, None)
 
-    async def _simulate_test_execution(self, suite: TestSuite) -> Dict[str, Any]:
+    async def _simulate_test_execution(self, suite: TestSuite) -> dict[str, Any]:
         """Simulate test execution results (replace with actual test runner)"""
         import random
 
@@ -399,14 +433,14 @@ Always provide detailed test reports and actionable recommendations."""
                 "passed": passed,
                 "failed": failed,
                 "skipped": skipped,
-                "coverage": coverage
+                "coverage": coverage,
             },
             "test_files": suite.test_files,
             "coverage_details": {
                 "line_coverage": coverage,
                 "branch_coverage": coverage * 0.9,
-                "function_coverage": coverage * 1.1
-            }
+                "function_coverage": coverage * 1.1,
+            },
         }
 
     async def _validate_environment(self, suite: TestSuite) -> bool:
@@ -425,7 +459,7 @@ Always provide detailed test reports and actionable recommendations."""
 
         return True
 
-    def _store_test_results(self, suite_id: str, results: Dict[str, Any]):
+    def _store_test_results(self, suite_id: str, results: dict[str, Any]):
         """Store test results for analysis"""
         results_path = Path(self.test_config.test_results_path)
         results_path.mkdir(parents=True, exist_ok=True)
@@ -434,18 +468,21 @@ Always provide detailed test reports and actionable recommendations."""
         result_file = results_path / f"{suite_id}_{timestamp}.json"
 
         try:
-            with open(result_file, 'w') as f:
+            with open(result_file, "w") as f:
                 json.dump(results, f, indent=2, default=str)
         except Exception as e:
             logger.error(f"Failed to store test results: {e}")
 
-    async def _handle_test_failures(self, execution_results: List[Dict[str, Any]]):
+    async def _handle_test_failures(self, execution_results: list[Dict[str, Any]]):
         """Handle test failures by creating error states"""
         for result in execution_results:
-            if result.get("status") == "completed" and result.get("metrics", {}).get("failed", 0) > 0:
+            if (
+                result.get("status") == "completed"
+                and result.get("metrics", {}).get("failed", 0) > 0
+            ):
                 await self._create_failure_error_state(result)
 
-    async def _create_failure_error_state(self, result: Dict[str, Any]):
+    async def _create_failure_error_state(self, result: dict[str, Any]):
         """Create error state for test failures"""
         suite_id = result["suite_id"]
         failed_count = result["metrics"]["failed"]
@@ -456,12 +493,9 @@ Always provide detailed test reports and actionable recommendations."""
             "context": {
                 "suite_id": suite_id,
                 "failed_tests": failed_count,
-                "test_results": result
+                "test_results": result,
             },
-            "metadata": {
-                "source": "integration_testing",
-                "severity": "test_failure"
-            }
+            "metadata": {"source": "integration_testing", "severity": "test_failure"},
         }
 
         error_state = await self.detect_error(error_data)
@@ -470,7 +504,7 @@ Always provide detailed test reports and actionable recommendations."""
         fix_suggestions = await self.suggest_fix(error_state)
         logger.info(f"Generated fix suggestions for test failures: {fix_suggestions}")
 
-    async def _update_flaky_test_detection(self, execution_results: List[Dict[str, Any]]):
+    async def _update_flaky_test_detection(self, execution_results: list[Dict[str, Any]]):
         """Update flaky test detection based on execution patterns"""
         # This would analyze test result patterns to identify flaky tests
         # For now, we'll use a simple simulation
@@ -483,7 +517,7 @@ Always provide detailed test reports and actionable recommendations."""
                 else:
                     self.flaky_tests.add(suite_id)
 
-    async def get_test_status(self) -> Dict[str, Any]:
+    async def get_test_status(self) -> dict[str, Any]:
         """Get current testing status and metrics"""
         return {
             "total_suites": len(self.test_suites),
@@ -495,10 +529,10 @@ Always provide detailed test reports and actionable recommendations."""
                     "suite_id": suite.suite_id,
                     "name": suite.name,
                     "priority": suite.priority,
-                    "tags": suite.tags
+                    "tags": suite.tags,
                 }
                 for suite in self.test_suites
-            ]
+            ],
         }
 
     # Tool implementation methods
@@ -533,7 +567,7 @@ Always provide detailed test reports and actionable recommendations."""
         """Tool for validating test environment"""
         return "Test environment validation completed"
 
-    async def execute_task(self, task_data: Dict[str, Any]) -> TaskResult:
+    async def execute_task(self, task_data: dict[str, Any]) -> TaskResult:
         """Execute integration testing coordination task"""
         task_type = task_data.get("task_type", "execute_tests")
 
@@ -544,7 +578,7 @@ Always provide detailed test reports and actionable recommendations."""
                 return TaskResult.create(
                     success=True,
                     data=result,
-                    message="Integration tests executed successfully"
+                    message="Integration tests executed successfully",
                 )
 
             elif task_type == "get_status":
@@ -552,14 +586,14 @@ Always provide detailed test reports and actionable recommendations."""
                 return TaskResult.create(
                     success=True,
                     data=status,
-                    message="Test status retrieved successfully"
+                    message="Test status retrieved successfully",
                 )
 
             else:
                 return TaskResult.create(
                     success=False,
                     error=f"Unknown task type: {task_type}",
-                    message="Task execution failed"
+                    message="Task execution failed",
                 )
 
         except Exception as e:
@@ -567,5 +601,5 @@ Always provide detailed test reports and actionable recommendations."""
             return TaskResult.create(
                 success=False,
                 error=str(e),
-                message="Integration testing coordination failed"
+                message="Integration testing coordination failed",
             )

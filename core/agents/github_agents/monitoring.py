@@ -3,7 +3,7 @@ Monitoring module for the GitHub Agent System.
 """
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 
 class GitHubAgentMonitoring:
@@ -19,24 +19,28 @@ class GitHubAgentMonitoring:
         if agent_name not in self.metrics:
             self.metrics[agent_name] = []
 
-        self.metrics[agent_name].append({
-            "operation": operation,
-            "duration": duration,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.metrics[agent_name].append(
+            {
+                "operation": operation,
+                "duration": duration,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
     async def send_alert(self, severity: str, message: str):
         """Send an alert."""
-        self.alerts.append({
-            "severity": severity,
-            "message": message,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.alerts.append(
+            {
+                "severity": severity,
+                "message": message,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get metrics summary."""
         return {
             "agents": list(self.metrics.keys()),
             "total_operations": sum(len(ops) for ops in self.metrics.values()),
-            "alerts": self.alerts
+            "alerts": self.alerts,
         }

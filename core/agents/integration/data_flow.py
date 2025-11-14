@@ -5,20 +5,24 @@ This module provides agents for managing data flow, schema validation,
 event bus operations, cache invalidation, and conflict resolution.
 """
 
-from typing import Dict, Any, Optional, List, Set
-from datetime import datetime
 import asyncio
 import logging
+from datetime import datetime
 from enum import Enum
-import json
+from typing import Any, Optional
 
-from .base_integration_agent import BaseIntegrationAgent, IntegrationPlatform, IntegrationEvent
+from .base_integration_agent import (
+    BaseIntegrationAgent,
+    IntegrationEvent,
+    IntegrationPlatform,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class SchemaType(Enum):
     """Schema validation types"""
+
     JSON_SCHEMA = "json_schema"
     PROTOBUF = "protobuf"
     GRAPHQL = "graphql"
@@ -32,10 +36,10 @@ class SchemaValidatorAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "SchemaValidatorAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.schemas: Dict[str, Any] = {}
-        self.validation_history: List[Dict[str, Any]] = []
+        self.schemas: dict[str, Any] = {}
+        self.validation_history: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on schema validator"""
         return {
             "status": "healthy",
@@ -43,12 +47,17 @@ class SchemaValidatorAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "registered_schemas": len(self.schemas),
             "validations_performed": len(self.validation_history),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def register_schema(self, schema_name: str, schema_type: SchemaType,
-                            definition: Dict[str, Any], platform: IntegrationPlatform,
-                            version: str = "1.0.0"):
+    async def register_schema(
+        self,
+        schema_name: str,
+        schema_type: SchemaType,
+        definition: dict[str, Any],
+        platform: IntegrationPlatform,
+        version: str = "1.0.0",
+    ):
         """Register a schema for validation"""
         schema_key = f"{platform.value}:{schema_name}:{version}"
 
@@ -58,28 +67,36 @@ class SchemaValidatorAgent(BaseIntegrationAgent):
             "definition": definition,
             "platform": platform.value if isinstance(platform, IntegrationPlatform) else platform,
             "version": version,
-            "registered_at": datetime.utcnow()
+            "registered_at": datetime.utcnow(),
         }
 
-        await self.publish_event(IntegrationEvent(
-            event_type="schema_registered",
-            source=self.platform,
-            target=platform if isinstance(platform, IntegrationPlatform) else IntegrationPlatform.BACKEND,
-            data={"schema": schema_name, "version": version}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="schema_registered",
+                source=self.platform,
+                target=(
+                    platform
+                    if isinstance(platform, IntegrationPlatform)
+                    else IntegrationPlatform.BACKEND
+                ),
+                data={"schema": schema_name, "version": version},
+            )
+        )
 
         logger.info(f"Schema registered: {schema_key}")
 
-    async def validate(self, data: Any, schema_name: str, platform: IntegrationPlatform,
-                      version: str = "1.0.0") -> Dict[str, Any]:
+    async def validate(
+        self,
+        data: Any,
+        schema_name: str,
+        platform: IntegrationPlatform,
+        version: str = "1.0.0",
+    ) -> dict[str, Any]:
         """Validate data against a schema"""
         schema_key = f"{platform.value}:{schema_name}:{version}"
 
         if schema_key not in self.schemas:
-            return {
-                "valid": False,
-                "errors": [f"Schema {schema_key} not found"]
-            }
+            return {"valid": False, "errors": [f"Schema {schema_key} not found"]}
 
         # Mock validation
         validation_result = {
@@ -87,7 +104,7 @@ class SchemaValidatorAgent(BaseIntegrationAgent):
             "errors": [],
             "warnings": [],
             "schema": schema_key,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         # Simple type checking (mock implementation)
@@ -100,12 +117,14 @@ class SchemaValidatorAgent(BaseIntegrationAgent):
 
         self.validation_history.append(validation_result)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="schema_validated",
-            source=self.platform,
-            target=platform,
-            data=validation_result
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="schema_validated",
+                source=self.platform,
+                target=platform,
+                data=validation_result,
+            )
+        )
 
         return validation_result
 
@@ -123,11 +142,11 @@ class EventBusAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "EventBusAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.event_topics: Dict[str, List[Any]] = {}
-        self.subscribers: Dict[str, List[Any]] = {}
-        self.event_history: List[Dict[str, Any]] = []
+        self.event_topics: dict[str, list[Any]] = {}
+        self.subscribers: dict[str, list[Any]] = {}
+        self.event_history: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on event bus"""
         return {
             "status": "healthy",
@@ -136,7 +155,7 @@ class EventBusAgent(BaseIntegrationAgent):
             "topics": len(self.event_topics),
             "total_subscribers": sum(len(subs) for subs in self.subscribers.values()),
             "events_processed": len(self.event_history),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def create_topic(self, topic_name: str):
@@ -145,12 +164,14 @@ class EventBusAgent(BaseIntegrationAgent):
             self.event_topics[topic_name] = []
             self.subscribers[topic_name] = []
 
-            await self.publish_event(IntegrationEvent(
-                event_type="topic_created",
-                source=self.platform,
-                target=IntegrationPlatform.BACKEND,
-                data={"topic": topic_name}
-            ))
+            await self.publish_event(
+                IntegrationEvent(
+                    event_type="topic_created",
+                    source=self.platform,
+                    target=IntegrationPlatform.BACKEND,
+                    data={"topic": topic_name},
+                )
+            )
 
             logger.info(f"Event topic created: {topic_name}")
 
@@ -162,7 +183,7 @@ class EventBusAgent(BaseIntegrationAgent):
         self.subscribers[topic_name].append(subscriber)
         logger.info(f"Subscriber added to topic: {topic_name}")
 
-    async def publish_to_topic(self, topic_name: str, event_data: Dict[str, Any]):
+    async def publish_to_topic(self, topic_name: str, event_data: dict[str, Any]):
         """Publish an event to a topic"""
         if topic_name not in self.event_topics:
             await self.create_topic(topic_name)
@@ -170,7 +191,7 @@ class EventBusAgent(BaseIntegrationAgent):
         event = {
             "topic": topic_name,
             "data": event_data,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         self.event_topics[topic_name].append(event)
@@ -184,12 +205,14 @@ class EventBusAgent(BaseIntegrationAgent):
             except Exception as e:
                 logger.error(f"Error notifying subscriber: {e}")
 
-        await self.publish_event(IntegrationEvent(
-            event_type="event_published",
-            source=self.platform,
-            target=IntegrationPlatform.BACKEND,
-            data=event
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="event_published",
+                source=self.platform,
+                target=IntegrationPlatform.BACKEND,
+                data=event,
+            )
+        )
 
     async def cleanup(self):
         """Clean up event bus resources"""
@@ -206,11 +229,11 @@ class CacheInvalidationAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "CacheInvalidationAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.cache_keys: Set[str] = set()
-        self.invalidation_rules: Dict[str, Any] = {}
-        self.invalidation_history: List[Dict[str, Any]] = []
+        self.cache_keys: set[str] = set()
+        self.invalidation_rules: dict[str, Any] = {}
+        self.invalidation_history: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on cache invalidation"""
         return {
             "status": "healthy",
@@ -219,7 +242,7 @@ class CacheInvalidationAgent(BaseIntegrationAgent):
             "cached_keys": len(self.cache_keys),
             "invalidation_rules": len(self.invalidation_rules),
             "invalidations_performed": len(self.invalidation_history),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def register_key(self, cache_key: str, ttl: Optional[int] = None):
@@ -237,23 +260,23 @@ class CacheInvalidationAgent(BaseIntegrationAgent):
         await asyncio.sleep(ttl)
         await self.invalidate(cache_key)
 
-    async def add_rule(self, rule_name: str, pattern: str, platforms: List[IntegrationPlatform]):
+    async def add_rule(self, rule_name: str, pattern: str, platforms: list[IntegrationPlatform]):
         """Add an invalidation rule"""
         self.invalidation_rules[rule_name] = {
             "pattern": pattern,
             "platforms": [p.value if isinstance(p, IntegrationPlatform) else p for p in platforms],
-            "created_at": datetime.utcnow()
+            "created_at": datetime.utcnow(),
         }
 
         logger.info(f"Invalidation rule added: {rule_name}")
 
-    async def invalidate(self, cache_key: str, cascade: bool = False) -> Dict[str, Any]:
+    async def invalidate(self, cache_key: str, cascade: bool = False) -> dict[str, Any]:
         """Invalidate a cache key"""
         invalidation = {
             "key": cache_key,
             "cascade": cascade,
             "timestamp": datetime.utcnow().isoformat(),
-            "affected_keys": [cache_key]
+            "affected_keys": [cache_key],
         }
 
         if cache_key in self.cache_keys:
@@ -268,12 +291,14 @@ class CacheInvalidationAgent(BaseIntegrationAgent):
 
         self.invalidation_history.append(invalidation)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="cache_invalidated",
-            source=self.platform,
-            target=IntegrationPlatform.BACKEND,
-            data=invalidation
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="cache_invalidated",
+                source=self.platform,
+                target=IntegrationPlatform.BACKEND,
+                data=invalidation,
+            )
+        )
 
         logger.info(f"Cache invalidated: {cache_key} (cascade={cascade})")
 
@@ -294,10 +319,10 @@ class ConflictResolutionAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "ConflictResolutionAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.resolution_strategies: Dict[str, Any] = {}
-        self.conflict_history: List[Dict[str, Any]] = []
+        self.resolution_strategies: dict[str, Any] = {}
+        self.conflict_history: list[dict[str, Any]] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on conflict resolution"""
         return {
             "status": "healthy",
@@ -305,28 +330,35 @@ class ConflictResolutionAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "strategies": len(self.resolution_strategies),
             "conflicts_resolved": len(self.conflict_history),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def register_strategy(self, conflict_type: str, strategy: str,
-                               priority_platform: Optional[IntegrationPlatform] = None):
+    async def register_strategy(
+        self,
+        conflict_type: str,
+        strategy: str,
+        priority_platform: Optional[IntegrationPlatform] = None,
+    ):
         """Register a conflict resolution strategy"""
         self.resolution_strategies[conflict_type] = {
             "strategy": strategy,
             "priority_platform": priority_platform.value if priority_platform else None,
-            "registered_at": datetime.utcnow()
+            "registered_at": datetime.utcnow(),
         }
 
         logger.info(f"Resolution strategy registered for: {conflict_type}")
 
-    async def resolve_conflict(self, conflict_type: str,
-                              source_data: Dict[str, Any],
-                              target_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def resolve_conflict(
+        self,
+        conflict_type: str,
+        source_data: dict[str, Any],
+        target_data: dict[str, Any],
+    ) -> dict[str, Any]:
         """Resolve a data conflict"""
         resolution = {
             "conflict_type": conflict_type,
             "resolved_at": datetime.utcnow().isoformat(),
-            "strategy_used": "default"
+            "strategy_used": "default",
         }
 
         if conflict_type in self.resolution_strategies:
@@ -338,7 +370,9 @@ class ConflictResolutionAgent(BaseIntegrationAgent):
                 # Choose data with latest timestamp
                 source_time = source_data.get("updated_at", "")
                 target_time = target_data.get("updated_at", "")
-                resolution["resolved_data"] = source_data if source_time > target_time else target_data
+                resolution["resolved_data"] = (
+                    source_data if source_time > target_time else target_data
+                )
             elif strategy["strategy"] == "priority_platform":
                 # Choose data from priority platform
                 priority = strategy.get("priority_platform")
@@ -352,12 +386,14 @@ class ConflictResolutionAgent(BaseIntegrationAgent):
 
         self.conflict_history.append(resolution)
 
-        await self.publish_event(IntegrationEvent(
-            event_type="conflict_resolved",
-            source=self.platform,
-            target=IntegrationPlatform.BACKEND,
-            data=resolution
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="conflict_resolved",
+                source=self.platform,
+                target=IntegrationPlatform.BACKEND,
+                data=resolution,
+            )
+        )
 
         logger.info(f"Conflict resolved: {conflict_type} using {resolution['strategy_used']}")
 
@@ -375,5 +411,5 @@ __all__ = [
     "SchemaValidatorAgent",
     "EventBusAgent",
     "CacheInvalidationAgent",
-    "ConflictResolutionAgent"
+    "ConflictResolutionAgent",
 ]

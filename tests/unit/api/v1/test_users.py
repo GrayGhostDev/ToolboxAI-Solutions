@@ -70,7 +70,10 @@ class TestUserProfileEndpoints:
         auth_headers: dict,
     ):
         """Test successful profile update"""
-        update_data = {"display_name": "Updated Test Name", "bio": "This is my updated bio text"}
+        update_data = {
+            "display_name": "Updated Test Name",
+            "bio": "This is my updated bio text",
+        }
 
         response = await async_client.patch(
             "/api/v1/users/me/profile",
@@ -312,7 +315,7 @@ class TestUserCreationEndpoints:
         }
 
         # Create first user
-        response1 = await async_client.post(
+        await async_client.post(
             "/api/v1/users",
             json=user_data,
             headers=admin_headers,

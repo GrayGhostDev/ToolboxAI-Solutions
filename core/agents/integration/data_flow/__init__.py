@@ -9,13 +9,13 @@ This module provides agents for data flow and synchronization including:
 """
 
 from .schema_validator_agent import (
-    SchemaValidatorAgent,
     Schema,
+    SchemaEvolution,
+    SchemaMapping,
     SchemaType,
+    SchemaValidatorAgent,
     ValidationLevel,
     ValidationResult,
-    SchemaMapping,
-    SchemaEvolution
 )
 
 # Track available exports dynamically
@@ -26,24 +26,27 @@ _available_exports = [
     "ValidationLevel",
     "ValidationResult",
     "SchemaMapping",
-    "SchemaEvolution"
+    "SchemaEvolution",
 ]
 
 # Import other agents when available
 try:
     from .event_bus_agent import EventBusAgent
+
     _available_exports.append("EventBusAgent")
 except ImportError:
     pass
 
 try:
     from .cache_invalidation_agent import CacheInvalidationAgent
+
     _available_exports.append("CacheInvalidationAgent")
 except ImportError:
     pass
 
 try:
     from .conflict_resolution_agent import ConflictResolutionAgent
+
     _available_exports.append("ConflictResolutionAgent")
 except ImportError:
     pass

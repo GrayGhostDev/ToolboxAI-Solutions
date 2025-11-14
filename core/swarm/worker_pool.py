@@ -6,17 +6,15 @@ health monitoring, specialization management, and educational content optimizati
 """
 
 import asyncio
+import logging
 import time
 import uuid
-from typing import Dict, List, Optional, Set, Any, Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-import logging
-from datetime import datetime, timedelta
-import json
-import resource
+from typing import Any, Optional
+
 import psutil
-import threading
 
 logger = logging.getLogger(__name__)
 
@@ -59,13 +57,13 @@ class WorkerConfig:
     """Configuration for a worker agent in the pool."""
 
     worker_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    capabilities: List[WorkerCapability] = field(default_factory=list)
+    capabilities: list[WorkerCapability] = field(default_factory=list)
     max_concurrent_tasks: int = 5
     timeout_seconds: int = 300
     retry_attempts: int = 3
     priority: int = 1
-    resource_limits: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    resource_limits: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -93,9 +91,7 @@ class WorkerMetrics:
         if total_tasks > 0:
             self.error_rate = self.tasks_failed / total_tasks
             if self.tasks_completed > 0:
-                self.average_task_time = (
-                    self.total_execution_time / self.tasks_completed
-                )
+                self.average_task_time = self.total_execution_time / self.tasks_completed
 
 
 class WorkerAgent:
@@ -109,9 +105,9 @@ class WorkerAgent:
     def __init__(
         self,
         worker_id: str,
-        capabilities: List[WorkerCapability],
+        capabilities: list[WorkerCapability],
         max_concurrent_tasks: int = 3,
-        educational_specializations: Optional[List[str]] = None,
+        educational_specializations: Optional[list[str]] = None,
     ):
         self.worker_id = worker_id
         self.capabilities = capabilities
@@ -120,7 +116,7 @@ class WorkerAgent:
 
         self.status = WorkerStatus.INITIALIZING
         self.metrics = WorkerMetrics()
-        self.current_tasks: Dict[str, Any] = {}
+        self.current_tasks: dict[str, Any] = {}
         self.task_queue: asyncio.Queue = asyncio.Queue()
 
         # Resource monitoring
@@ -128,18 +124,16 @@ class WorkerAgent:
         self.start_time = time.time()
 
         # Educational context
-        self.subject_expertise: Dict[str, float] = {}  # subject -> expertise level
-        self.grade_level_adaptations: Set[int] = set()
-        self.curriculum_knowledge: List[str] = []
+        self.subject_expertise: dict[str, float] = {}  # subject -> expertise level
+        self.grade_level_adaptations: set[int] = set()
+        self.curriculum_knowledge: list[str] = []
 
         # Task execution
         self._execution_lock = asyncio.Lock()
         self._shutdown_event = asyncio.Event()
         self._worker_task: Optional[asyncio.Task] = None
 
-        logger.info(
-            f"WorkerAgent {worker_id} initialized with capabilities: {capabilities}"
-        )
+        logger.info(f"WorkerAgent {worker_id} initialized with capabilities: {capabilities}")
 
     async def initialize(self):
         """Initialize the worker agent and start task processing."""
@@ -195,9 +189,7 @@ class WorkerAgent:
             True if task was successfully assigned
         """
         if self.status not in [WorkerStatus.IDLE, WorkerStatus.WORKING]:
-            logger.warning(
-                f"Cannot assign task to worker {self.worker_id} in state {self.status}"
-            )
+            logger.warning(f"Cannot assign task to worker {self.worker_id} in state {self.status}")
             return False
 
         if len(self.current_tasks) >= self.max_concurrent_tasks:
@@ -245,20 +237,14 @@ class WorkerAgent:
             # Check memory usage
             memory_percent = self.process.memory_percent()
             if memory_percent > 90:
-                logger.warning(
-                    f"Worker {self.worker_id} memory usage high: {memory_percent}%"
-                )
+                logger.warning(f"Worker {self.worker_id} memory usage high: {memory_percent}%")
                 self.status = WorkerStatus.OVERLOADED
                 return False
 
             # Check if worker is responsive
-            last_activity_ago = (
-                datetime.now() - self.metrics.last_activity
-            ).total_seconds()
+            last_activity_ago = (datetime.now() - self.metrics.last_activity).total_seconds()
             if last_activity_ago > 600:  # 10 minutes
-                logger.warning(
-                    f"Worker {self.worker_id} inactive for {last_activity_ago}s"
-                )
+                logger.warning(f"Worker {self.worker_id} inactive for {last_activity_ago}s")
                 return False
 
             # Update metrics
@@ -338,7 +324,7 @@ class WorkerAgent:
 
         return score / factors if factors > 0 else 0.5
 
-    def get_status_info(self) -> Dict[str, Any]:
+    def get_status_info(self) -> dict[str, Any]:
         """Get comprehensive status information for this worker."""
         return {
             "worker_id": self.worker_id,
@@ -380,9 +366,7 @@ class WorkerAgent:
             except asyncio.CancelledError:
                 break
             except (ValueError, TypeError, RuntimeError, AttributeError) as e:
-                logger.error(
-                    f"Error in task processing loop for worker {self.worker_id}: {e}"
-                )
+                logger.error(f"Error in task processing loop for worker {self.worker_id}: {e}")
                 await asyncio.sleep(1.0)
 
         logger.info(f"Task processing loop ended for worker {self.worker_id}")
@@ -464,9 +448,7 @@ class WorkerAgent:
         else:
             return await self._execute_generic_task(task_data)
 
-    async def _execute_content_generation(
-        self, task_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_content_generation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Execute educational content generation task."""
         # Simulate content generation (replace with actual implementation)
         await asyncio.sleep(2.0)  # Simulate processing time
@@ -481,7 +463,7 @@ class WorkerAgent:
             "quality_score": 0.85,
         }
 
-    async def _execute_quiz_creation(self, task_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_quiz_creation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Execute quiz creation task."""
         await asyncio.sleep(1.5)
 
@@ -507,9 +489,7 @@ class WorkerAgent:
             "quality_score": 0.88,
         }
 
-    async def _execute_terrain_generation(
-        self, task_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_terrain_generation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Execute terrain generation task."""
         await asyncio.sleep(3.0)
 
@@ -522,9 +502,7 @@ class WorkerAgent:
             "quality_score": 0.82,
         }
 
-    async def _execute_script_optimization(
-        self, task_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_script_optimization(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Execute script optimization task."""
         await asyncio.sleep(1.0)
 
@@ -536,9 +514,7 @@ class WorkerAgent:
             "quality_score": 0.90,
         }
 
-    async def _execute_quality_review(
-        self, task_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_quality_review(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Execute quality review task."""
         await asyncio.sleep(1.2)
 
@@ -552,7 +528,7 @@ class WorkerAgent:
             "quality_score": 0.88,
         }
 
-    async def _execute_generic_task(self, task_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_generic_task(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Execute generic task."""
         await asyncio.sleep(1.0)
 
@@ -564,8 +540,8 @@ class WorkerAgent:
         }
 
     async def _apply_educational_enhancements(
-        self, result: Dict[str, Any], educational_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, result: dict[str, Any], educational_context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Apply educational enhancements to task results."""
         enhanced_result = result.copy()
 
@@ -646,14 +622,14 @@ class WorkerPool:
         self,
         max_workers: int = 10,
         min_workers: int = 2,
-        specializations: Optional[List[str]] = None,
+        specializations: Optional[list[str]] = None,
     ):
         self.max_workers = max_workers
         self.min_workers = min_workers
         self.specializations = specializations or []
 
-        self.workers: Dict[str, WorkerAgent] = {}
-        self.worker_assignments: Dict[str, List[str]] = {}  # task_type -> worker_ids
+        self.workers: dict[str, WorkerAgent] = {}
+        self.worker_assignments: dict[str, list[str]] = {}  # task_type -> worker_ids
 
         # Health monitoring
         self._health_check_task: Optional[asyncio.Task] = None
@@ -673,9 +649,7 @@ class WorkerPool:
                 await self._create_worker()
 
             # Start health monitoring
-            self._health_check_task = asyncio.create_task(
-                self._health_monitoring_loop()
-            )
+            self._health_check_task = asyncio.create_task(self._health_monitoring_loop())
 
             logger.info(f"WorkerPool initialized with {len(self.workers)} workers")
 
@@ -755,9 +729,7 @@ class WorkerPool:
                 # Scale down
                 workers_to_remove = current_count - target_count
                 removed = await self._remove_idle_workers(workers_to_remove)
-                logger.info(
-                    f"Scaled down by {removed} workers to {len(self.workers)} total"
-                )
+                logger.info(f"Scaled down by {removed} workers to {len(self.workers)} total")
 
             return True
 
@@ -769,11 +741,11 @@ class WorkerPool:
         """Get the current number of workers."""
         return len(self.workers)
 
-    async def get_all_workers(self) -> List[WorkerAgent]:
+    async def get_all_workers(self) -> list[WorkerAgent]:
         """Get all workers in the pool."""
         return list(self.workers.values())
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get comprehensive status of the worker pool."""
         worker_statuses = {}
         total_tasks_completed = 0
@@ -794,7 +766,7 @@ class WorkerPool:
             "worker_assignments": self.worker_assignments,
         }
 
-    async def check_worker_health(self) -> List[WorkerAgent]:
+    async def check_worker_health(self) -> list[WorkerAgent]:
         """Check health of all workers and return unhealthy ones."""
         unhealthy_workers = []
 
@@ -834,9 +806,7 @@ class WorkerPool:
 
         for worker in self.workers.values():
             if worker.status == WorkerStatus.IDLE:
-                idle_time = (
-                    datetime.now() - worker.metrics.last_activity
-                ).total_seconds()
+                idle_time = (datetime.now() - worker.metrics.last_activity).total_seconds()
                 total_idle_time += idle_time
                 idle_workers += 1
 
@@ -869,7 +839,7 @@ class WorkerPool:
         return worker
 
     async def _create_worker_with_capabilities(
-        self, capabilities: List[WorkerCapability]
+        self, capabilities: list[WorkerCapability]
     ) -> WorkerAgent:
         """Create a worker with specific capabilities."""
         worker_id = f"worker_{self._next_worker_id:03d}"
@@ -891,9 +861,7 @@ class WorkerPool:
     async def _remove_idle_workers(self, count: int) -> int:
         """Remove idle workers up to the specified count."""
         idle_workers = [
-            worker
-            for worker in self.workers.values()
-            if worker.status == WorkerStatus.IDLE
+            worker for worker in self.workers.values() if worker.status == WorkerStatus.IDLE
         ]
 
         # Sort by last activity (remove least recently active first)
@@ -908,7 +876,7 @@ class WorkerPool:
 
         return removed
 
-    def _setup_capability_distribution(self) -> Dict[WorkerCapability, float]:
+    def _setup_capability_distribution(self) -> dict[WorkerCapability, float]:
         """Set up the distribution of capabilities across workers."""
         return {
             WorkerCapability.CONTENT_GENERATION: 0.8,
@@ -926,25 +894,18 @@ class WorkerPool:
             WorkerCapability.HISTORY: 0.2,
         }
 
-    def _assign_worker_capabilities(self) -> List[WorkerCapability]:
+    def _assign_worker_capabilities(self) -> list[WorkerCapability]:
         """Assign capabilities to a new worker based on distribution."""
-        capabilities = [
-            WorkerCapability.CONTENT_GENERATION
-        ]  # All workers can generate content
+        capabilities = [WorkerCapability.CONTENT_GENERATION]  # All workers can generate content
 
         for capability, probability in self._worker_capabilities_distribution.items():
             if capability != WorkerCapability.CONTENT_GENERATION:
-                if (
-                    hash(str(capability) + str(self._next_worker_id)) % 100
-                    < probability * 100
-                ):
+                if hash(str(capability) + str(self._next_worker_id)) % 100 < probability * 100:
                     capabilities.append(capability)
 
         return capabilities
 
-    def _update_worker_assignments(
-        self, worker_id: str, capabilities: List[WorkerCapability]
-    ):
+    def _update_worker_assignments(self, worker_id: str, capabilities: list[WorkerCapability]):
         """Update worker assignments based on capabilities."""
         for capability in capabilities:
             task_type = capability.value
@@ -958,7 +919,7 @@ class WorkerPool:
             if worker_id in worker_ids:
                 worker_ids.remove(worker_id)
 
-    async def _find_suitable_workers(self, task: Any) -> List[WorkerAgent]:
+    async def _find_suitable_workers(self, task: Any) -> list[WorkerAgent]:
         """Find workers suitable for the given task."""
         if not hasattr(task, "task_type"):
             # Return all available workers for generic tasks
@@ -978,7 +939,7 @@ class WorkerPool:
         return suitable_workers
 
     async def _select_best_worker(
-        self, workers: List[WorkerAgent], task: Any
+        self, workers: list[WorkerAgent], task: Any
     ) -> Optional[WorkerAgent]:
         """Select the best worker for the task based on load and capabilities."""
         if not workers:

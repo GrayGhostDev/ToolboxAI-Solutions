@@ -56,8 +56,16 @@ MCP_WS_URL = "ws://127.0.0.1:9876"
 # Test users (from config/users.ts)
 TEST_USERS = {
     "admin": {"email": "admin@toolboxai.com", "password": "admin123", "role": "admin"},
-    "teacher": {"email": "teacher@school.edu", "password": "teacher123", "role": "teacher"},
-    "student": {"email": "student@school.edu", "password": "student123", "role": "student"},
+    "teacher": {
+        "email": "teacher@school.edu",
+        "password": "teacher123",
+        "role": "teacher",
+    },
+    "student": {
+        "email": "student@school.edu",
+        "password": "student123",
+        "role": "student",
+    },
 }
 
 
@@ -157,7 +165,9 @@ class DashboardIntegrationTest:
             response = self.session.post(f"{API_URL}/api/v1/content/generate", json=payload)
             if response.status_code != 200:
                 self.print_result(
-                    "Content Generation Flow", False, f"API failed: {response.status_code}"
+                    "Content Generation Flow",
+                    False,
+                    f"API failed: {response.status_code}",
                 )
                 return False
 
@@ -186,7 +196,8 @@ class DashboardIntegrationTest:
             if self.auth_token:
                 pusher.trigger(
                     json.dumps(
-                        {"type": "auth", "token": self.auth_token}, default=make_json_serializable
+                        {"type": "auth", "token": self.auth_token},
+                        default=make_json_serializable,
                     )
                 )
 
@@ -241,7 +252,9 @@ class DashboardIntegrationTest:
 
             success = poll_response.status_code == 200
             self.print_result(
-                "Roblox Plugin Communication", success, "Dashboard->Flask->Plugin path working"
+                "Roblox Plugin Communication",
+                success,
+                "Dashboard->Flask->Plugin path working",
             )
             return success
         except Exception as e:
@@ -297,7 +310,9 @@ class DashboardIntegrationTest:
 
             success = len(working_endpoints) > 0
             self.print_result(
-                "Real-time Updates", success, f"Working endpoints: {len(working_endpoints)}"
+                "Real-time Updates",
+                success,
+                f"Working endpoints: {len(working_endpoints)}",
             )
             return success
         except Exception as e:
@@ -330,11 +345,13 @@ class DashboardIntegrationTest:
 
             if response.status_code != 200:
                 self.print_result(
-                    "Multi-user Scenario", False, f"Content creation failed: {response.status_code}"
+                    "Multi-user Scenario",
+                    False,
+                    f"Content creation failed: {response.status_code}",
                 )
                 return False
 
-            content_data = response.json()
+            response.json()
 
             # Step 3: Login as student
             self.auth_token = None

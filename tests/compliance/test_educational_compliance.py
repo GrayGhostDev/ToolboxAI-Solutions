@@ -116,7 +116,12 @@ class TestEducationalCompliance:
         if response.status_code == 200:
             data = response.json()
             # Check that sensitive data is properly redacted or requires additional consent
-            sensitive_fields = ["ssn", "home_address", "parent_income", "medical_records"]
+            sensitive_fields = [
+                "ssn",
+                "home_address",
+                "parent_income",
+                "medical_records",
+            ]
             for field in sensitive_fields:
                 assert (
                     field not in data or data[field] is None
@@ -142,7 +147,6 @@ class TestEducationalCompliance:
         if response.status_code == 200:
             data = response.json()
             # Directory information should be available but limited
-            allowed_fields = ["name", "grade_level", "enrollment_status", "major_field"]
             restricted_fields = ["grades", "disciplinary_records", "personal_notes"]
 
             for field in restricted_fields:
@@ -154,7 +158,8 @@ class TestEducationalCompliance:
     async def test_gdpr_data_deletion(self, client, user_token):
         """Test GDPR right to be forgotten"""
         response = await client.delete(
-            "/api/v1/user/delete-my-data", headers={"Authorization": f"Bearer {user_token}"}
+            "/api/v1/user/delete-my-data",
+            headers={"Authorization": f"Bearer {user_token}"},
         )
 
         # Should accept deletion request
@@ -177,7 +182,8 @@ class TestEducationalCompliance:
     async def test_gdpr_data_portability(self, client, user_token):
         """Test GDPR right to data portability"""
         response = await client.get(
-            "/api/v1/user/export-my-data", headers={"Authorization": f"Bearer {user_token}"}
+            "/api/v1/user/export-my-data",
+            headers={"Authorization": f"Bearer {user_token}"},
         )
 
         # Should provide data export functionality
@@ -212,11 +218,15 @@ class TestEducationalCompliance:
         )
 
         # Should accept consent withdrawal
-        assert response.status_code in [200, 202], "Consent withdrawal should be accepted"
+        assert response.status_code in [
+            200,
+            202,
+        ], "Consent withdrawal should be accepted"
 
         # Test consent status check
         consent_response = await client.get(
-            "/api/v1/user/consent/status", headers={"Authorization": f"Bearer {user_token}"}
+            "/api/v1/user/consent/status",
+            headers={"Authorization": f"Bearer {user_token}"},
         )
 
         if consent_response.status_code == 200:
@@ -283,7 +293,8 @@ class TestEducationalCompliance:
 
             # Check that child account has enhanced privacy settings by default
             privacy_response = await client.get(
-                "/api/v1/user/privacy-settings", headers={"Authorization": f"Bearer {token}"}
+                "/api/v1/user/privacy-settings",
+                headers={"Authorization": f"Bearer {token}"},
             )
 
             if privacy_response.status_code == 200:

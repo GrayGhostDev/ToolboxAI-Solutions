@@ -132,7 +132,7 @@ class RequestSchemas:
         page: int = Field(1, ge=1, le=1000)
         limit: int = Field(10, ge=1, le=100)
         sort: str | None = Field(None, max_length=50)
-        order: str | None = Field("asc", regex="^(asc|desc)$")
+        order: str | None = Field("asc", pattern="^(asc|desc)$")
 
     class SearchParams(BaseModel):
         query: str = Field(..., min_length=1, max_length=500)
@@ -257,7 +257,8 @@ class RequestValidator:
             # Check JSON depth
             if self._get_json_depth(data) > self.config.MAX_JSON_DEPTH:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="JSON nesting too deep"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="JSON nesting too deep",
                 )
 
             # Sanitize strings in JSON
@@ -265,7 +266,8 @@ class RequestValidator:
 
         except json.JSONDecodeError as e:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid JSON: {str(e)}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid JSON: {str(e)}",
             )
 
     async def _validate_form_data(self, request: Request) -> dict[str, Any]:
@@ -364,7 +366,8 @@ class RequestValidator:
                 if re.search(pattern, value, re.IGNORECASE):
                     logger.warning(f"Potential SQL injection detected: {value[:100]}")
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input detected"
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid input detected",
                     )
 
             # Check XSS
@@ -372,7 +375,8 @@ class RequestValidator:
                 if re.search(pattern, value, re.IGNORECASE):
                     logger.warning(f"Potential XSS detected: {value[:100]}")
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input detected"
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid input detected",
                     )
 
             # Check path traversal
@@ -380,7 +384,8 @@ class RequestValidator:
                 if re.search(pattern, value, re.IGNORECASE):
                     logger.warning(f"Potential path traversal detected: {value[:100]}")
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input detected"
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid input detected",
                     )
 
         def recursive_check(obj: Any):

@@ -4,9 +4,8 @@ Authentication Service
 Business logic for authentication and authorization operations.
 """
 
-import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from apps.backend.core.config import settings
 from apps.backend.core.logging import logging_manager
@@ -103,7 +102,7 @@ class AuthService:
             logger.error(f"Failed to get user from token: {e}")
             return None
 
-    async def create_access_token(self, user: User) -> Dict[str, Any]:
+    async def create_access_token(self, user: User) -> dict[str, Any]:
         """
         Create JWT access token for user
 
@@ -186,7 +185,7 @@ class AuthService:
             logger.error(f"Failed to revoke token: {e}")
             return False
 
-    async def check_user_permissions(self, user: User, required_roles: List[str]) -> bool:
+    async def check_user_permissions(self, user: User, required_roles: list[str]) -> bool:
         """
         Check if user has required permissions
 
@@ -257,7 +256,7 @@ class AuthService:
             logger.error(f"Failed to check resource access for user {user.id}: {e}")
             return False
 
-    async def get_user_stats(self, user_id: str) -> Dict[str, Any]:
+    async def get_user_stats(self, user_id: str) -> dict[str, Any]:
         """
         Get user activity statistics
 
@@ -285,7 +284,7 @@ class AuthService:
             return {}
 
     async def update_user_activity(
-        self, user_id: str, activity_type: str, metadata: Dict[str, Any]
+        self, user_id: str, activity_type: str, metadata: dict[str, Any]
     ) -> bool:
         """
         Update user activity log

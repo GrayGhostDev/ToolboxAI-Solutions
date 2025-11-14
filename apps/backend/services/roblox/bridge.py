@@ -1592,7 +1592,10 @@ def sync_with_main_server(sync_data: dict[str, Any]) -> dict[str, Any]:
     try:
         # Build sync request
         sync_url = f"http://{settings.API_HOST}:{settings.API_PORT}/sync"
-        headers = {"Content-Type": "application/json", "Authorization": "Bearer demo-token"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer demo-token",
+        }
 
         response = requests.post(
             sync_url, json=sync_data, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS
@@ -1601,7 +1604,10 @@ def sync_with_main_server(sync_data: dict[str, Any]) -> dict[str, Any]:
         if response.status_code == 200:
             return {"status": "synced", "data": response.json()}
         else:
-            return {"status": "error", "message": f"Sync failed: {response.status_code}"}
+            return {
+                "status": "error",
+                "message": f"Sync failed: {response.status_code}",
+            }
     except Exception as e:
         logger.error(f"Sync error: {sanitize_for_logging(e)}")
         return {"status": "error", "message": str(e)}
@@ -1801,7 +1807,10 @@ def sync_with_dashboard():
         else:
             return (
                 jsonify(
-                    {"status": "error", "message": f"Dashboard sync failed: {response.status_code}"}
+                    {
+                        "status": "error",
+                        "message": f"Dashboard sync failed: {response.status_code}",
+                    }
                 ),
                 response.status_code,
             )
@@ -1836,7 +1845,11 @@ def start_plugin_session():
             memory_store.set(f"session:{session_id}", session_data)
 
         return jsonify(
-            {"status": "success", "session_id": session_id, "message": "Session started"}
+            {
+                "status": "success",
+                "session_id": session_id,
+                "message": "Session started",
+            }
         )
 
     except Exception as e:
@@ -1969,7 +1982,7 @@ def poll_messages():
             return jsonify({"status": "error", "message": "No data provided"}), 400
 
         plugin_id = request_data.get("plugin_id")
-        last_message_id = request_data.get("last_message_id", 0)
+        request_data.get("last_message_id", 0)
 
         if not plugin_id:
             return jsonify({"status": "error", "message": "Plugin ID required"}), 400

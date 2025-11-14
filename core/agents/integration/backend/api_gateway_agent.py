@@ -10,26 +10,22 @@ This agent handles:
 - API health monitoring
 """
 
-import asyncio
 import logging
-from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import json
-from pathlib import Path
+from typing import Any, Optional
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response
-from fastapi.openapi.utils import get_openapi
-from pydantic import BaseModel, Field
+from fastapi import APIRouter
+
+from core.agents.base_agent import AgentConfig
 
 from ..base_integration_agent import (
     BaseIntegrationAgent,
-    IntegrationPlatform,
     IntegrationEvent,
-    TaskResult
+    IntegrationPlatform,
+    TaskResult,
 )
-from core.agents.base_agent import AgentConfig
 
 # Try to import SPARC if available
 try:
@@ -39,11 +35,13 @@ except ImportError:
     class SPARCContext:
         pass
 
+
 logger = logging.getLogger(__name__)
 
 
 class APIVersion(Enum):
     """API version enumeration"""
+
     V1 = "v1"
     V2 = "v2"
     V3 = "v3"
@@ -52,23 +50,25 @@ class APIVersion(Enum):
 @dataclass
 class APIEndpoint:
     """API endpoint definition"""
+
     path: str
     method: str
     version: APIVersion
     handler: Optional[Any] = None
     description: str = ""
-    tags: List[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     deprecated: bool = False
     rate_limit: Optional[int] = None  # Requests per minute
     authentication_required: bool = True
-    roles_allowed: List[str] = field(default_factory=list)
-    request_schema: Optional[Dict[str, Any]] = None
-    response_schema: Optional[Dict[str, Any]] = None
+    roles_allowed: list[str] = field(default_factory=list)
+    request_schema: Optional[dict[str, Any]] = None
+    response_schema: Optional[dict[str, Any]] = None
 
 
 @dataclass
 class APIMetrics:
     """Metrics for API endpoints"""
+
     endpoint_path: str
     total_requests: int = 0
     successful_requests: int = 0
@@ -84,7 +84,7 @@ class RateLimiter:
     def __init__(self, max_requests: int, time_window: timedelta):
         self.max_requests = max_requests
         self.time_window = time_window
-        self.requests: Dict[str, List[datetime]] = {}
+        self.requests: dict[str, list[datetime]] = {}
 
     def is_allowed(self, client_id: str) -> bool:
         """Check if request is allowed for client"""
@@ -95,8 +95,7 @@ class RateLimiter:
 
         # Clean old requests
         self.requests[client_id] = [
-            req_time for req_time in self.requests[client_id]
-            if now - req_time < self.time_window
+            req_time for req_time in self.requests[client_id] if now - req_time < self.time_window
         ]
 
         # Check if under limit
@@ -123,27 +122,24 @@ class APIGatewayAgent(BaseIntegrationAgent):
                 - Handling request/response transformations
                 - Monitoring API health and performance
                 - Implementing rate limiting and security
-                """
+                """,
             )
         super().__init__(config)
 
         # API management
-        self.endpoints: Dict[str, APIEndpoint] = {}
-        self.routers: Dict[APIVersion, APIRouter] = {}
-        self.endpoint_metrics: Dict[str, APIMetrics] = {}
-        self.rate_limiters: Dict[str, RateLimiter] = {}
+        self.endpoints: dict[str, APIEndpoint] = {}
+        self.routers: dict[APIVersion, APIRouter] = {}
+        self.endpoint_metrics: dict[str, APIMetrics] = {}
+        self.rate_limiters: dict[str, RateLimiter] = {}
 
         # Documentation
-        self.api_documentation: Dict[APIVersion, Dict[str, Any]] = {}
+        self.api_documentation: dict[APIVersion, dict[str, Any]] = {}
 
         # Initialize routers for each version
         for version in APIVersion:
             self.routers[version] = APIRouter(prefix=f"/api/{version.value}")
 
-    async def register_endpoint(
-        self,
-        endpoint: APIEndpoint
-    ) -> TaskResult:
+    async def register_endpoint(self, endpoint: APIEndpoint) -> TaskResult:
         """Register a new API endpoint"""
         try:
             endpoint_key = f"{endpoint.version.value}:{endpoint.method}:{endpoint.path}"
@@ -162,8 +158,7 @@ class APIGatewayAgent(BaseIntegrationAgent):
             # Setup rate limiter if specified
             if endpoint.rate_limit:
                 self.rate_limiters[endpoint_key] = RateLimiter(
-                    max_requests=endpoint.rate_limit,
-                    time_window=timedelta(minutes=1)
+                    max_requests=endpoint.rate_limit, time_window=timedelta(minutes=1)
                 )
 
             # Update documentation
@@ -177,25 +172,17 @@ class APIGatewayAgent(BaseIntegrationAgent):
                     "endpoint": endpoint_key,
                     "version": endpoint.version.value,
                     "path": endpoint.path,
-                    "method": endpoint.method
+                    "method": endpoint.method,
                 },
-                metadata={"registered_at": datetime.utcnow().isoformat()}
+                metadata={"registered_at": datetime.utcnow().isoformat()},
             )
 
         except Exception as e:
             logger.error(f"Error registering endpoint: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def deprecate_endpoint(
-        self,
-        path: str,
-        method: str,
-        version: APIVersion,
-        deprecation_message: str = ""
+        self, path: str, method: str, version: APIVersion, deprecation_message: str = ""
     ) -> TaskResult:
         """Mark an endpoint as deprecated"""
         try:
@@ -205,48 +192,43 @@ class APIGatewayAgent(BaseIntegrationAgent):
                 return TaskResult(
                     success=False,
                     output=None,
-                    error=f"Endpoint not found: {endpoint_key}"
+                    error=f"Endpoint not found: {endpoint_key}",
                 )
 
             # Mark as deprecated
             self.endpoints[endpoint_key].deprecated = True
 
             # Emit deprecation event
-            await self.emit_event(IntegrationEvent(
-                event_id=f"deprecation_{endpoint_key}",
-                event_type="api_endpoint_deprecated",
-                source_platform=IntegrationPlatform.BACKEND,
-                payload={
-                    "endpoint": endpoint_key,
-                    "message": deprecation_message,
-                    "deprecated_at": datetime.utcnow().isoformat()
-                }
-            ))
+            await self.emit_event(
+                IntegrationEvent(
+                    event_id=f"deprecation_{endpoint_key}",
+                    event_type="api_endpoint_deprecated",
+                    source_platform=IntegrationPlatform.BACKEND,
+                    payload={
+                        "endpoint": endpoint_key,
+                        "message": deprecation_message,
+                        "deprecated_at": datetime.utcnow().isoformat(),
+                    },
+                )
+            )
 
             logger.info(f"Deprecated endpoint: {endpoint_key}")
 
-            return TaskResult(
-                success=True,
-                output={"endpoint": endpoint_key, "deprecated": True}
-            )
+            return TaskResult(success=True, output={"endpoint": endpoint_key, "deprecated": True})
 
         except Exception as e:
             logger.error(f"Error deprecating endpoint: {e}")
-            return TaskResult(
-                success=False,
-                output=None,
-                error=str(e)
-            )
+            return TaskResult(success=False, output=None, error=str(e))
 
     async def transform_request(
         self,
-        request_data: Dict[str, Any],
+        request_data: dict[str, Any],
         source_version: APIVersion,
-        target_version: APIVersion
-    ) -> Dict[str, Any]:
+        target_version: APIVersion,
+    ) -> dict[str, Any]:
         """Transform request between API versions"""
         # Use SPARC reasoning for complex transformations
-        context = SPARCContext()
+        SPARCContext()
 
         # Default transformation (can be enhanced with version-specific logic)
         transformed = request_data.copy()
@@ -268,11 +250,8 @@ class APIGatewayAgent(BaseIntegrationAgent):
         return transformed
 
     async def validate_request(
-        self,
-        endpoint_key: str,
-        request_data: Dict[str, Any],
-        client_id: str
-    ) -> Tuple[bool, Optional[str]]:
+        self, endpoint_key: str, request_data: dict[str, Any], client_id: str
+    ) -> tuple[bool, Optional[str]]:
         """Validate incoming request"""
         # Check if endpoint exists
         if endpoint_key not in self.endpoints:
@@ -296,12 +275,7 @@ class APIGatewayAgent(BaseIntegrationAgent):
 
         return True, None
 
-    async def record_request_metrics(
-        self,
-        endpoint_key: str,
-        success: bool,
-        latency_ms: float
-    ):
+    async def record_request_metrics(self, endpoint_key: str, success: bool, latency_ms: float):
         """Record metrics for an API request"""
         if endpoint_key not in self.endpoint_metrics:
             self.endpoint_metrics[endpoint_key] = APIMetrics(endpoint_path=endpoint_key)
@@ -316,9 +290,8 @@ class APIGatewayAgent(BaseIntegrationAgent):
 
         # Update average latency
         metrics.average_latency_ms = (
-            (metrics.average_latency_ms * (metrics.total_requests - 1) + latency_ms)
-            / metrics.total_requests
-        )
+            metrics.average_latency_ms * (metrics.total_requests - 1) + latency_ms
+        ) / metrics.total_requests
 
         metrics.last_accessed = datetime.utcnow()
 
@@ -326,14 +299,10 @@ class APIGatewayAgent(BaseIntegrationAgent):
         if metrics.total_requests > 0:
             metrics.error_rate = metrics.failed_requests / metrics.total_requests
 
-    async def generate_openapi_spec(
-        self,
-        version: APIVersion
-    ) -> Dict[str, Any]:
+    async def generate_openapi_spec(self, version: APIVersion) -> dict[str, Any]:
         """Generate OpenAPI specification for API version"""
         endpoints_for_version = {
-            key: endpoint for key, endpoint in self.endpoints.items()
-            if endpoint.version == version
+            key: endpoint for key, endpoint in self.endpoints.items() if endpoint.version == version
         }
 
         paths = {}
@@ -356,22 +325,18 @@ class APIGatewayAgent(BaseIntegrationAgent):
                             "application/json": {
                                 "schema": endpoint.response_schema or {"type": "object"}
                             }
-                        }
+                        },
                     },
                     "400": {"description": "Bad request"},
                     "401": {"description": "Unauthorized"},
                     "429": {"description": "Rate limit exceeded"},
-                    "500": {"description": "Internal server error"}
-                }
+                    "500": {"description": "Internal server error"},
+                },
             }
 
             if endpoint.request_schema:
                 paths[path][method]["requestBody"] = {
-                    "content": {
-                        "application/json": {
-                            "schema": endpoint.request_schema
-                        }
-                    }
+                    "content": {"application/json": {"schema": endpoint.request_schema}}
                 }
 
         spec = {
@@ -379,21 +344,19 @@ class APIGatewayAgent(BaseIntegrationAgent):
             "info": {
                 "title": f"ToolboxAI API {version.value}",
                 "version": version.value,
-                "description": "Educational Platform API"
+                "description": "Educational Platform API",
             },
-            "servers": [
-                {"url": f"http://127.0.0.1:8008/api/{version.value}"}
-            ],
+            "servers": [{"url": f"http://127.0.0.1:8008/api/{version.value}"}],
             "paths": paths,
             "components": {
                 "securitySchemes": {
                     "bearerAuth": {
                         "type": "http",
                         "scheme": "bearer",
-                        "bearerFormat": "JWT"
+                        "bearerFormat": "JWT",
                     }
                 }
-            }
+            },
         }
 
         return spec
@@ -414,7 +377,7 @@ class APIGatewayAgent(BaseIntegrationAgent):
                 description=endpoint_data.get("description", ""),
                 tags=endpoint_data.get("tags", []),
                 rate_limit=endpoint_data.get("rate_limit"),
-                authentication_required=endpoint_data.get("authentication_required", True)
+                authentication_required=endpoint_data.get("authentication_required", True),
             )
             await self.register_endpoint(endpoint)
 
@@ -423,26 +386,29 @@ class APIGatewayAgent(BaseIntegrationAgent):
             endpoint_key = event.payload.get("endpoint_key")
             if endpoint_key in self.endpoint_metrics:
                 metrics = self.endpoint_metrics[endpoint_key]
-                await self.emit_event(IntegrationEvent(
-                    event_id=f"metrics_response_{event.event_id}",
-                    event_type="endpoint_metrics_response",
-                    source_platform=IntegrationPlatform.BACKEND,
-                    payload={
-                        "endpoint": endpoint_key,
-                        "metrics": {
-                            "total_requests": metrics.total_requests,
-                            "success_rate": (
-                                metrics.successful_requests / metrics.total_requests
-                                if metrics.total_requests > 0 else 0
-                            ),
-                            "average_latency_ms": metrics.average_latency_ms,
-                            "error_rate": metrics.error_rate
-                        }
-                    },
-                    correlation_id=event.correlation_id
-                ))
+                await self.emit_event(
+                    IntegrationEvent(
+                        event_id=f"metrics_response_{event.event_id}",
+                        event_type="endpoint_metrics_response",
+                        source_platform=IntegrationPlatform.BACKEND,
+                        payload={
+                            "endpoint": endpoint_key,
+                            "metrics": {
+                                "total_requests": metrics.total_requests,
+                                "success_rate": (
+                                    metrics.successful_requests / metrics.total_requests
+                                    if metrics.total_requests > 0
+                                    else 0
+                                ),
+                                "average_latency_ms": metrics.average_latency_ms,
+                                "error_rate": metrics.error_rate,
+                            },
+                        },
+                        correlation_id=event.correlation_id,
+                    )
+                )
 
-    async def monitor_api_health(self) -> Dict[str, Any]:
+    async def monitor_api_health(self) -> dict[str, Any]:
         """Monitor overall API health"""
         total_endpoints = len(self.endpoints)
         active_endpoints = sum(1 for e in self.endpoints.values() if not e.deprecated)
@@ -455,12 +421,14 @@ class APIGatewayAgent(BaseIntegrationAgent):
 
         # Find problematic endpoints
         high_error_endpoints = [
-            key for key, metrics in self.endpoint_metrics.items()
+            key
+            for key, metrics in self.endpoint_metrics.items()
             if metrics.error_rate > 0.1  # More than 10% error rate
         ]
 
         slow_endpoints = [
-            key for key, metrics in self.endpoint_metrics.items()
+            key
+            for key, metrics in self.endpoint_metrics.items()
             if metrics.average_latency_ms > 1000  # More than 1 second
         ]
 
@@ -469,20 +437,20 @@ class APIGatewayAgent(BaseIntegrationAgent):
             "endpoints": {
                 "total": total_endpoints,
                 "active": active_endpoints,
-                "deprecated": deprecated_endpoints
+                "deprecated": deprecated_endpoints,
             },
             "metrics": {
                 "total_requests": total_requests,
                 "overall_error_rate": overall_error_rate,
                 "high_error_endpoints": high_error_endpoints,
-                "slow_endpoints": slow_endpoints
+                "slow_endpoints": slow_endpoints,
             },
-            "versions": list(self.api_documentation.keys())
+            "versions": list(self.api_documentation.keys()),
         }
 
         return health
 
-    async def execute_task(self, task: str, context: Optional[Dict[str, Any]] = None) -> TaskResult:
+    async def execute_task(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
         """Execute API Gateway specific tasks"""
         if task == "register_endpoint":
             return await self.register_endpoint(context["endpoint"])
@@ -491,7 +459,7 @@ class APIGatewayAgent(BaseIntegrationAgent):
                 path=context["path"],
                 method=context["method"],
                 version=context["version"],
-                deprecation_message=context.get("message", "")
+                deprecation_message=context.get("message", ""),
             )
         elif task == "generate_documentation":
             spec = await self.generate_openapi_spec(context["version"])

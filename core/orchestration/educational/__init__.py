@@ -11,20 +11,24 @@ This module provides:
 - Assessment and curriculum alignment
 """
 
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 # Import base orchestration components
-from ...agents.master_orchestrator import MasterOrchestrator, AgentSystemType, TaskPriority
+from ...agents.master_orchestrator import (
+    AgentSystemType,
+    MasterOrchestrator,
+    TaskPriority,
+)
 
 # Import the swarm orchestration controller
 from ...swarm.orchestration_controller import (
     OrchestrationController,
     OrchestrationMode,
+    OrchestrationPlan,
     SessionContext,
-    OrchestrationPlan
 )
 
 logger = logging.getLogger(__name__)
@@ -48,7 +52,7 @@ class EducationalOrchestrationModule:
             "interactions_processed": 0,
             "successful_interactions": 0,
             "failed_interactions": 0,
-            "active_sessions": 0
+            "active_sessions": 0,
         }
 
         logger.info("Educational Orchestration Module initialized")
@@ -86,14 +90,14 @@ class EducationalOrchestrationModule:
             "user_input": user_input,
             "session_id": session_id,
             "user_context": user_context,
-            "module": "educational"
+            "module": "educational",
         }
 
         # Submit to master orchestrator
         task_id = await self.master.submit_task(
             agent_type=AgentSystemType.EDUCATIONAL,
             task_data=task_data,
-            priority=TaskPriority.MEDIUM
+            priority=TaskPriority.MEDIUM,
         )
 
         self.metrics["interactions_processed"] += 1
@@ -103,8 +107,8 @@ class EducationalOrchestrationModule:
         self,
         user_input: str,
         session_id: Optional[str] = None,
-        user_context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        user_context: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
         """
         Process user interaction through the swarm controller.
 
@@ -115,9 +119,7 @@ class EducationalOrchestrationModule:
 
         try:
             result = await self.swarm_controller.process_interaction(
-                user_input=user_input,
-                session_id=session_id,
-                user_context=user_context
+                user_input=user_input, session_id=session_id, user_context=user_context
             )
 
             if result.get("success", False):
@@ -132,7 +134,7 @@ class EducationalOrchestrationModule:
             self.metrics["failed_interactions"] += 1
             raise
 
-    async def create_lesson(self, **kwargs) -> Dict[str, Any]:
+    async def create_lesson(self, **kwargs) -> dict[str, Any]:
         """
         Create an educational lesson through the swarm controller.
 
@@ -151,12 +153,9 @@ class EducationalOrchestrationModule:
         if objectives:
             user_input += f" with objectives: {', '.join(objectives)}"
 
-        return await self.process_interaction(
-            user_input=user_input,
-            user_context=kwargs
-        )
+        return await self.process_interaction(user_input=user_input, user_context=kwargs)
 
-    async def create_assessment(self, **kwargs) -> Dict[str, Any]:
+    async def create_assessment(self, **kwargs) -> dict[str, Any]:
         """
         Create an educational assessment through the swarm controller.
 
@@ -171,12 +170,9 @@ class EducationalOrchestrationModule:
 
         user_input = f"Create a {assessment_type} for {subject}"
 
-        return await self.process_interaction(
-            user_input=user_input,
-            user_context=kwargs
-        )
+        return await self.process_interaction(user_input=user_input, user_context=kwargs)
 
-    async def analyze_performance(self, **kwargs) -> Dict[str, Any]:
+    async def analyze_performance(self, **kwargs) -> dict[str, Any]:
         """
         Analyze student performance through the swarm controller.
 
@@ -188,12 +184,9 @@ class EducationalOrchestrationModule:
         """
         user_input = "Analyze student performance and provide recommendations"
 
-        return await self.process_interaction(
-            user_input=user_input,
-            user_context=kwargs
-        )
+        return await self.process_interaction(user_input=user_input, user_context=kwargs)
 
-    async def get_session_context(self, session_id: str) -> Optional[Dict[str, Any]]:
+    async def get_session_context(self, session_id: str) -> Optional[dict[str, Any]]:
         """
         Get session context from the swarm controller.
 
@@ -219,10 +212,10 @@ class EducationalOrchestrationModule:
             "subject": session.subject,
             "topics": session.topics,
             "learning_objectives": session.learning_objectives,
-            "completed_tasks": session.completed_tasks
+            "completed_tasks": session.completed_tasks,
         }
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get the status of the educational orchestration module."""
         swarm_status = None
         if self.swarm_controller:
@@ -234,7 +227,7 @@ class EducationalOrchestrationModule:
                 swarm_status = {
                     "active_sessions": active_sessions,
                     "total_agents": len(self.swarm_controller.agents),
-                    "metrics": getattr(self.swarm_controller, 'metrics', {})
+                    "metrics": getattr(self.swarm_controller, "metrics", {}),
                 }
             except Exception as e:
                 swarm_status = {"error": str(e)}
@@ -243,7 +236,7 @@ class EducationalOrchestrationModule:
             "module": "educational",
             "initialized": self.swarm_controller is not None,
             "swarm_controller": swarm_status,
-            "metrics": self.metrics
+            "metrics": self.metrics,
         }
 
     async def cleanup(self):
@@ -266,10 +259,13 @@ __all__ = [
     "OrchestrationController",
     "OrchestrationMode",
     "SessionContext",
-    "OrchestrationPlan"
+    "OrchestrationPlan",
 ]
 
+
 # Convenience factory function
-def create_educational_orchestrator(master_orchestrator: MasterOrchestrator) -> EducationalOrchestrationModule:
+def create_educational_orchestrator(
+    master_orchestrator: MasterOrchestrator,
+) -> EducationalOrchestrationModule:
     """Create and initialize an educational orchestration module."""
     return EducationalOrchestrationModule(master_orchestrator)

@@ -613,7 +613,11 @@ class SendGridEmailService:
                     "img",
                     "hr",
                 ],
-                attributes={"*": ["style"], "a": ["href", "title"], "img": ["src", "alt"]},
+                attributes={
+                    "*": ["style"],
+                    "a": ["href", "title"],
+                    "img": ["src", "alt"],
+                },
                 strip=True,  # Remove disallowed tags instead of escaping
             )
         except Exception as e:
@@ -751,7 +755,11 @@ class SendGridEmailService:
         )
 
     async def send_verification_email(
-        self, user_email: str, user_name: str, verification_code: str, verification_url: str
+        self,
+        user_email: str,
+        user_name: str,
+        verification_code: str,
+        verification_url: str,
     ) -> dict[str, Any]:
         """Send email verification"""
         context = {
@@ -831,7 +839,7 @@ class SendGridEmailService:
         event_type = event.get("event")
         email = event.get("email")
         message_id = event.get("sg_message_id")
-        timestamp = event.get("timestamp")
+        event.get("timestamp")
 
         # Cache event
         cache_key = CacheKey.generate("email", "event", f"{message_id}:{event_type}")

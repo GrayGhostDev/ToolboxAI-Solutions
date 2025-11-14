@@ -3,13 +3,13 @@
 Fix all backend import paths to use absolute imports from apps.backend
 """
 
-import os
 import re
 from pathlib import Path
 
+
 def fix_imports_in_file(filepath):
     """Fix imports in a single Python file"""
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         content = f.read()
 
     original_content = content

@@ -8,7 +8,7 @@ Run with:
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
@@ -49,7 +49,7 @@ class UserCreate(BaseModel):
     full_name: Optional[str] = None
     role: UserRole = UserRole.STUDENT
     bio: Optional[str] = None
-    skills: List[str] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
 
 
 class UserUpdate(BaseModel):
@@ -57,7 +57,7 @@ class UserUpdate(BaseModel):
 
     full_name: Optional[str] = None
     bio: Optional[str] = None
-    skills: Optional[List[str]] = None
+    skills: Optional[list[str]] = None
     status: Optional[UserStatus] = None
 
 
@@ -87,7 +87,7 @@ class UserProfileResponse(BaseModel):
     role: UserRole
     status: UserStatus
     bio: Optional[str] = None
-    skills: List[str] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -102,8 +102,8 @@ class ContentCreate(BaseModel):
     content: str
     content_type: ContentType
     difficulty_level: DifficultyLevel
-    tags: List[str] = Field(default_factory=list)
-    learning_objectives: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    learning_objectives: list[str] = Field(default_factory=list)
     estimated_duration_minutes: Optional[int] = None
 
 
@@ -114,7 +114,7 @@ class ContentUpdate(BaseModel):
     description: Optional[str] = None
     content: Optional[str] = None
     status: Optional[ContentStatus] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
     difficulty_level: Optional[DifficultyLevel] = None
 
 
@@ -129,7 +129,7 @@ class ContentResponse(BaseModel):
     difficulty_level: DifficultyLevel
     status: ContentStatus
     author_id: UUID
-    tags: List[str]
+    tags: list[str]
     view_count: int
     average_rating: Optional[float]
     created_at: datetime
@@ -142,7 +142,7 @@ class ContentResponse(BaseModel):
 class PaginatedResponse(BaseModel):
     """Generic paginated response."""
 
-    items: List[dict]
+    items: list[dict]
     total: int
     page: int
     page_size: int
@@ -252,7 +252,7 @@ async def create_user(
     )
 
 
-@app.get("/users", response_model=List[UserResponse], tags=["Users"])
+@app.get("/users", response_model=list[UserResponse], tags=["Users"])
 async def list_users(
     role: Optional[UserRole] = None,
     status_filter: Optional[UserStatus] = Query(None, alias="status"),
@@ -438,7 +438,7 @@ async def create_content(
     return ContentResponse.model_validate(content)
 
 
-@app.get("/content", response_model=List[ContentResponse], tags=["Content"])
+@app.get("/content", response_model=list[ContentResponse], tags=["Content"])
 async def list_content(
     content_type: Optional[ContentType] = None,
     difficulty: Optional[DifficultyLevel] = None,

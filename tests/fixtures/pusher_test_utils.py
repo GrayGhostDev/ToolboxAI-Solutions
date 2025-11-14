@@ -114,9 +114,7 @@ class PusherTestHelper:
 class PusherAsyncTestHelper(PusherTestHelper):
     """Async version of PusherTestHelper for async tests"""
 
-    async def wait_for_event(
-        self, channel: str, event: str, timeout: float = 5.0
-    ) -> dict | None:
+    async def wait_for_event(self, channel: str, event: str, timeout: float = 5.0) -> dict | None:
         """Wait for a specific Pusher event asynchronously"""
         start_time = asyncio.get_event_loop().time()
 
@@ -202,7 +200,8 @@ def create_pusher_test_client(app=None):
             socket_id = kwargs.get("json", {}).get("socket_id", "test_socket")
             channel = kwargs.get("json", {}).get("channel_name", "test_channel")
             return MagicMock(
-                status_code=200, json=lambda: {"auth": f"{socket_id}:{channel}:mock_auth"}
+                status_code=200,
+                json=lambda: {"auth": f"{socket_id}:{channel}:mock_auth"},
             )
         return original_post(url, **kwargs)
 
@@ -410,8 +409,6 @@ def create_playwright_pusher_listener():
     """
 
     def pusher_listener(page):
-        events = []
-
         # Inject Pusher event tracking into the page
         page.evaluate(
             """

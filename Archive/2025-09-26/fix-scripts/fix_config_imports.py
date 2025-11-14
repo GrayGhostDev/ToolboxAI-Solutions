@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Fix config.environment imports to use toolboxai_settings."""
 
-import os
 import re
 from pathlib import Path
 
+
 def fix_config_imports(file_path):
     """Fix config imports in a Python file."""
-    with open(file_path, 'r') as f:
+    with open(file_path) as f:
         content = f.read()
     
     original_content = content

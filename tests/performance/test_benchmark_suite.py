@@ -292,7 +292,10 @@ class TestCacheBenchmarks:
             return result
 
         await BenchmarkRunner.run_benchmark(
-            "cache_hit_rate", cache_operation_with_tracking, num_operations=1000, concurrency=20
+            "cache_hit_rate",
+            cache_operation_with_tracking,
+            num_operations=1000,
+            concurrency=20,
         )
 
         hit_rate = hits / (hits + misses) if (hits + misses) > 0 else 0
@@ -365,7 +368,11 @@ class TestDatabaseBenchmarks:
 
         async def simple_query_operation():
             query = random.choice(queries)
-            params = {"id": random.randint(1, 1000), "active": True, "date": "2023-01-01"}
+            params = {
+                "id": random.randint(1, 1000),
+                "active": True,
+                "date": "2023-01-01",
+            }
             return await db_optimizer.execute_optimized_query(query, params, use_cache=False)
 
         result = await BenchmarkRunner.run_benchmark(
@@ -603,7 +610,10 @@ class TestPusherBenchmarks:
             return await pusher_service.trigger_event(channel, event, data, immediate=False)
 
         result = await BenchmarkRunner.run_benchmark(
-            "pusher_batched_event", batched_event_operation, num_operations=500, concurrency=20
+            "pusher_batched_event",
+            batched_event_operation,
+            num_operations=500,
+            concurrency=20,
         )
 
         print(f"\nPusher Batched Event Benchmark Results:")
@@ -657,7 +667,10 @@ class TestPusherBenchmarks:
                 return await pusher_service.authenticate_channel(socket_id, "private-test")
 
         result = await BenchmarkRunner.run_benchmark(
-            "pusher_mixed_operations", mixed_operation, num_operations=400, concurrency=15
+            "pusher_mixed_operations",
+            mixed_operation,
+            num_operations=400,
+            concurrency=15,
         )
 
         print(f"\nPusher Mixed Operations Benchmark Results:")
@@ -750,7 +763,6 @@ class TestIntegratedPerformanceBenchmarks:
 
     async def test_concurrent_mixed_workload(self, integrated_system_mocks):
         """Benchmark system under mixed concurrent workload."""
-        operations = []
 
         # Define different operation types with weights
         async def cache_heavy_operation():

@@ -7,27 +7,23 @@ Following official LangChain v0.3+ patterns and best practices.
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Union, Callable, Type
 from functools import lru_cache
+from typing import Any, Callable, Optional, Union
+
 from pydantic import BaseModel, Field
 
 from core.langchain_compat import (
     LANGCHAIN_AVAILABLE,
-    get_chat_model,
     ChatPromptTemplate,
-    MessagesPlaceholder,
-    StrOutputParser,
-    JsonOutputParser,
-    PydanticOutputParser,
-    RunnablePassthrough,
-    RunnableParallel,
-    RunnableLambda,
-    RunnableSequence,
-    RunnableBranch,
     HumanMessage,
-    AIMessage,
+    MessagesPlaceholder,
+    RunnableBranch,
+    RunnableParallel,
+    RunnablePassthrough,
+    RunnableSequence,
+    StrOutputParser,
     SystemMessage,
-    BaseMessage
+    get_chat_model,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class ChainConfig(BaseModel):
     """Configuration for chain creation"""
+
     model_name: str = Field(default="gpt-3.5-turbo", description="Model to use")
     temperature: float = Field(default=0.7, description="Temperature for generation")
     max_tokens: Optional[int] = Field(default=None, description="Max tokens to generate")
@@ -45,8 +42,7 @@ class ChainConfig(BaseModel):
 
 
 def create_simple_chain(
-    system_prompt: str,
-    config: Optional[ChainConfig] = None
+    system_prompt: str, config: Optional[ChainConfig] = None
 ) -> RunnableSequence:
     """
     Create a simple LCEL chain with prompt | model | parser pattern.
@@ -64,16 +60,15 @@ def create_simple_chain(
     config = config or ChainConfig()
 
     # Create prompt template
-    prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content="{input}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [SystemMessage(content=system_prompt), HumanMessage(content="{input}")]
+    )
 
     # Get model
     model = get_chat_model(
         model_name=config.model_name,
         temperature=config.temperature,
-        max_tokens=config.max_tokens
+        max_tokens=config.max_tokens,
     )
 
     # Create parser
@@ -88,9 +83,9 @@ def create_simple_chain(
 
 def create_agent_chain(
     system_prompt: str,
-    tools: List[Any],
+    tools: list[Any],
     config: Optional[ChainConfig] = None,
-    include_history: bool = True
+    include_history: bool = True,
 ) -> RunnableSequence:
     """
     Create an agent chain with tool execution capabilities.
@@ -115,27 +110,24 @@ def create_agent_chain(
     if include_history:
         messages.append(MessagesPlaceholder(variable_name="history", optional=True))
 
-    messages.extend([
-        HumanMessage(content="{input}"),
-        MessagesPlaceholder(variable_name="agent_scratchpad", optional=True)
-    ])
+    messages.extend(
+        [
+            HumanMessage(content="{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad", optional=True),
+        ]
+    )
 
     prompt = ChatPromptTemplate.from_messages(messages)
 
     # Get model with tool binding
-    model = get_chat_model(
-        model_name=config.model_name,
-        temperature=config.temperature
-    )
+    model = get_chat_model(model_name=config.model_name, temperature=config.temperature)
 
     if tools:
         model = model.bind_tools(tools)
 
     # Create agent chain
     chain = (
-        RunnablePassthrough.assign(
-            agent_scratchpad=lambda x: x.get("intermediate_steps", [])
-        )
+        RunnablePassthrough.assign(agent_scratchpad=lambda x: x.get("intermediate_steps", []))
         | prompt
         | model
         | StrOutputParser()
@@ -146,9 +138,7 @@ def create_agent_chain(
 
 
 def create_retrieval_chain(
-    system_prompt: str,
-    retriever: Any,
-    config: Optional[ChainConfig] = None
+    system_prompt: str, retriever: Any, config: Optional[ChainConfig] = None
 ) -> RunnableSequence:
     """
     Create a retrieval-augmented generation (RAG) chain.
@@ -167,26 +157,24 @@ def create_retrieval_chain(
     config = config or ChainConfig()
 
     # Create prompt with context
-    prompt = ChatPromptTemplate.from_messages([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content="""Context: {context}
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(content=system_prompt),
+            HumanMessage(
+                content="""Context: {context}
 
 Question: {question}
 
-Answer based on the context provided.""")
-    ])
-
-    model = get_chat_model(
-        model_name=config.model_name,
-        temperature=config.temperature
+Answer based on the context provided."""
+            ),
+        ]
     )
+
+    model = get_chat_model(model_name=config.model_name, temperature=config.temperature)
 
     # Build RAG chain
     chain = (
-        RunnableParallel(
-            context=retriever,
-            question=RunnablePassthrough()
-        )
+        RunnableParallel(context=retriever, question=RunnablePassthrough())
         | prompt
         | model
         | StrOutputParser()
@@ -196,9 +184,7 @@ Answer based on the context provided.""")
     return chain
 
 
-def create_parallel_chain(
-    chains: Dict[str, RunnableSequence]
-) -> RunnableParallel:
+def create_parallel_chain(chains: dict[str, RunnableSequence]) -> RunnableParallel:
     """
     Create a parallel execution chain for concurrent operations.
 
@@ -217,9 +203,9 @@ def create_parallel_chain(
 
 
 def create_conditional_chain(
-    condition: Callable[[Dict], str],
-    branches: Dict[str, RunnableSequence],
-    default: Optional[RunnableSequence] = None
+    condition: Callable[[dict], str],
+    branches: dict[str, RunnableSequence],
+    default: Optional[RunnableSequence] = None,
 ) -> RunnableBranch:
     """
     Create a conditional chain that routes based on input.
@@ -238,9 +224,7 @@ def create_conditional_chain(
     # Build branch conditions
     branch_list = []
     for branch_name, branch_chain in branches.items():
-        branch_list.append(
-            (lambda x, name=branch_name: condition(x) == name, branch_chain)
-        )
+        branch_list.append((lambda x, name=branch_name: condition(x) == name, branch_chain))
 
     # Create branch with default
     if default:
@@ -259,11 +243,7 @@ class ChainExecutor:
     Provides streaming, batching, retries, and monitoring.
     """
 
-    def __init__(
-        self,
-        chain: RunnableSequence,
-        config: Optional[ChainConfig] = None
-    ):
+    def __init__(self, chain: RunnableSequence, config: Optional[ChainConfig] = None):
         """
         Initialize chain executor.
 
@@ -278,8 +258,8 @@ class ChainExecutor:
 
     async def execute(
         self,
-        input_data: Union[str, Dict[str, Any]],
-        callbacks: Optional[List[Any]] = None
+        input_data: Union[str, dict[str, Any]],
+        callbacks: Optional[list[Any]] = None,
     ) -> Any:
         """
         Execute the chain with input data.
@@ -306,16 +286,14 @@ class ChainExecutor:
                         # Stream response
                         result = ""
                         async for chunk in self.chain.astream(
-                            input_data,
-                            config={"callbacks": callbacks}
+                            input_data, config={"callbacks": callbacks}
                         ):
                             result += chunk
                         return result
                     else:
                         # Regular execution
                         result = await self.chain.ainvoke(
-                            input_data,
-                            config={"callbacks": callbacks}
+                            input_data, config={"callbacks": callbacks}
                         )
                         return result
 
@@ -323,17 +301,15 @@ class ChainExecutor:
                     if attempt == self.config.retry_attempts - 1:
                         raise
                     logger.warning(f"Chain execution attempt {attempt + 1} failed: {e}")
-                    await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
 
         except Exception as e:
             logger.error(f"Chain execution failed after {self.config.retry_attempts} attempts: {e}")
             raise
 
     async def batch_execute(
-        self,
-        inputs: List[Union[str, Dict[str, Any]]],
-        max_concurrency: int = 5
-    ) -> List[Any]:
+        self, inputs: list[Union[str, dict[str, Any]]], max_concurrency: int = 5
+    ) -> list[Any]:
         """
         Execute chain on multiple inputs concurrently.
 
@@ -366,7 +342,7 @@ class ChainExecutor:
         # Filter out exceptions
         return [r for r in results if not isinstance(r, Exception)]
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """
         Get execution metrics.
 
@@ -376,7 +352,7 @@ class ChainExecutor:
         return {
             "execution_count": self.execution_count,
             "total_tokens": self.total_tokens,
-            "config": self.config.dict()
+            "config": self.config.dict(),
         }
 
 
@@ -386,7 +362,7 @@ def get_qa_chain(temperature: float = 0.7) -> RunnableSequence:
     """Get a question-answering chain"""
     return create_simple_chain(
         "You are a helpful assistant that answers questions accurately and concisely.",
-        ChainConfig(temperature=temperature)
+        ChainConfig(temperature=temperature),
     )
 
 
@@ -395,17 +371,16 @@ def get_summarization_chain(temperature: float = 0.3) -> RunnableSequence:
     """Get a summarization chain"""
     return create_simple_chain(
         "You are an expert at summarizing text. Provide clear, concise summaries.",
-        ChainConfig(temperature=temperature)
+        ChainConfig(temperature=temperature),
     )
 
 
 @lru_cache(maxsize=32)
 def get_code_generation_chain(
-    language: str = "python",
-    temperature: float = 0.5
+    language: str = "python", temperature: float = 0.5
 ) -> RunnableSequence:
     """Get a code generation chain"""
     return create_simple_chain(
         f"You are an expert {language} programmer. Generate clean, efficient, well-commented code.",
-        ChainConfig(temperature=temperature)
+        ChainConfig(temperature=temperature),
     )

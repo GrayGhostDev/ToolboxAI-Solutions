@@ -6,15 +6,13 @@ Generates optimized, secure Lua scripts for Roblox environments.
 
 import asyncio
 import logging
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
 import re
-import json
+from datetime import datetime
+from typing import Any, Optional
 
-from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.tools import Tool
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from .base_agent import AgentConfig, AgentState, BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -97,21 +95,33 @@ Always prioritize:
 - Readability (clear, maintainable code)
 - Reusability (modular design)"""
 
-    def _initialize_tools(self) -> List[Tool]:
+    def _initialize_tools(self) -> list[Tool]:
         """Initialize script development tools"""
         tools = []
 
         tools.append(
-            Tool(name="ValidateLuaSyntax", func=self._validate_lua_syntax, description="Validate Lua script syntax", return_direct=False)
-        )
-
-        tools.append(
-            Tool(name="OptimizeScript", func=self._optimize_script, description="Optimize Lua script for performance", return_direct=False)
+            Tool(
+                name="ValidateLuaSyntax",
+                func=self._validate_lua_syntax,
+                description="Validate Lua script syntax",
+                return_direct=False,
+            )
         )
 
         tools.append(
             Tool(
-                name="SecurityCheck", func=self._security_check, description="Check script for security vulnerabilities"
+                name="OptimizeScript",
+                func=self._optimize_script,
+                description="Optimize Lua script for performance",
+                return_direct=False,
+            )
+        )
+
+        tools.append(
+            Tool(
+                name="SecurityCheck",
+                func=self._security_check,
+                description="Check script for security vulnerabilities",
             )
         )
 
@@ -125,7 +135,7 @@ Always prioritize:
 
         return tools
 
-    def _load_script_templates(self) -> Dict[str, str]:
+    def _load_script_templates(self) -> dict[str, str]:
         """Load Lua script templates"""
         return {
             "server_script": """-- Server Script: {name}
@@ -215,17 +225,17 @@ remoteEvent.OnServerEvent:Connect(function(player, ...)
     if not player or not player.Parent then
         return
     end
-    
+
     -- Rate limiting
     local lastCall = player:GetAttribute("Last{event_name}")
     local currentTime = tick()
-    
+
     if lastCall and (currentTime - lastCall) < {rate_limit} then
         return -- Too many requests
     end
-    
+
     player:SetAttribute("Last{event_name}", currentTime)
-    
+
     -- Process event
     {handler_logic}
 end)
@@ -236,28 +246,28 @@ local function validateInput(player, input)
     if typeof(input) ~= "{expected_type}" then
         return false
     end
-    
+
     -- Range checking
     {range_checks}
-    
+
     -- Sanity checks
     {sanity_checks}
-    
+
     return true
 end
 
 local function detectExploit(player, action)
     local suspicious = false
-    
+
     -- Check for impossible actions
     {exploit_checks}
-    
+
     if suspicious then
         -- Log and handle exploit
         warn("Potential exploit detected:", player.Name, action)
         -- Take action (kick, ban, etc.)
     end
-    
+
     return suspicious
 end
 """,
@@ -265,7 +275,7 @@ end
 
     async def _process_task(self, state: AgentState) -> Any:
         """Process script generation task"""
-        task = state["task"]
+        state["task"]
         context = state["context"]
 
         # Determine script type
@@ -274,7 +284,9 @@ end
         requirements = context.get("requirements", [])
 
         # Generate script based on requirements
-        script = await self._generate_script(script_type=script_type, feature=feature, requirements=requirements)
+        script = await self._generate_script(
+            script_type=script_type, feature=feature, requirements=requirements
+        )
 
         # Validate syntax
         validation = self._validate_lua_syntax(script)
@@ -301,7 +313,11 @@ end
             "type": script_type,
             "feature": feature,
             "documentation": documentation,
-            "validation": {"syntax_valid": True, "security_passed": True, "optimized": True},
+            "validation": {
+                "syntax_valid": True,
+                "security_passed": True,
+                "optimized": True,
+            },
             "metadata": {
                 "lines_of_code": len(optimized_script.split("\n")),
                 "generated_at": datetime.now().isoformat(),
@@ -310,7 +326,9 @@ end
 
         return result
 
-    async def _generate_script(self, script_type: str, feature: str, requirements: List[str]) -> str:
+    async def _generate_script(
+        self, script_type: str, feature: str, requirements: list[str]
+    ) -> str:
         """Generate Lua script based on requirements"""
 
         requirements_text = "\n".join(f"- {req}" for req in requirements)
@@ -388,7 +406,7 @@ Generate complete, production-ready Lua code."""
 
         return filled
 
-    def _parse_script_components(self, script: str) -> Dict[str, str]:
+    def _parse_script_components(self, script: str) -> dict[str, str]:
         """Parse script into components"""
         components = {}
 
@@ -417,7 +435,7 @@ Generate complete, production-ready Lua code."""
 
         return components
 
-    def _validate_lua_syntax(self, script: str) -> Dict[str, Any]:
+    def _validate_lua_syntax(self, script: str) -> dict[str, Any]:
         """Validate Lua syntax"""
         validation = {"valid": True, "errors": [], "warnings": []}
 
@@ -454,7 +472,7 @@ Generate complete, production-ready Lua code."""
 
         return validation
 
-    def _security_check(self, script: str) -> Dict[str, Any]:
+    def _security_check(self, script: str) -> dict[str, Any]:
         """Check script for security vulnerabilities"""
         security = {"vulnerabilities": [], "risk_level": "low"}
 
@@ -463,7 +481,12 @@ Generate complete, production-ready Lua code."""
             matches = re.finditer(pattern, script, re.IGNORECASE)
             for match in matches:
                 security["vulnerabilities"].append(
-                    {"type": "potential_exploit", "pattern": pattern, "location": match.start(), "severity": "high"}
+                    {
+                        "type": "potential_exploit",
+                        "pattern": pattern,
+                        "location": match.start(),
+                        "severity": "high",
+                    }
                 )
 
         # Check for missing validation
@@ -479,7 +502,11 @@ Generate complete, production-ready Lua code."""
         # Check for trust issues
         if "trust" in script.lower() or "assume" in script.lower():
             security["vulnerabilities"].append(
-                {"type": "trust_issue", "description": "Potential client trust issue", "severity": "medium"}
+                {
+                    "type": "trust_issue",
+                    "description": "Potential client trust issue",
+                    "severity": "medium",
+                }
             )
 
         # Determine risk level
@@ -497,7 +524,7 @@ Generate complete, production-ready Lua code."""
         # Cache services at the top
         services = re.findall(r'game:GetService\("(\w+)"\)', script)
         if services:
-            service_cache = "\n".join([f'local {s} = game:GetService("{s}")' for s in set(services)])
+            "\n".join([f'local {s} = game:GetService("{s}")' for s in set(services)])
             # Remove inline GetService calls
             for service in set(services):
                 optimized = re.sub(f'game:GetService\\("{service}"\\)', service, optimized)
@@ -513,7 +540,11 @@ Generate complete, production-ready Lua code."""
                 optimized = f"local {global_name} = {global_name}\n" + optimized
 
         # Optimize loops
-        optimized = re.sub(r"for\s+(\w+)\s*=\s*1\s*,\s*#(\w+)\s+do", r"for \1, _ in ipairs(\2) do", optimized)
+        optimized = re.sub(
+            r"for\s+(\w+)\s*=\s*1\s*,\s*#(\w+)\s+do",
+            r"for \1, _ in ipairs(\2) do",
+            optimized,
+        )
 
         # Add connection cleanup
         if ".Connect" in optimized and "connection" not in optimized.lower():
@@ -554,7 +585,7 @@ game:BindToClose(cleanup)
 
         return script
 
-    async def _fix_syntax_errors(self, script: str, errors: List[str]) -> str:
+    async def _fix_syntax_errors(self, script: str, errors: list[str]) -> str:
         """Fix syntax errors in script"""
         prompt = f"""Fix these Lua syntax errors:
 
@@ -569,9 +600,14 @@ Return the corrected script."""
         response = await self.llm.ainvoke(prompt)
         return self._extract_lua_code(response.content)
 
-    async def _fix_security_issues(self, script: str, vulnerabilities: List[Dict]) -> str:
+    async def _fix_security_issues(self, script: str, vulnerabilities: list[dict]) -> str:
         """Fix security vulnerabilities in script"""
-        vuln_text = "\n".join([f"- {v['type']}: {v.get('description', v.get('pattern', ''))}" for v in vulnerabilities])
+        vuln_text = "\n".join(
+            [
+                f"- {v['type']}: {v.get('description', v.get('pattern', ''))}"
+                for v in vulnerabilities
+            ]
+        )
 
         prompt = f"""Fix these security vulnerabilities in the Lua script:
 
@@ -637,18 +673,18 @@ Return the secured script."""
             handler_logic=f"""
     -- Handle {feature} event
     local args = {{...}}
-    
+
     -- Validate input
     if not validateInput(player, args) then
         return
     end
-    
+
     -- Process {feature}
     local success, result = pcall(function()
         -- Implementation here
         return true
     end)
-    
+
     if success then
         -- Send response to client if needed
         remoteEvent:FireClient(player, result)
@@ -658,26 +694,34 @@ Return the secured script."""
 """,
         )
 
-    async def generate_game_system(self, system_type: str, specifications: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_game_system(
+        self, system_type: str, specifications: dict[str, Any]
+    ) -> dict[str, Any]:
         """Generate a complete game system with multiple scripts"""
 
         scripts = {}
 
         # Generate server script
         server_script = await self._generate_script(
-            script_type="server", feature=system_type, requirements=specifications.get("server_requirements", [])
+            script_type="server",
+            feature=system_type,
+            requirements=specifications.get("server_requirements", []),
         )
         scripts["ServerScript"] = server_script
 
         # Generate client script
         client_script = await self._generate_script(
-            script_type="client", feature=system_type, requirements=specifications.get("client_requirements", [])
+            script_type="client",
+            feature=system_type,
+            requirements=specifications.get("client_requirements", []),
         )
         scripts["ClientScript"] = client_script
 
         # Generate module script
         module_script = await self._generate_script(
-            script_type="module", feature=system_type, requirements=specifications.get("module_requirements", [])
+            script_type="module",
+            feature=system_type,
+            requirements=specifications.get("module_requirements", []),
         )
         scripts["ModuleScript"] = module_script
 
@@ -698,7 +742,7 @@ Return the secured script."""
             "installation_guide": self._generate_installation_guide(system_type, scripts),
         }
 
-    def _generate_system_documentation(self, scripts: Dict[str, str]) -> str:
+    def _generate_system_documentation(self, scripts: dict[str, str]) -> str:
         """Generate documentation for complete system"""
         doc = [f"# System Documentation\n"]
 
@@ -709,7 +753,7 @@ Return the secured script."""
 
         return "\n".join(doc)
 
-    def _generate_installation_guide(self, system_type: str, scripts: Dict[str, str]) -> str:
+    def _generate_installation_guide(self, system_type: str, scripts: dict[str, str]) -> str:
         """Generate installation guide for system"""
         guide = f"""# Installation Guide for {system_type}
 
@@ -739,8 +783,8 @@ Return the secured script."""
 3. Verify all features work as expected
 """
         return guide
-    
-    async def batch_generate_scripts(self, script_configs: List[Dict[str, Any]]) -> List[str]:
+
+    async def batch_generate_scripts(self, script_configs: list[dict[str, Any]]) -> list[str]:
         """Generate multiple scripts in batch for performance"""
         # Use asyncio.gather for concurrent generation
         tasks = []
@@ -749,90 +793,94 @@ Return the secured script."""
             request = {
                 "script_type": config.get("type", "general"),
                 "theme": config.get("theme", "default"),
-                "requirements": [f"Implement {config.get('type', 'functionality')}"]
+                "requirements": [f"Implement {config.get('type', 'functionality')}"],
             }
             tasks.append(self.generate_script(request))
-        
+
         # Execute all tasks concurrently
         scripts = await asyncio.gather(*tasks)
         return scripts
-    
-    async def generate_cached_script(self, config: Dict[str, Any]) -> str:
+
+    async def generate_cached_script(self, config: dict[str, Any]) -> str:
         """Generate script with caching support"""
         # Simple in-memory cache (in production, use Redis or similar)
-        if not hasattr(self, '_script_cache'):
+        if not hasattr(self, "_script_cache"):
             self._script_cache = {}
-            
+
         # Create cache key from config
         cache_key = str(sorted(config.items()))
-        
+
         # Check cache first
         if cache_key in self._script_cache:
             return self._script_cache[cache_key]
-        
+
         # Generate script
         request = {
             "script_type": config.get("type", "general"),
             "theme": config.get("theme", "default"),
             "size": config.get("size", "medium"),
-            "requirements": [f"Generate {config.get('type', 'script')} with {config.get('theme', 'default')} theme"]
+            "requirements": [
+                f"Generate {config.get('type', 'script')} with {config.get('theme', 'default')} theme"
+            ],
         }
-        
+
         script = await self.generate_script(request)
-        
+
         # Cache the result
         self._script_cache[cache_key] = script
-        
+
         return script
-    
-    async def generate_script(self, request: Dict[str, Any]) -> str:
+
+    async def generate_script(self, request: dict[str, Any]) -> str:
         """Generate script based on request (alias for tests)."""
         # Call the base execute method directly to get script as string
         context = {
             "script_type": request.get("script_type", "game_logic"),
             "features": request.get("features", []),
-            "educational_elements": request.get("educational_elements", [])
+            "educational_elements": request.get("educational_elements", []),
         }
         result = await self.execute(f"Generate {context['script_type']} script", context)
-        
+
         # If result has output, it might be a dict or string
         if result.success and result.output:
             if isinstance(result.output, dict):
                 # Extract script from dict
-                return result.output.get("script", "-- Default Script\nlocal Players = game:GetService(\"Players\")\n")
+                return result.output.get(
+                    "script",
+                    '-- Default Script\nlocal Players = game:GetService("Players")\n',
+                )
             elif isinstance(result.output, str):
                 return result.output
-        
+
         # Default fallback
-        return "-- Default Script\nlocal Players = game:GetService(\"Players\")\n"
-    
-    async def generate_game_script(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        return '-- Default Script\nlocal Players = game:GetService("Players")\n'
+
+    async def generate_game_script(self, request: dict[str, Any]) -> dict[str, Any]:
         """Generate game script based on request."""
         context = {
             "script_type": request.get("script_type", "game_mechanic"),
             "functionality": request.get("functionality", "basic"),
-            "framework": request.get("framework", "roblox")
+            "framework": request.get("framework", "roblox"),
         }
         result = await self.execute(f"Generate {context['script_type']} script", context)
         # Always return a dict with script key
         if result.success and result.output:
             return {"script": result.output}
         # Return default script with Players for test assertion
-        return {"script": f"-- {context['script_type']} Script\nlocal Players = game:GetService(\"Players\")\nlocal script = {{}}\nreturn script"}
-    
-    async def generate_ui_script(self, ui_elements: List[str]) -> str:
-        """Generate UI script based on UI elements list."""
-        context = {
-            "script_type": "ui",
-            "components": ui_elements
+        return {
+            "script": f"-- {context['script_type']} Script\nlocal Players = game:GetService(\"Players\")\nlocal script = {{}}\nreturn script"
         }
+
+    async def generate_ui_script(self, ui_elements: list[str]) -> str:
+        """Generate UI script based on UI elements list."""
+        context = {"script_type": "ui", "components": ui_elements}
         result = await self.execute("Generate UI script", context)
         # Always return a valid UI script
         if result.success and result.output:
             return result.output
         # Return default UI script
         return f"-- UI Script\nlocal UI = {{}}\n-- Components: {', '.join(ui_elements)}\nreturn UI"
-    
+
     async def optimize_script(self, script: str) -> str:
         """Optimize a given script."""
         context = {"script": script, "optimize": True}

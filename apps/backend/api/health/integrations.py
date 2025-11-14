@@ -227,7 +227,7 @@ async def check_api_integrations() -> dict[str, Any]:
 
                 # Test trigger capability
                 start_time = time.time()
-                result = pusher_client.trigger("test-channel", "health-check", {"test": True})
+                pusher_client.trigger("test-channel", "health-check", {"test": True})
                 response_time = (time.time() - start_time) * 1000
 
                 checks["pusher"] = {
@@ -291,7 +291,10 @@ async def check_api_integrations() -> dict[str, Any]:
                             "healthy": response.status in [200, 404],
                             "response_time_ms": round(response_time, 2),
                             "status_code": response.status,
-                            "details": {"api_reachable": True, "url": os.getenv("SUPABASE_URL")},
+                            "details": {
+                                "api_reachable": True,
+                                "url": os.getenv("SUPABASE_URL"),
+                            },
                         }
             except Exception as e:
                 checks["supabase"] = {"healthy": False, "error": str(e)}
@@ -323,7 +326,10 @@ async def check_api_integrations() -> dict[str, Any]:
             except Exception as e:
                 checks["openai"] = {"healthy": False, "error": str(e)}
         else:
-            checks["openai"] = {"healthy": False, "error": "OpenAI API key not configured"}
+            checks["openai"] = {
+                "healthy": False,
+                "error": "OpenAI API key not configured",
+            }
 
         overall_healthy = all(check.get("healthy", False) for check in checks.values())
 
@@ -381,7 +387,10 @@ async def check_realtime_integrations() -> dict[str, Any]:
             except Exception as e:
                 checks["pusher_channels"] = {"healthy": False, "error": str(e)}
         else:
-            checks["pusher_channels"] = {"healthy": False, "error": "Pusher not configured"}
+            checks["pusher_channels"] = {
+                "healthy": False,
+                "error": "Pusher not configured",
+            }
 
         # WebSocket fallback endpoints
         websocket_endpoints = [
@@ -393,7 +402,10 @@ async def check_realtime_integrations() -> dict[str, Any]:
 
         checks["websocket_fallback"] = {
             "healthy": True,
-            "details": {"endpoints": websocket_endpoints, "status": "legacy_support_available"},
+            "details": {
+                "endpoints": websocket_endpoints,
+                "status": "legacy_support_available",
+            },
         }
 
         # Test real-time event broadcasting
@@ -414,7 +426,7 @@ async def check_realtime_integrations() -> dict[str, Any]:
                 }
 
                 start_time = time.time()
-                result = pusher_client.trigger("system-health", "test-event", test_event)
+                pusher_client.trigger("system-health", "test-event", test_event)
                 broadcast_time = (time.time() - start_time) * 1000
 
                 checks["event_broadcasting"] = {
@@ -471,7 +483,8 @@ async def check_agent_integrations() -> dict[str, Any]:
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(
-                            "http://localhost:9878/health", timeout=aiohttp.ClientTimeout(total=5)
+                            "http://localhost:9878/health",
+                            timeout=aiohttp.ClientTimeout(total=5),
                         ) as response:
                             if response.status == 200:
                                 mcp_health_data = await response.json()
@@ -554,7 +567,10 @@ async def check_agent_integrations() -> dict[str, Any]:
 
                 agent_tests["multi_modal_generator"] = {"importable": True}
             except ImportError as e:
-                agent_tests["multi_modal_generator"] = {"importable": False, "error": str(e)}
+                agent_tests["multi_modal_generator"] = {
+                    "importable": False,
+                    "error": str(e),
+                }
 
             try:
                 from core.agents.enhanced_content_pipeline import (
@@ -563,7 +579,10 @@ async def check_agent_integrations() -> dict[str, Any]:
 
                 agent_tests["enhanced_content_pipeline"] = {"importable": True}
             except ImportError as e:
-                agent_tests["enhanced_content_pipeline"] = {"importable": False, "error": str(e)}
+                agent_tests["enhanced_content_pipeline"] = {
+                    "importable": False,
+                    "error": str(e),
+                }
 
             checks["agent_communication"] = {
                 "healthy": any(test.get("importable", False) for test in agent_tests.values()),
@@ -608,7 +627,8 @@ async def check_roblox_integrations() -> dict[str, Any]:
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(
-                            "http://localhost:5001/health", timeout=aiohttp.ClientTimeout(total=5)
+                            "http://localhost:5001/health",
+                            timeout=aiohttp.ClientTimeout(total=5),
                         ) as response:
                             bridge_health = (
                                 await response.json()
@@ -668,7 +688,10 @@ async def check_roblox_integrations() -> dict[str, Any]:
 
                 roblox_agents["content_generation"] = {"available": True}
             except ImportError as e:
-                roblox_agents["content_generation"] = {"available": False, "error": str(e)}
+                roblox_agents["content_generation"] = {
+                    "available": False,
+                    "error": str(e),
+                }
 
             try:
                 from core.agents.roblox.roblox_script_optimization_agent import (
@@ -677,7 +700,10 @@ async def check_roblox_integrations() -> dict[str, Any]:
 
                 roblox_agents["script_optimization"] = {"available": True}
             except ImportError as e:
-                roblox_agents["script_optimization"] = {"available": False, "error": str(e)}
+                roblox_agents["script_optimization"] = {
+                    "available": False,
+                    "error": str(e),
+                }
 
             try:
                 from core.agents.roblox.roblox_security_validation_agent import (
@@ -686,7 +712,10 @@ async def check_roblox_integrations() -> dict[str, Any]:
 
                 roblox_agents["security_validation"] = {"available": True}
             except ImportError as e:
-                roblox_agents["security_validation"] = {"available": False, "error": str(e)}
+                roblox_agents["security_validation"] = {
+                    "available": False,
+                    "error": str(e),
+                }
 
             agents_healthy = any(agent.get("available", False) for agent in roblox_agents.values())
 

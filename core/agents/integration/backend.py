@@ -5,13 +5,16 @@ This module provides agents for backend service integration including API gatewa
 database synchronization, authentication, and service discovery.
 """
 
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 import asyncio
 import logging
-from enum import Enum
+from datetime import datetime
+from typing import Any
 
-from .base_integration_agent import BaseIntegrationAgent, IntegrationPlatform, IntegrationEvent
+from .base_integration_agent import (
+    BaseIntegrationAgent,
+    IntegrationEvent,
+    IntegrationPlatform,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +26,10 @@ class APIGatewayAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "APIGatewayAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.routes: Dict[str, Any] = {}
-        self.middlewares: List[Any] = []
+        self.routes: dict[str, Any] = {}
+        self.middlewares: list[Any] = []
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on API gateway"""
         return {
             "status": "healthy",
@@ -34,10 +37,10 @@ class APIGatewayAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "routes": len(self.routes),
             "middlewares": len(self.middlewares),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def register_route(self, path: str, handler: Any, methods: List[str] = None):
+    async def register_route(self, path: str, handler: Any, methods: list[str] = None):
         """Register a new route in the gateway"""
         if methods is None:
             methods = ["GET"]
@@ -45,15 +48,17 @@ class APIGatewayAgent(BaseIntegrationAgent):
         self.routes[path] = {
             "handler": handler,
             "methods": methods,
-            "registered_at": datetime.utcnow()
+            "registered_at": datetime.utcnow(),
         }
 
-        await self.publish_event(IntegrationEvent(
-            event_type="route_registered",
-            source=self.platform,
-            target=IntegrationPlatform.BACKEND,
-            data={"path": path, "methods": methods}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="route_registered",
+                source=self.platform,
+                target=IntegrationPlatform.BACKEND,
+                data={"path": path, "methods": methods},
+            )
+        )
 
         logger.info(f"Route registered: {path} with methods {methods}")
 
@@ -76,10 +81,10 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "DatabaseSyncAgent"):
         super().__init__(name, IntegrationPlatform.DATABASE)
-        self.connections: Dict[str, Any] = {}
-        self.sync_tasks: Dict[str, asyncio.Task] = {}
+        self.connections: dict[str, Any] = {}
+        self.sync_tasks: dict[str, asyncio.Task] = {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on database connections"""
         connection_status = {}
         for platform, conn in self.connections.items():
@@ -95,27 +100,34 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "connections": connection_status,
             "active_syncs": len(self.sync_tasks),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def connect_platform(self, platform: IntegrationPlatform, connection: Any):
         """Connect to a platform's database"""
         self.connections[platform.value] = connection
 
-        await self.publish_event(IntegrationEvent(
-            event_type="database_connected",
-            source=self.platform,
-            target=platform,
-            data={"platform": platform.value}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="database_connected",
+                source=self.platform,
+                target=platform,
+                data={"platform": platform.value},
+            )
+        )
 
         logger.info(f"Connected to {platform.value} database")
 
-    async def sync_data(self, source_platform: IntegrationPlatform,
-                       target_platform: IntegrationPlatform,
-                       data: Dict[str, Any]) -> Any:
+    async def sync_data(
+        self,
+        source_platform: IntegrationPlatform,
+        target_platform: IntegrationPlatform,
+        data: dict[str, Any],
+    ) -> Any:
         """Synchronize data between platforms"""
-        sync_id = f"{source_platform.value}_to_{target_platform.value}_{datetime.utcnow().timestamp()}"
+        sync_id = (
+            f"{source_platform.value}_to_{target_platform.value}_{datetime.utcnow().timestamp()}"
+        )
 
         try:
             # Mock sync operation
@@ -126,15 +138,17 @@ class DatabaseSyncAgent(BaseIntegrationAgent):
                 "source": source_platform.value,
                 "target": target_platform.value,
                 "records_synced": len(data.get("records", [])),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
-            await self.publish_event(IntegrationEvent(
-                event_type="data_synced",
-                source=source_platform,
-                target=target_platform,
-                data=result
-            ))
+            await self.publish_event(
+                IntegrationEvent(
+                    event_type="data_synced",
+                    source=source_platform,
+                    target=target_platform,
+                    data=result,
+                )
+            )
 
             # Return a mock result object
             class SyncResult:
@@ -175,10 +189,10 @@ class AuthenticationAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "AuthenticationAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.auth_providers: Dict[str, Any] = {}
-        self.sessions: Dict[str, Any] = {}
+        self.auth_providers: dict[str, Any] = {}
+        self.sessions: dict[str, Any] = {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on authentication services"""
         return {
             "status": "healthy",
@@ -186,23 +200,25 @@ class AuthenticationAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "providers": list(self.auth_providers.keys()),
             "active_sessions": len(self.sessions),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def register_provider(self, provider_name: str, provider: Any):
         """Register an authentication provider"""
         self.auth_providers[provider_name] = provider
 
-        await self.publish_event(IntegrationEvent(
-            event_type="auth_provider_registered",
-            source=self.platform,
-            target=IntegrationPlatform.BACKEND,
-            data={"provider": provider_name}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="auth_provider_registered",
+                source=self.platform,
+                target=IntegrationPlatform.BACKEND,
+                data={"provider": provider_name},
+            )
+        )
 
         logger.info(f"Authentication provider registered: {provider_name}")
 
-    async def authenticate(self, provider: str, credentials: Dict[str, Any]) -> Dict[str, Any]:
+    async def authenticate(self, provider: str, credentials: dict[str, Any]) -> dict[str, Any]:
         """Authenticate user with specified provider"""
         if provider not in self.auth_providers:
             raise ValueError(f"Unknown auth provider: {provider}")
@@ -212,14 +228,10 @@ class AuthenticationAgent(BaseIntegrationAgent):
         self.sessions[session_id] = {
             "provider": provider,
             "created_at": datetime.utcnow(),
-            "user": credentials.get("username", "user")
+            "user": credentials.get("username", "user"),
         }
 
-        return {
-            "session_id": session_id,
-            "authenticated": True,
-            "provider": provider
-        }
+        return {"session_id": session_id, "authenticated": True, "provider": provider}
 
     async def cleanup(self):
         """Clean up authentication resources"""
@@ -235,10 +247,10 @@ class ServiceDiscoveryAgent(BaseIntegrationAgent):
 
     def __init__(self, name: str = "ServiceDiscoveryAgent"):
         super().__init__(name, IntegrationPlatform.BACKEND)
-        self.services: Dict[str, Any] = {}
-        self.health_checks: Dict[str, asyncio.Task] = {}
+        self.services: dict[str, Any] = {}
+        self.health_checks: dict[str, asyncio.Task] = {}
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check on discovered services"""
         service_status = {}
         for service_name, service_info in self.services.items():
@@ -250,23 +262,25 @@ class ServiceDiscoveryAgent(BaseIntegrationAgent):
             "platform": self.platform.value,
             "services": service_status,
             "monitoring": len(self.health_checks),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-    async def register_service(self, service_name: str, service_info: Dict[str, Any]):
+    async def register_service(self, service_name: str, service_info: dict[str, Any]):
         """Register a new service"""
         self.services[service_name] = {
             **service_info,
             "registered_at": datetime.utcnow(),
-            "status": "healthy"
+            "status": "healthy",
         }
 
-        await self.publish_event(IntegrationEvent(
-            event_type="service_registered",
-            source=self.platform,
-            target=IntegrationPlatform.BACKEND,
-            data={"service": service_name, "info": service_info}
-        ))
+        await self.publish_event(
+            IntegrationEvent(
+                event_type="service_registered",
+                source=self.platform,
+                target=IntegrationPlatform.BACKEND,
+                data={"service": service_name, "info": service_info},
+            )
+        )
 
         # Start health monitoring
         if service_name not in self.health_checks:
@@ -303,5 +317,5 @@ __all__ = [
     "APIGatewayAgent",
     "DatabaseSyncAgent",
     "AuthenticationAgent",
-    "ServiceDiscoveryAgent"
+    "ServiceDiscoveryAgent",
 ]

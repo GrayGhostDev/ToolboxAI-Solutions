@@ -53,7 +53,7 @@ class SupabaseManager:
         """Test Supabase connection"""
         try:
             # Try a simple query to test connection
-            response = self.client.table("_test_").select("*").limit(1).execute()
+            self.client.table("_test_").select("*").limit(1).execute()
             logger.info("Supabase connection test successful")
             return True
         except Exception as e:

@@ -246,11 +246,11 @@ class DatabaseIntegrationTest:
 
                 # Test educational content
                 result = session.execute(text("SELECT COUNT(*) FROM educational_content"))
-                content_count = result.scalar()
+                result.scalar()
 
                 # Test quizzes
                 result = session.execute(text("SELECT COUNT(*) FROM quizzes"))
-                quiz_count = result.scalar()
+                result.scalar()
 
                 return True
 
@@ -271,11 +271,11 @@ class DatabaseIntegrationTest:
 
                 # Test agent tasks
                 result = session.execute(text("SELECT COUNT(*) FROM agent_tasks"))
-                task_count = result.scalar()
+                result.scalar()
 
                 # Test Roblox integration
                 result = session.execute(text("SELECT COUNT(*) FROM roblox_plugins"))
-                plugin_count = result.scalar()
+                result.scalar()
 
                 return True
 
@@ -296,11 +296,11 @@ class DatabaseIntegrationTest:
 
                 # Test WebSocket connections
                 result = session.execute(text("SELECT COUNT(*) FROM websocket_connections"))
-                ws_count = result.scalar()
+                result.scalar()
 
                 # Test collaboration sessions
                 result = session.execute(text("SELECT COUNT(*) FROM collaboration_sessions"))
-                collab_count = result.scalar()
+                result.scalar()
 
                 return True
 
@@ -314,11 +314,11 @@ class DatabaseIntegrationTest:
             with get_session("education") as session:
                 # Test usage analytics
                 result = session.execute(text("SELECT COUNT(*) FROM usage_analytics"))
-                usage_count = result.scalar()
+                result.scalar()
 
                 # Test educational analytics
                 result = session.execute(text("SELECT COUNT(*) FROM educational_analytics"))
-                edu_count = result.scalar()
+                result.scalar()
 
                 # Test achievements
                 result = session.execute(text("SELECT COUNT(*) FROM achievements"))
@@ -400,7 +400,7 @@ class DatabaseIntegrationTest:
 
                 # Simple query
                 result = session.execute(text("SELECT COUNT(*) FROM users"))
-                user_count = result.scalar()
+                result.scalar()
 
                 # Complex query with joins
                 result = session.execute(
@@ -414,7 +414,7 @@ class DatabaseIntegrationTest:
                 """
                     )
                 )
-                results = result.fetchall()
+                result.fetchall()
 
                 end_time = time.time()
                 query_time = end_time - start_time

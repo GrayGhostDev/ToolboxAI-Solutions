@@ -4,18 +4,16 @@ This agent analyzes learning patterns, tracks student progress, measures engagem
 and provides actionable insights for improving educational outcomes.
 """
 
-import asyncio
-from typing import Dict, List, Any, Optional, Tuple, Set
+import statistics
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from collections import defaultdict, Counter
-import statistics
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
+from typing import Any, Optional
 
-from ..base_agent import BaseAgent, TaskResult, AgentCapability, AgentConfig
+import numpy as np
+
+from ..base_agent import AgentConfig, BaseAgent, TaskResult
 
 
 class ProgressStatus(Enum):
@@ -75,7 +73,7 @@ class StudentActivity:
     attempts: int = 1
     help_used: bool = False
     feedback_given: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -99,13 +97,13 @@ class StudentProgress:
     # Learning patterns
     preferred_learning_style: LearningStyle
     peak_learning_time: Optional[str] = None
-    strongest_topics: List[str] = field(default_factory=list)
-    struggling_topics: List[str] = field(default_factory=list)
+    strongest_topics: list[str] = field(default_factory=list)
+    struggling_topics: list[str] = field(default_factory=list)
 
     # Growth metrics
     growth_rate: float = 0.0
-    mastery_levels: Dict[str, float] = field(default_factory=dict)
-    skill_progression: List[Dict[str, Any]] = field(default_factory=list)
+    mastery_levels: dict[str, float] = field(default_factory=dict)
+    skill_progression: list[dict[str, Any]] = field(default_factory=list)
 
     # Engagement metrics
     login_frequency: float = 0.0
@@ -114,13 +112,13 @@ class StudentProgress:
     collaboration_score: float = 0.0
 
     # Risk indicators
-    risk_factors: List[str] = field(default_factory=list)
+    risk_factors: list[str] = field(default_factory=list)
     intervention_needed: bool = False
     last_active: Optional[datetime] = None
 
     # Historical data
-    progress_history: List[Dict[str, Any]] = field(default_factory=list)
-    achievement_milestones: List[Dict[str, Any]] = field(default_factory=list)
+    progress_history: list[dict[str, Any]] = field(default_factory=list)
+    achievement_milestones: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -130,10 +128,10 @@ class LearningPattern:
     pattern_type: str
     description: str
     confidence: float
-    affected_students: List[str]
-    characteristics: Dict[str, Any]
-    recommendations: List[str]
-    evidence: List[Dict[str, Any]]
+    affected_students: list[str]
+    characteristics: dict[str, Any]
+    recommendations: list[str]
+    evidence: list[dict[str, Any]]
 
 
 @dataclass
@@ -143,32 +141,32 @@ class ClassroomAnalytics:
     classroom_id: str
     total_students: int
     average_progress: float
-    engagement_distribution: Dict[EngagementLevel, int]
+    engagement_distribution: dict[EngagementLevel, int]
 
     # Performance distribution
-    performance_quartiles: Dict[str, float]
-    score_distribution: List[float]
-    completion_distribution: List[float]
+    performance_quartiles: dict[str, float]
+    score_distribution: list[float]
+    completion_distribution: list[float]
 
     # Topic analysis
-    mastered_topics: List[str]
-    challenging_topics: List[str]
-    topic_performance: Dict[str, float]
+    mastered_topics: list[str]
+    challenging_topics: list[str]
+    topic_performance: dict[str, float]
 
     # Trends
-    weekly_progress: List[float]
+    weekly_progress: list[float]
     engagement_trend: str
     performance_trend: str
 
     # Risk analysis
-    at_risk_students: List[str]
-    high_performers: List[str]
-    improving_students: List[str]
+    at_risk_students: list[str]
+    high_performers: list[str]
+    improving_students: list[str]
 
     # Recommendations
-    class_recommendations: List[str]
-    content_adjustments: List[str]
-    teaching_strategies: List[str]
+    class_recommendations: list[str]
+    content_adjustments: list[str]
+    teaching_strategies: list[str]
 
 
 @dataclass
@@ -180,8 +178,8 @@ class PredictiveInsight:
     predicted_value: float
     confidence: float
     timeframe: str
-    factors: List[str]
-    recommended_interventions: List[str]
+    factors: list[str]
+    recommended_interventions: list[str]
     expected_outcome: str
 
 
@@ -201,16 +199,14 @@ class LearningAnalyticsAgent(BaseAgent):
 
     def __init__(self):
         """Initialize the Learning Analytics Agent."""
-        config = AgentConfig(
-            name="LearningAnalyticsAgent"
-        )
+        config = AgentConfig(name="LearningAnalyticsAgent")
         super().__init__(config)
 
         # Analytics storage
-        self.student_activities: List[StudentActivity] = []
-        self.student_profiles: Dict[str, StudentProgress] = {}
-        self.learning_patterns: List[LearningPattern] = []
-        self.classroom_analytics: Dict[str, ClassroomAnalytics] = {}
+        self.student_activities: list[StudentActivity] = []
+        self.student_profiles: dict[str, StudentProgress] = {}
+        self.learning_patterns: list[LearningPattern] = []
+        self.classroom_analytics: dict[str, ClassroomAnalytics] = {}
 
         # Thresholds and benchmarks
         self.risk_thresholds = {
@@ -218,7 +214,7 @@ class LearningAnalyticsAgent(BaseAgent):
             "accuracy_rate": 0.5,
             "engagement_score": 0.4,
             "login_frequency": 2,  # days between logins
-            "growth_rate": -0.1  # negative growth
+            "growth_rate": -0.1,  # negative growth
         }
 
         self.engagement_thresholds = {
@@ -226,10 +222,10 @@ class LearningAnalyticsAgent(BaseAgent):
             EngagementLevel.ENGAGED: 0.70,
             EngagementLevel.MODERATELY_ENGAGED: 0.50,
             EngagementLevel.LOW_ENGAGEMENT: 0.30,
-            EngagementLevel.DISENGAGED: 0.0
+            EngagementLevel.DISENGAGED: 0.0,
         }
 
-    async def process(self, task_data: Dict[str, Any]) -> TaskResult:
+    async def process(self, task_data: dict[str, Any]) -> TaskResult:
         """
         Process learning analytics task.
 
@@ -267,22 +263,15 @@ class LearningAnalyticsAgent(BaseAgent):
                 metadata={
                     "analytics_type": analytics_type,
                     "timestamp": datetime.now().isoformat(),
-                    "confidence": result.get("confidence", 0.85)
-                }
+                    "confidence": result.get("confidence", 0.85),
+                },
             )
 
         except Exception as e:
             self.logger.error(f"Analytics processing failed: {str(e)}")
-            return TaskResult(
-                success=False,
-                data={},
-                error=str(e)
-            )
+            return TaskResult(success=False, data={}, error=str(e))
 
-    async def track_student_activity(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def track_student_activity(self, data: dict[str, Any]) -> dict[str, Any]:
         """Track and record student learning activities."""
         activity = StudentActivity(
             student_id=data["student_id"],
@@ -295,7 +284,7 @@ class LearningAnalyticsAgent(BaseAgent):
             attempts=data.get("attempts", 1),
             help_used=data.get("help_used", False),
             feedback_given=data.get("feedback"),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
         )
 
         self.student_activities.append(activity)
@@ -310,13 +299,10 @@ class LearningAnalyticsAgent(BaseAgent):
             "activity_recorded": True,
             "student_id": activity.student_id,
             "immediate_insights": insights,
-            "current_progress": self._get_student_summary(activity.student_id)
+            "current_progress": self._get_student_summary(activity.student_id),
         }
 
-    async def analyze_student_progress(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def analyze_student_progress(self, data: dict[str, Any]) -> dict[str, Any]:
         """Analyze individual student progress and performance."""
         student_id = data["student_id"]
         timeframe = data.get("timeframe", "all")
@@ -328,7 +314,7 @@ class LearningAnalyticsAgent(BaseAgent):
             return {
                 "student_id": student_id,
                 "status": "no_data",
-                "message": "No activity data available for this student"
+                "message": "No activity data available for this student",
             }
 
         # Calculate progress metrics
@@ -364,7 +350,7 @@ class LearningAnalyticsAgent(BaseAgent):
             mastery_levels=progress["mastery_levels"],
             risk_factors=self._identify_risk_factors(progress, activities),
             intervention_needed=status == ProgressStatus.AT_RISK,
-            last_active=max(a.timestamp for a in activities) if activities else None
+            last_active=max(a.timestamp for a in activities) if activities else None,
         )
 
         self.student_profiles[student_id] = profile
@@ -375,20 +361,17 @@ class LearningAnalyticsAgent(BaseAgent):
                 "status": profile.progress_status.value,
                 "overall_score": profile.overall_score,
                 "completion_rate": profile.completion_rate,
-                "engagement": profile.engagement_level.value
+                "engagement": profile.engagement_level.value,
             },
             "strengths": profile.strongest_topics,
             "areas_for_improvement": profile.struggling_topics,
             "growth_analysis": growth,
             "recommendations": await self._generate_student_recommendations(profile),
             "detailed_metrics": progress,
-            "learning_patterns": patterns
+            "learning_patterns": patterns,
         }
 
-    async def identify_learning_patterns(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def identify_learning_patterns(self, data: dict[str, Any]) -> dict[str, Any]:
         """Identify learning patterns across students or for individuals."""
         scope = data.get("scope", "individual")
 
@@ -400,10 +383,12 @@ class LearningAnalyticsAgent(BaseAgent):
             return {
                 "student_id": student_id,
                 "patterns": patterns,
-                "learning_style": patterns["learning_style"].value if patterns["learning_style"] else None,
+                "learning_style": (
+                    patterns["learning_style"].value if patterns["learning_style"] else None
+                ),
                 "behavioral_patterns": patterns["behaviors"],
                 "performance_patterns": patterns["performance"],
-                "recommendations": patterns["recommendations"]
+                "recommendations": patterns["recommendations"],
             }
 
         else:  # classroom or cohort level
@@ -418,13 +403,10 @@ class LearningAnalyticsAgent(BaseAgent):
                 "pattern_clusters": clusters,
                 "common_patterns": common_patterns,
                 "diversity_index": self._calculate_learning_diversity(clusters),
-                "grouped_recommendations": await self._generate_group_recommendations(clusters)
+                "grouped_recommendations": await self._generate_group_recommendations(clusters),
             }
 
-    async def analyze_engagement(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def analyze_engagement(self, data: dict[str, Any]) -> dict[str, Any]:
         """Analyze student engagement levels and patterns."""
         student_ids = data.get("student_ids", [])
         if not student_ids and "student_id" in data:
@@ -442,7 +424,7 @@ class LearningAnalyticsAgent(BaseAgent):
                 "interaction_rate": self._calculate_interaction_rate(activities),
                 "completion_consistency": self._calculate_completion_consistency(activities),
                 "help_seeking_behavior": self._analyze_help_seeking(activities),
-                "time_distribution": self._analyze_time_distribution(activities)
+                "time_distribution": self._analyze_time_distribution(activities),
             }
 
             # Determine engagement level
@@ -454,7 +436,7 @@ class LearningAnalyticsAgent(BaseAgent):
                 "peak_engagement_times": self._identify_peak_times(activities),
                 "engagement_triggers": self._identify_engagement_triggers(activities),
                 "disengagement_indicators": self._identify_disengagement_signs(metrics),
-                "engagement_trend": self._calculate_engagement_trend(activities)
+                "engagement_trend": self._calculate_engagement_trend(activities),
             }
 
             engagement_analysis[student_id] = {
@@ -464,29 +446,32 @@ class LearningAnalyticsAgent(BaseAgent):
                 "patterns": patterns,
                 "recommendations": self._generate_engagement_recommendations(
                     engagement_level, patterns
-                )
+                ),
             }
 
         # Generate aggregate insights if multiple students
         if len(student_ids) > 1:
             engagement_analysis["aggregate"] = {
                 "average_engagement": statistics.mean(
-                    [a["engagement_score"] for a in engagement_analysis.values()
-                     if isinstance(a, dict) and "engagement_score" in a]
+                    [
+                        a["engagement_score"]
+                        for a in engagement_analysis.values()
+                        if isinstance(a, dict) and "engagement_score" in a
+                    ]
                 ),
                 "distribution": Counter(
-                    [a["engagement_level"] for a in engagement_analysis.values()
-                     if isinstance(a, dict) and "engagement_level" in a]
+                    [
+                        a["engagement_level"]
+                        for a in engagement_analysis.values()
+                        if isinstance(a, dict) and "engagement_level" in a
+                    ]
                 ),
-                "trends": self._analyze_cohort_engagement_trends(engagement_analysis)
+                "trends": self._analyze_cohort_engagement_trends(engagement_analysis),
             }
 
         return engagement_analysis
 
-    async def assess_at_risk_students(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def assess_at_risk_students(self, data: dict[str, Any]) -> dict[str, Any]:
         """Identify and assess students at risk of falling behind."""
         classroom_id = data.get("classroom_id")
         threshold_overrides = data.get("thresholds", {})
@@ -514,7 +499,10 @@ class LearningAnalyticsAgent(BaseAgent):
                 risk_score += 2
                 risk_factors.append(f"Low accuracy: {profile.accuracy_rate:.1%}")
 
-            if profile.engagement_level in [EngagementLevel.LOW_ENGAGEMENT, EngagementLevel.DISENGAGED]:
+            if profile.engagement_level in [
+                EngagementLevel.LOW_ENGAGEMENT,
+                EngagementLevel.DISENGAGED,
+            ]:
                 risk_score += 3
                 risk_factors.append(f"Low engagement: {profile.engagement_level.value}")
 
@@ -530,27 +518,31 @@ class LearningAnalyticsAgent(BaseAgent):
 
             # Categorize risk level
             if risk_score >= 5:
-                at_risk_students.append({
-                    "student_id": student_id,
-                    "risk_score": risk_score,
-                    "risk_level": "high",
-                    "risk_factors": risk_factors,
-                    "intervention_priority": "immediate",
-                    "recommended_interventions": await self._generate_interventions(
-                        profile, risk_factors
-                    )
-                })
+                at_risk_students.append(
+                    {
+                        "student_id": student_id,
+                        "risk_score": risk_score,
+                        "risk_level": "high",
+                        "risk_factors": risk_factors,
+                        "intervention_priority": "immediate",
+                        "recommended_interventions": await self._generate_interventions(
+                            profile, risk_factors
+                        ),
+                    }
+                )
             elif risk_score >= 3:
-                borderline_students.append({
-                    "student_id": student_id,
-                    "risk_score": risk_score,
-                    "risk_level": "moderate",
-                    "risk_factors": risk_factors,
-                    "intervention_priority": "monitor",
-                    "recommended_interventions": await self._generate_interventions(
-                        profile, risk_factors
-                    )
-                })
+                borderline_students.append(
+                    {
+                        "student_id": student_id,
+                        "risk_score": risk_score,
+                        "risk_level": "moderate",
+                        "risk_factors": risk_factors,
+                        "intervention_priority": "monitor",
+                        "recommended_interventions": await self._generate_interventions(
+                            profile, risk_factors
+                        ),
+                    }
+                )
 
         return {
             "assessment_date": datetime.now().isoformat(),
@@ -563,15 +555,10 @@ class LearningAnalyticsAgent(BaseAgent):
             "classroom_health": self._assess_classroom_health(
                 at_risk_students, borderline_students
             ),
-            "action_plan": await self._generate_action_plan(
-                at_risk_students, borderline_students
-            )
+            "action_plan": await self._generate_action_plan(at_risk_students, borderline_students),
         }
 
-    async def generate_predictive_insights(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def generate_predictive_insights(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate predictive insights about future student performance."""
         student_id = data["student_id"]
         prediction_horizon = data.get("horizon", "month")  # week, month, quarter
@@ -584,7 +571,7 @@ class LearningAnalyticsAgent(BaseAgent):
             return {
                 "student_id": student_id,
                 "status": "insufficient_data",
-                "message": "Not enough historical data for predictions"
+                "message": "Not enough historical data for predictions",
             }
 
         predictions = []
@@ -593,46 +580,52 @@ class LearningAnalyticsAgent(BaseAgent):
         completion_prediction = await self._predict_completion_rate(
             activities, profile, prediction_horizon
         )
-        predictions.append(PredictiveInsight(
-            student_id=student_id,
-            prediction_type="completion_rate",
-            predicted_value=completion_prediction["value"],
-            confidence=completion_prediction["confidence"],
-            timeframe=prediction_horizon,
-            factors=completion_prediction["factors"],
-            recommended_interventions=completion_prediction["interventions"],
-            expected_outcome=completion_prediction["outcome"]
-        ))
+        predictions.append(
+            PredictiveInsight(
+                student_id=student_id,
+                prediction_type="completion_rate",
+                predicted_value=completion_prediction["value"],
+                confidence=completion_prediction["confidence"],
+                timeframe=prediction_horizon,
+                factors=completion_prediction["factors"],
+                recommended_interventions=completion_prediction["interventions"],
+                expected_outcome=completion_prediction["outcome"],
+            )
+        )
 
         # Predict performance level
         performance_prediction = await self._predict_performance_level(
             activities, profile, prediction_horizon
         )
-        predictions.append(PredictiveInsight(
-            student_id=student_id,
-            prediction_type="performance_level",
-            predicted_value=performance_prediction["value"],
-            confidence=performance_prediction["confidence"],
-            timeframe=prediction_horizon,
-            factors=performance_prediction["factors"],
-            recommended_interventions=performance_prediction["interventions"],
-            expected_outcome=performance_prediction["outcome"]
-        ))
+        predictions.append(
+            PredictiveInsight(
+                student_id=student_id,
+                prediction_type="performance_level",
+                predicted_value=performance_prediction["value"],
+                confidence=performance_prediction["confidence"],
+                timeframe=prediction_horizon,
+                factors=performance_prediction["factors"],
+                recommended_interventions=performance_prediction["interventions"],
+                expected_outcome=performance_prediction["outcome"],
+            )
+        )
 
         # Predict engagement changes
         engagement_prediction = await self._predict_engagement_changes(
             activities, profile, prediction_horizon
         )
-        predictions.append(PredictiveInsight(
-            student_id=student_id,
-            prediction_type="engagement_level",
-            predicted_value=engagement_prediction["value"],
-            confidence=engagement_prediction["confidence"],
-            timeframe=prediction_horizon,
-            factors=engagement_prediction["factors"],
-            recommended_interventions=engagement_prediction["interventions"],
-            expected_outcome=engagement_prediction["outcome"]
-        ))
+        predictions.append(
+            PredictiveInsight(
+                student_id=student_id,
+                prediction_type="engagement_level",
+                predicted_value=engagement_prediction["value"],
+                confidence=engagement_prediction["confidence"],
+                timeframe=prediction_horizon,
+                factors=engagement_prediction["factors"],
+                recommended_interventions=engagement_prediction["interventions"],
+                expected_outcome=engagement_prediction["outcome"],
+            )
+        )
 
         # Predict mastery timeline
         mastery_prediction = await self._predict_mastery_timeline(
@@ -649,7 +642,7 @@ class LearningAnalyticsAgent(BaseAgent):
                     "confidence": p.confidence,
                     "factors": p.factors,
                     "interventions": p.recommended_interventions,
-                    "expected_outcome": p.expected_outcome
+                    "expected_outcome": p.expected_outcome,
                 }
                 for p in predictions
             ],
@@ -660,13 +653,10 @@ class LearningAnalyticsAgent(BaseAgent):
             ),
             "recommended_adjustments": await self._generate_predictive_recommendations(
                 predictions, profile
-            )
+            ),
         }
 
-    async def analyze_classroom_performance(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def analyze_classroom_performance(self, data: dict[str, Any]) -> dict[str, Any]:
         """Analyze aggregate classroom-level performance and trends."""
         classroom_id = data["classroom_id"]
         student_ids = data.get("student_ids", [])
@@ -688,7 +678,7 @@ class LearningAnalyticsAgent(BaseAgent):
             return {
                 "classroom_id": classroom_id,
                 "status": "no_data",
-                "message": "No student data available for this classroom"
+                "message": "No student data available for this classroom",
             }
 
         # Calculate aggregate metrics
@@ -701,7 +691,7 @@ class LearningAnalyticsAgent(BaseAgent):
             "median": np.percentile(scores, 50),
             "q3": np.percentile(scores, 75),
             "min": min(scores),
-            "max": max(scores)
+            "max": max(scores),
         }
 
         # Engagement distribution
@@ -711,14 +701,8 @@ class LearningAnalyticsAgent(BaseAgent):
         topic_performance = await self._analyze_topic_performance(classroom_activities)
 
         # Identify patterns
-        mastered_topics = [
-            topic for topic, score in topic_performance.items()
-            if score >= 0.8
-        ]
-        challenging_topics = [
-            topic for topic, score in topic_performance.items()
-            if score < 0.6
-        ]
+        mastered_topics = [topic for topic, score in topic_performance.items() if score >= 0.8]
+        challenging_topics = [topic for topic, score in topic_performance.items() if score < 0.6]
 
         # Trend analysis
         weekly_progress = await self._calculate_weekly_progress(classroom_activities)
@@ -729,11 +713,11 @@ class LearningAnalyticsAgent(BaseAgent):
 
         # Identify student groups
         at_risk = [
-            p.student_id for p in classroom_profiles
-            if p.progress_status == ProgressStatus.AT_RISK
+            p.student_id for p in classroom_profiles if p.progress_status == ProgressStatus.AT_RISK
         ]
         high_performers = [
-            p.student_id for p in classroom_profiles
+            p.student_id
+            for p in classroom_profiles
             if p.progress_status == ProgressStatus.EXCEEDING
         ]
         improving = await self._identify_improving_students(classroom_profiles)
@@ -762,7 +746,7 @@ class LearningAnalyticsAgent(BaseAgent):
             improving_students=improving,
             class_recommendations=recommendations["class_level"],
             content_adjustments=recommendations["content"],
-            teaching_strategies=recommendations["strategies"]
+            teaching_strategies=recommendations["strategies"],
         )
 
         self.classroom_analytics[classroom_id] = analytics
@@ -773,24 +757,24 @@ class LearningAnalyticsAgent(BaseAgent):
                 "total_students": analytics.total_students,
                 "average_progress": analytics.average_progress,
                 "performance_trend": analytics.performance_trend,
-                "engagement_trend": analytics.engagement_trend
+                "engagement_trend": analytics.engagement_trend,
             },
             "performance_insights": {
                 "distribution": performance_quartiles,
                 "mastered_topics": mastered_topics,
                 "challenging_topics": challenging_topics,
-                "topic_scores": topic_performance
+                "topic_scores": topic_performance,
             },
             "student_segments": {
                 "high_performers": high_performers,
                 "at_risk": at_risk,
                 "improving": improving,
-                "engagement_distribution": dict(engagement_dist)
+                "engagement_distribution": dict(engagement_dist),
             },
             "trends": {
                 "weekly_progress": weekly_progress,
                 "performance_trend": performance_trend,
-                "engagement_trend": engagement_trend
+                "engagement_trend": engagement_trend,
             },
             "recommendations": {
                 "immediate_actions": recommendations["class_level"][:3],
@@ -798,14 +782,11 @@ class LearningAnalyticsAgent(BaseAgent):
                 "teaching_strategies": recommendations["strategies"],
                 "individualized_support": await self._generate_individualized_support(
                     at_risk, classroom_profiles
-                )
-            }
+                ),
+            },
         }
 
-    async def generate_recommendations(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def generate_recommendations(self, data: dict[str, Any]) -> dict[str, Any]:
         """Generate personalized learning recommendations."""
         student_id = data["student_id"]
         profile = self.student_profiles.get(student_id)
@@ -814,7 +795,7 @@ class LearningAnalyticsAgent(BaseAgent):
             return {
                 "student_id": student_id,
                 "status": "no_profile",
-                "message": "Student profile not found"
+                "message": "Student profile not found",
             }
 
         recommendations = {
@@ -822,88 +803,102 @@ class LearningAnalyticsAgent(BaseAgent):
             "content_recommendations": [],
             "learning_strategies": [],
             "practice_areas": [],
-            "enrichment_opportunities": []
+            "enrichment_opportunities": [],
         }
 
         # Based on progress status
         if profile.progress_status == ProgressStatus.AT_RISK:
-            recommendations["immediate_actions"].extend([
-                "Schedule one-on-one support session",
-                "Reduce content difficulty temporarily",
-                "Increase scaffolding and guided practice"
-            ])
+            recommendations["immediate_actions"].extend(
+                [
+                    "Schedule one-on-one support session",
+                    "Reduce content difficulty temporarily",
+                    "Increase scaffolding and guided practice",
+                ]
+            )
         elif profile.progress_status == ProgressStatus.STRUGGLING:
-            recommendations["immediate_actions"].extend([
-                "Review prerequisite concepts",
-                "Provide additional practice problems",
-                "Implement peer tutoring"
-            ])
+            recommendations["immediate_actions"].extend(
+                [
+                    "Review prerequisite concepts",
+                    "Provide additional practice problems",
+                    "Implement peer tutoring",
+                ]
+            )
         elif profile.progress_status == ProgressStatus.EXCEEDING:
-            recommendations["immediate_actions"].extend([
-                "Introduce advanced challenges",
-                "Consider acceleration options",
-                "Provide leadership opportunities"
-            ])
+            recommendations["immediate_actions"].extend(
+                [
+                    "Introduce advanced challenges",
+                    "Consider acceleration options",
+                    "Provide leadership opportunities",
+                ]
+            )
 
         # Based on learning style
         if profile.preferred_learning_style == LearningStyle.VISUAL:
-            recommendations["learning_strategies"].extend([
-                "Use more diagrams and infographics",
-                "Incorporate video tutorials",
-                "Create mind maps for complex topics"
-            ])
+            recommendations["learning_strategies"].extend(
+                [
+                    "Use more diagrams and infographics",
+                    "Incorporate video tutorials",
+                    "Create mind maps for complex topics",
+                ]
+            )
         elif profile.preferred_learning_style == LearningStyle.KINESTHETIC:
-            recommendations["learning_strategies"].extend([
-                "Add hands-on activities",
-                "Use manipulatives and simulations",
-                "Incorporate movement-based learning"
-            ])
+            recommendations["learning_strategies"].extend(
+                [
+                    "Add hands-on activities",
+                    "Use manipulatives and simulations",
+                    "Incorporate movement-based learning",
+                ]
+            )
 
         # Based on struggling topics
         for topic in profile.struggling_topics:
-            recommendations["practice_areas"].append({
-                "topic": topic,
-                "recommended_exercises": await self._get_topic_exercises(topic, profile.grade_level),
-                "estimated_time": "15-20 minutes daily",
-                "support_resources": await self._get_support_resources(topic)
-            })
+            recommendations["practice_areas"].append(
+                {
+                    "topic": topic,
+                    "recommended_exercises": await self._get_topic_exercises(
+                        topic, profile.grade_level
+                    ),
+                    "estimated_time": "15-20 minutes daily",
+                    "support_resources": await self._get_support_resources(topic),
+                }
+            )
 
         # Based on engagement level
-        if profile.engagement_level in [EngagementLevel.LOW_ENGAGEMENT, EngagementLevel.DISENGAGED]:
-            recommendations["content_recommendations"].extend([
-                "Gamify learning experiences",
-                "Add collaborative projects",
-                "Incorporate student interests",
-                "Shorten activity duration",
-                "Increase variety in content types"
-            ])
+        if profile.engagement_level in [
+            EngagementLevel.LOW_ENGAGEMENT,
+            EngagementLevel.DISENGAGED,
+        ]:
+            recommendations["content_recommendations"].extend(
+                [
+                    "Gamify learning experiences",
+                    "Add collaborative projects",
+                    "Incorporate student interests",
+                    "Shorten activity duration",
+                    "Increase variety in content types",
+                ]
+            )
 
         # Enrichment for high performers
         if profile.progress_status == ProgressStatus.EXCEEDING:
-            recommendations["enrichment_opportunities"].extend([
-                "Advanced problem-solving challenges",
-                "Cross-curricular projects",
-                "Peer mentoring opportunities",
-                "Independent research topics"
-            ])
+            recommendations["enrichment_opportunities"].extend(
+                [
+                    "Advanced problem-solving challenges",
+                    "Cross-curricular projects",
+                    "Peer mentoring opportunities",
+                    "Independent research topics",
+                ]
+            )
 
         return {
             "student_id": student_id,
             "personalized_recommendations": recommendations,
             "priority_order": self._prioritize_recommendations(recommendations, profile),
-            "expected_impact": await self._estimate_recommendation_impact(
-                recommendations, profile
-            ),
-            "implementation_timeline": self._generate_implementation_timeline(
-                recommendations
-            ),
-            "success_metrics": self._define_success_metrics(recommendations, profile)
+            "expected_impact": await self._estimate_recommendation_impact(recommendations, profile),
+            "implementation_timeline": self._generate_implementation_timeline(recommendations),
+            "success_metrics": self._define_success_metrics(recommendations, profile),
         }
 
-    async def comprehensive_analysis(
-        self,
-        data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def comprehensive_analysis(self, data: dict[str, Any]) -> dict[str, Any]:
         """Perform comprehensive analysis combining all analytics capabilities."""
         scope = data.get("scope", "student")
 
@@ -927,7 +922,7 @@ class LearningAnalyticsAgent(BaseAgent):
                 "recommendations": recommendations,
                 "executive_summary": await self._generate_executive_summary(
                     progress, patterns, engagement, predictions
-                )
+                ),
             }
 
         else:  # classroom scope
@@ -935,20 +930,17 @@ class LearningAnalyticsAgent(BaseAgent):
             student_ids = data.get("student_ids", [])
 
             # Run classroom analyses
-            classroom = await self.analyze_classroom_performance({
-                "classroom_id": classroom_id,
-                "student_ids": student_ids
-            })
-            risk_assessment = await self.assess_at_risk_students({
-                "classroom_id": classroom_id
-            })
+            classroom = await self.analyze_classroom_performance(
+                {"classroom_id": classroom_id, "student_ids": student_ids}
+            )
+            risk_assessment = await self.assess_at_risk_students({"classroom_id": classroom_id})
 
             # Individual summaries
             individual_insights = {}
             for student_id in student_ids:
                 individual_insights[student_id] = {
                     "progress": self._get_student_summary(student_id),
-                    "needs_attention": student_id in risk_assessment["at_risk_students"]
+                    "needs_attention": student_id in risk_assessment["at_risk_students"],
                 }
 
             return {
@@ -962,16 +954,14 @@ class LearningAnalyticsAgent(BaseAgent):
                 ),
                 "resource_allocation": await self._recommend_resource_allocation(
                     classroom, risk_assessment
-                )
+                ),
             }
 
     # Helper methods
 
     def _get_student_activities(
-        self,
-        student_id: str,
-        timeframe: str = "all"
-    ) -> List[StudentActivity]:
+        self, student_id: str, timeframe: str = "all"
+    ) -> list[StudentActivity]:
         """Get student activities within specified timeframe."""
         activities = [a for a in self.student_activities if a.student_id == student_id]
 
@@ -994,9 +984,8 @@ class LearningAnalyticsAgent(BaseAgent):
             return datetime.min
 
     async def _calculate_progress_metrics(
-        self,
-        activities: List[StudentActivity]
-    ) -> Dict[str, Any]:
+        self, activities: list[StudentActivity]
+    ) -> dict[str, Any]:
         """Calculate comprehensive progress metrics."""
         if not activities:
             return {}
@@ -1007,24 +996,19 @@ class LearningAnalyticsAgent(BaseAgent):
         metrics = {
             "overall_score": statistics.mean([a.score for a in scored]) if scored else 0,
             "completion_rate": len(completed) / len(activities) if activities else 0,
-            "accuracy_rate": statistics.mean(
-                [a.score for a in scored if a.score is not None]
-            ) if scored else 0,
-            "avg_time_on_task": statistics.mean(
-                [a.duration_minutes for a in activities]
+            "accuracy_rate": (
+                statistics.mean([a.score for a in scored if a.score is not None]) if scored else 0
             ),
+            "avg_time_on_task": statistics.mean([a.duration_minutes for a in activities]),
             "total_time_spent": sum(a.duration_minutes for a in activities),
             "avg_attempts": statistics.mean([a.attempts for a in activities]),
             "help_usage_rate": len([a for a in activities if a.help_used]) / len(activities),
-            "mastery_levels": self._calculate_mastery_levels(activities)
+            "mastery_levels": self._calculate_mastery_levels(activities),
         }
 
         return metrics
 
-    def _calculate_mastery_levels(
-        self,
-        activities: List[StudentActivity]
-    ) -> Dict[str, float]:
+    def _calculate_mastery_levels(self, activities: list[StudentActivity]) -> dict[str, float]:
         """Calculate mastery level for each topic."""
         topic_scores = defaultdict(list)
 
@@ -1043,7 +1027,7 @@ class LearningAnalyticsAgent(BaseAgent):
 
         return mastery_levels
 
-    def _determine_progress_status(self, metrics: Dict[str, Any]) -> ProgressStatus:
+    def _determine_progress_status(self, metrics: dict[str, Any]) -> ProgressStatus:
         """Determine student's progress status."""
         score = metrics.get("overall_score", 0)
         completion = metrics.get("completion_rate", 0)
@@ -1059,10 +1043,7 @@ class LearningAnalyticsAgent(BaseAgent):
         else:
             return ProgressStatus.AT_RISK
 
-    def _calculate_engagement_level(
-        self,
-        activities: List[StudentActivity]
-    ) -> EngagementLevel:
+    def _calculate_engagement_level(self, activities: list[StudentActivity]) -> EngagementLevel:
         """Calculate student's engagement level."""
         if not activities:
             return EngagementLevel.DISENGAGED
@@ -1074,9 +1055,9 @@ class LearningAnalyticsAgent(BaseAgent):
 
         # Engagement score (0-1)
         engagement_score = (
-            completion_rate * 0.4 +
-            min(avg_duration / 30, 1) * 0.3 +  # Normalize to 30 min sessions
-            max(0, 1 - recent_activity / 7) * 0.3  # Penalize inactivity
+            completion_rate * 0.4
+            + min(avg_duration / 30, 1) * 0.3  # Normalize to 30 min sessions
+            + max(0, 1 - recent_activity / 7) * 0.3  # Penalize inactivity
         )
 
         return self._determine_engagement_level(engagement_score)
@@ -1084,18 +1065,13 @@ class LearningAnalyticsAgent(BaseAgent):
     def _determine_engagement_level(self, score: float) -> EngagementLevel:
         """Determine engagement level from score."""
         for level, threshold in sorted(
-            self.engagement_thresholds.items(),
-            key=lambda x: x[1],
-            reverse=True
+            self.engagement_thresholds.items(), key=lambda x: x[1], reverse=True
         ):
             if score >= threshold:
                 return level
         return EngagementLevel.DISENGAGED
 
-    async def _identify_student_patterns(
-        self,
-        activities: List[StudentActivity]
-    ) -> Dict[str, Any]:
+    async def _identify_student_patterns(self, activities: list[StudentActivity]) -> dict[str, Any]:
         """Identify learning patterns for a student."""
         patterns = {
             "learning_style": LearningStyle.MULTIMODAL,
@@ -1104,14 +1080,14 @@ class LearningAnalyticsAgent(BaseAgent):
             "weak_topics": [],
             "behaviors": [],
             "performance": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         if not activities:
             return patterns
 
         # Analyze activity types to determine learning style
-        activity_types = [a.activity_type for a in activities]
+        [a.activity_type for a in activities]
         type_performance = defaultdict(list)
 
         for activity in activities:
@@ -1169,7 +1145,7 @@ class LearningAnalyticsAgent(BaseAgent):
 
         return patterns
 
-    def _get_student_summary(self, student_id: str) -> Dict[str, Any]:
+    def _get_student_summary(self, student_id: str) -> dict[str, Any]:
         """Get quick summary of student progress."""
         profile = self.student_profiles.get(student_id)
 
@@ -1182,13 +1158,10 @@ class LearningAnalyticsAgent(BaseAgent):
             "overall_score": profile.overall_score,
             "completion_rate": profile.completion_rate,
             "last_active": profile.last_active.isoformat() if profile.last_active else None,
-            "needs_intervention": profile.intervention_needed
+            "needs_intervention": profile.intervention_needed,
         }
 
-    async def _generate_pattern_recommendations(
-        self,
-        patterns: Dict[str, Any]
-    ) -> List[str]:
+    async def _generate_pattern_recommendations(self, patterns: dict[str, Any]) -> list[str]:
         """Generate recommendations based on identified patterns."""
         recommendations = []
 
@@ -1204,12 +1177,17 @@ class LearningAnalyticsAgent(BaseAgent):
 
         # Topic recommendations
         if patterns["weak_topics"]:
-            recommendations.append(f"Focus on strengthening: {', '.join(patterns['weak_topics'][:3])}")
+            recommendations.append(
+                f"Focus on strengthening: {', '.join(patterns['weak_topics'][:3])}"
+            )
 
         if patterns["strong_topics"]:
-            recommendations.append(f"Build on strengths in: {', '.join(patterns['strong_topics'][:3])}")
+            recommendations.append(
+                f"Build on strengths in: {', '.join(patterns['strong_topics'][:3])}"
+            )
 
         return recommendations
+
     async def _process_task(self, state: "AgentState") -> Any:
         """
         Process the task for this educational agent.
@@ -1222,7 +1200,6 @@ class LearningAnalyticsAgent(BaseAgent):
         Returns:
             Task result
         """
-        from typing import Any
 
         # Extract the task
         task = state.get("task", "")
@@ -1235,5 +1212,5 @@ class LearningAnalyticsAgent(BaseAgent):
             "task": task,
             "status": "completed",
             "result": f"{self.__class__.__name__} processed task: {task[:100] if task else 'No task'}...",
-            "context": context
+            "context": context,
         }

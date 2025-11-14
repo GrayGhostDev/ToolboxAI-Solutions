@@ -5,20 +5,28 @@ This module provides a comprehensive agent-based system for generating
 AI-powered educational content in Roblox environments using LangChain/LangGraph.
 """
 
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from .base_agent import BaseAgent, AgentConfig, AgentState, TaskResult, AgentStatus, AgentPriority
+from .base_agent import (
+    AgentConfig,
+    AgentPriority,
+    AgentState,
+    AgentStatus,
+    BaseAgent,
+    TaskResult,
+)
+from .orchestrator import OrchestrationRequest, OrchestrationResult, WorkflowType
+from .review_agent import ReviewFinding, ReviewSeverity
 
 # Import only essential types at module level
-from .supervisor import TaskType, SupervisorDecision
-from .review_agent import ReviewSeverity, ReviewFinding
-from .testing_agent import TestType, TestStatus, TestResult, TestSuiteResult
-from .orchestrator import OrchestrationRequest, OrchestrationResult, WorkflowType
+from .supervisor import SupervisorDecision, TaskType
+from .testing_agent import TestResult, TestStatus, TestSuiteResult, TestType
 
 # New orchestration system imports (preferred) - lazy import to avoid circular imports
 UnifiedOrchestrator = None
 create_orchestrator = None
 OrchestrationCompat = None
+
 
 def _get_new_orchestration():
     """Lazy import of new orchestration system."""
@@ -29,34 +37,37 @@ def _get_new_orchestration():
             from .orchestrator_compat import OrchestrationCompat
         except ImportError as e:
             import logging
+
             logging.warning(f"Could not import new orchestration system: {e}")
     return UnifiedOrchestrator, create_orchestrator, OrchestrationCompat
 
+
 # Import agent classes lazily to avoid circular imports
 if TYPE_CHECKING:
+    from .content_agent import ContentAgent
+    from .orchestrator import Orchestrator
+    from .quiz_agent import QuizAgent
+    from .review_agent import ReviewAgent
+    from .script_agent import ScriptAgent
     from .supervisor import SupervisorAgent
     from .supervisor_complete import CompleteSupervisorAgent
-    from .content_agent import ContentAgent
-    from .quiz_agent import QuizAgent
     from .terrain_agent import TerrainAgent
-    from .script_agent import ScriptAgent
-    from .review_agent import ReviewAgent
     from .testing_agent import TestingAgent
-    from .orchestrator import Orchestrator
 
 # Direct imports for runtime access
 try:
+    from .content_agent import ContentAgent
+    from .orchestrator import Orchestrator
+    from .quiz_agent import QuizAgent
+    from .review_agent import ReviewAgent
+    from .script_agent import ScriptAgent
     from .supervisor import SupervisorAgent
     from .supervisor_complete import CompleteSupervisorAgent
-    from .content_agent import ContentAgent
-    from .quiz_agent import QuizAgent
     from .terrain_agent import TerrainAgent
-    from .script_agent import ScriptAgent
-    from .review_agent import ReviewAgent
     from .testing_agent import TestingAgent
-    from .orchestrator import Orchestrator
 except ImportError as e:
     import logging
+
     logging.warning(f"Failed to import agents: {e}")
 
 # Version
@@ -102,17 +113,18 @@ __all__ = [
     "get_available_agents",
 ]
 
+
 # Agent registry - lazy loading
 def _get_agent_registry():
     """Get agent registry with lazy loading to avoid circular imports"""
-    from .supervisor import SupervisorAgent
     from .content_agent import ContentAgent
     from .quiz_agent import QuizAgent
-    from .terrain_agent import TerrainAgent
-    from .script_agent import ScriptAgent
     from .review_agent import ReviewAgent
+    from .script_agent import ScriptAgent
+    from .supervisor import SupervisorAgent
+    from .terrain_agent import TerrainAgent
     from .testing_agent import TestingAgent
-    
+
     return {
         "supervisor": SupervisorAgent,
         "content": ContentAgent,
@@ -124,7 +136,7 @@ def _get_agent_registry():
     }
 
 
-def create_orchestrator(config: Optional[Dict[str, Any]] = None):
+def create_orchestrator(config: Optional[dict[str, Any]] = None):
     """
     Create and configure an orchestrator instance.
 
@@ -135,6 +147,7 @@ def create_orchestrator(config: Optional[Dict[str, Any]] = None):
         Configured Orchestrator instance
     """
     from .orchestrator import Orchestrator
+
     return Orchestrator(config)
 
 
@@ -161,7 +174,7 @@ def create_agent(agent_type: str, config: Optional[AgentConfig] = None) -> BaseA
     return agent_class(config or AgentConfig())
 
 
-def get_available_agents() -> List[str]:
+def get_available_agents() -> list[str]:
     """
     Get list of available agent types.
 

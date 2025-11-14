@@ -28,20 +28,25 @@ Environment Variables:
     SPRINT_DURATION_WEEKS - Sprint duration (default: 2)
 """
 
-import os
-import sys
 import argparse
 import json
-import re
+import os
+import sys
+from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Set
-from dataclasses import dataclass
-from collections import defaultdict
+from typing import Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github import GitHubHelper, EducationalPlatformHelper, setup_logging, load_config, notify_team
+from github import (
+    EducationalPlatformHelper,
+    GitHubHelper,
+    load_config,
+    notify_team,
+    setup_logging,
+)
 
 logger = setup_logging()
 
@@ -54,8 +59,8 @@ class ProjectCard:
     column_id: int
     column_name: str
     title: str
-    labels: List[str]
-    assignees: List[str]
+    labels: list[str]
+    assignees: list[str]
     created_at: datetime
     updated_at: datetime
 
@@ -65,8 +70,8 @@ class Sprint:
     name: str
     start_date: datetime
     end_date: datetime
-    issues: List[int]
-    completed_issues: List[int]
+    issues: list[int]
+    completed_issues: list[int]
     total_points: int
     completed_points: int
     
@@ -155,11 +160,11 @@ class ProjectBoardManager:
             logger.error(f"Error synchronizing project boards: {e}")
             return False
     
-    def _get_project_board(self) -> Optional[Dict]:
+    def _get_project_board(self) -> Optional[dict]:
         """Get project board information"""
         return self.github_helper.send_github_api_request(f'projects/{self.project_board_id}')
     
-    def _get_project_cards(self) -> List[ProjectCard]:
+    def _get_project_cards(self) -> list[ProjectCard]:
         """Get all cards from project board"""
         cards = []
         
@@ -182,7 +187,7 @@ class ProjectBoardManager:
         
         return cards
     
-    def _parse_card_data(self, card_data: Dict, column_id: int, column_name: str) -> Optional[ProjectCard]:
+    def _parse_card_data(self, card_data: dict, column_id: int, column_name: str) -> Optional[ProjectCard]:
         """Parse card data from API response"""
         try:
             content_url = card_data.get('content_url', '')
@@ -405,7 +410,7 @@ class ProjectBoardManager:
             logger.error(f"Error creating sprint: {e}")
             return False
     
-    def _collect_sprint_issues(self) -> List[int]:
+    def _collect_sprint_issues(self) -> list[int]:
         """Collect issues for sprint from backlog"""
         sprint_issues = []
         
@@ -600,7 +605,7 @@ Let's make this sprint count! 💪
             return None
         
         try:
-            with open(sprint_file, 'r') as f:
+            with open(sprint_file) as f:
                 data = json.load(f)
             
             return Sprint(
@@ -689,7 +694,7 @@ Thanks for the hard work! 🎉
         
         notify_team(message)
     
-    def generate_burndown_chart(self, sprint_name: str) -> Dict:
+    def generate_burndown_chart(self, sprint_name: str) -> dict:
         """Generate burndown chart data"""
         logger.info(f"Generating burndown chart for {sprint_name}")
         
@@ -750,7 +755,7 @@ Thanks for the hard work! 🎉
         progress_ratio = elapsed_days / total_days
         return max(0, int(total_points * (1 - progress_ratio)))
     
-    def track_team_velocity(self) -> List[TeamVelocity]:
+    def track_team_velocity(self) -> list[TeamVelocity]:
         """Calculate team velocity over recent sprints"""
         logger.info("Calculating team velocity")
         
@@ -762,7 +767,7 @@ Thanks for the hard work! 🎉
         
         for sprint_file in sprints_dir.glob('*.json'):
             try:
-                with open(sprint_file, 'r') as f:
+                with open(sprint_file) as f:
                     data = json.load(f)
                 
                 completion_rate = (data.get('completed_points', 0) / data['total_points'] * 100) if data['total_points'] > 0 else 0
@@ -795,7 +800,7 @@ Thanks for the hard work! 🎉
         
         for sprint_file in sprints_dir.glob('*.json'):
             try:
-                with open(sprint_file, 'r') as f:
+                with open(sprint_file) as f:
                     data = json.load(f)
                 
                 end_date = datetime.fromisoformat(data['end_date'])
@@ -831,7 +836,7 @@ Thanks for the hard work! 🎉
             except Exception as e:
                 logger.warning(f"Error updating sprint progress: {e}")
     
-    def _update_educational_priorities(self, cards: List[ProjectCard]):
+    def _update_educational_priorities(self, cards: list[ProjectCard]):
         """Update educational priority ordering"""
         # Group cards by educational component
         educational_cards = defaultdict(list)

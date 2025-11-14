@@ -9,9 +9,9 @@ factory function with required dependencies.
 import os
 import re
 from pathlib import Path
-from typing import List, Tuple
 
-def find_files_with_swarm_init(root_dir: str = ".") -> List[Path]:
+
+def find_files_with_swarm_init(root_dir: str = ".") -> list[Path]:
     """Find all Python files with SwarmController() initialization."""
     files_to_fix = []
     
@@ -34,7 +34,7 @@ def find_files_with_swarm_init(root_dir: str = ".") -> List[Path]:
 def fix_swarm_initialization(file_path: Path) -> bool:
     """Fix SwarmController initialization in a file."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             content = f.read()
         
         original_content = content

@@ -20,19 +20,16 @@ Environment Variables:
     SECURITY_SCAN_ENABLED - Set to 'false' to disable security scanning
 """
 
-import os
-import sys
 import argparse
-import re
 import json
-import subprocess
+import os
+import re
+import sys
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Set
-import ast
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github import GitHubHelper, EducationalPlatformHelper, setup_logging, load_config, notify_team
+from github import EducationalPlatformHelper, GitHubHelper, load_config, setup_logging
 
 logger = setup_logging()
 
@@ -46,8 +43,8 @@ class PrePushHook:
         self.force_push = force_push
         self.skip_security = skip_security
         self.repo_root = self.github_helper.repo_root
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
         
         # Get push information
         self.local_branch = self._get_local_branch()
@@ -116,7 +113,7 @@ class PrePushHook:
         # For now, assume same as local branch
         return self.local_branch
     
-    def _get_commits_to_push(self) -> List[str]:
+    def _get_commits_to_push(self) -> list[str]:
         """Get list of commits that will be pushed"""
         exit_code, stdout, stderr = self.github_helper.run_command([
             'git', 'log', f'origin/{self.remote_branch}..HEAD', '--pretty=format:%H'
@@ -186,7 +183,7 @@ class PrePushHook:
         
         return True
     
-    def _scan_python_security(self, python_files: List[str]) -> List[str]:
+    def _scan_python_security(self, python_files: list[str]) -> list[str]:
         """Scan Python files with bandit security scanner"""
         try:
             cmd = ['bandit', '-f', 'json', '-q'] + python_files
@@ -208,7 +205,7 @@ class PrePushHook:
         
         return []
     
-    def _scan_file_security_patterns(self, file_path: str) -> List[str]:
+    def _scan_file_security_patterns(self, file_path: str) -> list[str]:
         """Scan file for common security anti-patterns"""
         full_path = self.repo_root / file_path
         if not full_path.exists():
@@ -217,7 +214,7 @@ class PrePushHook:
         issues = []
         
         try:
-            with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(full_path, encoding='utf-8', errors='ignore') as f:
                 content = f.read()
             
             lines = content.split('\n')
@@ -288,10 +285,10 @@ class PrePushHook:
         
         return True
     
-    def _scan_file_for_keys(self, file_path: Path, patterns: List[str]) -> List[str]:
+    def _scan_file_for_keys(self, file_path: Path, patterns: list[str]) -> list[str]:
         """Scan file for API key patterns"""
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, encoding='utf-8', errors='ignore') as f:
                 content = f.read()
             
             found_keys = []
@@ -367,7 +364,7 @@ class PrePushHook:
                 # Read coverage report
                 coverage_file = self.repo_root / 'coverage.json'
                 if coverage_file.exists():
-                    with open(coverage_file, 'r') as f:
+                    with open(coverage_file) as f:
                         coverage_data = json.load(f)
                     
                     total_coverage = coverage_data.get('totals', {}).get('percent_covered', 0)
@@ -425,7 +422,7 @@ class PrePushHook:
         
         return True  # Don't fail on breaking changes, just warn
     
-    def _detect_api_breaking_changes(self) -> List[str]:
+    def _detect_api_breaking_changes(self) -> list[str]:
         """Detect breaking changes in API"""
         breaking_changes = []
         
@@ -446,7 +443,7 @@ class PrePushHook:
         
         return breaking_changes
     
-    def _detect_schema_changes(self) -> List[str]:
+    def _detect_schema_changes(self) -> list[str]:
         """Detect database schema changes"""
         schema_changes = []
         
@@ -511,7 +508,7 @@ class PrePushHook:
         
         return True  # Don't fail on educational standards, just warn
     
-    def _check_roblox_educational_standards(self, file_path: str) -> List[str]:
+    def _check_roblox_educational_standards(self, file_path: str) -> list[str]:
         """Check Roblox files for educational standards"""
         full_path = self.repo_root / file_path
         if not full_path.exists():
@@ -520,7 +517,7 @@ class PrePushHook:
         issues = []
         
         try:
-            with open(full_path, 'r') as f:
+            with open(full_path) as f:
                 content = f.read()
             
             # Check for inappropriate content for educational environment
@@ -549,7 +546,7 @@ class PrePushHook:
         
         return issues
     
-    def _check_agent_educational_standards(self, file_path: str) -> List[str]:
+    def _check_agent_educational_standards(self, file_path: str) -> list[str]:
         """Check agent files for educational AI standards"""
         full_path = self.repo_root / file_path
         if not full_path.exists():
@@ -558,7 +555,7 @@ class PrePushHook:
         issues = []
         
         try:
-            with open(full_path, 'r') as f:
+            with open(full_path) as f:
                 content = f.read()
             
             # Check for educational AI best practices

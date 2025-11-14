@@ -12,7 +12,7 @@ Reference: https://docs.sqlalchemy.org/en/20/
 
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import Boolean, CheckConstraint, Enum, Index, String
@@ -149,7 +149,7 @@ class User(TenantBaseModel):
         lazy="selectin",  # Eager loading for single relationship
     )
 
-    sessions: Mapped[List["UserSession"]] = relationship(
+    sessions: Mapped[list["UserSession"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="select",  # Lazy load for collections
@@ -285,13 +285,13 @@ class UserProfile(TenantBaseModel):
     )
 
     # Skills and interests (PostgreSQL array)
-    skills: Mapped[Optional[List[str]]] = mapped_column(
+    skills: Mapped[Optional[list[str]]] = mapped_column(
         ARRAY(String(50)),
         nullable=True,
         default=list,
     )
 
-    interests: Mapped[Optional[List[str]]] = mapped_column(
+    interests: Mapped[Optional[list[str]]] = mapped_column(
         ARRAY(String(50)),
         nullable=True,
         default=list,

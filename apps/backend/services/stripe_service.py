@@ -105,7 +105,12 @@ class StripeService:
                     else None
                 ),
                 "price": 499,
-                "features": ["Unlimited API calls", "Dedicated support", "Custom features", "SLA"],
+                "features": [
+                    "Unlimited API calls",
+                    "Dedicated support",
+                    "Custom features",
+                    "SLA",
+                ],
             },
         }
 
@@ -362,7 +367,10 @@ class StripeService:
             if quantity is not None:
                 if "items" not in update_data:
                     update_data["items"] = [
-                        {"id": subscription["items"]["data"][0].id, "quantity": quantity}
+                        {
+                            "id": subscription["items"]["data"][0].id,
+                            "quantity": quantity,
+                        }
                     ]
                 else:
                     update_data["items"][0]["quantity"] = quantity
@@ -398,7 +406,8 @@ class StripeService:
             # Set as default if requested
             if set_as_default:
                 stripe.Customer.modify(
-                    customer_id, invoice_settings={"default_payment_method": payment_method_id}
+                    customer_id,
+                    invoice_settings={"default_payment_method": payment_method_id},
                 )
 
             logger.info(f"Attached payment method: {payment_method_id} to customer: {customer_id}")
@@ -550,7 +559,11 @@ class StripeService:
             session = stripe.checkout.Session.create(**session_data)
 
             logger.info(f"Created checkout session: {session.id}")
-            return {"id": session.id, "url": session.url, "expires_at": session.expires_at}
+            return {
+                "id": session.id,
+                "url": session.url,
+                "expires_at": session.expires_at,
+            }
 
         except StripeError as e:
             logger.error(f"Stripe error creating checkout session: {e}")
@@ -708,7 +721,7 @@ class StripeService:
         subscription = event["data"]["object"]
 
         # Update user subscription status in database
-        customer_id = subscription["customer"]
+        subscription["customer"]
 
         if organization_id:
             async for session in get_db():
@@ -774,7 +787,7 @@ class StripeService:
         subscription = event["data"]["object"]
 
         # Update user to free tier
-        customer_id = subscription["customer"]
+        subscription["customer"]
 
         if organization_id:
             async for session in get_db():
@@ -969,7 +982,10 @@ class StripeService:
         try:
             # Get charges for the period
             charges = stripe.Charge.list(
-                created={"gte": int(start_date.timestamp()), "lte": int(end_date.timestamp())},
+                created={
+                    "gte": int(start_date.timestamp()),
+                    "lte": int(end_date.timestamp()),
+                },
                 limit=100,
             )
 

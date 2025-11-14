@@ -140,7 +140,7 @@ class MigrationService:
         for table in required_tables:
             try:
                 # Test table existence with a simple count query
-                result = self.supabase_service.client.table(table).select("count").execute()
+                self.supabase_service.client.table(table).select("count").execute()
                 logger.debug(f"Supabase table {table} exists and is accessible")
             except Exception as e:
                 logger.warning(f"Supabase table {table} may not exist or is not accessible: {e}")
@@ -178,7 +178,7 @@ class MigrationService:
                 table_status = {}
                 for table in required_tables:
                     try:
-                        result = self.supabase_service.client.table(table).select("count").execute()
+                        self.supabase_service.client.table(table).select("count").execute()
                         table_status[table] = True
                     except Exception:
                         table_status[table] = False
@@ -224,7 +224,7 @@ class MigrationService:
             ]
             for table in required_tables:
                 try:
-                    result = self.supabase_service.client.table(table).select("count").execute()
+                    self.supabase_service.client.table(table).select("count").execute()
                     sync_results["schema_comparison"][table] = "exists"
                 except Exception:
                     sync_results["schema_comparison"][table] = "missing"

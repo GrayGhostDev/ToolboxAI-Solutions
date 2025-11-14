@@ -16,6 +16,26 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+try:
+    # Prefer the canonical enum definition from the Roblox schemas module
+    from apps.backend.schemas.roblox import ConversationStage as _ConversationStage
+
+    ConversationStage = _ConversationStage
+except Exception:  # pragma: no cover - fallback for bootstrap/import cycles
+
+    class ConversationStage(str, Enum):
+        """Conversation flow stages (fallback definition)."""
+
+        GREETING = "greeting"
+        DISCOVERY = "discovery"
+        REQUIREMENTS = "requirements"
+        PERSONALIZATION = "personalization"
+        DESIGN = "design"
+        UNIQUENESS = "uniqueness"
+        VALIDATION = "validation"
+        GENERATION = "generation"
+        COMPLETE = "complete"
+
 
 # Enums for type safety
 class SubjectType(str, Enum):

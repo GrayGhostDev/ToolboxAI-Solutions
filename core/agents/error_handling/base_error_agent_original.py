@@ -5,37 +5,34 @@ Foundation for all error handling agents with specialized capabilities
 for error detection, analysis, and resolution.
 """
 
-import asyncio
+import json
 import logging
-import traceback
-from typing import Dict, Any, Optional, List, TypedDict, Tuple
-from dataclasses import dataclass, field
+import re
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-import json
-import re
+from typing import Any, Optional
 
 # Apply compatibility patches before LangChain imports
 from core.agents.langchain_compat import apply_compatibility_patches
+
 apply_compatibility_patches()
 
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 from langchain_core.tools import Tool
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
-from core.sparc.state_manager import StateManager
+from core.agents.base_agent import AgentConfig, BaseAgent
 from core.sparc.policy_engine import PolicyEngine
 from core.sparc.reward_calculator import RewardCalculator
+from core.sparc.state_manager import StateManager
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorType(Enum):
     """Types of errors that can be handled"""
+
     SYNTAX = "syntax_error"
     RUNTIME = "runtime_error"
     LOGIC = "logic_error"
@@ -55,6 +52,7 @@ class ErrorType(Enum):
 
 class ErrorPriority(Enum):
     """Priority levels for error handling"""
+
     LOW = 1
     MEDIUM = 2
     HIGH = 3
@@ -64,6 +62,7 @@ class ErrorPriority(Enum):
 
 class ErrorState(TypedDict):
     """State schema for error handling operations"""
+
     error_id: str
     error_type: ErrorType
     priority: ErrorPriority
@@ -71,18 +70,19 @@ class ErrorState(TypedDict):
     stack_trace: Optional[str]
     file_path: Optional[str]
     line_number: Optional[int]
-    context: Dict[str, Any]
-    attempted_fixes: List[Dict[str, Any]]
+    context: dict[str, Any]
+    attempted_fixes: list[Dict[str, Any]]
     resolution_status: str
     timestamp: str
-    affected_components: List[str]
+    affected_components: list[str]
     potential_impact: str
     recovery_strategy: Optional[str]
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class ErrorPattern(BaseModel):
     """Model for error patterns"""
+
     pattern_id: str = Field(description="Unique identifier for the pattern")
     regex: str = Field(description="Regular expression to match the error")
     error_type: ErrorType = Field(description="Type of error this pattern matches")
@@ -95,18 +95,24 @@ class ErrorPattern(BaseModel):
 
 class ErrorContext(BaseModel):
     """Extended context for error analysis"""
+
     code_snippet: Optional[str] = Field(description="Code snippet around the error")
-    dependencies: List[str] = Field(default_factory=list, description="Related dependencies")
-    environment: Dict[str, str] = Field(default_factory=dict, description="Environment variables")
-    recent_changes: List[str] = Field(default_factory=list, description="Recent git changes")
-    system_state: Dict[str, Any] = Field(default_factory=dict, description="System state at error time")
-    user_actions: List[str] = Field(default_factory=list, description="User actions leading to error")
-    related_errors: List[str] = Field(default_factory=list, description="Related error IDs")
+    dependencies: list[str] = Field(default_factory=list, description="Related dependencies")
+    environment: dict[str, str] = Field(default_factory=dict, description="Environment variables")
+    recent_changes: list[str] = Field(default_factory=list, description="Recent git changes")
+    system_state: dict[str, Any] = Field(
+        default_factory=dict, description="System state at error time"
+    )
+    user_actions: list[str] = Field(
+        default_factory=list, description="User actions leading to error"
+    )
+    related_errors: list[str] = Field(default_factory=list, description="Related error IDs")
 
 
 @dataclass
 class ErrorAgentConfig(AgentConfig):
     """Configuration specific to error handling agents"""
+
     max_fix_attempts: int = 3
     auto_fix_enabled: bool = True
     pattern_learning_enabled: bool = True
@@ -132,9 +138,9 @@ class BaseErrorAgent(BaseAgent):
     def __init__(self, config: ErrorAgentConfig):
         super().__init__(config)
         self.error_config = config
-        self.error_patterns: List[ErrorPattern] = []
-        self.error_history: List[ErrorState] = []
-        self.recovery_strategies: Dict[str, Any] = {}
+        self.error_patterns: list[ErrorPattern] = []
+        self.error_history: list[ErrorState] = []
+        self.recovery_strategies: dict[str, Any] = {}
 
         # Initialize SPARC components
         self.state_manager = StateManager()
@@ -172,44 +178,54 @@ Key principles:
 You have access to specialized tools for error analysis and correction.
 Always provide clear, actionable recommendations with risk assessments."""
 
-    def _create_error_tools(self) -> List[Tool]:
+    def _create_error_tools(self) -> list[Tool]:
         """Create specialized tools for error handling"""
         tools = []
 
         # Error detection tool
-        tools.append(Tool(
-            name="detect_error",
-            description="Detect and classify errors in code or logs",
-            func=self._detect_error_tool
-        ))
+        tools.append(
+            Tool(
+                name="detect_error",
+                description="Detect and classify errors in code or logs",
+                func=self._detect_error_tool,
+            )
+        )
 
         # Stack trace analyzer
-        tools.append(Tool(
-            name="analyze_stack_trace",
-            description="Analyze stack trace to identify root cause",
-            func=self._analyze_stack_trace_tool
-        ))
+        tools.append(
+            Tool(
+                name="analyze_stack_trace",
+                description="Analyze stack trace to identify root cause",
+                func=self._analyze_stack_trace_tool,
+            )
+        )
 
         # Code fix suggester
-        tools.append(Tool(
-            name="suggest_fix",
-            description="Suggest fixes for identified errors",
-            func=self._suggest_fix_tool
-        ))
+        tools.append(
+            Tool(
+                name="suggest_fix",
+                description="Suggest fixes for identified errors",
+                func=self._suggest_fix_tool,
+            )
+        )
 
         # Pattern matcher
-        tools.append(Tool(
-            name="match_pattern",
-            description="Match error against known patterns",
-            func=self._match_pattern_tool
-        ))
+        tools.append(
+            Tool(
+                name="match_pattern",
+                description="Match error against known patterns",
+                func=self._match_pattern_tool,
+            )
+        )
 
         # Recovery strategy selector
-        tools.append(Tool(
-            name="select_recovery_strategy",
-            description="Select appropriate recovery strategy",
-            func=self._select_recovery_strategy_tool
-        ))
+        tools.append(
+            Tool(
+                name="select_recovery_strategy",
+                description="Select appropriate recovery strategy",
+                func=self._select_recovery_strategy_tool,
+            )
+        )
 
         return tools
 
@@ -218,7 +234,7 @@ Always provide clear, actionable recommendations with risk assessments."""
         pattern_file = Path(self.error_config.pattern_database_path)
         if pattern_file.exists():
             try:
-                with open(pattern_file, 'r') as f:
+                with open(pattern_file) as f:
                     patterns_data = json.load(f)
                     self.error_patterns = [ErrorPattern(**p) for p in patterns_data]
                 logger.info(f"Loaded {len(self.error_patterns)} error patterns")
@@ -234,39 +250,39 @@ Always provide clear, actionable recommendations with risk assessments."""
         default_patterns = [
             ErrorPattern(
                 pattern_id="import_error",
-                regex=r"(Import|Module).*not found",
+                pattern=r"(Import|Module).*not found",
                 error_type=ErrorType.DEPENDENCY,
                 priority=ErrorPriority.HIGH,
-                suggested_fix="Check if module is installed and in PYTHONPATH"
+                suggested_fix="Check if module is installed and in PYTHONPATH",
             ),
             ErrorPattern(
                 pattern_id="null_pointer",
-                regex=r"(NoneType|null|undefined).*has no attribute",
+                pattern=r"(NoneType|null|undefined).*has no attribute",
                 error_type=ErrorType.RUNTIME,
                 priority=ErrorPriority.MEDIUM,
-                suggested_fix="Add null check before accessing attributes"
+                suggested_fix="Add null check before accessing attributes",
             ),
             ErrorPattern(
                 pattern_id="type_mismatch",
-                regex=r"(TypeError|type mismatch|incompatible type)",
+                pattern=r"(TypeError|type mismatch|incompatible type)",
                 error_type=ErrorType.TYPE_ERROR,
                 priority=ErrorPriority.MEDIUM,
-                suggested_fix="Check type annotations and ensure correct types are passed"
+                suggested_fix="Check type annotations and ensure correct types are passed",
             ),
             ErrorPattern(
                 pattern_id="memory_issue",
-                regex=r"(MemoryError|out of memory|heap size)",
+                pattern=r"(MemoryError|out of memory|heap size)",
                 error_type=ErrorType.MEMORY_LEAK,
                 priority=ErrorPriority.CRITICAL,
-                suggested_fix="Analyze memory usage and optimize data structures"
+                suggested_fix="Analyze memory usage and optimize data structures",
             ),
             ErrorPattern(
                 pattern_id="connection_error",
-                regex=r"(Connection|Socket|Network).*error",
+                pattern=r"(Connection|Socket|Network).*error",
                 error_type=ErrorType.NETWORK_ERROR,
                 priority=ErrorPriority.HIGH,
-                suggested_fix="Check network connectivity and service availability"
-            )
+                suggested_fix="Check network connectivity and service availability",
+            ),
         ]
         self.error_patterns = default_patterns
 
@@ -275,7 +291,7 @@ Always provide clear, actionable recommendations with risk assessments."""
         strategy_file = Path(self.error_config.recovery_strategies_path)
         if strategy_file.exists():
             try:
-                with open(strategy_file, 'r') as f:
+                with open(strategy_file) as f:
                     self.recovery_strategies = json.load(f)
                 logger.info(f"Loaded {len(self.recovery_strategies)} recovery strategies")
             except Exception as e:
@@ -292,32 +308,32 @@ Always provide clear, actionable recommendations with risk assessments."""
                 "description": "Retry operation with exponential backoff",
                 "max_attempts": 3,
                 "initial_delay": 1,
-                "applicable_to": [ErrorType.NETWORK_ERROR, ErrorType.API_ERROR]
+                "applicable_to": [ErrorType.NETWORK_ERROR, ErrorType.API_ERROR],
             },
             "circuit_breaker": {
                 "description": "Implement circuit breaker pattern",
                 "threshold": 5,
                 "timeout": 30,
-                "applicable_to": [ErrorType.API_ERROR, ErrorType.DATABASE_ERROR]
+                "applicable_to": [ErrorType.API_ERROR, ErrorType.DATABASE_ERROR],
             },
             "graceful_degradation": {
                 "description": "Provide reduced functionality",
                 "fallback_mode": "cached_data",
-                "applicable_to": [ErrorType.INTEGRATION, ErrorType.API_ERROR]
+                "applicable_to": [ErrorType.INTEGRATION, ErrorType.API_ERROR],
             },
             "rollback": {
                 "description": "Rollback to previous working state",
                 "checkpoint_required": True,
-                "applicable_to": [ErrorType.CONFIGURATION, ErrorType.RUNTIME]
+                "applicable_to": [ErrorType.CONFIGURATION, ErrorType.RUNTIME],
             },
             "auto_fix": {
                 "description": "Attempt automatic fix based on patterns",
                 "confidence_threshold": 0.8,
-                "applicable_to": [ErrorType.SYNTAX, ErrorType.TYPE_ERROR]
-            }
+                "applicable_to": [ErrorType.SYNTAX, ErrorType.TYPE_ERROR],
+            },
         }
 
-    async def detect_error(self, data: Dict[str, Any]) -> ErrorState:
+    async def detect_error(self, data: dict[str, Any]) -> ErrorState:
         """
         Detect and classify an error from various sources.
 
@@ -358,17 +374,16 @@ Always provide clear, actionable recommendations with risk assessments."""
             "affected_components": affected_components,
             "potential_impact": self._assess_impact(error_type, priority),
             "recovery_strategy": None,
-            "metadata": data.get("metadata", {})
+            "metadata": data.get("metadata", {}),
         }
 
         # Add to history
         self.error_history.append(error_state)
 
         # Update SPARC state
-        await self.state_manager.update_state({
-            "current_error": error_state,
-            "error_count": len(self.error_history)
-        })
+        await self.state_manager.update_state(
+            {"current_error": error_state, "error_count": len(self.error_history)}
+        )
 
         return error_state
 
@@ -387,7 +402,7 @@ Always provide clear, actionable recommendations with risk assessments."""
             ErrorType.DATABASE_ERROR: ["database", "sql", "query failed"],
             ErrorType.SECURITY: ["security", "vulnerability", "unauthorized"],
             ErrorType.PERFORMANCE: ["timeout", "slow", "performance"],
-            ErrorType.CONFIGURATION: ["config", "setting", "environment"]
+            ErrorType.CONFIGURATION: ["config", "setting", "environment"],
         }
 
         for error_type, keywords in classification_rules.items():
@@ -396,10 +411,14 @@ Always provide clear, actionable recommendations with risk assessments."""
 
         return ErrorType.RUNTIME  # Default
 
-    def _determine_priority(self, error_type: ErrorType, data: Dict[str, Any]) -> ErrorPriority:
+    def _determine_priority(self, error_type: ErrorType, data: dict[str, Any]) -> ErrorPriority:
         """Determine error priority based on type and context"""
         # Critical types
-        if error_type in [ErrorType.SECURITY, ErrorType.MEMORY_LEAK, ErrorType.DATABASE_ERROR]:
+        if error_type in [
+            ErrorType.SECURITY,
+            ErrorType.MEMORY_LEAK,
+            ErrorType.DATABASE_ERROR,
+        ]:
             return ErrorPriority.CRITICAL
 
         # Check for production environment
@@ -421,12 +440,12 @@ Always provide clear, actionable recommendations with risk assessments."""
             ErrorType.DEPENDENCY: ErrorPriority.HIGH,
             ErrorType.NETWORK_ERROR: ErrorPriority.MEDIUM,
             ErrorType.PERFORMANCE: ErrorPriority.LOW,
-            ErrorType.CONFIGURATION: ErrorPriority.MEDIUM
+            ErrorType.CONFIGURATION: ErrorPriority.MEDIUM,
         }
 
         return priority_map.get(error_type, ErrorPriority.MEDIUM)
 
-    def _extract_affected_components(self, stack_trace: str) -> List[str]:
+    def _extract_affected_components(self, stack_trace: str) -> list[str]:
         """Extract affected components from stack trace"""
         components = []
 
@@ -454,7 +473,7 @@ Always provide clear, actionable recommendations with risk assessments."""
             ErrorPriority.CRITICAL: "Major functionality compromised",
             ErrorPriority.HIGH: "Significant feature degradation",
             ErrorPriority.MEDIUM: "Minor feature affected",
-            ErrorPriority.LOW: "Minimal user impact"
+            ErrorPriority.LOW: "Minimal user impact",
         }
 
         base_impact = impact_levels.get(priority, "Unknown impact")
@@ -465,7 +484,7 @@ Always provide clear, actionable recommendations with risk assessments."""
             ErrorType.DATABASE_ERROR: " - Data integrity at risk",
             ErrorType.MEMORY_LEAK: " - System resources depleting",
             ErrorType.DEADLOCK: " - Process frozen",
-            ErrorType.API_ERROR: " - External integrations failing"
+            ErrorType.API_ERROR: " - External integrations failing",
         }
 
         if error_type in type_impacts:
@@ -476,9 +495,10 @@ Always provide clear, actionable recommendations with risk assessments."""
     def _generate_error_id(self) -> str:
         """Generate unique error ID"""
         import uuid
+
         return f"ERR-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8]}"
 
-    async def suggest_fix(self, error_state: ErrorState) -> Dict[str, Any]:
+    async def suggest_fix(self, error_state: ErrorState) -> dict[str, Any]:
         """
         Suggest fix for the given error.
 
@@ -493,12 +513,14 @@ Always provide clear, actionable recommendations with risk assessments."""
         # Check against known patterns
         for pattern in self.error_patterns:
             if re.search(pattern.regex, error_state["description"], re.IGNORECASE):
-                suggestions.append({
-                    "fix": pattern.suggested_fix,
-                    "confidence": pattern.success_rate,
-                    "pattern_id": pattern.pattern_id,
-                    "previous_success_rate": pattern.success_rate
-                })
+                suggestions.append(
+                    {
+                        "fix": pattern.suggested_fix,
+                        "confidence": pattern.success_rate,
+                        "pattern_id": pattern.pattern_id,
+                        "previous_success_rate": pattern.success_rate,
+                    }
+                )
 
         # Add type-specific suggestions
         type_suggestions = self._get_type_specific_suggestions(error_state["error_type"])
@@ -511,30 +533,36 @@ Always provide clear, actionable recommendations with risk assessments."""
             "error_id": error_state["error_id"],
             "suggestions": suggestions[:5],  # Top 5 suggestions
             "recommended": suggestions[0] if suggestions else None,
-            "recovery_strategy": self._select_recovery_strategy(error_state)
+            "recovery_strategy": self._select_recovery_strategy(error_state),
         }
 
-    def _get_type_specific_suggestions(self, error_type: ErrorType) -> List[Dict[str, Any]]:
+    def _get_type_specific_suggestions(self, error_type: ErrorType) -> list[Dict[str, Any]]:
         """Get type-specific fix suggestions"""
         suggestions = []
 
         type_fixes = {
             ErrorType.SYNTAX: [
-                {"fix": "Check for missing brackets, quotes, or semicolons", "confidence": 0.7},
-                {"fix": "Verify indentation is consistent", "confidence": 0.6}
+                {
+                    "fix": "Check for missing brackets, quotes, or semicolons",
+                    "confidence": 0.7,
+                },
+                {"fix": "Verify indentation is consistent", "confidence": 0.6},
             ],
             ErrorType.TYPE_ERROR: [
                 {"fix": "Add type checking before operations", "confidence": 0.8},
-                {"fix": "Convert types explicitly", "confidence": 0.7}
+                {"fix": "Convert types explicitly", "confidence": 0.7},
             ],
             ErrorType.DEPENDENCY: [
                 {"fix": "Run pip install for missing packages", "confidence": 0.9},
-                {"fix": "Check virtual environment activation", "confidence": 0.8}
+                {"fix": "Check virtual environment activation", "confidence": 0.8},
             ],
             ErrorType.NETWORK_ERROR: [
                 {"fix": "Implement retry with exponential backoff", "confidence": 0.8},
-                {"fix": "Check network connectivity and firewall rules", "confidence": 0.7}
-            ]
+                {
+                    "fix": "Check network connectivity and firewall rules",
+                    "confidence": 0.7,
+                },
+            ],
         }
 
         return type_fixes.get(error_type, [])
@@ -612,16 +640,22 @@ Always provide clear, actionable recommendations with risk assessments."""
 
                 # Update success rate
                 if success:
-                    pattern.success_rate = (pattern.success_rate * (pattern.frequency - 1) + 1.0) / pattern.frequency
+                    pattern.success_rate = (
+                        pattern.success_rate * (pattern.frequency - 1) + 1.0
+                    ) / pattern.frequency
                 else:
-                    pattern.success_rate = (pattern.success_rate * (pattern.frequency - 1)) / pattern.frequency
+                    pattern.success_rate = (
+                        pattern.success_rate * (pattern.frequency - 1)
+                    ) / pattern.frequency
 
         # Update error state
-        error_state["attempted_fixes"].append({
-            "fix": fix_applied,
-            "success": success,
-            "timestamp": datetime.now().isoformat()
-        })
+        error_state["attempted_fixes"].append(
+            {
+                "fix": fix_applied,
+                "success": success,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
 
         if success:
             error_state["resolution_status"] = "resolved"
@@ -631,7 +665,7 @@ Always provide clear, actionable recommendations with risk assessments."""
         await self.reward_system.update_reward(
             action=f"fix_{error_state['error_type'].value}",
             reward=reward,
-            context={"error_id": error_id, "fix": fix_applied}
+            context={"error_id": error_id, "fix": fix_applied},
         )
 
         # Save updated patterns
@@ -644,13 +678,13 @@ Always provide clear, actionable recommendations with risk assessments."""
 
         try:
             patterns_data = [p.model_dump() for p in self.error_patterns]
-            with open(pattern_file, 'w') as f:
+            with open(pattern_file, "w") as f:
                 json.dump(patterns_data, f, indent=2, default=str)
             logger.info(f"Saved {len(self.error_patterns)} error patterns")
         except Exception as e:
             logger.error(f"Failed to save error patterns: {e}")
 
-    async def get_error_metrics(self) -> Dict[str, Any]:
+    async def get_error_metrics(self) -> dict[str, Any]:
         """Get metrics about error handling performance"""
         metrics = {
             "total_errors_handled": len(self.error_history),
@@ -660,7 +694,7 @@ Always provide clear, actionable recommendations with risk assessments."""
             "error_type_distribution": {},
             "priority_distribution": {},
             "top_patterns": [],
-            "recovery_strategy_usage": {}
+            "recovery_strategy_usage": {},
         }
 
         if self.error_history:
@@ -672,19 +706,22 @@ Always provide clear, actionable recommendations with risk assessments."""
             for error in self.error_history:
                 # Error type distribution
                 error_type = error["error_type"].value
-                metrics["error_type_distribution"][error_type] = \
+                metrics["error_type_distribution"][error_type] = (
                     metrics["error_type_distribution"].get(error_type, 0) + 1
+                )
 
                 # Priority distribution
                 priority = error["priority"].value
-                metrics["priority_distribution"][priority] = \
+                metrics["priority_distribution"][priority] = (
                     metrics["priority_distribution"].get(priority, 0) + 1
+                )
 
                 # Recovery strategy usage
                 if error.get("recovery_strategy"):
                     strategy = error["recovery_strategy"]
-                    metrics["recovery_strategy_usage"][strategy] = \
+                    metrics["recovery_strategy_usage"][strategy] = (
                         metrics["recovery_strategy_usage"].get(strategy, 0) + 1
+                    )
 
             # Top patterns by frequency
             top_patterns = sorted(self.error_patterns, key=lambda p: p.frequency, reverse=True)[:5]
@@ -692,7 +729,7 @@ Always provide clear, actionable recommendations with risk assessments."""
                 {
                     "pattern_id": p.pattern_id,
                     "frequency": p.frequency,
-                    "success_rate": p.success_rate
+                    "success_rate": p.success_rate,
                 }
                 for p in top_patterns
             ]

@@ -6,16 +6,17 @@ This module provides helper functions and utilities for GitHub hooks and integra
 in the ToolboxAI educational platform development workflow.
 """
 
-import os
-import sys
-import subprocess
-import logging
 import json
-import yaml
-from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Union
-import requests
+import logging
+import os
+import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+import requests
+import yaml
 
 # Configure logging
 logging.basicConfig(
@@ -42,7 +43,7 @@ class GitHubHelper:
             current_dir = current_dir.parent
         return Path.cwd()
     
-    def run_command(self, command: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
+    def run_command(self, command: list[str], cwd: Optional[Path] = None) -> tuple[int, str, str]:
         """Run a shell command and return exit code, stdout, stderr"""
         try:
             result = subprocess.run(
@@ -58,7 +59,7 @@ class GitHubHelper:
         except Exception as e:
             return 1, "", str(e)
     
-    def get_changed_files(self, commit_range: Optional[str] = None) -> List[str]:
+    def get_changed_files(self, commit_range: Optional[str] = None) -> list[str]:
         """Get list of changed files"""
         if commit_range:
             cmd = ['git', 'diff', '--name-only', commit_range]
@@ -70,7 +71,7 @@ class GitHubHelper:
             return [f.strip() for f in stdout.split('\n') if f.strip()]
         return []
     
-    def get_staged_files(self) -> List[str]:
+    def get_staged_files(self) -> list[str]:
         """Get list of staged files"""
         return self.get_changed_files()
     
@@ -90,7 +91,7 @@ class GitHubHelper:
     def validate_json_file(self, file_path: Path) -> bool:
         """Validate JSON file syntax"""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 json.load(f)
             return True
         except json.JSONDecodeError as e:
@@ -103,7 +104,7 @@ class GitHubHelper:
     def validate_yaml_file(self, file_path: Path) -> bool:
         """Validate YAML file syntax"""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 yaml.safe_load(f)
             return True
         except yaml.YAMLError as e:
@@ -125,7 +126,7 @@ class GitHubHelper:
             logger.error(f"Error checking file size for {file_path}: {e}")
             return False
     
-    def check_secrets_in_file(self, file_path: Path) -> List[str]:
+    def check_secrets_in_file(self, file_path: Path) -> list[str]:
         """Check for potential secrets in file content"""
         secret_patterns = [
             'api_key',
@@ -140,7 +141,7 @@ class GitHubHelper:
         ]
         
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, encoding='utf-8', errors='ignore') as f:
                 content = f.read().lower()
             
             found_secrets = []
@@ -170,14 +171,14 @@ class GitHubHelper:
             return stdout.strip()
         return ''
     
-    def get_commit_files(self, commit_hash: str = 'HEAD') -> List[str]:
+    def get_commit_files(self, commit_hash: str = 'HEAD') -> list[str]:
         """Get files changed in a specific commit"""
         exit_code, stdout, stderr = self.run_command(['git', 'show', '--name-only', '--pretty=format:', commit_hash])
         if exit_code == 0:
             return [f.strip() for f in stdout.split('\n') if f.strip()]
         return []
     
-    def send_github_api_request(self, endpoint: str, method: str = 'GET', data: Optional[Dict] = None) -> Optional[Dict]:
+    def send_github_api_request(self, endpoint: str, method: str = 'GET', data: Optional[dict] = None) -> Optional[dict]:
         """Send request to GitHub API"""
         if not self.github_token:
             logger.warning("GitHub token not available")
@@ -246,7 +247,7 @@ class EducationalPlatformHelper:
             return 'core'
     
     @staticmethod
-    def get_educational_labels(content: str) -> List[str]:
+    def get_educational_labels(content: str) -> list[str]:
         """Extract educational-related labels from content"""
         educational_keywords = {
             'curriculum': 'curriculum',
@@ -297,14 +298,14 @@ def setup_logging(log_file: Optional[str] = None) -> logging.Logger:
     
     return logger
 
-def load_config(config_path: Optional[Path] = None) -> Dict:
+def load_config(config_path: Optional[Path] = None) -> dict:
     """Load configuration from file"""
     if config_path is None:
         config_path = Path(__file__).parent / 'config.json'
     
     if config_path.exists():
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Error loading config: {e}")

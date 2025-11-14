@@ -3,33 +3,31 @@ Temporary BaseErrorAgent without LangChain dependencies
 Phase 1.5 workaround for LangChain compatibility issues
 """
 
-import asyncio
 import logging
-import traceback
-from typing import Dict, Any, Optional, List, TypedDict, Tuple
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
-import json
-import re
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
-
-from core.agents.base_agent import BaseAgent, AgentConfig, AgentState, TaskResult
+from core.agents.base_agent import AgentConfig, BaseAgent, TaskResult
 
 logger = logging.getLogger(__name__)
 
+
 class ErrorPriority(Enum):
     """Error priority levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
     EMERGENCY = "emergency"
 
+
 class ErrorType(Enum):
     """Types of errors the agent can handle"""
+
     SYNTAX_ERROR = "syntax_error"
     RUNTIME_ERROR = "runtime_error"
     LOGIC_ERROR = "logic_error"
@@ -43,8 +41,10 @@ class ErrorType(Enum):
     COMPATIBILITY_ERROR = "compatibility_error"
     UNKNOWN_ERROR = "unknown_error"
 
+
 class ErrorState(Enum):
     """States of error handling workflow"""
+
     DETECTED = "detected"
     ANALYZING = "analyzing"
     REPRODUCING = "reproducing"
@@ -54,9 +54,11 @@ class ErrorState(Enum):
     ESCALATED = "escalated"
     DEFERRED = "deferred"
 
+
 @dataclass
 class ErrorContext:
     """Context information for an error"""
+
     error_id: str
     timestamp: datetime
     error_type: ErrorType
@@ -67,10 +69,11 @@ class ErrorContext:
     file_path: Optional[str] = None
     line_number: Optional[int] = None
     code_snippet: Optional[str] = None
-    reproduction_steps: List[str] = field(default_factory=list)
-    attempted_fixes: List[str] = field(default_factory=list)
-    related_errors: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    reproduction_steps: list[str] = field(default_factory=list)
+    attempted_fixes: list[str] = field(default_factory=list)
+    related_errors: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
 
 class BaseErrorAgent(BaseAgent):
     """
@@ -82,49 +85,49 @@ class BaseErrorAgent(BaseAgent):
         super().__init__(config)
         self.error_patterns = self._load_error_patterns()
         self.known_fixes = self._load_known_fixes()
-        self.active_errors: Dict[str, ErrorContext] = {}
+        self.active_errors: dict[str, ErrorContext] = {}
 
-    def _load_error_patterns(self) -> Dict[str, Any]:
+    def _load_error_patterns(self) -> dict[str, Any]:
         """Load error detection patterns"""
         return {
             "pydantic_v2_incompatibility": {
                 "pattern": r"__init_subclass__.*takes no keyword arguments",
                 "type": ErrorType.COMPATIBILITY_ERROR,
-                "priority": ErrorPriority.HIGH
+                "priority": ErrorPriority.HIGH,
             },
             "jwt_validation": {
                 "pattern": r"JWT secret validation failed",
                 "type": ErrorType.CONFIG_ERROR,
-                "priority": ErrorPriority.HIGH
+                "priority": ErrorPriority.HIGH,
             },
             "langchain_syntax": {
                 "pattern": r"invalid syntax.*output_key",
                 "type": ErrorType.SYNTAX_ERROR,
-                "priority": ErrorPriority.CRITICAL
-            }
+                "priority": ErrorPriority.CRITICAL,
+            },
         }
 
-    def _load_known_fixes(self) -> Dict[str, Any]:
+    def _load_known_fixes(self) -> dict[str, Any]:
         """Load known fixes for common errors"""
         return {
             "pydantic_v2_incompatibility": [
                 "Apply compatibility layer patches",
                 "Use alternative imports without LangChain chains",
-                "Implement temporary workaround classes"
+                "Implement temporary workaround classes",
             ],
             "jwt_validation": [
                 "Generate secure JWT secret",
                 "Update .env file with valid secret",
-                "Restart application"
+                "Restart application",
             ],
             "langchain_syntax": [
                 "Downgrade to LangChain 0.2.x",
                 "Use alternative agent implementations",
-                "Apply syntax compatibility patches"
-            ]
+                "Apply syntax compatibility patches",
+            ],
         }
 
-    async def analyze_error(self, error_text: str, context: Dict[str, Any] = None) -> ErrorContext:
+    async def analyze_error(self, error_text: str, context: dict[str, Any] = None) -> ErrorContext:
         """
         Analyze an error and create context.
         Simplified implementation for Phase 1.5.
@@ -148,7 +151,7 @@ class BaseErrorAgent(BaseAgent):
             priority=priority,
             state=ErrorState.DETECTED,
             message=error_text,
-            metadata=context or {}
+            metadata=context or {},
         )
 
         self.active_errors[error_id] = error_context
@@ -157,7 +160,7 @@ class BaseErrorAgent(BaseAgent):
 
         return error_context
 
-    async def suggest_fix(self, error_context: ErrorContext) -> List[str]:
+    async def suggest_fix(self, error_context: ErrorContext) -> list[str]:
         """
         Suggest fixes for the given error.
         Simplified implementation for Phase 1.5.
@@ -176,12 +179,12 @@ class BaseErrorAgent(BaseAgent):
                 "Review error message and stack trace",
                 "Check recent changes",
                 "Consult documentation",
-                "Search for similar issues online"
+                "Search for similar issues online",
             ]
 
         return fixes
 
-    async def execute_task(self, task: Dict[str, Any]) -> TaskResult:
+    async def execute_task(self, task: dict[str, Any]) -> TaskResult:
         """
         Execute error handling task.
         Simplified implementation for Phase 1.5.
@@ -202,25 +205,19 @@ class BaseErrorAgent(BaseAgent):
                         "error_id": error_context.error_id,
                         "error_type": error_context.error_type.value,
                         "priority": error_context.priority.value,
-                        "suggested_fixes": fixes
+                        "suggested_fixes": fixes,
                     },
-                    message=f"Error analysis completed for {error_context.error_id}"
+                    message=f"Error analysis completed for {error_context.error_id}",
                 )
 
             else:
-                return TaskResult.create(
-                    status="error",
-                    message=f"Unknown action: {action}"
-                )
+                return TaskResult.create(status="error", message=f"Unknown action: {action}")
 
         except Exception as e:
             logger.error(f"Error in BaseErrorAgent.execute_task: {e}")
-            return TaskResult.create(
-                status="error",
-                message=f"Task execution failed: {str(e)}"
-            )
+            return TaskResult.create(status="error", message=f"Task execution failed: {str(e)}")
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get current agent status"""
         return {
             "agent_type": "BaseErrorAgent",
@@ -229,5 +226,5 @@ class BaseErrorAgent(BaseAgent):
             "error_patterns": len(self.error_patterns),
             "known_fixes": len(self.known_fixes),
             "capabilities": ["error_analysis", "fix_suggestion"],
-            "phase": "1.5_compatibility_mode"
+            "phase": "1.5_compatibility_mode",
         }

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from fastapi import FastAPI, HTTPException
 
@@ -56,12 +56,12 @@ class ErrorRecord:
     message: str
     stack_trace: str
     component: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     timestamp: datetime = field(default_factory=datetime.now)
     resolved: bool = False
     resolution_time: Optional[datetime] = None
-    recovery_attempts: List[Dict[str, Any]] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    recovery_attempts: list[dict[str, Any]] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
 
     @property
     def age_minutes(self) -> float:
@@ -76,7 +76,7 @@ class RecoveryStrategy:
     strategy_id: str
     name: str
     description: str
-    applicable_errors: List[str]  # Error types this strategy can handle
+    applicable_errors: list[str]  # Error types this strategy can handle
     severity_threshold: ErrorSeverity
     auto_retry: bool
     max_attempts: int
@@ -95,7 +95,7 @@ class AlertRule:
     severity_threshold: ErrorSeverity
     time_window_minutes: int
     max_occurrences: int
-    notification_channels: List[str]  # email, slack, webhook
+    notification_channels: list[str]  # email, slack, webhook
     enabled: bool = True
 
 
@@ -111,7 +111,7 @@ class ErrorCoordinator:
     - Error metrics and reporting
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
 
         # Configuration
@@ -134,12 +134,12 @@ class ErrorCoordinator:
         self.error_patterns = defaultdict(list)
 
         # Recovery system
-        self.recovery_strategies: Dict[str, RecoveryStrategy] = {}
-        self.active_recoveries: Dict[str, RecoveryStatus] = {}
+        self.recovery_strategies: dict[str, RecoveryStrategy] = {}
+        self.active_recoveries: dict[str, RecoveryStatus] = {}
         self.recovery_success_rates = defaultdict(float)
 
         # Alert system
-        self.alert_rules: Dict[str, AlertRule] = {}
+        self.alert_rules: dict[str, AlertRule] = {}
         self.notification_history = deque(maxlen=1000)
         self.last_notification_times = defaultdict(datetime)
 
@@ -312,10 +312,10 @@ class ErrorCoordinator:
         self,
         error_type: str,
         error: Union[Exception, str],
-        context: Dict[str, Any],
+        context: dict[str, Any],
         component: str = "unknown",
         severity: ErrorSeverity = ErrorSeverity.ERROR,
-        tags: List[str] = None,
+        tags: list[str] = None,
     ) -> str:
         """
         Handle an error with comprehensive processing and recovery
@@ -705,7 +705,7 @@ class ErrorCoordinator:
             except (ValueError, TypeError, KeyError, AttributeError) as e:
                 logger.error(f"Alert rule evaluation failed for {rule.rule_id}: {e}")
 
-    def _evaluate_condition_safely(self, condition: str, context: Dict[str, Any]) -> bool:
+    def _evaluate_condition_safely(self, condition: str, context: dict[str, Any]) -> bool:
         """Safely evaluate a condition without using ast.literal_eval()"""
         # Define allowed operators for safe evaluation
         allowed_operators = {
@@ -771,7 +771,7 @@ class ErrorCoordinator:
             raise ValueError(f"Invalid condition expression: {e}")
 
     async def _trigger_alert(
-        self, rule: AlertRule, error_record: ErrorRecord, context: Dict[str, Any]
+        self, rule: AlertRule, error_record: ErrorRecord, context: dict[str, Any]
     ):
         """Trigger an alert based on rule"""
 
@@ -920,7 +920,7 @@ class ErrorCoordinator:
             except Exception as e:
                 logger.error(f"Pattern analyzer error: {e}")
 
-    async def _analyze_error_patterns(self) -> Dict[str, Any]:
+    async def _analyze_error_patterns(self) -> dict[str, Any]:
         """Analyze error patterns for insights"""
         analysis = {}
 
@@ -962,7 +962,7 @@ class ErrorCoordinator:
 
         return analysis
 
-    async def _generate_error_insights(self, patterns: Dict[str, Any]) -> List[str]:
+    async def _generate_error_insights(self, patterns: dict[str, Any]) -> list[str]:
         """Generate actionable insights from error patterns"""
         insights = []
 
@@ -1075,7 +1075,7 @@ class ErrorCoordinator:
             except Exception as e:
                 logger.error(f"Cleanup task error: {e}")
 
-    async def get_error_summary(self, time_window_hours: int = 24) -> Dict[str, Any]:
+    async def get_error_summary(self, time_window_hours: int = 24) -> dict[str, Any]:
         """Get error summary for specified time window"""
         time_threshold = datetime.now() - timedelta(hours=time_window_hours)
         recent_errors = [err for err in self.error_history if err.timestamp > time_threshold]
@@ -1112,7 +1112,7 @@ class ErrorCoordinator:
             },
         }
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """Get error coordinator metrics"""
         error_summary = await self.get_error_summary()
 
@@ -1129,7 +1129,7 @@ class ErrorCoordinator:
             "recent_patterns": await self._analyze_error_patterns(),
         }
 
-    async def get_health(self) -> Dict[str, Any]:
+    async def get_health(self) -> dict[str, Any]:
         """Get error coordinator health status"""
         try:
             # Check recent error rate

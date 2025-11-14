@@ -138,7 +138,11 @@ class TestAgentConnectivitySimple:
             (
                 "content",
                 "generate_content",
-                {"subject": "Mathematics", "grade_level": 5, "objectives": ["Learn fractions"]},
+                {
+                    "subject": "Mathematics",
+                    "grade_level": 5,
+                    "objectives": ["Learn fractions"],
+                },
             ),
             (
                 "quiz",
@@ -192,7 +196,11 @@ class TestAgentConnectivitySimple:
             agent_service.execute_task(
                 "content",
                 "generate_content",
-                {"subject": f"Subject_{i}", "grade_level": 5, "objectives": ["Test objective"]},
+                {
+                    "subject": f"Subject_{i}",
+                    "grade_level": 5,
+                    "objectives": ["Test objective"],
+                },
                 f"user_{i}",
             )
             for i in range(3)
@@ -218,7 +226,10 @@ class TestAgentConnectivitySimple:
 
         # Test invalid agent type
         result = await agent_service.execute_task(
-            agent_type="nonexistent", task_type="test", task_data={}, user_id="test_user"
+            agent_type="nonexistent",
+            task_type="test",
+            task_data={},
+            user_id="test_user",
         )
 
         assert result["success"] is False
@@ -246,7 +257,10 @@ async def test_complete_integration_coverage():
 
     # Define all integration tests
     integration_tests = [
-        ("Agent Service Initialization", test_instance.test_agent_service_basic_functionality),
+        (
+            "Agent Service Initialization",
+            test_instance.test_agent_service_basic_functionality,
+        ),
         ("Agent Task Execution", test_instance.test_agent_task_execution),
         ("Pusher Integration", test_instance.test_pusher_integration_mock),
         ("Agent Performance Quality", test_instance.test_agent_performance_quality),
@@ -261,7 +275,7 @@ async def test_complete_integration_coverage():
     for test_name, test_func in integration_tests:
         try:
             print(f"\nRunning: {test_name}")
-            result = await test_func()
+            await test_func()
             test_results[test_name] = True
             successful_tests += 1
             print(f"✅ {test_name}: PASSED")

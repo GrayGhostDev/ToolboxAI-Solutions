@@ -12,29 +12,25 @@ Version: 1.0.0
 """
 
 import asyncio
-import logging
 import hashlib
-import json
-from typing import Dict, Any, Optional, List, Set, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime, timedelta
-import os
-from pathlib import Path
+import logging
+from datetime import datetime
+from typing import Any, Optional
+
+from core.agents.base_agent import AgentCapability, AgentState, TaskResult
 
 from .base_database_agent import (
     BaseDatabaseAgent,
     DatabaseAgentConfig,
     DatabaseOperation,
-    DatabaseHealth
 )
-from core.agents.base_agent import AgentCapability, AgentState, TaskResult
 
 # Import Alembic for migrations
 try:
     from alembic import command
     from alembic.config import Config
     from alembic.script import ScriptDirectory
+
     ALEMBIC_AVAILABLE = True
 except ImportError:
     ALEMBIC_AVAILABLE = False
@@ -45,6 +41,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # SCHEMA MANAGEMENT AGENT
 # ============================================================================
+
 
 class SchemaManagementAgent(BaseDatabaseAgent):
     """
@@ -62,16 +59,15 @@ class SchemaManagementAgent(BaseDatabaseAgent):
         """Initialize the Schema Management Agent."""
         if not config:
             config = DatabaseAgentConfig(
-                name="SchemaManagementAgent",
-                capability=AgentCapability.ORCHESTRATION
+                name="SchemaManagementAgent", capability=AgentCapability.ORCHESTRATION
             )
         super().__init__(config)
-        self.migration_history: List[Dict] = []
-        self.schema_versions: Dict[str, str] = {}
+        self.migration_history: list[dict] = []
+        self.schema_versions: dict[str, str] = {}
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process schema management tasks."""
-        task = state.get("task", "")
+        state.get("task", "")
         operation = state.get("operation", DatabaseOperation.MIGRATION)
 
         if operation == DatabaseOperation.MIGRATION:
@@ -110,18 +106,23 @@ class SchemaManagementAgent(BaseDatabaseAgent):
             contract_result = await self._contract_phase(migration_name)
 
             # Record migration history
-            self.migration_history.append({
-                "name": migration_name,
-                "timestamp": datetime.utcnow().isoformat(),
-                "status": "completed",
-                "phases": ["expand", "migrate", "contract"]
-            })
+            self.migration_history.append(
+                {
+                    "name": migration_name,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "status": "completed",
+                    "phases": ["expand", "migrate", "contract"],
+                }
+            )
 
             # Publish event
-            await self.publish_event("migration_completed", {
-                "migration": migration_name,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+            await self.publish_event(
+                "migration_completed",
+                {
+                    "migration": migration_name,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
 
             return TaskResult(
                 success=True,
@@ -131,19 +132,16 @@ class SchemaManagementAgent(BaseDatabaseAgent):
                     "phases": {
                         "expand": expand_result,
                         "migrate": migrate_result,
-                        "contract": contract_result
-                    }
-                }
+                        "contract": contract_result,
+                    },
+                },
             )
 
         except Exception as e:
             logger.error(f"Migration failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e), "migration": migration_name}
-            )
+            return TaskResult(success=False, data={"error": str(e), "migration": migration_name})
 
-    async def _expand_phase(self, migration_name: str) -> Dict:
+    async def _expand_phase(self, migration_name: str) -> dict:
         """Expand phase - add new columns/tables without breaking existing code."""
         try:
             # Simulate expansion (in real implementation, use Alembic)
@@ -152,7 +150,7 @@ class SchemaManagementAgent(BaseDatabaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _migrate_data_phase(self, migration_name: str) -> Dict:
+    async def _migrate_data_phase(self, migration_name: str) -> dict:
         """Migrate data from old schema to new schema."""
         try:
             # Simulate data migration
@@ -161,7 +159,7 @@ class SchemaManagementAgent(BaseDatabaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _contract_phase(self, migration_name: str) -> Dict:
+    async def _contract_phase(self, migration_name: str) -> dict:
         """Contract phase - remove old columns/tables after migration."""
         try:
             # Simulate contraction
@@ -170,7 +168,7 @@ class SchemaManagementAgent(BaseDatabaseAgent):
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _rollback_expand(self, migration_name: str) -> Dict:
+    async def _rollback_expand(self, migration_name: str) -> dict:
         """Rollback expand phase if migration fails."""
         try:
             logger.info(f"Rolling back expand phase for {migration_name}")
@@ -186,30 +184,26 @@ class SchemaManagementAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "tables_checked": 0,
                 "columns_checked": 0,
-                "issues": []
+                "issues": [],
             }
 
             # Simulate schema validation
             async with self.get_db_session() as session:
                 # Check table existence
-                result = await session.execute("""
+                result = await session.execute(
+                    """
                     SELECT table_name
                     FROM information_schema.tables
                     WHERE table_schema = 'public'
-                """)
+                """
+                )
                 tables = result.fetchall()
                 validation_results["tables_checked"] = len(tables)
 
-            return TaskResult(
-                success=True,
-                data=validation_results
-            )
+            return TaskResult(success=True, data=validation_results)
 
         except Exception as e:
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
     async def analyze_schema_drift(self) -> TaskResult:
         """Analyze drift between environments."""
@@ -218,27 +212,22 @@ class SchemaManagementAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "environments": ["development", "staging", "production"],
                 "drift_detected": False,
-                "differences": []
+                "differences": [],
             }
 
             # Simulate drift analysis
             await asyncio.sleep(0.1)
 
-            return TaskResult(
-                success=True,
-                data=drift_analysis
-            )
+            return TaskResult(success=True, data=drift_analysis)
 
         except Exception as e:
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
 
 # ============================================================================
 # DATA SYNCHRONIZATION AGENT
 # ============================================================================
+
 
 class DataSynchronizationAgent(BaseDatabaseAgent):
     """
@@ -257,16 +246,16 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
         if not config:
             config = DatabaseAgentConfig(
                 name="DataSynchronizationAgent",
-                capability=AgentCapability.ORCHESTRATION
+                capability=AgentCapability.ORCHESTRATION,
             )
         super().__init__(config)
-        self.sync_status: Dict[str, Any] = {}
-        self.vector_clocks: Dict[str, Dict[str, int]] = {}
-        self.merkle_trees: Dict[str, Any] = {}
+        self.sync_status: dict[str, Any] = {}
+        self.vector_clocks: dict[str, dict[str, int]] = {}
+        self.merkle_trees: dict[str, Any] = {}
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process synchronization tasks."""
-        task = state.get("task", "")
+        state.get("task", "")
         operation = state.get("operation", DatabaseOperation.SYNC)
 
         if operation == DatabaseOperation.SYNC:
@@ -303,15 +292,14 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
             self.sync_status[f"{source}->{target}"] = {
                 "last_sync": datetime.utcnow().isoformat(),
                 "records_synced": len(applied),
-                "status": "completed"
+                "status": "completed",
             }
 
             # Publish event
-            await self.publish_event("sync_completed", {
-                "source": source,
-                "target": target,
-                "records": len(applied)
-            })
+            await self.publish_event(
+                "sync_completed",
+                {"source": source, "target": target, "records": len(applied)},
+            )
 
             return TaskResult(
                 success=True,
@@ -319,24 +307,21 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
                     "source": source,
                     "target": target,
                     "records_synced": len(applied),
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             )
 
         except Exception as e:
             logger.error(f"Sync failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _build_merkle_tree(self, database: str) -> Dict:
+    async def _build_merkle_tree(self, database: str) -> dict:
         """Build merkle tree for efficient comparison."""
         # Simplified merkle tree implementation
         tree = {
             "root": hashlib.sha256(f"{database}_root".encode()).hexdigest(),
             "branches": {},
-            "leaves": {}
+            "leaves": {},
         }
 
         # In real implementation, would query database and build actual tree
@@ -344,21 +329,23 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
 
         return tree
 
-    async def _compare_merkle_trees(self, source_tree: Dict, target_tree: Dict) -> List[Dict]:
+    async def _compare_merkle_trees(self, source_tree: dict, target_tree: dict) -> list[dict]:
         """Compare merkle trees to find differences."""
         differences = []
 
         # Simplified comparison
         if source_tree["root"] != target_tree["root"]:
-            differences.append({
-                "type": "data_mismatch",
-                "source_hash": source_tree["root"],
-                "target_hash": target_tree["root"]
-            })
+            differences.append(
+                {
+                    "type": "data_mismatch",
+                    "source_hash": source_tree["root"],
+                    "target_hash": target_tree["root"],
+                }
+            )
 
         return differences
 
-    async def _resolve_conflicts(self, differences: List[Dict]) -> List[Dict]:
+    async def _resolve_conflicts(self, differences: list[dict]) -> list[dict]:
         """Resolve conflicts using vector clocks."""
         resolved = []
 
@@ -367,13 +354,13 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
             resolution = {
                 "action": "update",
                 "data": diff,
-                "vector_clock": self._increment_vector_clock("primary")
+                "vector_clock": self._increment_vector_clock("primary"),
             }
             resolved.append(resolution)
 
         return resolved
 
-    async def _apply_changes(self, target: str, changes: List[Dict]) -> List[Dict]:
+    async def _apply_changes(self, target: str, changes: list[dict]) -> list[dict]:
         """Apply resolved changes to target database."""
         applied = []
 
@@ -384,7 +371,7 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
 
         return applied
 
-    def _increment_vector_clock(self, node: str) -> Dict[str, int]:
+    def _increment_vector_clock(self, node: str) -> dict[str, int]:
         """Increment vector clock for a node."""
         if node not in self.vector_clocks:
             self.vector_clocks[node] = {}
@@ -402,27 +389,22 @@ class DataSynchronizationAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "databases_checked": ["primary", "replica1", "replica2"],
                 "consistency_status": "consistent",
-                "issues": []
+                "issues": [],
             }
 
             # Simulate consistency check
             await asyncio.sleep(0.1)
 
-            return TaskResult(
-                success=True,
-                data=consistency_report
-            )
+            return TaskResult(success=True, data=consistency_report)
 
         except Exception as e:
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
 
 # ============================================================================
 # QUERY OPTIMIZATION AGENT
 # ============================================================================
+
 
 class QueryOptimizationAgent(BaseDatabaseAgent):
     """
@@ -440,17 +422,16 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
         """Initialize the Query Optimization Agent."""
         if not config:
             config = DatabaseAgentConfig(
-                name="QueryOptimizationAgent",
-                capability=AgentCapability.ANALYSIS
+                name="QueryOptimizationAgent", capability=AgentCapability.ANALYSIS
             )
         super().__init__(config)
-        self.query_stats: Dict[str, Any] = {}
-        self.index_recommendations: List[Dict] = []
-        self.optimization_history: List[Dict] = []
+        self.query_stats: dict[str, Any] = {}
+        self.index_recommendations: list[dict] = []
+        self.optimization_history: list[dict] = []
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process query optimization tasks."""
-        task = state.get("task", "")
+        state.get("task", "")
         operation = state.get("operation", DatabaseOperation.OPTIMIZE)
 
         if operation == DatabaseOperation.OPTIMIZE:
@@ -490,7 +471,7 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
                 "optimized_query": optimized_query,
                 "recommendations": recommendations,
                 "expected_improvement": "50%",  # Placeholder
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             self.optimization_history.append(optimization)
@@ -499,19 +480,13 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
             cache_key = f"optimized:{hashlib.md5(query.encode()).hexdigest()}"
             await self.cache_set(cache_key, optimized_query)
 
-            return TaskResult(
-                success=True,
-                data=optimization
-            )
+            return TaskResult(success=True, data=optimization)
 
         except Exception as e:
             logger.error(f"Query optimization failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _analyze_query_plan(self, query: str) -> Dict:
+    async def _analyze_query_plan(self, query: str) -> dict:
         """Analyze query execution plan."""
         try:
             async with self.get_db_session() as session:
@@ -524,7 +499,7 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
                     "query": query,
                     "plan": [str(row) for row in plan],
                     "cost": 100,  # Placeholder
-                    "time": 50  # Placeholder
+                    "time": 50,  # Placeholder
                 }
         except:
             # Return mock plan if database not available
@@ -532,25 +507,29 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
                 "query": query,
                 "plan": ["Seq Scan on table"],
                 "cost": 100,
-                "time": 50
+                "time": 50,
             }
 
-    def _identify_bottlenecks(self, plan: Dict) -> List[Dict]:
+    def _identify_bottlenecks(self, plan: dict) -> list[dict]:
         """Identify performance bottlenecks in query plan."""
         bottlenecks = []
 
         # Check for sequential scans
         for line in plan.get("plan", []):
             if "Seq Scan" in str(line):
-                bottlenecks.append({
-                    "type": "sequential_scan",
-                    "severity": "high",
-                    "description": "Table scan detected - consider adding index"
-                })
+                bottlenecks.append(
+                    {
+                        "type": "sequential_scan",
+                        "severity": "high",
+                        "description": "Table scan detected - consider adding index",
+                    }
+                )
 
         return bottlenecks
 
-    async def _generate_recommendations(self, query: str, plan: Dict, bottlenecks: List[Dict]) -> List[str]:
+    async def _generate_recommendations(
+        self, query: str, plan: dict, bottlenecks: list[dict]
+    ) -> list[str]:
         """Generate optimization recommendations."""
         recommendations = []
 
@@ -563,7 +542,7 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
 
         return recommendations
 
-    async def _rewrite_query(self, query: str, recommendations: List[str]) -> str:
+    async def _rewrite_query(self, query: str, recommendations: list[str]) -> str:
         """Rewrite query for better performance."""
         # Simplified query rewriting
         optimized = query
@@ -582,27 +561,22 @@ class QueryOptimizationAgent(BaseDatabaseAgent):
                 "timestamp": datetime.utcnow().isoformat(),
                 "queries_analyzed": 0,
                 "recommendations": [],
-                "top_slow_queries": []
+                "top_slow_queries": [],
             }
 
             # In real implementation, would analyze pg_stat_statements
             await asyncio.sleep(0.1)
 
-            return TaskResult(
-                success=True,
-                data=slow_queries
-            )
+            return TaskResult(success=True, data=slow_queries)
 
         except Exception as e:
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
 
 # ============================================================================
 # CACHE MANAGEMENT AGENT
 # ============================================================================
+
 
 class CacheManagementAgent(BaseDatabaseAgent):
     """
@@ -620,20 +594,15 @@ class CacheManagementAgent(BaseDatabaseAgent):
         """Initialize the Cache Management Agent."""
         if not config:
             config = DatabaseAgentConfig(
-                name="CacheManagementAgent",
-                capability=AgentCapability.ANALYSIS
+                name="CacheManagementAgent", capability=AgentCapability.ANALYSIS
             )
         super().__init__(config)
-        self.cache_stats: Dict[str, Any] = {
-            "hits": 0,
-            "misses": 0,
-            "evictions": 0
-        }
-        self.ttl_strategies: Dict[str, int] = {}
+        self.cache_stats: dict[str, Any] = {"hits": 0, "misses": 0, "evictions": 0}
+        self.ttl_strategies: dict[str, int] = {}
 
     async def _process_task(self, state: AgentState) -> TaskResult:
         """Process cache management tasks."""
-        task = state.get("task", "")
+        state.get("task", "")
         operation = state.get("operation", DatabaseOperation.CACHE)
 
         if operation == DatabaseOperation.CACHE:
@@ -669,32 +638,26 @@ class CacheManagementAgent(BaseDatabaseAgent):
                 "patterns": patterns,
                 "ttl_adjustments": ttl_adjustments,
                 "eviction_policy": eviction_config,
-                "warming_strategy": warming_strategy
+                "warming_strategy": warming_strategy,
             }
 
             # Apply optimizations
             for key_pattern, ttl in ttl_adjustments.items():
                 self.ttl_strategies[key_pattern] = ttl
 
-            return TaskResult(
-                success=True,
-                data=optimization_result
-            )
+            return TaskResult(success=True, data=optimization_result)
 
         except Exception as e:
             logger.error(f"Cache optimization failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _analyze_cache_patterns(self) -> Dict:
+    async def _analyze_cache_patterns(self) -> dict:
         """Analyze cache access patterns."""
         patterns = {
             "hot_keys": [],
             "cold_keys": [],
             "access_frequency": {},
-            "size_distribution": {}
+            "size_distribution": {},
         }
 
         if self.redis_client:
@@ -706,7 +669,7 @@ class CacheManagementAgent(BaseDatabaseAgent):
 
         return patterns
 
-    async def _optimize_ttls(self, patterns: Dict) -> Dict[str, int]:
+    async def _optimize_ttls(self, patterns: dict) -> dict[str, int]:
         """Optimize TTLs based on access patterns."""
         ttl_adjustments = {}
 
@@ -717,20 +680,20 @@ class CacheManagementAgent(BaseDatabaseAgent):
 
         return ttl_adjustments
 
-    async def _configure_eviction_policy(self, patterns: Dict) -> Dict:
+    async def _configure_eviction_policy(self, patterns: dict) -> dict:
         """Configure optimal eviction policy."""
         return {
             "policy": "allkeys-lru",  # Least Recently Used
             "max_memory": "1gb",
-            "max_memory_samples": 5
+            "max_memory_samples": 5,
         }
 
-    async def _generate_warming_strategy(self, patterns: Dict) -> Dict:
+    async def _generate_warming_strategy(self, patterns: dict) -> dict:
         """Generate cache warming strategy."""
         return {
             "strategy": "preload_hot_data",
             "schedule": "0 6 * * *",  # Daily at 6 AM
-            "keys_to_warm": patterns.get("hot_keys", [])[:100]
+            "keys_to_warm": patterns.get("hot_keys", [])[:100],
         }
 
     def _calculate_hit_ratio(self) -> float:
@@ -772,19 +735,16 @@ class CacheManagementAgent(BaseDatabaseAgent):
                     "categories": {
                         "users": len(user_keys),
                         "content": len(content_keys),
-                        "sessions": len(session_keys)
-                    }
-                }
+                        "sessions": len(session_keys),
+                    },
+                },
             )
 
         except Exception as e:
             logger.error(f"Cache warming failed: {e}")
-            return TaskResult(
-                success=False,
-                data={"error": str(e)}
-            )
+            return TaskResult(success=False, data={"error": str(e)})
 
-    async def _warm_user_data(self) -> List[str]:
+    async def _warm_user_data(self) -> list[str]:
         """Warm user-related cache entries."""
         keys = []
         # In real implementation, would query active users
@@ -794,23 +754,27 @@ class CacheManagementAgent(BaseDatabaseAgent):
             keys.append(key)
         return keys
 
-    async def _warm_content_data(self) -> List[str]:
+    async def _warm_content_data(self) -> list[str]:
         """Warm content-related cache entries."""
         keys = []
         # In real implementation, would query popular content
         for content_id in range(1, 21):  # Top 20 content items
             key = f"content:{content_id}"
-            await self.cache_set(key, {"id": content_id, "cached_at": datetime.utcnow().isoformat()})
+            await self.cache_set(
+                key, {"id": content_id, "cached_at": datetime.utcnow().isoformat()}
+            )
             keys.append(key)
         return keys
 
-    async def _warm_session_data(self) -> List[str]:
+    async def _warm_session_data(self) -> list[str]:
         """Warm session-related cache entries."""
         keys = []
         # In real implementation, would query active sessions
         for session_id in range(1, 6):  # Recent 5 sessions
             key = f"session:{session_id}"
-            await self.cache_set(key, {"id": session_id, "cached_at": datetime.utcnow().isoformat()})
+            await self.cache_set(
+                key, {"id": session_id, "cached_at": datetime.utcnow().isoformat()}
+            )
             keys.append(key)
         return keys
 
@@ -820,5 +784,5 @@ __all__ = [
     "SchemaManagementAgent",
     "DataSynchronizationAgent",
     "QueryOptimizationAgent",
-    "CacheManagementAgent"
+    "CacheManagementAgent",
 ]

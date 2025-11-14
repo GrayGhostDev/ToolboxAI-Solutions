@@ -251,7 +251,13 @@ class GPT5Service:
         has_complex_request = any(
             keyword in str(m.get("content", "")).lower()
             for m in messages
-            for keyword in ["analyze", "explain", "complex", "detailed", "comprehensive"]
+            for keyword in [
+                "analyze",
+                "explain",
+                "complex",
+                "detailed",
+                "comprehensive",
+            ]
         )
 
         # Set reasoning effort based on complexity
@@ -417,7 +423,7 @@ class GPT5Service:
 
         # Test API connectivity
         try:
-            test_response = await self.async_client.chat.completions.create(
+            await self.async_client.chat.completions.create(
                 model="gpt-4o-mini",  # Use a cheap model for testing
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=1,

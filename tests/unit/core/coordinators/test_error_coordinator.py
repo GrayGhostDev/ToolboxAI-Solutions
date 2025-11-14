@@ -654,7 +654,7 @@ class TestRecoveryFunctions:
 
         with patch("gc.collect") as mock_gc:
             # Test basic cleanup without coordinator system
-            success = await error_coordinator._recover_resource_cleanup(error_record, 0)
+            await error_coordinator._recover_resource_cleanup(error_record, 0)
 
             mock_gc.assert_called_once()
 

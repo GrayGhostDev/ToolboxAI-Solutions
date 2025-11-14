@@ -246,7 +246,7 @@ class TestOptimizedAsyncEngine:
             pass
 
         try:
-            async with engine_instance.get_session() as session:
+            async with engine_instance.get_session():
                 raise TestError("Test error")
         except TestError:
             pass
@@ -766,8 +766,14 @@ class TestInitializationAndHealth:
     @patch("apps.backend.core.db_optimization.optimizer")
     async def test_get_db_health_success(self, mock_optimizer):
         """Test successful database health check."""
-        mock_optimizer.get_connection_pool_stats.return_value = {"pool_size": 20, "checked_out": 5}
-        mock_optimizer.get_query_stats.return_value = {"query_count": 100, "avg_time": 0.05}
+        mock_optimizer.get_connection_pool_stats.return_value = {
+            "pool_size": 20,
+            "checked_out": 5,
+        }
+        mock_optimizer.get_query_stats.return_value = {
+            "query_count": 100,
+            "avg_time": 0.05,
+        }
         mock_optimizer.get_prepared_statement_stats.return_value = {
             "registered_statements": 5,
             "total_usage": 50,

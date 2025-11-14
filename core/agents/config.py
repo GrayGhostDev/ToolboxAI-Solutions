@@ -7,8 +7,8 @@ tracing, monitoring, and observability features.
 
 import os
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Optional
 
 from langchain.callbacks.tracers import LangChainTracer
 from langsmith import Client
@@ -16,6 +16,7 @@ from langsmith import Client
 
 class AgentType(Enum):
     """Types of agents in the system."""
+
     BASE = "base"
     CONTENT = "content"
     QUIZ = "quiz"
@@ -50,7 +51,7 @@ class AgentConfig:
     max_tokens: int = 4096
 
     # Tool Configuration
-    tools: List[Any] = field(default_factory=list)
+    tools: list[Any] = field(default_factory=list)
     tool_timeout: int = 60
 
     # System Prompt
@@ -83,14 +84,8 @@ class LangChainConfiguration:
         # Load LangChain credentials from environment
         self.api_key = os.getenv("LANGCHAIN_API_KEY")
         self.project_id = os.getenv("LANGCHAIN_PROJECT_ID")
-        self.project_name = os.getenv(
-            "LANGCHAIN_PROJECT",
-            "ToolboxAI-Solutions"
-        )
-        self.endpoint = os.getenv(
-            "LANGCHAIN_ENDPOINT",
-            "https://api.smith.langchain.com"
-        )
+        self.project_name = os.getenv("LANGCHAIN_PROJECT", "ToolboxAI-Solutions")
+        self.endpoint = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
 
         # Enable tracing
         self.tracing_enabled = os.getenv("LANGCHAIN_TRACING_V2", "true").lower() == "true"
@@ -99,15 +94,12 @@ class LangChainConfiguration:
         self.langsmith_client = None
         if self.api_key and self.tracing_enabled:
             try:
-                self.langsmith_client = Client(
-                    api_key=self.api_key,
-                    api_url=self.endpoint
-                )
+                self.langsmith_client = Client(api_key=self.api_key, api_url=self.endpoint)
             except Exception as e:
                 print(f"Warning: Failed to initialize LangSmith client: {e}")
 
         # Store tracers for different agent types
-        self.tracers: Dict[str, LangChainTracer] = {}
+        self.tracers: dict[str, LangChainTracer] = {}
 
     def get_tracer(self, agent_name: str = None) -> Optional[LangChainTracer]:
         """
@@ -127,8 +119,7 @@ class LangChainConfiguration:
 
             try:
                 self.tracers[agent_name] = LangChainTracer(
-                    project_name=project_name,
-                    client=self.langsmith_client
+                    project_name=project_name, client=self.langsmith_client
                 )
             except Exception as e:
                 print(f"Warning: Failed to create tracer for {agent_name}: {e}")
@@ -136,7 +127,7 @@ class LangChainConfiguration:
 
         return self.tracers[agent_name]
 
-    def get_callbacks(self, agent_name: str = None) -> List:
+    def get_callbacks(self, agent_name: str = None) -> list:
         """
         Get callback handlers for LangChain operations.
 
@@ -176,7 +167,7 @@ class LangChainConfiguration:
             "LANGCHAIN_PROJECT": self.project_name,
             "LANGCHAIN_TRACING_V2": str(self.tracing_enabled).lower(),
             "LANGCHAIN_ENDPOINT": self.endpoint,
-            "LANGSMITH_API_KEY": self.api_key  # Some versions use LANGSMITH_API_KEY
+            "LANGSMITH_API_KEY": self.api_key,  # Some versions use LANGSMITH_API_KEY
         }
 
         for key, value in env_vars.items():
@@ -189,10 +180,7 @@ langchain_config = LangChainConfiguration()
 langchain_config.update_environment()
 
 
-def get_agent_config(
-    agent_type: AgentType = AgentType.BASE,
-    **overrides
-) -> AgentConfig:
+def get_agent_config(agent_type: AgentType = AgentType.BASE, **overrides) -> AgentConfig:
     """
     Get agent configuration with type-specific defaults.
 
@@ -267,7 +255,7 @@ def get_agent_config(
     return config
 
 
-def get_llm_config(agent_config: AgentConfig) -> Dict[str, Any]:
+def get_llm_config(agent_config: AgentConfig) -> dict[str, Any]:
     """
     Get LLM configuration dictionary for LangChain.
 
@@ -285,5 +273,5 @@ def get_llm_config(agent_config: AgentConfig) -> Dict[str, Any]:
         "verbose": agent_config.verbose,
         "api_key": os.getenv("OPENAI_API_KEY"),  # or appropriate API key
         "timeout": agent_config.timeout,
-        "max_retries": agent_config.max_retries
+        "max_retries": agent_config.max_retries,
     }

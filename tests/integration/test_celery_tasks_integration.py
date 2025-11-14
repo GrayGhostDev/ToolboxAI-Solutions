@@ -246,7 +246,8 @@ class TestCeleryTasksIntegration:
         """Test task priority queue routing."""
         # High priority task
         high_priority_result = send_notification.apply_async(
-            args=["user1", "critical", "Urgent", "Urgent message", None, ["pusher"]], priority=9
+            args=["user1", "critical", "Urgent", "Urgent message", None, ["pusher"]],
+            priority=9,
         )
 
         # Low priority task
@@ -423,7 +424,7 @@ class TestCeleryPerformance:
         inspector = self.celery_app.control.inspect()
 
         # Get initial memory stats
-        initial_stats = inspector.stats()
+        inspector.stats()
 
         # Submit memory-intensive tasks
         results = []

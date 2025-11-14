@@ -170,7 +170,11 @@ class TestStateManager:
     async def test_sparc_cycle_execution(self, state_manager):
         """Test SPARC cycle execution"""
         task = {"type": "learning_task", "subject": "Mathematics"}
-        user_context = {"user_id": "test_user", "performance_score": 0.7, "engagement_level": 0.8}
+        user_context = {
+            "user_id": "test_user",
+            "performance_score": 0.7,
+            "engagement_level": 0.8,
+        }
 
         result = await state_manager.execute_cycle(task, user_context)
 
@@ -212,14 +216,21 @@ class TestStateManager:
         """Test policy application for action decisions"""
         # Test different scenarios
         scenarios = [
-            {"state": {"content_loaded": False}, "context": {}, "expected_action": "load_content"},
+            {
+                "state": {"content_loaded": False},
+                "context": {},
+                "expected_action": "load_content",
+            },
             {
                 "state": {"content_loaded": True},
                 "context": {"assessment_due": True},
                 "expected_action": "start_assessment",
             },
             {
-                "state": {"content_loaded": True, "learning_metrics": {"engagement_level": 0.3}},
+                "state": {
+                    "content_loaded": True,
+                    "learning_metrics": {"engagement_level": 0.3},
+                },
                 "context": {"performance_score": 0.4},
                 "expected_action": "increase_engagement",
             },
@@ -269,7 +280,7 @@ class TestStateManager:
     @pytest.mark.asyncio
     async def test_context_updates(self, state_manager):
         """Test context update functionality"""
-        initial_context = state_manager.context.copy()
+        state_manager.context.copy()
 
         action = {"type": "test_action", "priority": "high"}
         result = {"success": True, "execution_time": 0.1}
@@ -401,7 +412,11 @@ class TestSwarmController:
         """Test swarm performance under load"""
         # Create performance test tasks
         performance_tasks = [
-            {"id": f"perf_task_{i}", "type": "performance_test", "complexity": i % 3 + 1}
+            {
+                "id": f"perf_task_{i}",
+                "type": "performance_test",
+                "complexity": i % 3 + 1,
+            }
             for i in range(20)
         ]
 
@@ -427,7 +442,10 @@ class TestStateManager:
     def state_manager(self):
         """Create state manager for testing"""
         return StateManager(
-            max_history=50, learning_rate=0.01, success_weight=1.0, efficiency_weight=0.5
+            max_history=50,
+            learning_rate=0.01,
+            success_weight=1.0,
+            efficiency_weight=0.5,
         )
 
     @pytest.mark.asyncio
@@ -448,7 +466,11 @@ class TestStateManager:
     @pytest.mark.asyncio
     async def test_sparc_cycle_complete(self, state_manager):
         """Test complete SPARC cycle execution"""
-        task = {"type": "learning_task", "subject": "Mathematics", "difficulty": "medium"}
+        task = {
+            "type": "learning_task",
+            "subject": "Mathematics",
+            "difficulty": "medium",
+        }
 
         user_context = {
             "user_id": "test_user_123",
@@ -519,7 +541,10 @@ class TestStateManager:
                 "expected_priority": "high",
             },
             {
-                "state": {"content_loaded": True, "learning_metrics": {"engagement_level": 0.3}},
+                "state": {
+                    "content_loaded": True,
+                    "learning_metrics": {"engagement_level": 0.3},
+                },
                 "context": {"performance_score": 0.4},
                 "expected_priority": "high",
             },
@@ -699,9 +724,9 @@ class TestIntegrationWorkflows:
     async def test_complete_orchestration_workflow(self):
         """Test complete orchestration workflow"""
         # Create all components
-        orchestrator = OrchestrationEngine()
-        state_manager = StateManager()
-        swarm_controller = SwarmController(num_workers=2)
+        OrchestrationEngine()
+        StateManager()
+        SwarmController(num_workers=2)
         coordinator = MainCoordinator()
 
         # Test complete workflow
@@ -711,7 +736,11 @@ class TestIntegrationWorkflows:
             "grade_level": 7,
             "topic": "Photosynthesis",
             "learning_objectives": ["Understand plant biology"],
-            "features": {"include_quiz": True, "include_terrain": True, "include_scripts": True},
+            "features": {
+                "include_quiz": True,
+                "include_terrain": True,
+                "include_scripts": True,
+            },
         }
 
         # Execute through coordinator
@@ -756,7 +785,7 @@ class TestIntegrationWorkflows:
     async def test_swarm_orchestration_integration(self):
         """Test swarm controller integration with orchestration"""
         swarm = SwarmController(num_workers=3)
-        orchestrator = OrchestrationEngine()
+        OrchestrationEngine()
 
         # Create tasks for swarm processing
         swarm_tasks = [

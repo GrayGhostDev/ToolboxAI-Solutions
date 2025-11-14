@@ -47,13 +47,25 @@ class ContentValidationSystem:
                 "max_count": 10,
                 "min_length": 10,
                 "max_length": 200,
-                "keywords": ["learn", "understand", "demonstrate", "apply", "analyze", "create"],
+                "keywords": [
+                    "learn",
+                    "understand",
+                    "demonstrate",
+                    "apply",
+                    "analyze",
+                    "create",
+                ],
                 "severity": ValidationSeverity.CRITICAL,
             },
             "personalization": {
                 "required": True,
                 "min_elements": 2,
-                "elements": ["student_names", "cultural_elements", "local_references", "interests"],
+                "elements": [
+                    "student_names",
+                    "cultural_elements",
+                    "local_references",
+                    "interests",
+                ],
                 "severity": ValidationSeverity.WARNING,
             },
             "uniqueness": {
@@ -75,12 +87,21 @@ class ContentValidationSystem:
             },
             "accessibility": {
                 "required": True,
-                "elements": ["multiple_formats", "clear_language", "appropriate_difficulty"],
+                "elements": [
+                    "multiple_formats",
+                    "clear_language",
+                    "appropriate_difficulty",
+                ],
                 "severity": ValidationSeverity.CRITICAL,
             },
             "technical_quality": {
                 "required": True,
-                "elements": ["performance", "compatibility", "security", "error_handling"],
+                "elements": [
+                    "performance",
+                    "compatibility",
+                    "security",
+                    "error_handling",
+                ],
                 "severity": ValidationSeverity.WARNING,
             },
         }
@@ -139,8 +160,18 @@ class ContentValidationSystem:
         return {
             "common_core": {
                 "elementary": {
-                    "math": ["number_operations", "geometry", "measurement", "data_analysis"],
-                    "language_arts": ["reading_comprehension", "writing", "speaking", "listening"],
+                    "math": [
+                        "number_operations",
+                        "geometry",
+                        "measurement",
+                        "data_analysis",
+                    ],
+                    "language_arts": [
+                        "reading_comprehension",
+                        "writing",
+                        "speaking",
+                        "listening",
+                    ],
                 },
                 "middle_school": {
                     "math": ["algebra", "geometry", "statistics", "probability"],
@@ -151,7 +182,12 @@ class ContentValidationSystem:
                     ],
                 },
                 "high_school": {
-                    "math": ["advanced_algebra", "trigonometry", "calculus", "statistics"],
+                    "math": [
+                        "advanced_algebra",
+                        "trigonometry",
+                        "calculus",
+                        "statistics",
+                    ],
                     "language_arts": [
                         "literature_analysis",
                         "research_papers",
@@ -160,14 +196,24 @@ class ContentValidationSystem:
                 },
             },
             "next_gen_science": {
-                "elementary": ["physical_science", "life_science", "earth_science", "engineering"],
+                "elementary": [
+                    "physical_science",
+                    "life_science",
+                    "earth_science",
+                    "engineering",
+                ],
                 "middle_school": [
                     "matter_energy",
                     "motion_stability",
                     "ecosystems",
                     "earth_systems",
                 ],
-                "high_school": ["physics", "chemistry", "biology", "earth_space_science"],
+                "high_school": [
+                    "physics",
+                    "chemistry",
+                    "biology",
+                    "earth_space_science",
+                ],
             },
         }
 
@@ -223,7 +269,12 @@ class ContentValidationSystem:
     async def validate_requirements(self, requirements: ContentRequirements) -> dict[str, Any]:
         """Validate content requirements"""
 
-        result = {"errors": [], "warnings": [], "suggestions": [], "educational_value_score": 0.0}
+        result = {
+            "errors": [],
+            "warnings": [],
+            "suggestions": [],
+            "educational_value_score": 0.0,
+        }
 
         # Validate learning objectives
         if not requirements.learning_objectives:
@@ -376,7 +427,6 @@ class ContentValidationSystem:
         result = {"warnings": [], "suggestions": [], "score": 0.0}
 
         grade_level = requirements.grade_level
-        subject_area = requirements.subject_area
 
         # Check for appropriate complexity
         if grade_level in [GradeLevel.PRE_K, GradeLevel.KINDERGARTEN]:

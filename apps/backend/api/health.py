@@ -64,7 +64,7 @@ async def check_database_connection(session: AsyncSession) -> dict[str, Any]:
     """Check database connectivity and basic stats."""
     try:
         # Test database connection
-        result = await session.execute(text("SELECT 1"))
+        await session.execute(text("SELECT 1"))
         await session.execute(text("SELECT version()"))
         version_result = await session.execute(text("SELECT version()"))
         db_version = version_result.scalar()
@@ -132,12 +132,18 @@ async def health_check() -> dict[str, Any]:
 
 
 @router.get("/ready")
-async def readiness_check(session: AsyncSession = Depends(get_async_session)) -> dict[str, Any]:
+async def readiness_check(
+    session: AsyncSession = Depends(get_async_session),
+) -> dict[str, Any]:
     """
     Readiness check endpoint.
     Verifies that all dependencies are accessible.
     """
-    checks = {"service": "ready", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
+    checks = {
+        "service": "ready",
+        "timestamp": datetime.utcnow().isoformat(),
+        "checks": {},
+    }
 
     # Check database
     db_status = await check_database_connection(session)
@@ -182,7 +188,11 @@ async def liveness_check() -> dict[str, Any]:
             "memory_available_mb": memory.available / (1024 * 1024),
             "disk_free_gb": disk.free / (1024 * 1024 * 1024),
         },
-        "thresholds": {"cpu": CPU_THRESHOLD, "memory": MEMORY_THRESHOLD, "disk": DISK_THRESHOLD},
+        "thresholds": {
+            "cpu": CPU_THRESHOLD,
+            "memory": MEMORY_THRESHOLD,
+            "disk": DISK_THRESHOLD,
+        },
     }
 
     # Check if resources are within acceptable limits
@@ -191,7 +201,6 @@ async def liveness_check() -> dict[str, Any]:
         or memory.percent > MEMORY_THRESHOLD
         or disk.percent > DISK_THRESHOLD
     ):
-
         health_status["status"] = "degraded"
         health_status["warnings"] = []
 
@@ -209,7 +218,9 @@ async def liveness_check() -> dict[str, Any]:
 
 
 @router.get("/metrics")
-async def metrics_endpoint(session: AsyncSession = Depends(get_async_session)) -> dict[str, Any]:
+async def metrics_endpoint(
+    session: AsyncSession = Depends(get_async_session),
+) -> dict[str, Any]:
     """
     Metrics endpoint for monitoring.
     Returns detailed metrics about the service.
@@ -248,7 +259,10 @@ async def metrics_endpoint(session: AsyncSession = Depends(get_async_session)) -
             ).total_seconds(),
         },
         "system": {
-            "cpu": {"percent": psutil.cpu_percent(interval=1), "count": psutil.cpu_count()},
+            "cpu": {
+                "percent": psutil.cpu_percent(interval=1),
+                "count": psutil.cpu_count(),
+            },
             "memory": {
                 "percent": psutil.virtual_memory().percent,
                 "available_mb": psutil.virtual_memory().available / (1024 * 1024),

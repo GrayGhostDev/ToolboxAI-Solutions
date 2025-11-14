@@ -10,9 +10,7 @@ with automatic validation and generation of cryptographically secure secrets.
 
 import logging
 import os
-import warnings
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Application Settings
 APP_NAME = os.getenv("APP_NAME", "ToolboxAI-Roblox")
@@ -28,7 +26,10 @@ FLASK_PORT = int(os.getenv("FLASK_PORT", "5001"))
 MCP_PORT = int(os.getenv("MCP_PORT", "9876"))
 
 # Database Configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://eduplatform:eduplatform2024@localhost/educational_platform_dev",
+)
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Supabase Configuration
@@ -54,6 +55,7 @@ SCHOOLOGY_KEY = os.getenv("SCHOOLOGY_KEY", "")
 SCHOOLOGY_SECRET = os.getenv("SCHOOLOGY_SECRET", "")
 CANVAS_TOKEN = os.getenv("CANVAS_TOKEN", "")
 
+
 # JWT Security Configuration with Enhanced Security
 def _initialize_jwt_security():
     """
@@ -70,11 +72,12 @@ def _initialize_jwt_security():
     Raises:
         ValueError: If no secure secret can be established
     """
-    logger = logging.getLogger(__name__)
+    logging.getLogger(__name__)
 
     # Always use environment validation to avoid circular imports
     # The JWT security modules can validate independently when they're imported
     return _validate_environment_jwt_secret()
+
 
 def _validate_environment_jwt_secret():
     """
@@ -98,11 +101,11 @@ def _validate_environment_jwt_secret():
         "change-me",
         "default",
         "secret",
-        "key"
+        "key",
     ]:
         logger.error("CRITICAL SECURITY ISSUE: No secure JWT secret configured!")
 
-        if ENV_NAME.lower() in ('development', 'dev', 'local'):
+        if ENV_NAME.lower() in ("development", "dev", "local"):
             # Generate secure development secret
             logger.warning("Generating secure development JWT secret...")
             dev_secret = _generate_development_secret()
@@ -126,9 +129,22 @@ def _validate_environment_jwt_secret():
 
     # Weak pattern check
     weak_patterns = [
-        'password', 'secret', 'key', 'token', '12345', 'admin',
-        'test', 'demo', 'dev', 'prod', 'staging', 'change',
-        'your-secret', 'default', 'example', 'sample'
+        "password",
+        "secret",
+        "key",
+        "token",
+        "12345",
+        "admin",
+        "test",
+        "demo",
+        "dev",
+        "prod",
+        "staging",
+        "change",
+        "your-secret",
+        "default",
+        "example",
+        "sample",
     ]
     found_patterns = [pattern for pattern in weak_patterns if pattern in env_secret.lower()]
     if found_patterns:
@@ -137,7 +153,9 @@ def _validate_environment_jwt_secret():
     # Character diversity check
     unique_chars = len(set(env_secret))
     if unique_chars < 10:
-        validation_errors.append(f"Low character diversity: {unique_chars} unique characters (minimum: 10)")
+        validation_errors.append(
+            f"Low character diversity: {unique_chars} unique characters (minimum: 10)"
+        )
 
     # Entropy check (basic)
     if len(env_secret) == len(set(env_secret)) and len(env_secret) < 40:
@@ -147,7 +165,7 @@ def _validate_environment_jwt_secret():
     if validation_errors:
         error_msg = "JWT secret validation failed: " + "; ".join(validation_errors)
 
-        if ENV_NAME.lower() in ('development', 'dev', 'local'):
+        if ENV_NAME.lower() in ("development", "dev", "local"):
             logger.error(error_msg)
             logger.warning("Development mode: Generating secure replacement...")
             dev_secret = _generate_development_secret()
@@ -160,6 +178,7 @@ def _validate_environment_jwt_secret():
     logger.info("JWT secret validation passed")
     return env_secret
 
+
 def _generate_development_secret():
     """Generate a cryptographically secure development JWT secret"""
     import secrets
@@ -169,7 +188,8 @@ def _generate_development_secret():
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+[]{}|;:,.<>?"
 
     # Generate 64-character secret with high entropy
-    return ''.join(secrets.choice(alphabet) for _ in range(64))
+    return "".join(secrets.choice(alphabet) for _ in range(64))
+
 
 def _log_jwt_security_status():
     """Log JWT security status for monitoring"""
@@ -183,11 +203,12 @@ def _log_jwt_security_status():
     logger.info(f"  Character Diversity: {unique_chars} unique characters")
     logger.info(f"  Environment: {ENV_NAME}")
 
-    if ENV_NAME.lower() not in ('development', 'dev', 'local'):
+    if ENV_NAME.lower() not in ("development", "dev", "local"):
         # Production environment - log security reminder
         logger.info("  Production JWT security active")
         logger.info("  Secret source: Environment variable")
         logger.info("  Next rotation recommended: Within 90 days")
+
 
 # Initialize JWT secret with enhanced security
 try:
@@ -199,7 +220,7 @@ except Exception as e:
     logger = logging.getLogger(__name__)
     logger.critical(f"CRITICAL: JWT security initialization completely failed: {e}")
 
-    if ENV_NAME.lower() in ('development', 'dev', 'local'):
+    if ENV_NAME.lower() in ("development", "dev", "local"):
         logger.warning("Emergency fallback: Using minimal development secret")
         JWT_SECRET_KEY = _generate_development_secret()
         logger.warning("This is an emergency fallback - fix JWT security configuration!")
@@ -238,7 +259,7 @@ DEFAULT_SUBJECTS = [
     "Art",
     "Music",
     "Physical Education",
-    "Technology"
+    "Technology",
 ]
 
 # Test Configuration
@@ -246,9 +267,25 @@ TESTING = os.getenv("TESTING", "False").lower() in ("true", "1", "yes", "on")
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
 
 # Feature Flags
-ENABLE_REAL_DATA = os.getenv("ENABLE_REAL_DATA", "True").lower() in ("true", "1", "yes", "on")
-ENABLE_AI_GENERATION = os.getenv("ENABLE_AI_GENERATION", "True").lower() in ("true", "1", "yes", "on")
-ENABLE_ROBLOX_INTEGRATION = os.getenv("ENABLE_ROBLOX_INTEGRATION", "True").lower() in ("true", "1", "yes", "on")
+ENABLE_REAL_DATA = os.getenv("ENABLE_REAL_DATA", "True").lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
+ENABLE_AI_GENERATION = os.getenv("ENABLE_AI_GENERATION", "True").lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
+ENABLE_ROBLOX_INTEGRATION = os.getenv("ENABLE_ROBLOX_INTEGRATION", "True").lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
+
 
 # CORS Settings - Secure configuration based on environment
 def _get_cors_origins():
@@ -258,7 +295,7 @@ def _get_cors_origins():
     if cors_env:
         # Use environment variable if set
         origins = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
-    elif ENV_NAME.lower() in ('development', 'dev', 'local', 'testing'):
+    elif ENV_NAME.lower() in ("development", "dev", "local", "testing"):
         # Development: Allow common local development ports
         origins = [
             "http://localhost:3000",
@@ -294,19 +331,22 @@ def _get_cors_origins():
         origins = []
         logger = logging.getLogger(__name__)
         logger.error("CORS: No allowed origins configured for production!")
-        logger.error("Set ALLOWED_ORIGINS environment variable with comma-separated list of allowed origins")
+        logger.error(
+            "Set ALLOWED_ORIGINS environment variable with comma-separated list of allowed origins"
+        )
 
     # Validate origins - no wildcards in production
     validated_origins = []
     for origin in origins:
         if origin == "*":
-            if ENV_NAME.lower() not in ('development', 'dev', 'local'):
+            if ENV_NAME.lower() not in ("development", "dev", "local"):
                 logger = logging.getLogger(__name__)
                 logger.error("CORS: Wildcard (*) not allowed in production!")
                 continue
         validated_origins.append(origin)
 
     return validated_origins
+
 
 ALLOWED_ORIGINS = _get_cors_origins()
 
@@ -316,7 +356,8 @@ RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "100"))
 # Cache Settings
 CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "3600"))
 
-def get_database_config() -> Dict[str, Any]:
+
+def get_database_config() -> dict[str, Any]:
     """Get database configuration dictionary."""
     return {
         "url": DATABASE_URL,
@@ -324,58 +365,60 @@ def get_database_config() -> Dict[str, Any]:
         "pool_size": 10,
         "max_overflow": 20,
         "pool_timeout": 30,
-        "pool_recycle": 3600
+        "pool_recycle": 3600,
     }
 
-def get_redis_config() -> Dict[str, Any]:
+
+def get_redis_config() -> dict[str, Any]:
     """Get Redis configuration dictionary."""
-    return {
-        "url": REDIS_URL,
-        "decode_responses": True,
-        "health_check_interval": 30
-    }
+    return {"url": REDIS_URL, "decode_responses": True, "health_check_interval": 30}
 
-def get_api_config() -> Dict[str, Any]:
+
+def get_api_config() -> dict[str, Any]:
     """Get API configuration dictionary."""
     return {
         "host": API_HOST,
         "port": API_PORT,
         "debug": DEBUG,
         "cors_origins": ALLOWED_ORIGINS,
-        "rate_limit": RATE_LIMIT_PER_MINUTE
+        "rate_limit": RATE_LIMIT_PER_MINUTE,
     }
 
-def validate_jwt_security() -> Dict[str, Any]:
+
+def validate_jwt_security() -> dict[str, Any]:
     """Validate JWT security configuration."""
     validation_result = {
-        'secret_configured': bool(JWT_SECRET_KEY),
-        'secret_length': len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0,
-        'meets_minimum_length': len(JWT_SECRET_KEY) >= 32 if JWT_SECRET_KEY else False,
-        'environment': ENV_NAME,
-        'is_secure': False,
-        'using_fallback': True  # Since we're using environment validation
+        "secret_configured": bool(JWT_SECRET_KEY),
+        "secret_length": len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0,
+        "meets_minimum_length": len(JWT_SECRET_KEY) >= 32 if JWT_SECRET_KEY else False,
+        "environment": ENV_NAME,
+        "is_secure": False,
+        "using_fallback": True,  # Since we're using environment validation
     }
 
     if JWT_SECRET_KEY:
         # Check for weak patterns
-        weak_patterns = ['dev-secret', 'change-in-production', 'your-secret', 'default']
+        weak_patterns = ["dev-secret", "change-in-production", "your-secret", "default"]
         has_weak_pattern = any(pattern in JWT_SECRET_KEY.lower() for pattern in weak_patterns)
-        validation_result['has_weak_pattern'] = has_weak_pattern
-        validation_result['is_secure'] = (
-            validation_result['meets_minimum_length'] and
-            not has_weak_pattern
+        validation_result["has_weak_pattern"] = has_weak_pattern
+        validation_result["is_secure"] = (
+            validation_result["meets_minimum_length"] and not has_weak_pattern
         )
 
     return validation_result
+
 
 def rotate_jwt_secret() -> bool:
     """Rotate JWT secret (placeholder for actual implementation)."""
     logger = logging.getLogger(__name__)
     logger.warning("JWT secret rotation requested - manual update required")
-    logger.warning("1. Generate new secret using: python apps/backend/core/security/jwt_cli.py generate")
+    logger.warning(
+        "1. Generate new secret using: python apps/backend/core/security/jwt_cli.py generate"
+    )
     logger.warning("2. Update environment variable: JWT_SECRET_KEY")
     logger.warning("3. Restart application")
     return False
+
 
 # Service URLs Configuration
 SERVICE_URLS = {
@@ -385,12 +428,14 @@ SERVICE_URLS = {
     "roblox_plugin": f"http://localhost:{ROBLOX_PLUGIN_PORT}",
 }
 
+
 def should_use_real_data() -> bool:
     """Check if real data should be used (vs mock data)."""
     return ENABLE_REAL_DATA
 
+
 # Security validation functions
-def validate_jwt_security() -> Dict[str, Any]:
+def validate_jwt_security() -> dict[str, Any]:
     """
     Validate current JWT security configuration
 
@@ -408,11 +453,12 @@ def validate_jwt_security() -> Dict[str, Any]:
 
     # Fallback validation
     return {
-        'secret_configured': bool(JWT_SECRET_KEY),
-        'secret_length': len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0,
-        'environment': ENV_NAME,
-        'using_fallback': True
+        "secret_configured": bool(JWT_SECRET_KEY),
+        "secret_length": len(JWT_SECRET_KEY) if JWT_SECRET_KEY else 0,
+        "environment": ENV_NAME,
+        "using_fallback": True,
     }
+
 
 def rotate_jwt_secret() -> bool:
     """
@@ -434,24 +480,30 @@ def rotate_jwt_secret() -> bool:
 
     return False
 
+
 # Additional attributes for compatibility
 class LLMConfig:
     """LLM configuration."""
+
     def __init__(self):
         self.default_model = os.getenv("OPENAI_MODEL", "gpt-4")
         self.temperature = float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
         self.max_tokens = int(os.getenv("MAX_TOKENS", "4000"))
 
+
 class EducationalConfig:
     """Educational settings configuration."""
+
     def __init__(self):
         self.supported_subjects = DEFAULT_SUBJECTS
         self.supported_grade_levels = DEFAULT_GRADE_LEVELS
         self.learning_objectives_enabled = True
         self.assessment_mode_enabled = True
 
+
 class ServiceURLsConfig:
     """Service URLs configuration."""
+
     def __init__(self):
         self.backend = f"http://{API_HOST}:{API_PORT}"
         self.flask = f"http://{API_HOST}:{FLASK_PORT}"
@@ -459,8 +511,10 @@ class ServiceURLsConfig:
         self.roblox_plugin = f"http://localhost:{ROBLOX_PLUGIN_PORT}"
         self.sentry_dsn = os.getenv("SENTRY_DSN", "")
 
+
 class SupabaseConfig:
     """Supabase configuration."""
+
     def __init__(self):
         self.url = SUPABASE_URL
         self.anon_key = SUPABASE_ANON_KEY
@@ -486,8 +540,10 @@ class SupabaseConfig:
         """Get PostgreSQL connection URL for direct database access."""
         return f"postgresql://{self.db_user}:{self.db_pass}@{self.db_host}:{self.db_port}/{self.db_name}"
 
+
 class Settings:
     """Settings class with attributes for compatibility."""
+
     def __init__(self):
         # Copy all module-level variables as attributes
         self.app_name = APP_NAME
@@ -576,8 +632,18 @@ class Settings:
         self.JWT_REFRESH_TOKEN_EXPIRE_DAYS = 1  # 1 day refresh token expiry with rotation
 
         # Additional compatibility attributes
-        self.use_mock_database = os.getenv("USE_MOCK_DATABASE", "false").lower() in ("true", "1", "yes", "on")
-        self.use_mock_llm = os.getenv("USE_MOCK_LLM", "true").lower() in ("true", "1", "yes", "on")
+        self.use_mock_database = os.getenv("USE_MOCK_DATABASE", "false").lower() in (
+            "true",
+            "1",
+            "yes",
+            "on",
+        )
+        self.use_mock_llm = os.getenv("USE_MOCK_LLM", "true").lower() in (
+            "true",
+            "1",
+            "yes",
+            "on",
+        )
 
     def is_development(self) -> bool:
         """Check if environment is development."""
@@ -609,16 +675,16 @@ class Settings:
             return self.service_urls.roblox_plugin
         return ""
 
-    def get_database_config(self) -> Dict[str, Any]:
+    def get_database_config(self) -> dict[str, Any]:
         return get_database_config()
 
-    def get_redis_config(self) -> Dict[str, Any]:
+    def get_redis_config(self) -> dict[str, Any]:
         return get_redis_config()
 
-    def get_api_config(self) -> Dict[str, Any]:
+    def get_api_config(self) -> dict[str, Any]:
         return get_api_config()
 
-    def get_supabase_config(self) -> Dict[str, Any]:
+    def get_supabase_config(self) -> dict[str, Any]:
         """Get Supabase configuration dictionary."""
         return {
             "url": self.supabase_url,
@@ -635,7 +701,7 @@ class Settings:
             "enable_rls": self.supabase_enable_rls,
             "connection_timeout": self.supabase_connection_timeout,
             "max_retries": self.supabase_max_retries,
-            "retry_delay": self.supabase_retry_delay
+            "retry_delay": self.supabase_retry_delay,
         }
 
     def is_supabase_configured(self) -> bool:
@@ -646,13 +712,14 @@ class Settings:
         """Get PostgreSQL connection URL for direct database access to Supabase."""
         return f"postgresql://{self.supabase_db_user}:{self.supabase_db_pass}@{self.supabase_db_host}:{self.supabase_db_port}/{self.supabase_db_name}"
 
-    def validate_jwt_security(self) -> Dict[str, Any]:
+    def validate_jwt_security(self) -> dict[str, Any]:
         """Validate JWT security configuration"""
         return validate_jwt_security()
 
     def rotate_jwt_secret(self) -> bool:
         """Rotate JWT secret"""
         return rotate_jwt_secret()
+
 
 # Create a singleton settings instance
 settings = Settings()
@@ -666,7 +733,7 @@ _logger = logging.getLogger(__name__)
 _logger.info("ToolboxAI settings loaded with enhanced JWT security")
 
 # Validate security on import in production
-if ENV_NAME.lower() not in ('development', 'dev', 'local', 'testing', 'test'):
+if ENV_NAME.lower() not in ("development", "dev", "local", "testing", "test"):
     security_status = validate_jwt_security()
-    if not security_status.get('secret_configured', False):
+    if not security_status.get("secret_configured", False):
         _logger.critical("PRODUCTION ALERT: JWT security validation failed!")

@@ -8,7 +8,7 @@ import hashlib
 import logging
 import secrets
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 import aiohttp
@@ -76,8 +76,8 @@ class RobloxOAuth2Service:
             client_secret=getattr(settings, "ROBLOX_CLIENT_SECRET", ""),
         )
         self.session: Optional[aiohttp.ClientSession] = None
-        self._state_storage: Dict[str, Dict[str, Any]] = {}  # In production, use Redis
-        self._token_storage: Dict[str, TokenResponse] = {}  # In production, use secure storage
+        self._state_storage: dict[str, dict[str, Any]] = {}  # In production, use Redis
+        self._token_storage: dict[str, TokenResponse] = {}  # In production, use secure storage
 
     async def __aenter__(self):
         """Async context manager entry"""
@@ -112,7 +112,7 @@ class RobloxOAuth2Service:
 
     def generate_authorization_url(
         self, user_id: str, additional_scopes: Optional[list[str]] = None
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Generate OAuth2 authorization URL with PKCE
 
@@ -294,7 +294,8 @@ class RobloxOAuth2Service:
 
         try:
             async with self.session.get(
-                self.config.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"}
+                self.config.userinfo_endpoint,
+                headers={"Authorization": f"Bearer {access_token}"},
             ) as response:
                 if response.status != 200:
                     error_data = await response.text()

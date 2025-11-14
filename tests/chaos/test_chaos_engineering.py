@@ -23,7 +23,6 @@ import httpx
 import psutil
 import pytest
 import redis.asyncio as redis_async
-from apps.backend.services.websocket_handler import WebSocketHandler
 
 # Import system components
 from apps.backend.core.circuit_breaker import (
@@ -36,6 +35,7 @@ from apps.backend.core.security.rate_limit_manager import (
     RateLimitConfig,
     RateLimitManager,
 )
+from apps.backend.services.websocket_handler import WebSocketHandler
 
 # Test utilities
 from tests.fixtures.cleanup import TestCleanupManager
@@ -205,13 +205,16 @@ def mock_external_services():
         patch("redis.asyncio.Redis") as mock_redis,
         patch("websockets.connect") as mock_websocket,
     ):
-
         # Configure mocks to simulate various failure modes
         mock_client.return_value.get = AsyncMock()
         mock_redis.return_value.get = AsyncMock()
         mock_websocket.return_value = AsyncMock()
 
-        yield {"http_client": mock_client, "redis": mock_redis, "websocket": mock_websocket}
+        yield {
+            "http_client": mock_client,
+            "redis": mock_redis,
+            "websocket": mock_websocket,
+        }
 
 
 class TestNetworkPartitionSimulation:
@@ -655,7 +658,10 @@ class TestCachePoisoning:
         async def validate_cache_recovery():
             """Validate that cache recovers from corruption"""
             # Cache should be marked as unhealthy and bypassed
-            with patch("apps.backend.services.cache.CacheService.is_healthy", return_value=False):
+            with patch(
+                "apps.backend.services.cache.CacheService.is_healthy",
+                return_value=False,
+            ):
                 # All requests should bypass cache
                 result = await self._get_data_with_cache("test_key")
                 assert result is not None  # Should still work without cache

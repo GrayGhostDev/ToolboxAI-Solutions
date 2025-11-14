@@ -5,15 +5,13 @@ This agent orchestrates multiple git worktrees to enable concurrent development
 with parallel Claude Code sessions, following Anthropic's best practices.
 """
 
-import asyncio
 import json
 import logging
-import os
 import subprocess
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from .base_github_agent import BaseGitHubAgent
 
@@ -32,8 +30,8 @@ class WorktreeConfig:
     last_accessed: datetime
     status: str = "active"
     claude_session_active: bool = False
-    services_running: Dict[str, bool] = field(default_factory=dict)
-    resource_usage: Dict[str, Any] = field(default_factory=dict)
+    services_running: dict[str, bool] = field(default_factory=dict)
+    resource_usage: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,7 +67,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
         self.port_range = 20
 
         # Active worktrees
-        self.worktrees: Dict[str, WorktreeConfig] = {}
+        self.worktrees: dict[str, WorktreeConfig] = {}
 
         # Metrics
         self.metrics = WorktreeMetrics()
@@ -109,7 +107,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             with open(self.config_file, 'w') as f:
                 yaml.dump(default_config, f, default_flow_style=False)
 
-    async def analyze(self, files: List[str]) -> Dict[str, Any]:
+    async def analyze(self, files: list[str]) -> dict[str, Any]:
         """Analyze files (required by BaseGitHubAgent).
 
         Args:
@@ -121,7 +119,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
         # Not needed for worktree orchestration
         return {"message": "Worktree orchestrator doesn't analyze files"}
 
-    async def execute_action(self, action: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_action(self, action: str, context: dict[str, Any]) -> dict[str, Any]:
         """Execute an action (required by BaseGitHubAgent).
 
         Args:
@@ -136,7 +134,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
         task["action"] = action
         return await self.execute(task)
 
-    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, task: dict[str, Any]) -> dict[str, Any]:
         """Execute worktree orchestration task.
 
         Args:
@@ -191,7 +189,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
         self,
         branch_name: str,
         launch_claude: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new worktree.
 
         Args:
@@ -275,7 +273,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             "message": f"Worktree created successfully at {worktree_path}"
         }
 
-    async def remove_worktree(self, branch_name: str) -> Dict[str, Any]:
+    async def remove_worktree(self, branch_name: str) -> dict[str, Any]:
         """Remove a worktree.
 
         Args:
@@ -325,7 +323,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             "message": f"Worktree {branch_name} removed successfully"
         }
 
-    async def list_worktrees(self) -> Dict[str, Any]:
+    async def list_worktrees(self) -> dict[str, Any]:
         """List all active worktrees.
 
         Returns:
@@ -355,7 +353,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             "active_sessions": sum(1 for w in self.worktrees.values() if w.claude_session_active)
         }
 
-    async def get_status(self) -> Dict[str, Any]:
+    async def get_status(self) -> dict[str, Any]:
         """Get overall worktree system status.
 
         Returns:
@@ -405,7 +403,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             }
         }
 
-    async def cleanup_old_worktrees(self, days: int = 7) -> Dict[str, Any]:
+    async def cleanup_old_worktrees(self, days: int = 7) -> dict[str, Any]:
         """Clean up worktrees older than specified days.
 
         Args:
@@ -432,7 +430,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             "message": f"Removed {len(removed)} old worktrees"
         }
 
-    async def optimize_resources(self) -> Dict[str, Any]:
+    async def optimize_resources(self) -> dict[str, Any]:
         """Optimize resource allocation for worktrees.
 
         Returns:
@@ -463,7 +461,7 @@ class WorktreeOrchestratorAgent(BaseGitHubAgent):
             "message": f"Applied {len(optimizations)} optimizations"
         }
 
-    async def launch_claude_session(self, branch_name: str) -> Dict[str, Any]:
+    async def launch_claude_session(self, branch_name: str) -> dict[str, Any]:
         """Launch Claude Code session in a worktree.
 
         Args:
@@ -513,7 +511,7 @@ claude --continue
             "message": f"Claude Code session launched for {branch_name}"
         }
 
-    async def coordinate_sessions(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def coordinate_sessions(self, tasks: list[dict[str, Any]]) -> dict[str, Any]:
         """Coordinate multiple Claude sessions for parallel work.
 
         Args:
@@ -738,7 +736,7 @@ CACHE_DIR={config.worktree_path}/.cache
         with open(self.session_log, "a") as f:
             f.write(log_entry)
 
-    def get_report(self) -> Dict[str, Any]:
+    def get_report(self) -> dict[str, Any]:
         """Generate a report of worktree orchestration activities.
 
         Returns:

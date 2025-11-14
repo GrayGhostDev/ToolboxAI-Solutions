@@ -4,19 +4,19 @@ import asyncio
 import json
 import logging
 import time
-from typing import Dict, List, Any, Optional, Callable, Union
 from dataclasses import dataclass
 from enum import Enum
-import asyncpg
+from typing import Any, Callable, Optional
+
 import aiofiles
-from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine
+import asyncpg
 
 logger = logging.getLogger(__name__)
 
 
 class MigrationStatus(Enum):
     """Migration status types."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -27,6 +27,7 @@ class MigrationStatus(Enum):
 @dataclass
 class MigrationBatch:
     """Represents a batch of data for migration."""
+
     table_name: str
     batch_id: int
     offset: int
@@ -41,6 +42,7 @@ class MigrationBatch:
 @dataclass
 class MigrationResult:
     """Results of a data migration operation."""
+
     table_name: str
     total_rows: int
     migrated_rows: int
@@ -48,7 +50,7 @@ class MigrationResult:
     batches_completed: int
     duration_seconds: float
     status: MigrationStatus
-    validation_results: Optional[Dict[str, Any]] = None
+    validation_results: Optional[dict[str, Any]] = None
 
 
 class DataMigrationTool:
@@ -68,7 +70,7 @@ class DataMigrationTool:
         self,
         batch_size: int = 1000,
         max_concurrent_batches: int = 5,
-        retry_attempts: int = 3
+        retry_attempts: int = 3,
     ):
         """
         Initialize the data migration tool.
@@ -81,7 +83,7 @@ class DataMigrationTool:
         self.batch_size = batch_size
         self.max_concurrent_batches = max_concurrent_batches
         self.retry_attempts = retry_attempts
-        self.migration_state: Dict[str, Any] = {}
+        self.migration_state: dict[str, Any] = {}
         self.progress_callback: Optional[Callable] = None
 
     async def migrate_table(
@@ -91,7 +93,7 @@ class DataMigrationTool:
         table_name: str,
         dry_run: bool = False,
         progress_callback: Optional[Callable] = None,
-        validation_mode: str = "basic"
+        validation_mode: str = "basic",
     ) -> MigrationResult:
         """
         Migrate a single table from source to target.
@@ -123,10 +125,7 @@ class DataMigrationTool:
 
             if dry_run:
                 return await self._dry_run_validation(
-                    source_conn_string,
-                    target_conn_string,
-                    table_name,
-                    total_rows
+                    source_conn_string, target_conn_string, table_name, total_rows
                 )
 
             # Create batches
@@ -138,7 +137,7 @@ class DataMigrationTool:
                 target_conn_string,
                 table_name,
                 batches,
-                validation_mode
+                validation_mode,
             )
 
             # Update timing
@@ -156,18 +155,18 @@ class DataMigrationTool:
                 failed_rows=0,
                 batches_completed=0,
                 duration_seconds=time.time() - start_time,
-                status=MigrationStatus.FAILED
+                status=MigrationStatus.FAILED,
             )
 
     async def migrate_database(
         self,
         source_conn_string: str,
         target_conn_string: str,
-        table_list: Optional[List[str]] = None,
-        exclude_tables: Optional[List[str]] = None,
+        table_list: Optional[list[str]] = None,
+        exclude_tables: Optional[list[str]] = None,
         dry_run: bool = False,
-        progress_callback: Optional[Callable] = None
-    ) -> Dict[str, MigrationResult]:
+        progress_callback: Optional[Callable] = None,
+    ) -> dict[str, MigrationResult]:
         """
         Migrate entire database or selected tables.
 
@@ -194,10 +193,7 @@ class DataMigrationTool:
         results = {}
 
         # Process tables in dependency order
-        ordered_tables = await self._order_tables_by_dependencies(
-            source_conn_string,
-            table_list
-        )
+        ordered_tables = await self._order_tables_by_dependencies(source_conn_string, table_list)
 
         for table_name in ordered_tables:
             try:
@@ -206,7 +202,7 @@ class DataMigrationTool:
                     target_conn_string,
                     table_name,
                     dry_run=dry_run,
-                    progress_callback=progress_callback
+                    progress_callback=progress_callback,
                 )
                 results[table_name] = result
 
@@ -224,7 +220,7 @@ class DataMigrationTool:
                     failed_rows=0,
                     batches_completed=0,
                     duration_seconds=0,
-                    status=MigrationStatus.FAILED
+                    status=MigrationStatus.FAILED,
                 )
 
         return results
@@ -236,7 +232,7 @@ class DataMigrationTool:
         table_name: str,
         timestamp_column: str,
         last_sync_timestamp: Optional[str] = None,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
     ) -> MigrationResult:
         """
         Perform incremental migration based on timestamp.
@@ -257,20 +253,16 @@ class DataMigrationTool:
         # Get the latest timestamp from target if not provided
         if last_sync_timestamp is None:
             last_sync_timestamp = await self._get_latest_timestamp(
-                target_conn_string,
-                table_name,
-                timestamp_column
+                target_conn_string, table_name, timestamp_column
             )
 
         # Build incremental query
-        where_clause = f"{timestamp_column} > '{last_sync_timestamp}'" if last_sync_timestamp else "TRUE"
+        where_clause = (
+            f"{timestamp_column} > '{last_sync_timestamp}'" if last_sync_timestamp else "TRUE"
+        )
 
         # Get incremental row count
-        incremental_rows = await self._get_row_count(
-            source_conn_string,
-            table_name,
-            where_clause
-        )
+        incremental_rows = await self._get_row_count(source_conn_string, table_name, where_clause)
 
         if incremental_rows == 0:
             logger.info(f"No new rows to migrate for {table_name}")
@@ -281,7 +273,7 @@ class DataMigrationTool:
                 failed_rows=0,
                 batches_completed=0,
                 duration_seconds=0,
-                status=MigrationStatus.COMPLETED
+                status=MigrationStatus.COMPLETED,
             )
 
         # Execute incremental migration
@@ -291,14 +283,14 @@ class DataMigrationTool:
             table_name,
             where_clause,
             incremental_rows,
-            progress_callback
+            progress_callback,
         )
 
     async def rollback_migration(
         self,
         target_conn_string: str,
         table_name: str,
-        backup_data: Optional[str] = None
+        backup_data: Optional[str] = None,
     ) -> bool:
         """
         Rollback a migration by restoring from backup.
@@ -319,11 +311,7 @@ class DataMigrationTool:
 
             # Restore from backup if provided
             if backup_data:
-                await self._restore_from_backup(
-                    target_conn_string,
-                    table_name,
-                    backup_data
-                )
+                await self._restore_from_backup(target_conn_string, table_name, backup_data)
 
             logger.info(f"Rollback completed for {table_name}")
             return True
@@ -337,8 +325,8 @@ class DataMigrationTool:
         source_conn_string: str,
         target_conn_string: str,
         table_name: str,
-        validation_mode: str = "basic"
-    ) -> Dict[str, Any]:
+        validation_mode: str = "basic",
+    ) -> dict[str, Any]:
         """
         Validate migrated data integrity.
 
@@ -354,11 +342,11 @@ class DataMigrationTool:
         logger.info(f"Validating migration for {table_name}")
 
         validation_results = {
-            'table': table_name,
-            'validation_mode': validation_mode,
-            'is_valid': True,
-            'issues': [],
-            'metrics': {}
+            "table": table_name,
+            "validation_mode": validation_mode,
+            "is_valid": True,
+            "issues": [],
+            "metrics": {},
         }
 
         try:
@@ -366,55 +354,48 @@ class DataMigrationTool:
             source_count = await self._get_row_count(source_conn_string, table_name)
             target_count = await self._get_row_count(target_conn_string, table_name)
 
-            validation_results['metrics']['source_rows'] = source_count
-            validation_results['metrics']['target_rows'] = target_count
+            validation_results["metrics"]["source_rows"] = source_count
+            validation_results["metrics"]["target_rows"] = target_count
 
             if source_count != target_count:
-                validation_results['is_valid'] = False
-                validation_results['issues'].append(
+                validation_results["is_valid"] = False
+                validation_results["issues"].append(
                     f"Row count mismatch: source={source_count}, target={target_count}"
                 )
 
-            if validation_mode in ['full', 'checksum']:
+            if validation_mode in ["full", "checksum"]:
                 # Sample-based validation
                 sample_results = await self._validate_sample_data(
-                    source_conn_string,
-                    target_conn_string,
-                    table_name
+                    source_conn_string, target_conn_string, table_name
                 )
-                validation_results['metrics'].update(sample_results)
+                validation_results["metrics"].update(sample_results)
 
-            if validation_mode == 'checksum':
+            if validation_mode == "checksum":
                 # Checksum validation
                 checksum_results = await self._validate_checksums(
-                    source_conn_string,
-                    target_conn_string,
-                    table_name
+                    source_conn_string, target_conn_string, table_name
                 )
-                validation_results['metrics'].update(checksum_results)
+                validation_results["metrics"].update(checksum_results)
 
             return validation_results
 
         except Exception as e:
             logger.error(f"Validation failed for {table_name}: {str(e)}")
-            validation_results['is_valid'] = False
-            validation_results['issues'].append(f"Validation error: {str(e)}")
+            validation_results["is_valid"] = False
+            validation_results["issues"].append(f"Validation error: {str(e)}")
             return validation_results
 
     async def _initialize_migration_state(self, table_name: str):
         """Initialize migration state tracking."""
         self.migration_state[table_name] = {
-            'status': MigrationStatus.PENDING,
-            'batches': [],
-            'start_time': time.time(),
-            'errors': []
+            "status": MigrationStatus.PENDING,
+            "batches": [],
+            "start_time": time.time(),
+            "errors": [],
         }
 
     async def _get_row_count(
-        self,
-        conn_string: str,
-        table_name: str,
-        where_clause: str = "TRUE"
+        self, conn_string: str, table_name: str, where_clause: str = "TRUE"
     ) -> int:
         """Get row count for a table."""
         conn = await asyncpg.connect(conn_string)
@@ -425,7 +406,7 @@ class DataMigrationTool:
         finally:
             await conn.close()
 
-    def _create_batches(self, table_name: str, total_rows: int) -> List[MigrationBatch]:
+    def _create_batches(self, table_name: str, total_rows: int) -> list[MigrationBatch]:
         """Create migration batches."""
         batches = []
         batch_id = 0
@@ -438,7 +419,7 @@ class DataMigrationTool:
                 offset=offset,
                 limit=limit,
                 row_count=limit,
-                status=MigrationStatus.PENDING
+                status=MigrationStatus.PENDING,
             )
             batches.append(batch)
             batch_id += 1
@@ -450,8 +431,8 @@ class DataMigrationTool:
         source_conn_string: str,
         target_conn_string: str,
         table_name: str,
-        batches: List[MigrationBatch],
-        validation_mode: str
+        batches: list[MigrationBatch],
+        validation_mode: str,
     ) -> MigrationResult:
         """Execute the actual migration."""
         start_time = time.time()
@@ -465,9 +446,7 @@ class DataMigrationTool:
         async def process_batch(batch: MigrationBatch) -> bool:
             async with semaphore:
                 return await self._process_single_batch(
-                    source_conn_string,
-                    target_conn_string,
-                    batch
+                    source_conn_string, target_conn_string, batch
                 )
 
         # Process batches concurrently
@@ -497,10 +476,7 @@ class DataMigrationTool:
         validation_results = None
         if status == MigrationStatus.COMPLETED and validation_mode != "none":
             validation_results = await self.validate_migration(
-                source_conn_string,
-                target_conn_string,
-                table_name,
-                validation_mode
+                source_conn_string, target_conn_string, table_name, validation_mode
             )
 
         return MigrationResult(
@@ -511,14 +487,11 @@ class DataMigrationTool:
             batches_completed=completed_batches,
             duration_seconds=time.time() - start_time,
             status=status,
-            validation_results=validation_results
+            validation_results=validation_results,
         )
 
     async def _process_single_batch(
-        self,
-        source_conn_string: str,
-        target_conn_string: str,
-        batch: MigrationBatch
+        self, source_conn_string: str, target_conn_string: str, batch: MigrationBatch
     ) -> bool:
         """Process a single migration batch."""
         batch.started_at = time.time()
@@ -526,10 +499,7 @@ class DataMigrationTool:
 
         try:
             # Extract data from source
-            source_data = await self._extract_batch_data(
-                source_conn_string,
-                batch
-            )
+            source_data = await self._extract_batch_data(source_conn_string, batch)
 
             if not source_data:
                 batch.status = MigrationStatus.COMPLETED
@@ -537,11 +507,7 @@ class DataMigrationTool:
                 return True
 
             # Load data to target
-            success = await self._load_batch_data(
-                target_conn_string,
-                batch.table_name,
-                source_data
-            )
+            success = await self._load_batch_data(target_conn_string, batch.table_name, source_data)
 
             if success:
                 batch.status = MigrationStatus.COMPLETED
@@ -549,12 +515,14 @@ class DataMigrationTool:
 
                 # Update progress
                 if self.progress_callback:
-                    await self.progress_callback({
-                        'table': batch.table_name,
-                        'batch_id': batch.batch_id,
-                        'status': 'completed',
-                        'rows_processed': batch.row_count
-                    })
+                    await self.progress_callback(
+                        {
+                            "table": batch.table_name,
+                            "batch_id": batch.batch_id,
+                            "status": "completed",
+                            "rows_processed": batch.row_count,
+                        }
+                    )
 
                 return True
             else:
@@ -568,10 +536,8 @@ class DataMigrationTool:
             return False
 
     async def _extract_batch_data(
-        self,
-        source_conn_string: str,
-        batch: MigrationBatch
-    ) -> List[Dict[str, Any]]:
+        self, source_conn_string: str, batch: MigrationBatch
+    ) -> list[dict[str, Any]]:
         """Extract data from source database."""
         conn = await asyncpg.connect(source_conn_string)
         try:
@@ -586,10 +552,7 @@ class DataMigrationTool:
             await conn.close()
 
     async def _load_batch_data(
-        self,
-        target_conn_string: str,
-        table_name: str,
-        data: List[Dict[str, Any]]
+        self, target_conn_string: str, table_name: str, data: list[dict[str, Any]]
     ) -> bool:
         """Load data to target database."""
         if not data:
@@ -599,8 +562,8 @@ class DataMigrationTool:
         try:
             # Get column names
             columns = list(data[0].keys())
-            column_list = ', '.join(columns)
-            placeholders = ', '.join([f'${i+1}' for i in range(len(columns))])
+            column_list = ", ".join(columns)
+            placeholders = ", ".join([f"${i+1}" for i in range(len(columns))])
 
             query = f"""
             INSERT INTO {table_name} ({column_list})
@@ -609,10 +572,7 @@ class DataMigrationTool:
             """
 
             # Prepare data for insertion
-            values_list = [
-                [row[col] for col in columns]
-                for row in data
-            ]
+            values_list = [[row[col] for col in columns] for row in data]
 
             await conn.executemany(query, values_list)
             return True
@@ -628,16 +588,14 @@ class DataMigrationTool:
         source_conn_string: str,
         target_conn_string: str,
         table_name: str,
-        total_rows: int
+        total_rows: int,
     ) -> MigrationResult:
         """Perform dry run validation."""
         logger.info(f"Performing dry run for {table_name}")
 
         # Validate schema compatibility
         schema_valid = await self._validate_schema_compatibility(
-            source_conn_string,
-            target_conn_string,
-            table_name
+            source_conn_string, target_conn_string, table_name
         )
 
         status = MigrationStatus.COMPLETED if schema_valid else MigrationStatus.FAILED
@@ -649,14 +607,11 @@ class DataMigrationTool:
             failed_rows=0 if schema_valid else total_rows,
             batches_completed=0,
             duration_seconds=0,
-            status=status
+            status=status,
         )
 
     async def _validate_schema_compatibility(
-        self,
-        source_conn_string: str,
-        target_conn_string: str,
-        table_name: str
+        self, source_conn_string: str, target_conn_string: str, table_name: str
     ) -> bool:
         """Validate schema compatibility between source and target."""
         try:
@@ -670,8 +625,8 @@ class DataMigrationTool:
                 return False
 
             # Check column compatibility
-            source_columns = {col['name']: col for col in source_schema}
-            target_columns = {col['name']: col for col in target_schema}
+            source_columns = {col["name"]: col for col in source_schema}
+            target_columns = {col["name"]: col for col in target_schema}
 
             for col_name, col_info in source_columns.items():
                 if col_name not in target_columns:
@@ -680,8 +635,7 @@ class DataMigrationTool:
 
                 # Check type compatibility
                 if not self._are_types_compatible(
-                    col_info['type'],
-                    target_columns[col_name]['type']
+                    col_info["type"], target_columns[col_name]["type"]
                 ):
                     logger.warning(
                         f"Type mismatch for column {col_name}: "
@@ -694,11 +648,7 @@ class DataMigrationTool:
             logger.error(f"Schema validation failed: {str(e)}")
             return False
 
-    async def _get_table_schema(
-        self,
-        conn_string: str,
-        table_name: str
-    ) -> List[Dict[str, Any]]:
+    async def _get_table_schema(self, conn_string: str, table_name: str) -> list[dict[str, Any]]:
         """Get table schema information."""
         conn = await asyncpg.connect(conn_string)
         try:
@@ -718,13 +668,13 @@ class DataMigrationTool:
         """Check if data types are compatible."""
         # Type mapping for common PostgreSQL types
         type_mappings = {
-            'integer': ['int4', 'integer', 'serial'],
-            'bigint': ['int8', 'bigint', 'bigserial'],
-            'text': ['text', 'varchar', 'character varying'],
-            'timestamp': ['timestamp', 'timestamptz'],
-            'boolean': ['bool', 'boolean'],
-            'numeric': ['numeric', 'decimal'],
-            'uuid': ['uuid']
+            "integer": ["int4", "integer", "serial"],
+            "bigint": ["int8", "bigint", "bigserial"],
+            "text": ["text", "varchar", "character varying"],
+            "timestamp": ["timestamp", "timestamptz"],
+            "boolean": ["bool", "boolean"],
+            "numeric": ["numeric", "decimal"],
+            "uuid": ["uuid"],
         }
 
         # Normalize types
@@ -742,7 +692,7 @@ class DataMigrationTool:
 
         return False
 
-    async def _get_all_tables(self, conn_string: str) -> List[str]:
+    async def _get_all_tables(self, conn_string: str) -> list[str]:
         """Get list of all tables in database."""
         conn = await asyncpg.connect(conn_string)
         try:
@@ -753,15 +703,13 @@ class DataMigrationTool:
             AND table_type = 'BASE TABLE'
             """
             rows = await conn.fetch(query)
-            return [row['table_name'] for row in rows]
+            return [row["table_name"] for row in rows]
         finally:
             await conn.close()
 
     async def _order_tables_by_dependencies(
-        self,
-        conn_string: str,
-        table_list: List[str]
-    ) -> List[str]:
+        self, conn_string: str, table_list: list[str]
+    ) -> list[str]:
         """Order tables by foreign key dependencies."""
         # For now, return tables as-is
         # TODO: Implement topological sort based on foreign keys
@@ -774,7 +722,7 @@ class DataMigrationTool:
         table_name: str,
         where_clause: str,
         incremental_rows: int,
-        progress_callback: Optional[Callable]
+        progress_callback: Optional[Callable],
     ) -> MigrationResult:
         """Execute incremental migration."""
         # Create custom batches for incremental data
@@ -789,25 +737,18 @@ class DataMigrationTool:
                 offset=offset,
                 limit=limit,
                 row_count=limit,
-                status=MigrationStatus.PENDING
+                status=MigrationStatus.PENDING,
             )
             batches.append(batch)
             batch_id += 1
 
         # Execute migration with custom where clause
         return await self._execute_migration(
-            source_conn_string,
-            target_conn_string,
-            table_name,
-            batches,
-            "basic"
+            source_conn_string, target_conn_string, table_name, batches, "basic"
         )
 
     async def _get_latest_timestamp(
-        self,
-        conn_string: str,
-        table_name: str,
-        timestamp_column: str
+        self, conn_string: str, table_name: str, timestamp_column: str
     ) -> Optional[str]:
         """Get latest timestamp from target table."""
         conn = await asyncpg.connect(conn_string)
@@ -828,15 +769,10 @@ class DataMigrationTool:
         finally:
             await conn.close()
 
-    async def _restore_from_backup(
-        self,
-        conn_string: str,
-        table_name: str,
-        backup_file: str
-    ):
+    async def _restore_from_backup(self, conn_string: str, table_name: str, backup_file: str):
         """Restore table data from backup file."""
         # Load backup data
-        async with aiofiles.open(backup_file, 'r') as f:
+        async with aiofiles.open(backup_file) as f:
             backup_data = json.loads(await f.read())
 
         # Insert backup data
@@ -848,8 +784,8 @@ class DataMigrationTool:
         source_conn_string: str,
         target_conn_string: str,
         table_name: str,
-        sample_size: int = 100
-    ) -> Dict[str, Any]:
+        sample_size: int = 100,
+    ) -> dict[str, Any]:
         """Validate sample data between source and target."""
         # Sample random rows and compare
         source_conn = await asyncpg.connect(source_conn_string)
@@ -865,7 +801,7 @@ class DataMigrationTool:
             WHERE tc.table_name = $1 AND tc.constraint_type = 'PRIMARY KEY'
             """
             pk_result = await source_conn.fetchrow(pk_query, table_name)
-            pk_column = pk_result['column_name'] if pk_result else 'id'
+            pk_column = pk_result["column_name"] if pk_result else "id"
 
             # Get sample IDs
             sample_query = f"""
@@ -890,9 +826,9 @@ class DataMigrationTool:
                     mismatches += 1
 
             return {
-                'sample_size': len(sample_ids),
-                'mismatches': mismatches,
-                'accuracy': (len(sample_ids) - mismatches) / len(sample_ids) if sample_ids else 1.0
+                "sample_size": len(sample_ids),
+                "mismatches": mismatches,
+                "accuracy": (len(sample_ids) - mismatches) / len(sample_ids) if sample_ids else 1.0,
             }
 
         finally:
@@ -900,11 +836,8 @@ class DataMigrationTool:
             await target_conn.close()
 
     async def _validate_checksums(
-        self,
-        source_conn_string: str,
-        target_conn_string: str,
-        table_name: str
-    ) -> Dict[str, Any]:
+        self, source_conn_string: str, target_conn_string: str, table_name: str
+    ) -> dict[str, Any]:
         """Validate data using checksums."""
         # This is a simplified checksum validation
         # In practice, you'd want more sophisticated checksums
@@ -923,15 +856,15 @@ class DataMigrationTool:
             target_checksum = await target_conn.fetchrow(checksum_query)
 
             return {
-                'source_checksum': dict(source_checksum),
-                'target_checksum': dict(target_checksum),
-                'checksums_match': dict(source_checksum) == dict(target_checksum)
+                "source_checksum": dict(source_checksum),
+                "target_checksum": dict(target_checksum),
+                "checksums_match": dict(source_checksum) == dict(target_checksum),
             }
 
         except Exception as e:
             return {
-                'error': f"Checksum validation failed: {str(e)}",
-                'checksums_match': False
+                "error": f"Checksum validation failed: {str(e)}",
+                "checksums_match": False,
             }
         finally:
             await source_conn.close()

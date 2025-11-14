@@ -4,13 +4,12 @@ Fix TypeScript Errors - Phase 3
 Target: Reduce errors from 2,316 to <50
 """
 
-import os
-import re
-import sys
 import json
+import re
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Dict, Tuple
+
 
 def fix_mui_imports():
     """Fix Material-UI import errors"""
@@ -18,13 +17,13 @@ def fix_mui_imports():
     dashboard_dir = Path('/Volumes/G-DRIVE ArmorATD/Development/Clients/ToolBoxAI-Solutions/apps/dashboard')
 
     # Pattern to match MUI imports
-    mui_import_pattern = re.compile(r'from\s+["\']@mui/material["\']\s*;?')
+    re.compile(r'from\s+["\']@mui/material["\']\s*;?')
 
     fixes_applied = 0
 
     for ts_file in dashboard_dir.rglob('*.tsx'):
         try:
-            with open(ts_file, 'r') as f:
+            with open(ts_file) as f:
                 content = f.read()
 
             original_content = content
@@ -315,7 +314,7 @@ def fix_tsconfig():
     tsconfig_path = dashboard_dir / 'tsconfig.json'
 
     if tsconfig_path.exists():
-        with open(tsconfig_path, 'r') as f:
+        with open(tsconfig_path) as f:
             content = f.read()
             # Remove comments from JSON
             content_lines = []
@@ -423,10 +422,9 @@ def fix_common_type_errors():
 
     for tsx_file in dashboard_dir.rglob('*.tsx'):
         try:
-            with open(tsx_file, 'r') as f:
+            with open(tsx_file) as f:
                 content = f.read()
 
-            original_content = content
             modified = False
 
             # Apply fixes selectively
@@ -515,7 +513,7 @@ def main():
 
     # Fix TypeScript configuration
     print("\n2. Updating TypeScript configuration...")
-    tsconfig_fixed = fix_tsconfig()
+    fix_tsconfig()
 
     # Add type definitions
     print("\n3. Adding type definitions...")

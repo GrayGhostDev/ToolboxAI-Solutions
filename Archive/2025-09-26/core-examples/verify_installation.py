@@ -4,11 +4,11 @@ Coordinator System Installation Verification
 Verifies that all coordinator components are properly installed and configured.
 """
 
-import sys
-import os
 import importlib
+import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+
 
 def check_python_version() -> bool:
     """Check if Python version is compatible"""
@@ -119,7 +119,7 @@ def check_coordinator_imports() -> bool:
     
     for module_name in coordinator_modules:
         try:
-            module = importlib.import_module(f'coordinators.{module_name}')
+            importlib.import_module(f'coordinators.{module_name}')
             successful_imports.append(module_name)
             print(f"✓ coordinators.{module_name}")
             
@@ -166,10 +166,13 @@ def check_integration_components() -> bool:
 def check_configuration() -> bool:
     """Check if configuration can be loaded"""
     try:
-        from core.coordinators.config import ConfigurationManager, get_development_config
+        from core.coordinators.config import (
+            ConfigurationManager,
+            get_development_config,
+        )
         
         # Test configuration loading
-        config_manager = ConfigurationManager()
+        ConfigurationManager()
         config = get_development_config()
         
         print("✓ Configuration loading successful")
@@ -188,11 +191,10 @@ def run_basic_functionality_test() -> bool:
         print("Running basic functionality test...")
         
         # Test coordinator system import
-        from core.coordinators import CoordinatorSystem
         
         # Test config creation
         from core.coordinators.config import get_development_config
-        config = get_development_config()
+        get_development_config()
         
         print("✓ Basic functionality test passed")
         return True
@@ -201,7 +203,7 @@ def run_basic_functionality_test() -> bool:
         print(f"✗ Basic functionality test failed: {e}")
         return False
 
-def generate_verification_report() -> Dict[str, Any]:
+def generate_verification_report() -> dict[str, Any]:
     """Generate comprehensive verification report"""
     
     print("ToolboxAI Coordinator System Installation Verification")

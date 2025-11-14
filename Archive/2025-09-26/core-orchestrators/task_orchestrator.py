@@ -1,7 +1,9 @@
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
-from core.coordinators.task_registry import TaskRegistry, TaskState
+
+from core.coordinators.task_registry import TaskRegistry
 
 app = FastAPI(title="ToolboxAI Task Orchestrator", version="0.1.0")
 reg = TaskRegistry()
@@ -15,7 +17,7 @@ class TransitionRequest(BaseModel):
 
 class HeartbeatRequest(BaseModel):
     worker_id: str
-    tasks: List[str] = []
+    tasks: list[str] = []
 
 @app.get("/health")
 def health():

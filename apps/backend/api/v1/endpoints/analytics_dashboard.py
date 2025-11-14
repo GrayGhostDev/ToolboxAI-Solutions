@@ -22,7 +22,7 @@ analytics_router = APIRouter(prefix="/analytics", tags=["Analytics Dashboard"])
 async def get_analytics_dashboard(
     current_user: User = Depends(get_current_user),
     time_range: str = Query(
-        "7d", regex="^(1d|7d|30d|90d|1y)$", description="Time range for analytics"
+        "7d", pattern="^(1d|7d|30d|90d|1y)$", description="Time range for analytics"
     ),
 ) -> dict[str, Any]:
     """
@@ -206,7 +206,9 @@ async def get_analytics_dashboard(
 
 
 @analytics_router.get("/overview")
-async def get_analytics_overview(current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+async def get_analytics_overview(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get high-level analytics overview with key performance indicators.
     """
@@ -277,7 +279,7 @@ async def get_key_performance_metrics(
     current_user: User = Depends(get_current_user),
     category: str | None = Query(
         None,
-        regex="^(engagement|performance|usage|revenue)$",
+        pattern="^(engagement|performance|usage|revenue)$",
         description="Specific metric category",
     ),
 ) -> dict[str, Any]:
@@ -393,7 +395,9 @@ async def get_trend_analysis(
     current_user: User = Depends(get_current_user),
     metric: str = Query("engagement", description="Metric to analyze trends for"),
     granularity: str = Query(
-        "daily", regex="^(hourly|daily|weekly|monthly)$", description="Data granularity"
+        "daily",
+        pattern="^(hourly|daily|weekly|monthly)$",
+        description="Data granularity",
     ),
     period: int = Query(30, ge=1, le=365, description="Number of time units to analyze"),
 ) -> dict[str, Any]:
@@ -447,7 +451,10 @@ async def get_trend_analysis(
             ),
             "forecasting": {
                 "next_period_prediction": round(values[-1] * (1 + percent_change / 100), 2),
-                "confidence_interval": [round(values[-1] * 0.9, 2), round(values[-1] * 1.1, 2)],
+                "confidence_interval": [
+                    round(values[-1] * 0.9, 2),
+                    round(values[-1] * 1.1, 2),
+                ],
                 "forecast_accuracy": 87.3,
             },
             "recommendations": _generate_recommendations(
@@ -633,7 +640,7 @@ def _generate_recommendations(metric: str, direction: str, user_role: str) -> li
 
 @analytics_router.get("/user-engagement")
 async def get_user_engagement_analytics(
-    current_user: User = Depends(require_any_role(["admin", "teacher"]))
+    current_user: User = Depends(require_any_role(["admin", "teacher"])),
 ) -> dict[str, Any]:
     """Get detailed user engagement analytics (admin/teacher only)"""
     return {
@@ -666,7 +673,7 @@ async def get_user_engagement_analytics(
 
 @analytics_router.get("/learning-outcomes")
 async def get_learning_outcomes_analytics(
-    current_user: User = Depends(require_any_role(["admin", "teacher"]))
+    current_user: User = Depends(require_any_role(["admin", "teacher"])),
 ) -> dict[str, Any]:
     """Get learning outcomes and academic performance analytics"""
     return {
@@ -691,7 +698,11 @@ async def get_learning_outcomes_analytics(
         "assessment_insights": {
             "quiz_completion_rate": 91.7,
             "average_attempts_to_pass": 1.8,
-            "most_challenging_topics": ["Calculus", "Organic Chemistry", "Essay Writing"],
+            "most_challenging_topics": [
+                "Calculus",
+                "Organic Chemistry",
+                "Essay Writing",
+            ],
             "highest_performing_topics": ["Basic Algebra", "Cell Biology", "Grammar"],
         },
     }

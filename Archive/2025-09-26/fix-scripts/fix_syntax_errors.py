@@ -6,6 +6,7 @@ Fix syntax errors introduced by the previous fix script.
 import re
 from pathlib import Path
 
+
 def fix_duplicate_default_parameter(content: str) -> str:
     """Fix duplicate 'default' parameter in json.dumps calls."""
     

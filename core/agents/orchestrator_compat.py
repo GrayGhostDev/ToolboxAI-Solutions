@@ -11,29 +11,21 @@ Deprecated imports will eventually be removed. Please update your code to use:
 """
 
 import warnings
-from typing import Dict, Any, Optional, List
+from typing import Any, Optional
 
 # Import the new orchestration system
-from ..orchestration import (
-    UnifiedOrchestrator,
-    OrchestratorConfig,
-    create_orchestrator
-)
+from ..orchestration import OrchestratorConfig, UnifiedOrchestrator
 
 # Import original classes for compatibility
-from .orchestrator import (
-    WorkflowType,
-    OrchestrationRequest,
-    OrchestrationResult,
-    Orchestrator as OriginalOrchestrator
-)
+from .orchestrator import OrchestrationRequest, OrchestrationResult, WorkflowType
+from .orchestrator import Orchestrator as OriginalOrchestrator
 
 # Issue deprecation warning
 warnings.warn(
     "Importing from core.agents.orchestrator is deprecated. "
     "Please use core.orchestration instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 
@@ -43,7 +35,7 @@ class OrchestrationCompat:
     while using the new unified orchestration system underneath.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """Initialize with backward compatibility."""
         # Create a unified orchestrator
         orch_config = OrchestratorConfig() if not config else OrchestratorConfig(**config)
@@ -64,11 +56,11 @@ class OrchestrationCompat:
         """Review code using original orchestrator."""
         return await self.original.review_code(code, language)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get metrics from original orchestrator."""
         return self.original.get_metrics()
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform health check using original orchestrator."""
         return await self.original.health_check()
 
@@ -86,5 +78,5 @@ __all__ = [
     "OrchestrationCompat",
     "WorkflowType",
     "OrchestrationRequest",
-    "OrchestrationResult"
+    "OrchestrationResult",
 ]

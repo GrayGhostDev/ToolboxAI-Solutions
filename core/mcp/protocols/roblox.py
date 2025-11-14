@@ -6,9 +6,9 @@ Handles Roblox Studio communication and context management.
 
 import json
 import logging
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,10 @@ class RobloxContext:
 
     place_id: Optional[str]
     game_name: Optional[str]
-    scripts: List[Dict[str, str]]
-    terrain_data: Optional[Dict]
-    ui_elements: List[Dict]
-    active_plugins: List[str]
+    scripts: list[dict[str, str]]
+    terrain_data: Optional[dict]
+    ui_elements: list[dict]
+    active_plugins: list[str]
     studio_version: Optional[str]
 
 
@@ -50,7 +50,7 @@ class RobloxProtocol:
         self.script_history = []
         self.generation_cache = {}
 
-    def process_studio_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    def process_studio_message(self, message: dict[str, Any]) -> dict[str, Any]:
         """Process incoming message from Roblox Studio"""
         message_type = message.get("type")
 
@@ -71,7 +71,7 @@ class RobloxProtocol:
             logger.warning(f"Unknown Roblox message type: {message_type}")
             return {"error": f"Unknown message type: {message_type}"}
 
-    def _handle_studio_init(self, message: Dict) -> Dict:
+    def _handle_studio_init(self, message: dict) -> dict:
         """Handle Roblox Studio initialization"""
         self.current_context.studio_version = message.get("studio_version")
         self.current_context.place_id = message.get("place_id")
@@ -79,9 +79,13 @@ class RobloxProtocol:
 
         logger.info(f"Roblox Studio initialized: {self.current_context.game_name}")
 
-        return {"type": "studio_init_response", "status": "connected", "capabilities": self.get_capabilities()}
+        return {
+            "type": "studio_init_response",
+            "status": "connected",
+            "capabilities": self.get_capabilities(),
+        }
 
-    def _handle_script_request(self, message: Dict) -> Dict:
+    def _handle_script_request(self, message: dict) -> dict:
         """Handle script generation request"""
         script_type = message.get("script_type", "ServerScript")
         purpose = message.get("purpose")
@@ -113,7 +117,10 @@ class RobloxProtocol:
             "type": "script_response",
             "script": script_content,
             "script_type": script_type,
-            "metadata": {"generated_at": datetime.now().isoformat(), "purpose": purpose},
+            "metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "purpose": purpose,
+            },
         }
 
         # Cache response
@@ -121,7 +128,7 @@ class RobloxProtocol:
 
         return response
 
-    def _handle_terrain_request(self, message: Dict) -> Dict:
+    def _handle_terrain_request(self, message: dict) -> dict:
         """Handle terrain generation request"""
         terrain_type = message.get("terrain_type")
         size = message.get("size", "medium")
@@ -142,7 +149,7 @@ class RobloxProtocol:
             "terrain_config": {"type": terrain_type, "size": size, "theme": theme},
         }
 
-    def _handle_ui_request(self, message: Dict) -> Dict:
+    def _handle_ui_request(self, message: dict) -> dict:
         """Handle UI element generation request"""
         ui_type = message.get("ui_type")
         properties = message.get("properties", {})
@@ -160,7 +167,7 @@ class RobloxProtocol:
 
         return {"type": "ui_response", "script": ui_script, "ui_element": ui_element}
 
-    def _handle_context_update(self, message: Dict) -> Dict:
+    def _handle_context_update(self, message: dict) -> dict:
         """Handle context update from Studio"""
         context_type = message.get("context_type")
         context_data = message.get("data")
@@ -172,9 +179,13 @@ class RobloxProtocol:
         elif context_type == "ui":
             self.current_context.ui_elements = context_data
 
-        return {"type": "context_update_response", "status": "updated", "context_type": context_type}
+        return {
+            "type": "context_update_response",
+            "status": "updated",
+            "context_type": context_type,
+        }
 
-    def _handle_error_report(self, message: Dict) -> Dict:
+    def _handle_error_report(self, message: dict) -> dict:
         """Handle error reports from Studio"""
         error_type = message.get("error_type")
         error_message = message.get("error_message")
@@ -185,9 +196,13 @@ class RobloxProtocol:
         # Analyze error and provide fix suggestion
         fix_suggestion = self._analyze_error(error_type, error_message, script_context)
 
-        return {"type": "error_response", "fix_suggestion": fix_suggestion, "error_logged": True}
+        return {
+            "type": "error_response",
+            "fix_suggestion": fix_suggestion,
+            "error_logged": True,
+        }
 
-    def _handle_plugin_register(self, message: Dict) -> Dict:
+    def _handle_plugin_register(self, message: dict) -> dict:
         """Handle plugin registration"""
         plugin_name = message.get("plugin_name")
         plugin_version = message.get("plugin_version")
@@ -210,7 +225,7 @@ class RobloxProtocol:
             "plugin_id": f"{plugin_name}_{plugin_version}",
         }
 
-    def _generate_script(self, script_type: str, purpose: str, requirements: Dict) -> str:
+    def _generate_script(self, script_type: str, purpose: str, requirements: dict) -> str:
         """Generate Lua script based on requirements"""
 
         # Base template for different script types
@@ -368,7 +383,7 @@ Terrain:FillBlock(region.CFrame, region.Size, Enum.Material.Grass)
 
         return script
 
-    def _generate_ui_script(self, ui_type: str, properties: Dict) -> str:
+    def _generate_ui_script(self, ui_type: str, properties: dict) -> str:
         """Generate UI creation script"""
 
         script = f"""
@@ -407,7 +422,7 @@ for i = 1, 4 do
     button.Position = UDim2.new(0.05, 0, 0.35 + (i-1) * 0.13, 0)
     button.Text = "Answer " .. i
     button.Parent = frame
-    
+
     button.MouseButton1Click:Connect(function()
         print("Selected answer: " .. i)
     end)
@@ -430,7 +445,7 @@ for i, item in ipairs(menuItems) do
     button.Position = UDim2.new(0.05, 0, 0.1 + (i-1) * 0.09, 0)
     button.Text = item
     button.Parent = frame
-    
+
     button.MouseButton1Click:Connect(function()
         print("Menu selected: " .. item)
     end)
@@ -439,7 +454,9 @@ end
 
         return script
 
-    def _analyze_error(self, error_type: str, error_message: str, script_context: Optional[str]) -> str:
+    def _analyze_error(
+        self, error_type: str, error_message: str, script_context: Optional[str]
+    ) -> str:
         """Analyze error and provide fix suggestion"""
 
         suggestions = {
@@ -460,7 +477,7 @@ end
         else:
             return f"Error: {error_message}. Check the Roblox Developer documentation for more information."
 
-    def get_capabilities(self) -> List[str]:
+    def get_capabilities(self) -> list[str]:
         """Get protocol capabilities"""
         return [
             "script_generation",
@@ -472,7 +489,7 @@ end
             "cache_optimization",
         ]
 
-    def get_context_summary(self) -> Dict[str, Any]:
+    def get_context_summary(self) -> dict[str, Any]:
         """Get summary of current Roblox context"""
         return {
             "place_id": self.current_context.place_id,
@@ -484,7 +501,7 @@ end
             "studio_version": self.current_context.studio_version,
         }
 
-    def export_scripts(self) -> List[Dict[str, str]]:
+    def export_scripts(self) -> list[dict[str, str]]:
         """Export all generated scripts"""
         return self.current_context.scripts
 
@@ -492,20 +509,24 @@ end
         """Clear generation cache"""
         self.generation_cache.clear()
         logger.info("Roblox generation cache cleared")
-    
-    def format_terrain_data(self, terrain_data: Dict) -> Dict:
+
+    def format_terrain_data(self, terrain_data: dict) -> dict:
         """Format terrain data for Roblox Studio following Roblox Terrain API"""
         terrain_type = terrain_data.get("type", "grass")
         size = terrain_data.get("size", {"x": 100, "y": 50, "z": 100})
         material = terrain_data.get("material", "Grass")
-        
+
         # Handle different size formats
         if isinstance(size, dict):
-            size_x, size_y, size_z = size.get("x", 100), size.get("y", 50), size.get("z", 100)
+            size_x, size_y, size_z = (
+                size.get("x", 100),
+                size.get("y", 50),
+                size.get("z", 100),
+            )
         else:
             size_x, size_y, size_z = 100, 50, 100
-        
-        script = f'''-- Terrain Generation Script
+
+        script = f"""-- Terrain Generation Script
 local Terrain = workspace.Terrain
 local Region3 = Region3.new(Vector3.new(0, 0, 0), Vector3.new({size_x}, {size_y}, {size_z}))
 Region3 = Region3:ExpandToGrid(4)
@@ -528,23 +549,23 @@ elseif "{terrain_type}" == "forest" then
     end
 end
 
-print("Terrain generated: " .. "{terrain_type}")'''
-        
+print("Terrain generated: " .. "{terrain_type}")"""
+
         return {
             "terrain_script": script,
             "type": terrain_type,
             "material": material,
-            "size": {"x": size_x, "y": size_y, "z": size_z}
+            "size": {"x": size_x, "y": size_y, "z": size_z},
         }
-    
-    def format_quiz_data(self, quiz_data: Dict) -> Dict:
+
+    def format_quiz_data(self, quiz_data: dict) -> dict:
         """Format quiz data for Roblox GUI using ScreenGui API"""
         question = quiz_data.get("question", "")
         options = quiz_data.get("options", [])
         correct = quiz_data.get("correct_answer", 0)
         explanation = quiz_data.get("explanation", "")
-        
-        script = f'''-- Quiz GUI Script
+
+        script = f"""-- Quiz GUI Script
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -585,11 +606,11 @@ feedbackLabel.TextColor3 = Color3.new(1, 1, 1)
 feedbackLabel.BackgroundTransparency = 1
 feedbackLabel.Font = Enum.Font.SourceSans
 feedbackLabel.Parent = frame
-'''
-        
+"""
+
         # Add option buttons
         for i, option in enumerate(options):
-            script += f'''
+            script += f"""
 -- Option {i+1}: {option}
 local button{i} = Instance.new("TextButton")
 button{i}.Text = "{option}"
@@ -612,9 +633,9 @@ button{i}.MouseButton1Click:Connect(function()
         button{i}.BackgroundColor3 = Color3.new(0.6, 0, 0)
     end
 end)
-'''
-        
-        script += '''
+"""
+
+        script += """
 -- Close button
 local closeButton = Instance.new("TextButton")
 closeButton.Text = "X"
@@ -627,15 +648,15 @@ closeButton.Parent = frame
 
 closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
-end)'''
-        
+end)"""
+
         return {
             "quiz_gui": script,
             "question": question,
             "options": options,
-            "correct_answer": correct
+            "correct_answer": correct,
         }
-    
+
     def validate_place_id(self, place_id) -> bool:
         """Validate Roblox place ID"""
         if isinstance(place_id, int):
@@ -647,10 +668,10 @@ end)'''
             except (ValueError, TypeError):
                 return False
         return False
-    
-    def generate_remote_events(self, events: List[str]) -> str:
+
+    def generate_remote_events(self, events: list[str]) -> str:
         """Generate RemoteEvent setup script following Roblox networking patterns"""
-        script = '''-- RemoteEvents Setup Script
+        script = """-- RemoteEvents Setup Script
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Create RemoteEvents folder if it doesn't exist
@@ -668,10 +689,10 @@ if not remoteFunctions then
     remoteFunctions.Name = "RemoteFunctions"
     remoteFunctions.Parent = ReplicatedStorage
 end
-'''
-        
+"""
+
         for event in events:
-            script += f'''
+            script += f"""
 -- Create {event} RemoteEvent
 local {event} = remoteEvents:FindFirstChild("{event}")
 if not {event} then
@@ -685,18 +706,18 @@ end
     print("Received {event} from", player.Name)
     -- Handle event data here
 end)
-'''
-        
-        script += '''
+"""
+
+        script += """
 print("RemoteEvents initialized successfully")
-return remoteEvents'''
-        
+return remoteEvents"""
+
         return script
-    
-    def handle_message(self, message: Dict) -> Dict:
+
+    def handle_message(self, message: dict) -> dict:
         """Generic message handler for Roblox protocol messages"""
         message_type = message.get("type")
-        
+
         # Map message types to handlers
         if message_type == "terrain_request":
             # Process as studio message
@@ -705,11 +726,7 @@ return remoteEvents'''
             # Handle quiz generation
             quiz_data = message.get("data", {})
             formatted = self.format_quiz_data(quiz_data)
-            return {
-                "status": "success",
-                "type": "quiz_response",
-                "data": formatted
-            }
+            return {"status": "success", "type": "quiz_response", "data": formatted}
         elif message_type == "validation_request":
             # Validate place ID
             place_id = message.get("place_id")
@@ -718,12 +735,12 @@ return remoteEvents'''
                 "status": "success",
                 "type": "validation_response",
                 "valid": is_valid,
-                "place_id": place_id
+                "place_id": place_id,
             }
         else:
             # Default processing
             return {
                 "status": "processed",
                 "type": message_type,
-                "message": f"Message type '{message_type}' processed"
+                "message": f"Message type '{message_type}' processed",
             }

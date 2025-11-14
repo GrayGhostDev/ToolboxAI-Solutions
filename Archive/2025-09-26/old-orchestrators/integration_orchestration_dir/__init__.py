@@ -10,10 +10,10 @@ This module provides agents for cross-platform orchestration including:
 
 from .integration_coordinator import (
     IntegrationCoordinator,
-    IntegrationWorkflow,
     IntegrationTask,
+    IntegrationWorkflow,
+    TaskPriority,
     WorkflowStatus,
-    TaskPriority
 )
 
 # Track available exports dynamically

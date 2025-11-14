@@ -173,7 +173,7 @@ class DunningService:
             Dunning continuation result
         """
         try:
-            dunning_state = payment.metadata.get("dunning_state")
+            payment.metadata.get("dunning_state")
             retry_count = payment.metadata.get("retry_count", 0)
 
             # Attempt payment retry
@@ -269,7 +269,9 @@ class DunningService:
 
             # Send final notice email
             await self._send_final_notice_email(
-                customer=payment.customer, payment=payment, cancellation_date=cancellation_date
+                customer=payment.customer,
+                payment=payment,
+                cancellation_date=cancellation_date,
             )
 
             # Schedule cancellation
@@ -391,7 +393,11 @@ class DunningService:
 
     # Email notification methods
     async def _send_payment_failed_email(
-        self, customer: Customer, payment: Payment, invoice: Invoice | None, retry_date: datetime
+        self,
+        customer: Customer,
+        payment: Payment,
+        invoice: Invoice | None,
+        retry_date: datetime,
     ) -> None:
         """Send payment failed notification"""
         await email_service.send_email(

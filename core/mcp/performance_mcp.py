@@ -10,18 +10,16 @@ Version: 1.0.0
 """
 
 import asyncio
-import hashlib
-import json
 import logging
-import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 try:
     import redis.asyncio as redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -33,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class CacheStrategy(Enum):
     """Cache strategies"""
+
     LRU = "lru"  # Least Recently Used
     LFU = "lfu"  # Least Frequently Used
     TTL = "ttl"  # Time To Live
@@ -41,6 +40,7 @@ class CacheStrategy(Enum):
 
 class LoadBalancingStrategy(Enum):
     """Load balancing strategies"""
+
     ROUND_ROBIN = "round_robin"
     LEAST_CONNECTIONS = "least_connections"
     WEIGHTED_ROUND_ROBIN = "weighted_round_robin"
@@ -51,6 +51,7 @@ class LoadBalancingStrategy(Enum):
 @dataclass
 class ClusterNode:
     """Cluster node information"""
+
     node_id: str
     host: str
     port: int
@@ -69,12 +70,13 @@ class ClusterNode:
         resource_load = (self.cpu_usage + self.memory_usage) / 2
         response_load = min(self.response_time_ms / 1000, 1.0)  # Normalize to 0-1
 
-        return (connection_load * 0.4 + resource_load * 0.4 + response_load * 0.2)
+        return connection_load * 0.4 + resource_load * 0.4 + response_load * 0.2
 
 
 @dataclass
 class PerformanceMetrics:
     """Performance metrics tracking"""
+
     timestamp: datetime
     operation_type: str
     execution_time_ms: float
@@ -84,7 +86,7 @@ class PerformanceMetrics:
     error_count: int
     throughput_ops_per_second: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp.isoformat(),
             "operation_type": self.operation_type,
@@ -93,7 +95,7 @@ class PerformanceMetrics:
             "cpu_usage_percent": self.cpu_usage_percent,
             "cache_hit_rate": self.cache_hit_rate,
             "error_count": self.error_count,
-            "throughput_ops_per_second": self.throughput_ops_per_second
+            "throughput_ops_per_second": self.throughput_ops_per_second,
         }
 
 
@@ -110,7 +112,7 @@ class PerformanceMCP:
     - Memory and CPU optimization
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
 
         # Redis configuration
@@ -122,7 +124,7 @@ class PerformanceMCP:
             "ssl": self.config.get("redis_ssl", False),
             "max_connections": self.config.get("redis_max_connections", 20),
             "retry_on_timeout": True,
-            "health_check_interval": 30
+            "health_check_interval": 30,
         }
 
         # Clustering configuration
@@ -135,7 +137,7 @@ class PerformanceMCP:
             "auto_scaling": self.config.get("auto_scaling", False),
             "min_nodes": self.config.get("min_nodes", 1),
             "max_nodes": self.config.get("max_nodes", 10),
-            "scale_threshold": self.config.get("scale_threshold", 0.8)
+            "scale_threshold": self.config.get("scale_threshold", 0.8),
         }
 
         # Caching configuration
@@ -144,17 +146,17 @@ class PerformanceMCP:
             "max_memory_mb": self.config.get("cache_max_memory", 512),
             "default_ttl_seconds": self.config.get("cache_ttl", 3600),
             "compression_enabled": self.config.get("cache_compression", True),
-            "prefetch_enabled": self.config.get("cache_prefetch", True)
+            "prefetch_enabled": self.config.get("cache_prefetch", True),
         }
 
         # Performance monitoring
-        self.performance_metrics: List[PerformanceMetrics] = []
+        self.performance_metrics: list[PerformanceMetrics] = []
         self.metrics_retention_hours = self.config.get("metrics_retention_hours", 24)
 
         # Initialize components
         self.redis_client = None
-        self.cluster_nodes: Dict[str, ClusterNode] = {}
-        self.cache_storage: Dict[str, Any] = {}
+        self.cluster_nodes: dict[str, ClusterNode] = {}
+        self.cache_storage: dict[str, Any] = {}
         self.performance_optimizer = None
 
         # Load balancer state
@@ -162,12 +164,12 @@ class PerformanceMCP:
             "current_node_index": 0,
             "node_weights": {},
             "connection_counts": {},
-            "performance_history": {}
+            "performance_history": {},
         }
 
         logger.info("PerformanceMCP initialized")
 
-    async def initialize(self) -> Dict[str, Any]:
+    async def initialize(self) -> dict[str, Any]:
         """Initialize all performance components"""
         try:
             initialization_results = {
@@ -175,30 +177,35 @@ class PerformanceMCP:
                 "clustering": await self._initialize_clustering(),
                 "caching": await self._initialize_caching(),
                 "monitoring": await self._initialize_monitoring(),
-                "load_balancer": await self._initialize_load_balancer()
+                "load_balancer": await self._initialize_load_balancer(),
             }
 
             # Check overall initialization success
-            success_count = sum(1 for result in initialization_results.values() if result.get("success", False))
+            success_count = sum(
+                1 for result in initialization_results.values() if result.get("success", False)
+            )
             total_components = len(initialization_results)
 
             overall_success = success_count / total_components >= 0.8  # 80% success threshold
 
-            logger.info("PerformanceMCP initialization: %d/%d components successful",
-                       success_count, total_components)
+            logger.info(
+                "PerformanceMCP initialization: %d/%d components successful",
+                success_count,
+                total_components,
+            )
 
             return {
                 "success": overall_success,
                 "component_results": initialization_results,
                 "success_rate": success_count / total_components,
-                "ready_for_production": overall_success and success_count >= 4
+                "ready_for_production": overall_success and success_count >= 4,
             }
 
         except Exception as e:
             logger.error("PerformanceMCP initialization failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def _initialize_redis_backend(self) -> Dict[str, Any]:
+    async def _initialize_redis_backend(self) -> dict[str, Any]:
         """Initialize Redis backend for context storage"""
         try:
             if not REDIS_AVAILABLE:
@@ -206,7 +213,7 @@ class PerformanceMCP:
                 return {
                     "success": True,
                     "backend": "in_memory",
-                    "warning": "Redis not available, using fallback"
+                    "warning": "Redis not available, using fallback",
                 }
 
             # Create Redis connection pool
@@ -218,7 +225,7 @@ class PerformanceMCP:
                 ssl=self.redis_config["ssl"],
                 max_connections=self.redis_config["max_connections"],
                 retry_on_timeout=self.redis_config["retry_on_timeout"],
-                decode_responses=True
+                decode_responses=True,
             )
 
             # Test connection
@@ -234,14 +241,14 @@ class PerformanceMCP:
                 "backend": "redis",
                 "host": self.redis_config["host"],
                 "port": self.redis_config["port"],
-                "max_connections": self.redis_config["max_connections"]
+                "max_connections": self.redis_config["max_connections"],
             }
 
         except Exception as e:
             logger.error("Redis backend initialization failed: %s", str(e))
             return {"success": False, "error": str(e), "backend": "fallback"}
 
-    async def _initialize_clustering(self) -> Dict[str, Any]:
+    async def _initialize_clustering(self) -> dict[str, Any]:
         """Initialize clustering support"""
         try:
             if not self.cluster_config["enabled"]:
@@ -256,7 +263,7 @@ class PerformanceMCP:
                     host=node_config.get("host", "localhost"),
                     port=node_config.get("port", 9876),
                     weight=node_config.get("weight", 1.0),
-                    max_connections=node_config.get("max_connections", 100)
+                    max_connections=node_config.get("max_connections", 100),
                 )
 
                 self.cluster_nodes[node.node_id] = node
@@ -272,14 +279,14 @@ class PerformanceMCP:
                 "clustering": "enabled",
                 "nodes": len(self.cluster_nodes),
                 "load_balancing_strategy": self.cluster_config["load_balancing_strategy"].value,
-                "auto_scaling": self.cluster_config["auto_scaling"]
+                "auto_scaling": self.cluster_config["auto_scaling"],
             }
 
         except Exception as e:
             logger.error("Clustering initialization failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def _initialize_caching(self) -> Dict[str, Any]:
+    async def _initialize_caching(self) -> dict[str, Any]:
         """Initialize intelligent caching system"""
         try:
             # Initialize cache storage
@@ -296,7 +303,7 @@ class PerformanceMCP:
                 "hit_rate_target": 0.8,
                 "memory_usage_target": 0.7,
                 "eviction_policy": self.cache_config["strategy"].value,
-                "compression_ratio": 0.3 if self.cache_config["compression_enabled"] else 0.0
+                "compression_ratio": 0.3 if self.cache_config["compression_enabled"] else 0.0,
             }
 
             # Start cache monitoring
@@ -309,14 +316,14 @@ class PerformanceMCP:
                 "cache_backend": cache_backend,
                 "strategy": self.cache_config["strategy"].value,
                 "max_memory_mb": self.cache_config["max_memory_mb"],
-                "compression_enabled": self.cache_config["compression_enabled"]
+                "compression_enabled": self.cache_config["compression_enabled"],
             }
 
         except Exception as e:
             logger.error("Caching initialization failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def _initialize_monitoring(self) -> Dict[str, Any]:
+    async def _initialize_monitoring(self) -> dict[str, Any]:
         """Initialize performance monitoring"""
         try:
             # Start performance metrics collection
@@ -332,8 +339,8 @@ class PerformanceMCP:
                     "response_time_ms": 100,
                     "throughput_ops_per_second": 1000,
                     "cache_hit_rate": 0.8,
-                    "error_rate": 0.01
-                }
+                    "error_rate": 0.01,
+                },
             }
 
             # Start optimization loop
@@ -345,14 +352,14 @@ class PerformanceMCP:
                 "success": True,
                 "monitoring": "enabled",
                 "metrics_retention_hours": self.metrics_retention_hours,
-                "optimization_enabled": True
+                "optimization_enabled": True,
             }
 
         except Exception as e:
             logger.error("Monitoring initialization failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def _initialize_load_balancer(self) -> Dict[str, Any]:
+    async def _initialize_load_balancer(self) -> dict[str, Any]:
         """Initialize load balancer"""
         try:
             if not self.cluster_nodes:
@@ -361,24 +368,28 @@ class PerformanceMCP:
             # Initialize load balancer state
             for node_id in self.cluster_nodes:
                 self.load_balancer_state["connection_counts"][node_id] = 0
-                self.load_balancer_state["node_weights"][node_id] = self.cluster_nodes[node_id].weight
+                self.load_balancer_state["node_weights"][node_id] = self.cluster_nodes[
+                    node_id
+                ].weight
                 self.load_balancer_state["performance_history"][node_id] = []
 
-            logger.info("Load balancer initialized with strategy: %s",
-                       self.cluster_config["load_balancing_strategy"].value)
+            logger.info(
+                "Load balancer initialized with strategy: %s",
+                self.cluster_config["load_balancing_strategy"].value,
+            )
 
             return {
                 "success": True,
                 "load_balancer": "enabled",
                 "strategy": self.cluster_config["load_balancing_strategy"].value,
-                "nodes": len(self.cluster_nodes)
+                "nodes": len(self.cluster_nodes),
             }
 
         except Exception as e:
             logger.error("Load balancer initialization failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def optimize_performance(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def optimize_performance(self, context: dict[str, Any]) -> dict[str, Any]:
         """Optimize MCP performance based on current metrics"""
         try:
             optimization_type = context.get("optimization_type", "comprehensive")
@@ -387,28 +398,32 @@ class PerformanceMCP:
                 "cache_optimization": await self._optimize_cache_performance(),
                 "cluster_optimization": await self._optimize_cluster_performance(),
                 "memory_optimization": await self._optimize_memory_usage(),
-                "network_optimization": await self._optimize_network_performance()
+                "network_optimization": await self._optimize_network_performance(),
             }
 
             # Calculate overall optimization impact
             optimization_impact = await self._calculate_optimization_impact(optimization_results)
 
-            logger.info("Performance optimization completed with %.1f%% improvement",
-                       optimization_impact * 100)
+            logger.info(
+                "Performance optimization completed with %.1f%% improvement",
+                optimization_impact * 100,
+            )
 
             return {
                 "success": True,
                 "optimization_type": optimization_type,
                 "optimization_results": optimization_results,
                 "performance_improvement": optimization_impact,
-                "recommendations": await self._generate_performance_recommendations(optimization_results)
+                "recommendations": await self._generate_performance_recommendations(
+                    optimization_results
+                ),
             }
 
         except Exception as e:
             logger.error("Performance optimization failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def _optimize_cache_performance(self) -> Dict[str, Any]:
+    async def _optimize_cache_performance(self) -> dict[str, Any]:
         """Optimize cache performance"""
         cache_metrics = await self._get_cache_metrics()
 
@@ -416,7 +431,7 @@ class PerformanceMCP:
             "hit_rate_improvement": 0.0,
             "memory_reduction": 0.0,
             "eviction_optimization": False,
-            "prefetch_optimization": False
+            "prefetch_optimization": False,
         }
 
         current_hit_rate = cache_metrics.get("hit_rate", 0.5)
@@ -447,12 +462,14 @@ class PerformanceMCP:
                 optimizations["memory_reduction"] = 0.3
 
             # Reduce TTL for less important items
-            self.cache_config["default_ttl_seconds"] = int(self.cache_config["default_ttl_seconds"] * 0.8)
+            self.cache_config["default_ttl_seconds"] = int(
+                self.cache_config["default_ttl_seconds"] * 0.8
+            )
             optimizations["memory_reduction"] += 0.2
 
         return optimizations
 
-    async def _optimize_cluster_performance(self) -> Dict[str, Any]:
+    async def _optimize_cluster_performance(self) -> dict[str, Any]:
         """Optimize cluster performance"""
         if not self.cluster_nodes:
             return {"cluster_optimization": "not_applicable"}
@@ -461,7 +478,7 @@ class PerformanceMCP:
             "load_balancing_improved": False,
             "node_weights_adjusted": False,
             "unhealthy_nodes_removed": 0,
-            "auto_scaling_triggered": False
+            "auto_scaling_triggered": False,
         }
 
         # Check node health and performance
@@ -488,9 +505,14 @@ class PerformanceMCP:
 
         # Auto-scaling check
         if self.cluster_config["auto_scaling"]:
-            avg_load = sum(node.get_load_score() for node in self.cluster_nodes.values()) / len(self.cluster_nodes)
+            avg_load = sum(node.get_load_score() for node in self.cluster_nodes.values()) / len(
+                self.cluster_nodes
+            )
 
-            if avg_load > self.cluster_config["scale_threshold"] and len(self.cluster_nodes) < self.cluster_config["max_nodes"]:
+            if (
+                avg_load > self.cluster_config["scale_threshold"]
+                and len(self.cluster_nodes) < self.cluster_config["max_nodes"]
+            ):
                 # Trigger scale up
                 await self._scale_cluster_up()
                 optimizations["auto_scaling_triggered"] = True
@@ -501,13 +523,17 @@ class PerformanceMCP:
 
         return optimizations
 
-    async def scale_cluster(self, target_size: int) -> Dict[str, Any]:
+    async def scale_cluster(self, target_size: int) -> dict[str, Any]:
         """Scale cluster to target size"""
         try:
             current_size = len(self.cluster_nodes)
 
             if target_size == current_size:
-                return {"success": True, "message": "Cluster already at target size", "current_size": current_size}
+                return {
+                    "success": True,
+                    "message": "Cluster already at target size",
+                    "current_size": current_size,
+                }
 
             if target_size > current_size:
                 # Scale up
@@ -521,7 +547,7 @@ class PerformanceMCP:
                     "action": "scale_up",
                     "nodes_added": len(added_nodes),
                     "new_size": len(self.cluster_nodes),
-                    "added_node_ids": added_nodes
+                    "added_node_ids": added_nodes,
                 }
             else:
                 # Scale down
@@ -535,14 +561,14 @@ class PerformanceMCP:
                     "action": "scale_down",
                     "nodes_removed": len(removed_nodes),
                     "new_size": len(self.cluster_nodes),
-                    "removed_node_ids": removed_nodes
+                    "removed_node_ids": removed_nodes,
                 }
 
         except Exception as e:
             logger.error("Cluster scaling failed: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def get_performance_metrics(self, time_window_hours: int = 1) -> Dict[str, Any]:
+    async def get_performance_metrics(self, time_window_hours: int = 1) -> dict[str, Any]:
         """Get performance metrics for specified time window"""
         try:
             cutoff_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
@@ -552,11 +578,15 @@ class PerformanceMCP:
                 return {"error": "No metrics available for specified time window"}
 
             # Calculate aggregate metrics
-            avg_execution_time = sum(m.execution_time_ms for m in recent_metrics) / len(recent_metrics)
+            avg_execution_time = sum(m.execution_time_ms for m in recent_metrics) / len(
+                recent_metrics
+            )
             avg_memory_usage = sum(m.memory_usage_mb for m in recent_metrics) / len(recent_metrics)
             avg_cpu_usage = sum(m.cpu_usage_percent for m in recent_metrics) / len(recent_metrics)
             avg_cache_hit_rate = sum(m.cache_hit_rate for m in recent_metrics) / len(recent_metrics)
-            avg_throughput = sum(m.throughput_ops_per_second for m in recent_metrics) / len(recent_metrics)
+            avg_throughput = sum(m.throughput_ops_per_second for m in recent_metrics) / len(
+                recent_metrics
+            )
             total_errors = sum(m.error_count for m in recent_metrics)
 
             # Performance analysis
@@ -568,26 +598,28 @@ class PerformanceMCP:
                     "average_cache_hit_rate": avg_cache_hit_rate,
                     "average_throughput_ops_per_second": avg_throughput,
                     "total_errors": total_errors,
-                    "error_rate": total_errors / len(recent_metrics)
+                    "error_rate": total_errors / len(recent_metrics),
                 },
                 "performance_score": await self._calculate_performance_score(recent_metrics),
                 "bottlenecks": await self._identify_performance_bottlenecks(recent_metrics),
                 "trends": await self._analyze_performance_trends(recent_metrics),
-                "recommendations": await self._generate_performance_recommendations_from_metrics(recent_metrics)
+                "recommendations": await self._generate_performance_recommendations_from_metrics(
+                    recent_metrics
+                ),
             }
 
             return {
                 "success": True,
                 "time_window_hours": time_window_hours,
                 "metrics_count": len(recent_metrics),
-                "performance_analysis": performance_analysis
+                "performance_analysis": performance_analysis,
             }
 
         except Exception as e:
             logger.error("Failed to get performance metrics: %s", str(e))
             return {"success": False, "error": str(e)}
 
-    async def _calculate_performance_score(self, metrics: List[PerformanceMetrics]) -> float:
+    async def _calculate_performance_score(self, metrics: list[PerformanceMetrics]) -> float:
         """Calculate overall performance score"""
         if not metrics:
             return 0.0
@@ -595,17 +627,30 @@ class PerformanceMCP:
         targets = self.performance_optimizer["performance_targets"]
 
         # Calculate component scores
-        execution_time_score = 1.0 - min(1.0, sum(m.execution_time_ms for m in metrics) / len(metrics) / targets["response_time_ms"])
-        throughput_score = min(1.0, sum(m.throughput_ops_per_second for m in metrics) / len(metrics) / targets["throughput_ops_per_second"])
+        execution_time_score = 1.0 - min(
+            1.0,
+            sum(m.execution_time_ms for m in metrics) / len(metrics) / targets["response_time_ms"],
+        )
+        throughput_score = min(
+            1.0,
+            sum(m.throughput_ops_per_second for m in metrics)
+            / len(metrics)
+            / targets["throughput_ops_per_second"],
+        )
         cache_hit_score = sum(m.cache_hit_rate for m in metrics) / len(metrics)
-        error_score = 1.0 - min(1.0, sum(m.error_count for m in metrics) / len(metrics) / (targets["error_rate"] * len(metrics)))
+        error_score = 1.0 - min(
+            1.0,
+            sum(m.error_count for m in metrics)
+            / len(metrics)
+            / (targets["error_rate"] * len(metrics)),
+        )
 
         # Weighted performance score
         performance_score = (
-            execution_time_score * 0.3 +
-            throughput_score * 0.3 +
-            cache_hit_score * 0.2 +
-            error_score * 0.2
+            execution_time_score * 0.3
+            + throughput_score * 0.3
+            + cache_hit_score * 0.2
+            + error_score * 0.2
         )
 
         return max(0.0, min(1.0, performance_score))
@@ -624,7 +669,11 @@ class PerformanceMCP:
                     connected_clients = info.get("connected_clients", 0)
 
                     # Log health metrics
-                    logger.debug("Redis health: Memory=%d, Clients=%d", memory_usage, connected_clients)
+                    logger.debug(
+                        "Redis health: Memory=%d, Clients=%d",
+                        memory_usage,
+                        connected_clients,
+                    )
 
                 await asyncio.sleep(self.redis_config["health_check_interval"])
 
@@ -642,15 +691,16 @@ class PerformanceMCP:
 
                     # Simulate performance metrics
                     import random
+
                     node.cpu_usage = random.uniform(0.1, 0.8)
                     node.memory_usage = random.uniform(0.2, 0.7)
                     node.response_time_ms = random.uniform(50, 200)
 
                     # Update health status
                     node.is_healthy = (
-                        node.cpu_usage < 0.9 and
-                        node.memory_usage < 0.9 and
-                        node.response_time_ms < 500
+                        node.cpu_usage < 0.9
+                        and node.memory_usage < 0.9
+                        and node.response_time_ms < 500
                     )
 
                 await asyncio.sleep(60)  # Health check every minute
@@ -666,7 +716,10 @@ class PerformanceMCP:
                 cache_metrics = await self._get_cache_metrics()
 
                 # Auto-optimize cache if needed
-                if self.cache_optimizer and cache_metrics.get("hit_rate", 0) < self.cache_optimizer["hit_rate_target"]:
+                if (
+                    self.cache_optimizer
+                    and cache_metrics.get("hit_rate", 0) < self.cache_optimizer["hit_rate_target"]
+                ):
                     await self._auto_optimize_cache(cache_metrics)
 
                 await asyncio.sleep(300)  # Monitor every 5 minutes
@@ -675,7 +728,7 @@ class PerformanceMCP:
                 logger.error("Cache monitoring failed: %s", str(e))
                 await asyncio.sleep(300)
 
-    async def _get_cache_metrics(self) -> Dict[str, Any]:
+    async def _get_cache_metrics(self) -> dict[str, Any]:
         """Get current cache metrics"""
         if self.redis_client:
             try:
@@ -687,7 +740,7 @@ class PerformanceMCP:
                     "memory_usage_mb": info.get("used_memory", 0) / 1024 / 1024,
                     "key_count": keyspace.get("keys", 0),
                     "expired_keys": keyspace.get("expires", 0),
-                    "evicted_keys": info.get("evicted_keys", 0)
+                    "evicted_keys": info.get("evicted_keys", 0),
                 }
             except Exception as e:
                 logger.error("Failed to get Redis cache metrics: %s", str(e))
@@ -699,10 +752,12 @@ class PerformanceMCP:
                 "memory_usage_mb": len(self.cache_storage) * 0.001,  # Rough estimate
                 "key_count": len(self.cache_storage),
                 "expired_keys": 0,
-                "evicted_keys": 0
+                "evicted_keys": 0,
             }
 
-    async def select_optimal_node(self, request_context: Dict[str, Any] = None) -> Optional[ClusterNode]:
+    async def select_optimal_node(
+        self, request_context: dict[str, Any] = None
+    ) -> Optional[ClusterNode]:
         """Select optimal cluster node for request"""
         if not self.cluster_nodes:
             return None
@@ -718,7 +773,9 @@ class PerformanceMCP:
         if strategy == LoadBalancingStrategy.ROUND_ROBIN:
             # Round robin selection
             node_list = list(healthy_nodes)
-            selected_node = node_list[self.load_balancer_state["current_node_index"] % len(node_list)]
+            selected_node = node_list[
+                self.load_balancer_state["current_node_index"] % len(node_list)
+            ]
             self.load_balancer_state["current_node_index"] += 1
 
         elif strategy == LoadBalancingStrategy.LEAST_CONNECTIONS:
@@ -734,6 +791,7 @@ class PerformanceMCP:
             total_weight = sum(n.weight for n in healthy_nodes)
             if total_weight > 0:
                 import random
+
                 target_weight = random.uniform(0, total_weight)
                 cumulative_weight = 0
                 selected_node = healthy_nodes[0]  # Fallback
@@ -769,17 +827,19 @@ class PerformanceMCP:
                     timestamp=datetime.now(timezone.utc),
                     operation_type="context_update",
                     execution_time_ms=50.0,  # Simulated
-                    memory_usage_mb=256.0,   # Simulated
+                    memory_usage_mb=256.0,  # Simulated
                     cpu_usage_percent=25.0,  # Simulated
-                    cache_hit_rate=0.85,     # Simulated
+                    cache_hit_rate=0.85,  # Simulated
                     error_count=0,
-                    throughput_ops_per_second=100.0  # Simulated
+                    throughput_ops_per_second=100.0,  # Simulated
                 )
 
                 self.performance_metrics.append(metric)
 
                 # Maintain metrics history size
-                cutoff_time = datetime.now(timezone.utc) - timedelta(hours=self.metrics_retention_hours)
+                cutoff_time = datetime.now(timezone.utc) - timedelta(
+                    hours=self.metrics_retention_hours
+                )
                 self.performance_metrics = [
                     m for m in self.performance_metrics if m.timestamp >= cutoff_time
                 ]
@@ -803,14 +863,16 @@ class PerformanceMCP:
                 logger.error("Performance optimization loop failed: %s", str(e))
                 await asyncio.sleep(300)  # Wait 5 minutes before retry
 
-    def get_cluster_status(self) -> Dict[str, Any]:
+    def get_cluster_status(self) -> dict[str, Any]:
         """Get comprehensive cluster status"""
         if not self.cluster_nodes:
             return {"clustering": "disabled", "nodes": 0}
 
         healthy_nodes = sum(1 for node in self.cluster_nodes.values() if node.is_healthy)
         total_connections = sum(node.current_connections for node in self.cluster_nodes.values())
-        avg_load = sum(node.get_load_score() for node in self.cluster_nodes.values()) / len(self.cluster_nodes)
+        avg_load = sum(node.get_load_score() for node in self.cluster_nodes.values()) / len(
+            self.cluster_nodes
+        )
 
         return {
             "clustering": "enabled",
@@ -829,32 +891,55 @@ class PerformanceMCP:
                     "is_healthy": node.is_healthy,
                     "current_connections": node.current_connections,
                     "load_score": node.get_load_score(),
-                    "last_health_check": node.last_health_check.isoformat() if node.last_health_check else None
+                    "last_health_check": (
+                        node.last_health_check.isoformat() if node.last_health_check else None
+                    ),
                 }
                 for node in self.cluster_nodes.values()
-            ]
+            ],
         }
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get comprehensive performance summary"""
         recent_metrics = [
-            m for m in self.performance_metrics
+            m
+            for m in self.performance_metrics
             if m.timestamp >= datetime.now(timezone.utc) - timedelta(hours=1)
         ]
 
         if recent_metrics:
-            performance_score = asyncio.create_task(self._calculate_performance_score(recent_metrics))
+            performance_score = asyncio.create_task(
+                self._calculate_performance_score(recent_metrics)
+            )
         else:
             performance_score = 0.0
 
         return {
-            "performance_score": performance_score if isinstance(performance_score, float) else 0.85,
-            "cache_performance": asyncio.create_task(self._get_cache_metrics()) if asyncio.iscoroutine(self._get_cache_metrics()) else {"hit_rate": 0.85},
+            "performance_score": (
+                performance_score if isinstance(performance_score, float) else 0.85
+            ),
+            "cache_performance": (
+                asyncio.create_task(self._get_cache_metrics())
+                if asyncio.iscoroutine(self._get_cache_metrics())
+                else {"hit_rate": 0.85}
+            ),
             "cluster_status": self.get_cluster_status(),
             "optimization_status": {
-                "auto_optimization_enabled": self.performance_optimizer.get("enabled", False) if self.performance_optimizer else False,
+                "auto_optimization_enabled": (
+                    self.performance_optimizer.get("enabled", False)
+                    if self.performance_optimizer
+                    else False
+                ),
                 "last_optimization": datetime.now(timezone.utc).isoformat(),
-                "optimization_interval_seconds": self.performance_optimizer.get("optimization_interval", 300) if self.performance_optimizer else 300
+                "optimization_interval_seconds": (
+                    self.performance_optimizer.get("optimization_interval", 300)
+                    if self.performance_optimizer
+                    else 300
+                ),
             },
-            "system_health": "excellent" if (isinstance(performance_score, float) and performance_score >= 0.9) else "good"
+            "system_health": (
+                "excellent"
+                if (isinstance(performance_score, float) and performance_score >= 0.9)
+                else "good"
+            ),
         }

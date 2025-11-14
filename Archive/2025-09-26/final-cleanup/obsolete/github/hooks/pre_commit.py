@@ -21,17 +21,16 @@ Environment Variables:
     PYTHON_VERSION - Required Python version (default: 3.11)
 """
 
-import os
-import sys
 import argparse
-import subprocess
+import os
 import re
+import sys
 from pathlib import Path
-from typing import List, Tuple, Dict, Optional
+from typing import Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github import GitHubHelper, EducationalPlatformHelper, setup_logging, load_config
+from github import EducationalPlatformHelper, GitHubHelper, load_config, setup_logging
 
 logger = setup_logging()
 
@@ -44,8 +43,8 @@ class PreCommitHook:
         self.config = load_config()
         self.fix_issues = fix_issues
         self.skip_tests = skip_tests
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
         self.repo_root = self.github_helper.repo_root
     
     def run_all_checks(self) -> bool:
@@ -96,7 +95,7 @@ class PreCommitHook:
         
         return all_passed
     
-    def check_file_sizes(self, files: List[str]) -> bool:
+    def check_file_sizes(self, files: list[str]) -> bool:
         """Check file sizes against limits"""
         logger.info("Checking file sizes...")
         max_size_mb = self.config.get('max_file_size_mb', 50)
@@ -114,7 +113,7 @@ class PreCommitHook:
         
         return True
     
-    def check_secrets(self, files: List[str]) -> bool:
+    def check_secrets(self, files: list[str]) -> bool:
         """Check for hardcoded secrets"""
         logger.info("Scanning for hardcoded secrets...")
         
@@ -130,7 +129,7 @@ class PreCommitHook:
         
         return not secrets_found
     
-    def validate_config_files(self, files: List[str]) -> bool:
+    def validate_config_files(self, files: list[str]) -> bool:
         """Validate JSON and YAML configuration files"""
         logger.info("Validating configuration files...")
         
@@ -153,7 +152,7 @@ class PreCommitHook:
         
         return not validation_failed
     
-    def check_python_code(self, files: List[str]) -> bool:
+    def check_python_code(self, files: list[str]) -> bool:
         """Check Python code quality"""
         python_files = [f for f in files if self.github_helper.is_python_file(f)]
         if not python_files:
@@ -200,7 +199,7 @@ class PreCommitHook:
         
         return True
     
-    def _run_black(self, python_files: List[str]) -> bool:
+    def _run_black(self, python_files: list[str]) -> bool:
         """Run Black code formatter"""
         logger.info("Running Black formatter...")
         
@@ -223,7 +222,7 @@ class PreCommitHook:
         
         return True
     
-    def _run_isort(self, python_files: List[str]) -> bool:
+    def _run_isort(self, python_files: list[str]) -> bool:
         """Run isort for import sorting"""
         logger.info("Running isort...")
         
@@ -244,7 +243,7 @@ class PreCommitHook:
         
         return True
     
-    def _run_flake8(self, python_files: List[str]) -> bool:
+    def _run_flake8(self, python_files: list[str]) -> bool:
         """Run flake8 linting"""
         logger.info("Running flake8 linter...")
         
@@ -260,7 +259,7 @@ class PreCommitHook:
         
         return True
     
-    def _run_mypy(self, python_files: List[str]) -> bool:
+    def _run_mypy(self, python_files: list[str]) -> bool:
         """Run mypy type checking"""
         logger.info("Running mypy type checker...")
         
@@ -276,7 +275,7 @@ class PreCommitHook:
         
         return True  # Don't fail on mypy issues, just warn
     
-    def check_lua_code(self, files: List[str]) -> bool:
+    def check_lua_code(self, files: list[str]) -> bool:
         """Check Roblox Lua code quality"""
         if not self.config.get('roblox_lint_enabled', True):
             return True
@@ -322,7 +321,7 @@ class PreCommitHook:
         
         # Fallback to basic pattern checking
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
             
             # Check for unmatched brackets/parentheses
@@ -341,7 +340,7 @@ class PreCommitHook:
         except Exception:
             return True  # If we can't check, assume it's OK
     
-    def _check_roblox_patterns(self, file_path: Path) -> List[str]:
+    def _check_roblox_patterns(self, file_path: Path) -> list[str]:
         """Check for Roblox-specific code patterns and best practices"""
         if not file_path.exists():
             return []
@@ -349,7 +348,7 @@ class PreCommitHook:
         issues = []
         
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
             
             lines = content.split('\n')
@@ -378,7 +377,7 @@ class PreCommitHook:
         
         return issues
     
-    def check_documentation(self, files: List[str]) -> bool:
+    def check_documentation(self, files: list[str]) -> bool:
         """Check documentation requirements"""
         if not self.config.get('documentation_required', False):
             return True
@@ -401,7 +400,7 @@ class PreCommitHook:
     def _has_module_docstring(self, file_path: Path) -> bool:
         """Check if Python file has module-level docstring"""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 content = f.read()
             
             # Look for docstring at the beginning of the file (after imports and shebang)
@@ -418,7 +417,7 @@ class PreCommitHook:
         except Exception:
             return True  # If we can't check, assume it's OK
     
-    def run_tests(self, files: List[str]) -> bool:
+    def run_tests(self, files: list[str]) -> bool:
         """Run tests for changed files"""
         logger.info("Running tests for changed files...")
         

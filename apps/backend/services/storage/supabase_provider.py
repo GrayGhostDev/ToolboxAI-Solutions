@@ -187,7 +187,7 @@ class SupabaseStorageProvider(StorageService):
 
             # Create file record in database
             file_id = uuid4()
-            file_record = await self._create_file_record(
+            await self._create_file_record(
                 file_id=file_id,
                 filename=filename,
                 storage_path=storage_path,
@@ -459,7 +459,7 @@ class SupabaseStorageProvider(StorageService):
             options: Listing options
 
         Returns:
-            List[FileInfo]: List of file information
+            list[FileInfo]: List of file information
         """
         options = options or ListOptions()
 
@@ -571,7 +571,10 @@ class SupabaseStorageProvider(StorageService):
             raise StorageError(f"Signed URL generation failed: {str(e)}")
 
     async def copy_file(
-        self, source_file_id: UUID, destination_path: str, options: UploadOptions | None = None
+        self,
+        source_file_id: UUID,
+        destination_path: str,
+        options: UploadOptions | None = None,
     ) -> UploadResult:
         """
         Copy a file to a new location.
@@ -648,7 +651,7 @@ class SupabaseStorageProvider(StorageService):
                 copy_response = self.supabase.storage.from_(bucket_name).copy(old_path, new_path)
 
                 if copy_response:
-                    delete_response = self.supabase.storage.from_(bucket_name).remove([old_path])
+                    self.supabase.storage.from_(bucket_name).remove([old_path])
 
                     # Update database record
                     await self._update_file_path(file_id, new_path)

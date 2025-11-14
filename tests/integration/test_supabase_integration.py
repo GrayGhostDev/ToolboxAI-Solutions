@@ -89,7 +89,6 @@ class TestSupabaseIntegration:
     async def test_supabase_rest_api_connectivity(self):
         """Test Supabase REST API connectivity and authentication."""
         async with httpx.AsyncClient(timeout=30.0) as client:
-
             # Test API root endpoint
             headers = {
                 "Authorization": f"Bearer {self.supabase_anon_key}",
@@ -99,7 +98,10 @@ class TestSupabaseIntegration:
 
             try:
                 response = await client.get(f"{self.supabase_url}/rest/v1/", headers=headers)
-                assert response.status_code in [200, 404], f"API returned {response.status_code}"
+                assert response.status_code in [
+                    200,
+                    404,
+                ], f"API returned {response.status_code}"
 
                 # Test with service role key
                 service_headers = {
@@ -186,7 +188,6 @@ class TestSupabaseIntegration:
     async def test_storage_bucket_operations(self):
         """Test Supabase Storage bucket operations."""
         async with httpx.AsyncClient(timeout=30.0) as client:
-
             headers = {
                 "Authorization": f"Bearer {self.supabase_service_key}",
                 "apikey": self.supabase_service_key,
@@ -202,7 +203,9 @@ class TestSupabaseIntegration:
                 }
 
                 response = await client.post(
-                    f"{self.supabase_url}/storage/v1/bucket", headers=headers, json=bucket_data
+                    f"{self.supabase_url}/storage/v1/bucket",
+                    headers=headers,
+                    json=bucket_data,
                 )
 
                 # 201 (created) or 409 (already exists) are acceptable
@@ -266,14 +269,20 @@ class TestSupabaseIntegration:
                     f"{self.supabase_url}/storage/v1/object/{self.test_bucket_name}/test.txt",
                     headers=headers,
                 )
-                assert response.status_code in [200, 204], "Should be able to delete file"
+                assert response.status_code in [
+                    200,
+                    204,
+                ], "Should be able to delete file"
 
                 # Delete bucket
                 response = await client.delete(
                     f"{self.supabase_url}/storage/v1/bucket/{self.test_bucket_name}",
                     headers=headers,
                 )
-                assert response.status_code in [200, 204], "Should be able to delete bucket"
+                assert response.status_code in [
+                    200,
+                    204,
+                ], "Should be able to delete bucket"
 
             except Exception as e:
                 pytest.skip(f"Storage test failed: {e}")
@@ -298,7 +307,6 @@ serve(async (req) => {
 """
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-
             headers = {
                 "Authorization": f"Bearer {self.supabase_service_key}",
                 "apikey": self.supabase_service_key,
@@ -307,7 +315,11 @@ serve(async (req) => {
 
             try:
                 # Deploy Edge Function
-                deploy_data = {"slug": function_name, "body": function_code, "verify_jwt": False}
+                deploy_data = {
+                    "slug": function_name,
+                    "body": function_code,
+                    "verify_jwt": False,
+                }
 
                 response = await client.post(
                     f"{self.supabase_url}/functions/v1/{function_name}",
@@ -346,8 +358,7 @@ serve(async (req) => {
             # For now, test WebSocket connection capability
             from tests.fixtures.pusher_mocks import MockPusherService
 
-            ws_url = self.supabase_url.replace("http", "ws") + "/realtime/v1/websocket"
-            params = f"?apikey={self.supabase_anon_key}&vsn=1.0.0"
+            self.supabase_url.replace("http", "ws") + "/realtime/v1/websocket"
 
             try:
                 async with async_mock_pusher_context() as pusher:
@@ -515,7 +526,6 @@ def handler(request):
         """Test Supabase Auth integration."""
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-
             headers = {
                 "Authorization": f"Bearer {self.supabase_anon_key}",
                 "apikey": self.supabase_anon_key,
@@ -539,11 +549,16 @@ def handler(request):
                 signup_data = {"email": test_email, "password": "testpassword123"}
 
                 response = await client.post(
-                    f"{self.supabase_url}/auth/v1/signup", headers=headers, json=signup_data
+                    f"{self.supabase_url}/auth/v1/signup",
+                    headers=headers,
+                    json=signup_data,
                 )
 
                 # May require email confirmation, so 200 or 422 acceptable
-                assert response.status_code in [200, 422], f"Signup returned {response.status_code}"
+                assert response.status_code in [
+                    200,
+                    422,
+                ], f"Signup returned {response.status_code}"
 
                 if response.status_code == 200:
                     signup_result = response.json()
@@ -735,7 +750,6 @@ class TestSupabasePerformanceIntegration:
         """Test storage upload performance."""
 
         async with httpx.AsyncClient(timeout=60.0) as client:
-
             headers = {
                 "Authorization": f"Bearer {os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'test-key')}",
                 "apikey": os.getenv("SUPABASE_SERVICE_ROLE_KEY", "test-key"),
@@ -777,7 +791,8 @@ class TestSupabasePerformanceIntegration:
                     headers=headers,
                 )
                 await client.delete(
-                    f"{os.getenv('SUPABASE_URL')}/storage/v1/bucket/{bucket_name}", headers=headers
+                    f"{os.getenv('SUPABASE_URL')}/storage/v1/bucket/{bucket_name}",
+                    headers=headers,
                 )
 
             except Exception as e:
@@ -832,7 +847,7 @@ class TestSupabaseSecurityIntegration:
             )
 
             # Test without auth context (should see nothing)
-            rows = await conn.fetch(f"SELECT * FROM {test_table};")
+            await conn.fetch(f"SELECT * FROM {test_table};")
             # Without proper auth context, RLS should restrict access
             # (exact behavior depends on RLS configuration)
 
@@ -850,7 +865,6 @@ class TestSupabaseSecurityIntegration:
         """Test API key validation and security."""
 
         async with httpx.AsyncClient(timeout=30.0) as client:
-
             # Test with invalid API key
             invalid_headers = {
                 "Authorization": "Bearer invalid-key",
@@ -865,7 +879,10 @@ class TestSupabaseSecurityIntegration:
                 )
 
                 # Should reject invalid API key
-                assert response.status_code in [401, 403], "Invalid API key should be rejected"
+                assert response.status_code in [
+                    401,
+                    403,
+                ], "Invalid API key should be rejected"
 
             except Exception as e:
                 pytest.skip(f"API key validation test failed: {e}")

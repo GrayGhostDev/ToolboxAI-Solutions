@@ -31,22 +31,28 @@ Environment Variables:
     ROBLOX_API_KEY - Roblox API key for uploads
 """
 
-import os
-import sys
 import argparse
 import json
+import os
 import re
-import subprocess
+import sys
 import tarfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import Optional
+
 import semver
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from github import GitHubHelper, EducationalPlatformHelper, setup_logging, load_config, notify_team
+from github import (
+    EducationalPlatformHelper,
+    GitHubHelper,
+    load_config,
+    notify_team,
+    setup_logging,
+)
 
 logger = setup_logging()
 
@@ -224,7 +230,7 @@ class ReleaseManager:
     
     def _update_json_version(self, file_path: Path, version: str):
         """Update version in JSON file"""
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             data = json.load(f)
         
         data['version'] = version
@@ -234,7 +240,7 @@ class ReleaseManager:
     
     def _update_toml_version(self, file_path: Path, version: str):
         """Update version in TOML file"""
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             content = f.read()
         
         # Simple regex replacement for TOML version
@@ -354,7 +360,7 @@ class ReleaseManager:
         changelog_file = self.repo_root / self.release_config['changelog_file']
         
         if changelog_file.exists():
-            with open(changelog_file, 'r') as f:
+            with open(changelog_file) as f:
                 existing_content = f.read()
             
             # Insert new content after the header
@@ -378,7 +384,7 @@ class ReleaseManager:
         with open(changelog_file, 'w') as f:
             f.write(new_content)
     
-    def _bundle_assets(self, version: str) -> List[str]:
+    def _bundle_assets(self, version: str) -> list[str]:
         """Bundle release assets"""
         logger.info(f"Bundling assets for {version}")
         
@@ -759,7 +765,7 @@ See our [Contributing Guide](CONTRIBUTING.md) for details.
             return last_tag.lstrip('v')
         return "0.0.0"
     
-    def _create_github_release(self, version: str, release_notes: str, asset_files: List[str], prerelease: bool) -> bool:
+    def _create_github_release(self, version: str, release_notes: str, asset_files: list[str], prerelease: bool) -> bool:
         """Create GitHub release"""
         logger.info(f"Creating GitHub release for {version}")
         

@@ -17,7 +17,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from apps.backend.core.cache import CacheService
 from apps.backend.core.config import settings
-from apps.backend.services.email import email_service
+from apps.backend.services.email.factory import get_email_service_singleton
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,7 @@ class EmailQueueService:
         self.redis_client: redis.Redis | None = None
         self.cache_service = CacheService()
         self.processing = False
+        self.email_service = get_email_service_singleton()
         self._initialize_queues()
 
     def _initialize_queues(self):
@@ -223,7 +224,7 @@ class EmailQueueService:
 
             for to_email in to_emails:
                 if job.template_name:
-                    await email_service.send_templated_email(
+                    await self.email_service.send_templated_email(
                         to_email=to_email,
                         subject=job.subject,
                         template_name=job.template_name,
@@ -232,7 +233,7 @@ class EmailQueueService:
                         from_name=job.from_name,
                     )
                 else:
-                    await email_service.send_email(
+                    await self.email_service.send_email(
                         to_email=to_email,
                         subject=job.subject,
                         html_content=job.html_content,
@@ -331,7 +332,7 @@ class EmailQueueService:
 
             for to_email in to_emails:
                 if job.template_name:
-                    await email_service.send_templated_email(
+                    await self.email_service.send_templated_email(
                         to_email=to_email,
                         subject=job.subject,
                         template_name=job.template_name,
@@ -340,7 +341,7 @@ class EmailQueueService:
                         from_name=job.from_name,
                     )
                 else:
-                    await email_service.send_email(
+                    await self.email_service.send_email(
                         to_email=to_email,
                         subject=job.subject,
                         html_content=job.html_content,

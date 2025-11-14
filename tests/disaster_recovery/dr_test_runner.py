@@ -85,12 +85,24 @@ class DisasterRecoveryTester:
                     {
                         "name": "data_corruption",
                         "description": "Simulate data corruption",
-                        "steps": ["backup", "corrupt_data", "detect", "restore", "verify"],
+                        "steps": [
+                            "backup",
+                            "corrupt_data",
+                            "detect",
+                            "restore",
+                            "verify",
+                        ],
                     },
                     {
                         "name": "ransomware",
                         "description": "Simulate ransomware attack",
-                        "steps": ["backup", "encrypt_files", "isolate", "restore", "verify"],
+                        "steps": [
+                            "backup",
+                            "encrypt_files",
+                            "isolate",
+                            "restore",
+                            "verify",
+                        ],
                     },
                     {
                         "name": "cascading_failure",
@@ -218,7 +230,8 @@ class DisasterRecoveryTester:
             # Connect to database
             conn = psycopg2.connect(
                 os.environ.get(
-                    "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
+                    "DATABASE_URL",
+                    "postgresql://test_user:test_password@localhost/test_db",
                 )
             )
             cursor = conn.cursor()
@@ -555,7 +568,8 @@ class DisasterRecoveryTester:
         try:
             conn = psycopg2.connect(
                 os.environ.get(
-                    "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
+                    "DATABASE_URL",
+                    "postgresql://test_user:test_password@localhost/test_db",
                 )
             )
             cursor = conn.cursor()
@@ -568,7 +582,7 @@ class DisasterRecoveryTester:
                 WHERE schemaname = 'public'
             """
             )
-            current_indexes = cursor.fetchall()
+            cursor.fetchall()
 
             # Compare with checkpoint
             # (In real scenario, would compare with stored metadata)
@@ -639,7 +653,12 @@ class DisasterRecoveryTester:
             if db_backups:
                 # Restore database
                 latest_backup = db_backups[0]
-                restore_cmd = ["psql", os.environ.get("DATABASE_URL"), "-f", str(latest_backup)]
+                restore_cmd = [
+                    "psql",
+                    os.environ.get("DATABASE_URL"),
+                    "-f",
+                    str(latest_backup),
+                ]
 
                 if latest_backup.suffix == ".gz":
                     # Decompress first
@@ -701,7 +720,8 @@ class DisasterRecoveryTester:
         try:
             conn = psycopg2.connect(
                 os.environ.get(
-                    "DATABASE_URL", "postgresql://test_user:test_password@localhost/test_db"
+                    "DATABASE_URL",
+                    "postgresql://test_user:test_password@localhost/test_db",
                 )
             )
             cursor = conn.cursor()
@@ -865,7 +885,7 @@ class DisasterRecoveryTester:
         )
 
         for scenario in self.config["scenarios"]:
-            result = await self.run_scenario(scenario["name"])
+            await self.run_scenario(scenario["name"])
             await asyncio.sleep(2)  # Brief pause between scenarios
 
         # Generate report
@@ -935,7 +955,13 @@ def main():
 
     parser.add_argument(
         "--scenario",
-        choices=["database_failure", "data_corruption", "ransomware", "cascading_failure", "all"],
+        choices=[
+            "database_failure",
+            "data_corruption",
+            "ransomware",
+            "cascading_failure",
+            "all",
+        ],
         default="all",
         help="Scenario to test",
     )

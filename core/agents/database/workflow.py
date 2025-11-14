@@ -10,13 +10,10 @@ Created: 2025-09-16
 Version: 1.0.0
 """
 
-import asyncio
-import logging
-from typing import Dict, Any, List, Optional, TypedDict, Sequence
-from enum import Enum
-from datetime import datetime
 import json
-import os
+import logging
+from datetime import datetime
+from typing import Any, Optional, TypedDict
 
 # Temporarily disable LangGraph imports due to LangChain compatibility issues
 # from langgraph.graph import StateGraph, END
@@ -24,18 +21,23 @@ import os
 # from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 # from langgraph.prebuilt import ToolNode
 
+
 # Placeholder classes
 class StateGraph:
     pass
 
+
 class AsyncSqliteSaver:
     pass
+
 
 class AsyncPostgresSaver:
     pass
 
+
 class ToolNode:
     pass
+
 
 END = "end"
 # Temporarily disable LangChain imports due to Pydantic v2 compatibility
@@ -43,44 +45,45 @@ END = "end"
 # from langchain_openai import ChatOpenAI
 # from langchain_community.tools import Tool
 
+
 # Placeholder classes
 class BaseMessage:
     pass
 
+
 class HumanMessage:
     pass
+
 
 class AIMessage:
     pass
 
+
 class SystemMessage:
     pass
+
 
 class Tool:
     pass
 
-from core.agents.database.supervisor_agent import (
-    DatabaseSupervisorAgent,
-    WorkflowPriority,
-    WorkflowPlan,
-    WorkflowTask
-)
-from core.agents.database.base_database_agent import DatabaseOperation, DatabaseHealth
+
+from core.agents.database.supervisor_agent import DatabaseSupervisorAgent, WorkflowPlan
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseWorkflowState(TypedDict):
     """State definition for database workflow."""
-    messages: List[BaseMessage]
-    request: Dict[str, Any]
+
+    messages: list[BaseMessage]
+    request: dict[str, Any]
     plan: Optional[WorkflowPlan]
     current_agent: str
-    agent_results: Dict[str, Any]
-    health_status: Dict[str, str]
-    metadata: Dict[str, Any]
+    agent_results: dict[str, Any]
+    health_status: dict[str, str]
+    metadata: dict[str, Any]
     error: Optional[str]
-    final_result: Optional[Dict[str, Any]]
+    final_result: Optional[dict[str, Any]]
 
 
 class DatabaseWorkflow:
@@ -149,9 +152,7 @@ class DatabaseWorkflow:
             # Check if we're in production (PostgreSQL available)
             if "postgresql" in self.database_url:
                 # Use PostgreSQL checkpointer for production
-                self.checkpointer = AsyncPostgresSaver.from_conn_string(
-                    self.database_url
-                )
+                self.checkpointer = AsyncPostgresSaver.from_conn_string(self.database_url)
                 logger.info("Using PostgreSQL checkpointer for production")
             else:
                 # Use SQLite for development/testing
@@ -202,21 +203,29 @@ class DatabaseWorkflow:
                 "execute_backup": "execute_backup",
                 "execute_monitor": "execute_monitor",
                 "error": "error_handler",
-                "aggregate": "aggregate_results"
-            }
+                "aggregate": "aggregate_results",
+            },
         )
 
         # Add edges from execution nodes
-        for node in ["execute_schema", "execute_sync", "execute_query", "execute_cache",
-                    "execute_event", "execute_integrity", "execute_backup", "execute_monitor"]:
+        for node in [
+            "execute_schema",
+            "execute_sync",
+            "execute_query",
+            "execute_cache",
+            "execute_event",
+            "execute_integrity",
+            "execute_backup",
+            "execute_monitor",
+        ]:
             self.graph.add_conditional_edges(
                 node,
                 self._route_after_execution,
                 {
                     "continue": "health_check",
                     "aggregate": "aggregate_results",
-                    "error": "error_handler"
-                }
+                    "error": "error_handler",
+                },
             )
 
         # End edges
@@ -245,10 +254,12 @@ class DatabaseWorkflow:
 
                 Return as JSON with keys: operation, priority, params, constraints"""
 
-                response = await self.llm.ainvoke([
-                    SystemMessage(content=system_prompt),
-                    HumanMessage(content=request_text)
-                ])
+                response = await self.llm.ainvoke(
+                    [
+                        SystemMessage(content=system_prompt),
+                        HumanMessage(content=request_text),
+                    ]
+                )
 
                 # Parse LLM response
                 try:
@@ -259,20 +270,22 @@ class DatabaseWorkflow:
                         "operation": "query",
                         "priority": "medium",
                         "params": {},
-                        "constraints": []
+                        "constraints": [],
                     }
 
                 state["request"] = analysis
                 state["metadata"]["analysis"] = {
                     "timestamp": datetime.utcnow().isoformat(),
-                    "request_type": analysis.get("operation", "unknown")
+                    "request_type": analysis.get("operation", "unknown"),
                 }
 
                 # Add AI message with analysis
                 if "messages" not in state:
                     state["messages"] = []
                 state["messages"] = state["messages"] + [
-                    AIMessage(content=f"Analyzed request: {analysis['operation']} operation with {analysis['priority']} priority")
+                    AIMessage(
+                        content=f"Analyzed request: {analysis['operation']} operation with {analysis['priority']} priority"
+                    )
                 ]
 
         except Exception as e:
@@ -293,7 +306,7 @@ class DatabaseWorkflow:
             state["metadata"]["plan"] = {
                 "plan_id": plan.plan_id,
                 "total_tasks": plan.total_tasks,
-                "priority": plan.priority.value
+                "priority": plan.priority.value,
             }
 
             # Add message about plan
@@ -301,7 +314,9 @@ class DatabaseWorkflow:
             if "messages" not in state:
                 state["messages"] = []
             state["messages"] = state["messages"] + [
-                AIMessage(content=f"Created execution plan with {plan.total_tasks} tasks: {task_summary}")
+                AIMessage(
+                    content=f"Created execution plan with {plan.total_tasks} tasks: {task_summary}"
+                )
             ]
 
         except Exception as e:
@@ -322,8 +337,7 @@ class DatabaseWorkflow:
 
             # Check for critical agents
             critical_agents = [
-                agent for agent, health in state["health_status"].items()
-                if health == "critical"
+                agent for agent, health in state["health_status"].items() if health == "critical"
             ]
 
             if critical_agents:
@@ -331,7 +345,9 @@ class DatabaseWorkflow:
                 if "messages" not in state:
                     state["messages"] = []
                 state["messages"] = state["messages"] + [
-                    AIMessage(content=f"⚠️ Critical health issues detected in: {', '.join(critical_agents)}")
+                    AIMessage(
+                        content=f"⚠️ Critical health issues detected in: {', '.join(critical_agents)}"
+                    )
                 ]
             else:
                 if "messages" not in state:
@@ -395,7 +411,9 @@ class DatabaseWorkflow:
         """Execute monitoring task."""
         return await self._execute_agent_task(state, "monitor")
 
-    async def _execute_agent_task(self, state: DatabaseWorkflowState, agent_type: str) -> DatabaseWorkflowState:
+    async def _execute_agent_task(
+        self, state: DatabaseWorkflowState, agent_type: str
+    ) -> DatabaseWorkflowState:
         """Generic agent task execution."""
         try:
             plan = state["plan"]
@@ -429,7 +447,7 @@ class DatabaseWorkflow:
             state["agent_results"][current_task.task_id] = {
                 "success": result.success,
                 "data": result.data,
-                "error": result.error
+                "error": result.error,
             }
 
             # Add message about execution
@@ -437,7 +455,9 @@ class DatabaseWorkflow:
             if "messages" not in state:
                 state["messages"] = []
             state["messages"] = state["messages"] + [
-                AIMessage(content=f"{status_emoji} {agent_type} task completed: {current_task.task_id}")
+                AIMessage(
+                    content=f"{status_emoji} {agent_type} task completed: {current_task.task_id}"
+                )
             ]
 
         except Exception as e:
@@ -479,23 +499,25 @@ class DatabaseWorkflow:
                 "summary": {
                     "total_tasks": total_tasks,
                     "successful": successful_tasks,
-                    "failed": failed_tasks
+                    "failed": failed_tasks,
                 },
                 "results": agent_results,
-                "metadata": state.get("metadata", {})
+                "metadata": state.get("metadata", {}),
             }
 
             # Add final message
             if "messages" not in state:
                 state["messages"] = []
             state["messages"] = state["messages"] + [
-                AIMessage(content=f"""
+                AIMessage(
+                    content=f"""
                 Workflow completed:
                 - Total tasks: {total_tasks}
                 - Successful: {successful_tasks}
                 - Failed: {failed_tasks}
                 - Overall status: {'✅ Success' if failed_tasks == 0 else '⚠️ Partial failure'}
-                """)
+                """
+                )
             ]
 
         except Exception as e:
@@ -511,20 +533,18 @@ class DatabaseWorkflow:
         state["final_result"] = {
             "success": False,
             "error": error,
-            "metadata": state.get("metadata", {})
+            "metadata": state.get("metadata", {}),
         }
 
         if "messages" not in state:
             state["messages"] = []
-        state["messages"] = state["messages"] + [
-            AIMessage(content=f"❌ Workflow failed: {error}")
-        ]
+        state["messages"] = state["messages"] + [AIMessage(content=f"❌ Workflow failed: {error}")]
 
         logger.error(f"Workflow error: {error}")
 
         return state
 
-    async def execute(self, request: str, thread_id: str = "default") -> Dict[str, Any]:
+    async def execute(self, request: str, thread_id: str = "default") -> dict[str, Any]:
         """
         Execute a database workflow.
 
@@ -549,10 +569,10 @@ class DatabaseWorkflow:
                 "health_status": {},
                 "metadata": {
                     "thread_id": thread_id,
-                    "started_at": datetime.utcnow().isoformat()
+                    "started_at": datetime.utcnow().isoformat(),
                 },
                 "error": None,
-                "final_result": None
+                "final_result": None,
             }
 
             # Execute workflow
@@ -560,17 +580,13 @@ class DatabaseWorkflow:
             final_state = await self.compiled_graph.ainvoke(initial_state, config)
 
             # Extract and return final result
-            return final_state.get("final_result", {
-                "success": False,
-                "error": "No result generated"
-            })
+            return final_state.get(
+                "final_result", {"success": False, "error": "No result generated"}
+            )
 
         except Exception as e:
             logger.error(f"Workflow execution failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def get_state(self, thread_id: str = "default") -> Optional[DatabaseWorkflowState]:
         """Get current workflow state for a thread."""
@@ -584,7 +600,7 @@ class DatabaseWorkflow:
 
 
 # Convenience function for creating and executing workflows
-async def run_database_workflow(request: str, database_url: str, redis_url: str) -> Dict[str, Any]:
+async def run_database_workflow(request: str, database_url: str, redis_url: str) -> dict[str, Any]:
     """
     Run a database workflow.
 

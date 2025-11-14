@@ -82,8 +82,8 @@ async def test_rbac_override_via_settings():
 @pytest.mark.asyncio
 async def test_ws_rate_limit_override(monkeypatch):
     # Set WS rate limit to 1 for quick test
-    original_ws = getattr(settings, "WS_RATE_LIMIT_PER_MINUTE", 100)
-    original_api = getattr(settings, "RATE_LIMIT_PER_MINUTE", 60)
+    getattr(settings, "WS_RATE_LIMIT_PER_MINUTE", 100)
+    getattr(settings, "RATE_LIMIT_PER_MINUTE", 60)
     # Mock the property since it can't be set directly
     monkeypatch.setattr(settings.__class__, "WS_RATE_LIMIT_PER_MINUTE", property(lambda self: 1))
     if not hasattr(settings, "RATE_LIMIT_PER_MINUTE"):

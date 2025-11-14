@@ -733,7 +733,7 @@ class TestEdgeCases:
 
         # None input should not crash
         try:
-            result = validator.validate(None)
+            validator.validate(None)
             # Should either work or raise a clear exception
         except (TypeError, AttributeError):
             # Acceptable to raise these for None input
@@ -741,7 +741,7 @@ class TestEdgeCases:
 
         # Non-string input
         try:
-            result = validator.validate(12345)
+            validator.validate(12345)
             # Should either work (convert to string) or raise exception
         except (TypeError, AttributeError):
             pass

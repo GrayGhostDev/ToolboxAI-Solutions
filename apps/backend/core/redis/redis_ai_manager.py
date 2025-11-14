@@ -83,7 +83,11 @@ class RedisAIConnectionPool:
 
         # Retry on network errors
         if retry_on_error is None:
-            retry_on_error = [redis.ConnectionError, redis.TimeoutError, redis.BusyLoadingError]
+            retry_on_error = [
+                redis.ConnectionError,
+                redis.TimeoutError,
+                redis.BusyLoadingError,
+            ]
 
         # Create connection pool with optimizations
         self.pool = redis.ConnectionPool(
@@ -184,7 +188,10 @@ class RedisAIManager:
         else:
             # Create default connection
             self.redis = redis.Redis(
-                host="localhost", port=6379, decode_responses=True, health_check_interval=30
+                host="localhost",
+                port=6379,
+                decode_responses=True,
+                health_check_interval=30,
             )
 
         self.vector_dim = vector_dim
@@ -214,7 +221,11 @@ class RedisAIManager:
                 VectorField(
                     "embedding",
                     "FLAT",  # Use FLAT for small datasets, HNSW for large
-                    {"TYPE": "FLOAT32", "DIM": self.vector_dim, "DISTANCE_METRIC": "COSINE"},
+                    {
+                        "TYPE": "FLOAT32",
+                        "DIM": self.vector_dim,
+                        "DISTANCE_METRIC": "COSINE",
+                    },
                 ),
             )
 
@@ -491,7 +502,11 @@ class RedisAIManager:
     # ========== Distributed Locking ==========
 
     def acquire_lock(
-        self, resource: str, timeout: int = 10, blocking: bool = True, blocking_timeout: int = 5
+        self,
+        resource: str,
+        timeout: int = 10,
+        blocking: bool = True,
+        blocking_timeout: int = 5,
     ) -> redis.lock.Lock | None:
         """
         Acquire distributed lock for resource.
@@ -507,7 +522,10 @@ class RedisAIManager:
         """
         lock_key = f"{self.PREFIX_LOCK}{resource}"
         lock = self.redis.lock(
-            lock_key, timeout=timeout, blocking=blocking, blocking_timeout=blocking_timeout
+            lock_key,
+            timeout=timeout,
+            blocking=blocking,
+            blocking_timeout=blocking_timeout,
         )
 
         if lock.acquire():
@@ -532,7 +550,12 @@ class RedisAIManager:
         channel = f"{self.PREFIX_PUBSUB}agent:{agent_id}"
 
         message = json.dumps(
-            {"agent_id": agent_id, "event_type": event_type, "timestamp": time.time(), "data": data}
+            {
+                "agent_id": agent_id,
+                "event_type": event_type,
+                "timestamp": time.time(),
+                "data": data,
+            }
         )
 
         return self.redis.publish(channel, message)
@@ -660,7 +683,7 @@ class RedisAIManager:
             info = self.redis.info()
 
             # Get memory info
-            memory_info = self.redis.memory_stats()
+            self.redis.memory_stats()
 
             # Check vector index
             vector_index_ok = False
@@ -720,7 +743,8 @@ def get_redis_ai_manager(
         )
 
         _redis_ai_manager = RedisAIManager(
-            connection_pool=pool, vector_dim=1536  # OpenAI embedding dimension
+            connection_pool=pool,
+            vector_dim=1536,  # OpenAI embedding dimension
         )
 
     return _redis_ai_manager

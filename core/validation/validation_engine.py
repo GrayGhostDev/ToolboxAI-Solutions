@@ -5,24 +5,31 @@ Main engine that coordinates syntax validation, security analysis,
 educational content validation, quality checking, and compliance verification.
 """
 
-import logging
 import asyncio
-from typing import Dict, List, Any, Optional, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
 import json
+import logging
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
 
+from .educational_validator import (
+    EducationalContentValidator,
+    EducationalReport,
+    GradeLevel,
+    LearningObjective,
+    Subject,
+)
 from .lua_validator import LuaScriptValidator, ValidationResult
-from .security_analyzer import SecurityAnalyzer, SecurityReport
-from .educational_validator import EducationalContentValidator, EducationalReport, GradeLevel, Subject, LearningObjective
 from .quality_checker import CodeQualityChecker, QualityReport
-from .roblox_compliance import RobloxComplianceChecker, ComplianceReport
+from .roblox_compliance import ComplianceReport, RobloxComplianceChecker
+from .security_analyzer import SecurityAnalyzer, SecurityReport
 
 
 class ValidationStatus(Enum):
     """Overall validation status"""
+
     PASSED = "passed"
     PASSED_WITH_WARNINGS = "passed_with_warnings"
     FAILED = "failed"
@@ -32,11 +39,12 @@ class ValidationStatus(Enum):
 @dataclass
 class ValidationRequest:
     """Request for script validation"""
+
     script_code: str
     script_name: str
     grade_level: Optional[GradeLevel] = None
     subject: Optional[Subject] = None
-    learning_objectives: Optional[List[LearningObjective]] = None
+    learning_objectives: Optional[list[LearningObjective]] = None
     educational_context: bool = True
     strict_mode: bool = False
     include_suggestions: bool = True
@@ -45,6 +53,7 @@ class ValidationRequest:
 @dataclass
 class ComprehensiveReport:
     """Complete validation report combining all aspects"""
+
     # Metadata
     script_name: str
     validation_timestamp: str
@@ -60,13 +69,13 @@ class ComprehensiveReport:
     compliance_check: ComplianceReport
 
     # Summary
-    critical_issues: List[str]
-    warnings: List[str]
-    recommendations: List[str]
-    auto_fix_suggestions: List[str]
+    critical_issues: list[str]
+    warnings: list[str]
+    recommendations: list[str]
+    auto_fix_suggestions: list[str]
 
     # Scores breakdown
-    scores: Dict[str, float]
+    scores: dict[str, float]
 
     # Ready for deployment
     deployment_ready: bool
@@ -91,11 +100,11 @@ class ValidationEngine:
 
         # Validation statistics
         self.stats = {
-            'total_validations': 0,
-            'passed_validations': 0,
-            'failed_validations': 0,
-            'average_score': 0.0,
-            'common_issues': {}
+            "total_validations": 0,
+            "passed_validations": 0,
+            "failed_validations": 0,
+            "average_score": 0.0,
+            "common_issues": {},
         }
 
     async def validate_script(self, request: ValidationRequest) -> ComprehensiveReport:
@@ -133,15 +142,21 @@ class ValidationEngine:
 
             # Compliance check
             validation_tasks.append(
-                self._run_compliance_check(request.script_code, request.script_name, request.educational_context)
+                self._run_compliance_check(
+                    request.script_code,
+                    request.script_name,
+                    request.educational_context,
+                )
             )
 
             # Educational validation (if context provided)
             if request.educational_context and request.grade_level and request.subject:
                 validation_tasks.append(
                     self._run_educational_validation(
-                        request.script_code, request.grade_level,
-                        request.subject, request.learning_objectives or []
+                        request.script_code,
+                        request.grade_level,
+                        request.subject,
+                        request.learning_objectives or [],
                     )
                 )
             else:
@@ -151,25 +166,52 @@ class ValidationEngine:
             results = await asyncio.gather(*validation_tasks, return_exceptions=True)
 
             # Extract results
-            syntax_result = results[0] if not isinstance(results[0], Exception) else self._create_error_syntax_result(str(results[0]))
-            security_result = results[1] if not isinstance(results[1], Exception) else self._create_error_security_result(str(results[1]))
-            quality_result = results[2] if not isinstance(results[2], Exception) else self._create_error_quality_result(str(results[2]))
-            compliance_result = results[3] if not isinstance(results[3], Exception) else self._create_error_compliance_result(str(results[3]))
-            educational_result = results[4] if not isinstance(results[4], Exception) else self._create_empty_educational_report()
+            syntax_result = (
+                results[0]
+                if not isinstance(results[0], Exception)
+                else self._create_error_syntax_result(str(results[0]))
+            )
+            security_result = (
+                results[1]
+                if not isinstance(results[1], Exception)
+                else self._create_error_security_result(str(results[1]))
+            )
+            quality_result = (
+                results[2]
+                if not isinstance(results[2], Exception)
+                else self._create_error_quality_result(str(results[2]))
+            )
+            compliance_result = (
+                results[3]
+                if not isinstance(results[3], Exception)
+                else self._create_error_compliance_result(str(results[3]))
+            )
+            educational_result = (
+                results[4]
+                if not isinstance(results[4], Exception)
+                else self._create_empty_educational_report()
+            )
 
             # Calculate validation duration
             duration_ms = (time.time() - start_time) * 1000
 
             # Generate comprehensive report
             report = self._generate_comprehensive_report(
-                request, syntax_result, security_result, educational_result,
-                quality_result, compliance_result, duration_ms
+                request,
+                syntax_result,
+                security_result,
+                educational_result,
+                quality_result,
+                compliance_result,
+                duration_ms,
             )
 
             # Update statistics
             self._update_statistics(report)
 
-            self.logger.info(f"Validation completed for {request.script_name} in {duration_ms:.2f}ms")
+            self.logger.info(
+                f"Validation completed for {request.script_name} in {duration_ms:.2f}ms"
+            )
             return report
 
         except Exception as e:
@@ -185,8 +227,13 @@ class ValidationEngine:
         """Run security analysis"""
         return self.security_analyzer.analyze_security(script_code, script_name)
 
-    async def _run_educational_validation(self, script_code: str, grade_level: GradeLevel,
-                                        subject: Subject, learning_objectives: List[LearningObjective]) -> EducationalReport:
+    async def _run_educational_validation(
+        self,
+        script_code: str,
+        grade_level: GradeLevel,
+        subject: Subject,
+        learning_objectives: list[LearningObjective],
+    ) -> EducationalReport:
         """Run educational validation"""
         return self.educational_validator.validate_educational_content(
             script_code, grade_level, subject, learning_objectives
@@ -196,34 +243,50 @@ class ValidationEngine:
         """Run quality assessment"""
         return self.quality_checker.check_quality(script_code, script_name)
 
-    async def _run_compliance_check(self, script_code: str, script_name: str, educational_context: bool) -> ComplianceReport:
+    async def _run_compliance_check(
+        self, script_code: str, script_name: str, educational_context: bool
+    ) -> ComplianceReport:
         """Run compliance check"""
-        return self.compliance_checker.check_compliance(script_code, script_name, educational_context)
+        return self.compliance_checker.check_compliance(
+            script_code, script_name, educational_context
+        )
 
     async def _create_empty_educational_report(self) -> Optional[EducationalReport]:
         """Create empty educational report when not applicable"""
         return None
 
-    def _generate_comprehensive_report(self, request: ValidationRequest, syntax_result: ValidationResult,
-                                     security_result: SecurityReport, educational_result: Optional[EducationalReport],
-                                     quality_result: QualityReport, compliance_result: ComplianceReport,
-                                     duration_ms: float) -> ComprehensiveReport:
+    def _generate_comprehensive_report(
+        self,
+        request: ValidationRequest,
+        syntax_result: ValidationResult,
+        security_result: SecurityReport,
+        educational_result: Optional[EducationalReport],
+        quality_result: QualityReport,
+        compliance_result: ComplianceReport,
+        duration_ms: float,
+    ) -> ComprehensiveReport:
         """Generate comprehensive validation report"""
 
         # Collect all critical issues
         critical_issues = []
 
         # From syntax validation
-        critical_issues.extend([
-            issue.message for issue in syntax_result.issues
-            if issue.severity.value in ['error', 'critical']
-        ])
+        critical_issues.extend(
+            [
+                issue.message
+                for issue in syntax_result.issues
+                if issue.severity.value in ["error", "critical"]
+            ]
+        )
 
         # From security analysis
-        critical_issues.extend([
-            finding.description for finding in security_result.findings
-            if finding.threat_level.value in ['high', 'critical']
-        ])
+        critical_issues.extend(
+            [
+                finding.description
+                for finding in security_result.findings
+                if finding.threat_level.value in ["high", "critical"]
+            ]
+        )
 
         # From compliance check
         critical_issues.extend(compliance_result.critical_issues)
@@ -232,32 +295,36 @@ class ValidationEngine:
         warnings = []
 
         # From syntax validation
-        warnings.extend([
-            issue.message for issue in syntax_result.issues
-            if issue.severity.value == 'warning'
-        ])
+        warnings.extend(
+            [issue.message for issue in syntax_result.issues if issue.severity.value == "warning"]
+        )
 
         # From security analysis
-        warnings.extend([
-            finding.description for finding in security_result.findings
-            if finding.threat_level.value == 'medium'
-        ])
+        warnings.extend(
+            [
+                finding.description
+                for finding in security_result.findings
+                if finding.threat_level.value == "medium"
+            ]
+        )
 
         # From quality assessment
-        warnings.extend([
-            issue.message for issue in quality_result.issues
-            if issue.severity == 'warning'
-        ])
+        warnings.extend(
+            [issue.message for issue in quality_result.issues if issue.severity == "warning"]
+        )
 
         # From compliance check
         warnings.extend(compliance_result.warnings)
 
         # From educational validation
         if educational_result:
-            warnings.extend([
-                issue.description for issue in educational_result.issues
-                if issue.severity == 'warning'
-            ])
+            warnings.extend(
+                [
+                    issue.description
+                    for issue in educational_result.issues
+                    if issue.severity == "warning"
+                ]
+            )
 
         # Collect recommendations
         recommendations = []
@@ -270,15 +337,21 @@ class ValidationEngine:
 
         # Collect auto-fix suggestions
         auto_fix_suggestions = []
-        auto_fix_suggestions.extend(self.lua_validator.generate_fix_suggestions(syntax_result.issues))
+        auto_fix_suggestions.extend(
+            self.lua_validator.generate_fix_suggestions(syntax_result.issues)
+        )
 
         # Calculate individual scores
         scores = {
-            'syntax': 100.0 if syntax_result.success else 0.0,
-            'security': security_result.overall_score,
-            'quality': quality_result.overall_score,
-            'compliance': self._calculate_compliance_score(compliance_result),
-            'educational': self._calculate_educational_score(educational_result) if educational_result else None
+            "syntax": 100.0 if syntax_result.success else 0.0,
+            "security": security_result.overall_score,
+            "quality": quality_result.overall_score,
+            "compliance": self._calculate_compliance_score(compliance_result),
+            "educational": (
+                self._calculate_educational_score(educational_result)
+                if educational_result
+                else None
+            ),
         }
 
         # Calculate overall score
@@ -287,21 +360,27 @@ class ValidationEngine:
 
         # Determine overall status
         overall_status = self._determine_overall_status(
-            syntax_result, security_result, quality_result, compliance_result, educational_result
+            syntax_result,
+            security_result,
+            quality_result,
+            compliance_result,
+            educational_result,
         )
 
         # Determine readiness flags
         deployment_ready = (
-            syntax_result.success and
-            security_result.overall_score >= 70 and
-            compliance_result.overall_compliance.value in ['compliant', 'warning'] and
-            not critical_issues
+            syntax_result.success
+            and security_result.overall_score >= 70
+            and compliance_result.overall_compliance.value in ["compliant", "warning"]
+            and not critical_issues
         )
 
         educational_ready = deployment_ready and (
-            educational_result is None or
-            (educational_result.content_rating.value in ['appropriate', 'needs_review'] and
-             educational_result.educational_value_score >= 60)
+            educational_result is None
+            or (
+                educational_result.content_rating.value in ["appropriate", "needs_review"]
+                and educational_result.educational_value_score >= 60
+            )
         )
 
         platform_compliant = compliance_result.platform_ready
@@ -324,16 +403,16 @@ class ValidationEngine:
             scores=scores,
             deployment_ready=deployment_ready,
             educational_ready=educational_ready,
-            platform_compliant=platform_compliant
+            platform_compliant=platform_compliant,
         )
 
     def _calculate_compliance_score(self, compliance_result: ComplianceReport) -> float:
         """Calculate compliance score from compliance level"""
         compliance_scores = {
-            'compliant': 100.0,
-            'warning': 75.0,
-            'violation': 50.0,
-            'critical_violation': 0.0
+            "compliant": 100.0,
+            "warning": 75.0,
+            "violation": 50.0,
+            "critical_violation": 0.0,
         }
         return compliance_scores.get(compliance_result.overall_compliance.value, 0.0)
 
@@ -344,55 +423,60 @@ class ValidationEngine:
 
         # Weight different aspects
         weights = {
-            'content_rating': 0.3,
-            'educational_value': 0.3,
-            'engagement': 0.2,
-            'accessibility': 0.2
+            "content_rating": 0.3,
+            "educational_value": 0.3,
+            "engagement": 0.2,
+            "accessibility": 0.2,
         }
 
         # Convert content rating to score
         rating_scores = {
-            'appropriate': 100.0,
-            'needs_review': 75.0,
-            'inappropriate': 25.0,
-            'blocked': 0.0
+            "appropriate": 100.0,
+            "needs_review": 75.0,
+            "inappropriate": 25.0,
+            "blocked": 0.0,
         }
 
         content_score = rating_scores.get(educational_result.content_rating.value, 0.0)
 
         overall_score = (
-            content_score * weights['content_rating'] +
-            educational_result.educational_value_score * weights['educational_value'] +
-            educational_result.engagement_score * weights['engagement'] +
-            educational_result.accessibility_score * weights['accessibility']
+            content_score * weights["content_rating"]
+            + educational_result.educational_value_score * weights["educational_value"]
+            + educational_result.engagement_score * weights["engagement"]
+            + educational_result.accessibility_score * weights["accessibility"]
         )
 
         return overall_score
 
-    def _determine_overall_status(self, syntax_result: ValidationResult, security_result: SecurityReport,
-                                quality_result: QualityReport, compliance_result: ComplianceReport,
-                                educational_result: Optional[EducationalReport]) -> ValidationStatus:
+    def _determine_overall_status(
+        self,
+        syntax_result: ValidationResult,
+        security_result: SecurityReport,
+        quality_result: QualityReport,
+        compliance_result: ComplianceReport,
+        educational_result: Optional[EducationalReport],
+    ) -> ValidationStatus:
         """Determine overall validation status"""
 
         # Check for critical failures
         if not syntax_result.success:
             return ValidationStatus.FAILED
 
-        if security_result.threat_level.value == 'critical':
+        if security_result.threat_level.value == "critical":
             return ValidationStatus.FAILED
 
-        if compliance_result.overall_compliance.value == 'critical_violation':
+        if compliance_result.overall_compliance.value == "critical_violation":
             return ValidationStatus.FAILED
 
-        if educational_result and educational_result.content_rating.value == 'blocked':
+        if educational_result and educational_result.content_rating.value == "blocked":
             return ValidationStatus.FAILED
 
         # Check for warnings
         has_warnings = (
-            security_result.threat_level.value in ['high', 'medium'] or
-            compliance_result.overall_compliance.value in ['violation', 'warning'] or
-            quality_result.overall_score < 70 or
-            (educational_result and educational_result.content_rating.value == 'needs_review')
+            security_result.threat_level.value in ["high", "medium"]
+            or compliance_result.overall_compliance.value in ["violation", "warning"]
+            or quality_result.overall_score < 70
+            or (educational_result and educational_result.content_rating.value == "needs_review")
         )
 
         if has_warnings:
@@ -402,24 +486,28 @@ class ValidationEngine:
 
     def _update_statistics(self, report: ComprehensiveReport):
         """Update validation statistics"""
-        self.stats['total_validations'] += 1
+        self.stats["total_validations"] += 1
 
-        if report.overall_status in [ValidationStatus.PASSED, ValidationStatus.PASSED_WITH_WARNINGS]:
-            self.stats['passed_validations'] += 1
+        if report.overall_status in [
+            ValidationStatus.PASSED,
+            ValidationStatus.PASSED_WITH_WARNINGS,
+        ]:
+            self.stats["passed_validations"] += 1
         else:
-            self.stats['failed_validations'] += 1
+            self.stats["failed_validations"] += 1
 
         # Update average score
-        current_avg = self.stats['average_score']
-        total = self.stats['total_validations']
-        self.stats['average_score'] = (current_avg * (total - 1) + report.overall_score) / total
+        current_avg = self.stats["average_score"]
+        total = self.stats["total_validations"]
+        self.stats["average_score"] = (current_avg * (total - 1) + report.overall_score) / total
 
         # Track common issues
         for issue in report.critical_issues + report.warnings:
-            self.stats['common_issues'][issue] = self.stats['common_issues'].get(issue, 0) + 1
+            self.stats["common_issues"][issue] = self.stats["common_issues"].get(issue, 0) + 1
 
-    def _create_error_report(self, request: ValidationRequest, error_message: str,
-                           duration_ms: float) -> ComprehensiveReport:
+    def _create_error_report(
+        self, request: ValidationRequest, error_message: str, duration_ms: float
+    ) -> ComprehensiveReport:
         """Create error report when validation fails"""
         return ComprehensiveReport(
             script_name=request.script_name,
@@ -436,10 +524,10 @@ class ValidationEngine:
             warnings=[],
             recommendations=["Fix validation errors and try again"],
             auto_fix_suggestions=[],
-            scores={'error': 0.0},
+            scores={"error": 0.0},
             deployment_ready=False,
             educational_ready=False,
-            platform_compliant=False
+            platform_compliant=False,
         )
 
     def _create_error_syntax_result(self, error_message: str) -> ValidationResult:
@@ -448,13 +536,15 @@ class ValidationEngine:
 
         return ValidationResult(
             success=False,
-            issues=[ValidationIssue(
-                severity=ValidationSeverity.CRITICAL,
-                line=1,
-                column=1,
-                message=f"Validation error: {error_message}",
-                rule="validation_error"
-            )],
+            issues=[
+                ValidationIssue(
+                    severity=ValidationSeverity.CRITICAL,
+                    line=1,
+                    column=1,
+                    message=f"Validation error: {error_message}",
+                    rule="validation_error",
+                )
+            ],
             syntax_valid=False,
             api_compatible=False,
             performance_score=0.0,
@@ -462,80 +552,97 @@ class ValidationEngine:
             complexity_score=0.0,
             total_lines=0,
             function_count=0,
-            variable_count=0
+            variable_count=0,
         )
 
     def _create_error_security_result(self, error_message: str) -> SecurityReport:
         """Create error security result"""
-        from .security_analyzer import SecurityFinding, SecurityThreat, ExploitType
+        from .security_analyzer import ExploitType, SecurityFinding, SecurityThreat
 
         return SecurityReport(
             overall_score=0.0,
             threat_level=SecurityThreat.CRITICAL,
-            findings=[SecurityFinding(
-                threat_level=SecurityThreat.CRITICAL,
-                exploit_type=ExploitType.CODE_INJECTION,
-                line_number=1,
-                column=1,
-                description=f"Validation error: {error_message}",
-                code_snippet="",
-                mitigation="Fix validation errors"
-            )],
+            findings=[
+                SecurityFinding(
+                    threat_level=SecurityThreat.CRITICAL,
+                    exploit_type=ExploitType.CODE_INJECTION,
+                    line_number=1,
+                    column=1,
+                    description=f"Validation error: {error_message}",
+                    code_snippet="",
+                    mitigation="Fix validation errors",
+                )
+            ],
             remote_events_secure=False,
             input_validation_present=False,
             rate_limiting_present=False,
             authentication_checks=False,
             recommendations=[f"Fix validation error: {error_message}"],
-            compliant_with_standards=False
+            compliant_with_standards=False,
         )
 
     def _create_error_quality_result(self, error_message: str) -> QualityReport:
         """Create error quality result"""
-        from .quality_checker import QualityIssue, QualityMetrics, QualityLevel
+        from .quality_checker import QualityIssue, QualityLevel, QualityMetrics
 
         return QualityReport(
             overall_score=0.0,
             quality_level=QualityLevel.UNACCEPTABLE,
             metrics=QualityMetrics(
-                lines_of_code=0, logical_lines=0, comment_lines=0, blank_lines=0,
-                function_count=0, complexity_score=0, maintainability_score=0,
-                readability_score=0, documentation_score=0, test_coverage=0
+                lines_of_code=0,
+                logical_lines=0,
+                comment_lines=0,
+                blank_lines=0,
+                function_count=0,
+                complexity_score=0,
+                maintainability_score=0,
+                readability_score=0,
+                documentation_score=0,
+                test_coverage=0,
             ),
-            issues=[QualityIssue(
-                severity='error',
-                line_number=1,
-                column=1,
-                rule='validation_error',
-                message=f"Validation error: {error_message}"
-            )],
+            issues=[
+                QualityIssue(
+                    severity="error",
+                    line_number=1,
+                    column=1,
+                    rule="validation_error",
+                    message=f"Validation error: {error_message}",
+                )
+            ],
             recommendations=[f"Fix validation error: {error_message}"],
             best_practices_followed=[],
-            areas_for_improvement=['error_handling']
+            areas_for_improvement=["error_handling"],
         )
 
     def _create_error_compliance_result(self, error_message: str) -> ComplianceReport:
         """Create error compliance result"""
-        from .roblox_compliance import ComplianceViolation, ComplianceLevel, ViolationType
+        from .roblox_compliance import (
+            ComplianceLevel,
+            ComplianceViolation,
+            ViolationType,
+        )
 
         return ComplianceReport(
             overall_compliance=ComplianceLevel.CRITICAL_VIOLATION,
-            violations=[ComplianceViolation(
-                violation_type=ViolationType.TECHNICAL_VIOLATION,
-                severity=ComplianceLevel.CRITICAL_VIOLATION,
-                line_number=1,
-                description=f"Validation error: {error_message}",
-                policy_reference="Validation Error",
-                recommendation="Fix validation errors"
-            )],
+            violations=[
+                ComplianceViolation(
+                    violation_type=ViolationType.TECHNICAL_VIOLATION,
+                    severity=ComplianceLevel.CRITICAL_VIOLATION,
+                    line_number=1,
+                    description=f"Validation error: {error_message}",
+                    policy_reference="Validation Error",
+                    recommendation="Fix validation errors",
+                )
+            ],
             compliant_areas=[],
             warnings=[],
             critical_issues=[f"Validation error: {error_message}"],
             platform_ready=False,
             moderation_risk="high",
-            recommendations=[f"Fix validation error: {error_message}"]
+            recommendations=[f"Fix validation error: {error_message}"],
         )
 
-    def get_validation_statistics(self) -> Dict[str, Any]:
+    def get_validation_statistics(self) -> dict[str, Any]:
         """Get validation statistics"""
         return self.stats.copy()
 
@@ -586,7 +693,7 @@ Generated by ToolBoxAI Validation Engine
         """
         return summary.strip()
 
-    async def batch_validate(self, requests: List[ValidationRequest]) -> List[ComprehensiveReport]:
+    async def batch_validate(self, requests: list[ValidationRequest]) -> list[ComprehensiveReport]:
         """Validate multiple scripts in batch"""
         tasks = [self.validate_script(request) for request in requests]
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -595,9 +702,7 @@ Generated by ToolBoxAI Validation Engine
         reports = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                error_report = self._create_error_report(
-                    requests[i], str(result), 0.0
-                )
+                error_report = self._create_error_report(requests[i], str(result), 0.0)
                 reports.append(error_report)
             else:
                 reports.append(result)

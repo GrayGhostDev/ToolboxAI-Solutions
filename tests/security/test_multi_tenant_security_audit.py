@@ -73,10 +73,16 @@ def security_test_users(
     org1, org2 = security_test_orgs
 
     user1 = User(
-        id=9001, email="attacker@secure-org-1.test", username="attacker1", organization_id=org1.id
+        id=9001,
+        email="attacker@secure-org-1.test",
+        username="attacker1",
+        organization_id=org1.id,
     )
     user2 = User(
-        id=9002, email="victim@secure-org-2.test", username="victim2", organization_id=org2.id
+        id=9002,
+        email="victim@secure-org-2.test",
+        username="victim2",
+        organization_id=org2.id,
     )
 
     db_session.add_all([user1, user2])
@@ -147,7 +153,10 @@ class TestCrossOrganizationAccess:
 
         # Create environment in org2
         env2 = RobloxEnvironment(
-            user_id=user2.id, name="Secret Environment", place_id="999999", organization_id=org2.id
+            user_id=user2.id,
+            name="Secret Environment",
+            place_id="999999",
+            organization_id=org2.id,
         )
         db_session.add(env2)
         db_session.flush()
@@ -263,7 +272,7 @@ class TestRLSPolicyBypass:
 
         # Should only count org1's agents
         # (This test verifies RLS is applied to CTEs)
-        count = result.scalar()
+        result.scalar()
         # Count should be org1's agents only, not all agents
 
     def test_cannot_bypass_rls_by_resetting_context(
@@ -348,7 +357,8 @@ class TestAPIEndpointAuthorization:
         token1 = generate_test_token(user1, org1)
 
         response = test_client.get(
-            f"/api/v1/agents/instances/{agent2.id}", headers={"Authorization": f"Bearer {token1}"}
+            f"/api/v1/agents/instances/{agent2.id}",
+            headers={"Authorization": f"Bearer {token1}"},
         )
 
         # Should return 404 (not 403 to avoid information leakage)
@@ -452,7 +462,7 @@ class TestParameterTampering:
         token1 = generate_test_token(user1, org1)
 
         # Attempt to create resource with different organization_id
-        response = test_client.post(
+        test_client.post(
             "/api/v1/roblox/create",
             headers={"Authorization": f"Bearer {token1}"},
             json={
@@ -492,10 +502,13 @@ class TestParameterTampering:
         token1 = generate_test_token(user1, org1)
 
         # Attempt to change organization_id via update
-        response = test_client.patch(
+        test_client.patch(
             f"/api/v1/agents/instances/{agent1.id}",
             headers={"Authorization": f"Bearer {token1}"},
-            json={"organization_id": str(org2.id), "status": "BUSY"},  # Tampering attempt
+            json={
+                "organization_id": str(org2.id),
+                "status": "BUSY",
+            },  # Tampering attempt
         )
 
         # Verify organization_id unchanged
@@ -537,7 +550,7 @@ class TestSQLInjection:
 
         if response.status_code == 200:
             # Should not return all agents
-            agents = response.json().get("data", [])
+            response.json().get("data", [])
             # Check that response is properly filtered
             # (implementation-specific validation)
 
@@ -566,7 +579,8 @@ class TestInformationLeakage:
         fake_id = uuid4()
 
         response = test_client.get(
-            f"/api/v1/agents/instances/{fake_id}", headers={"Authorization": f"Bearer {token1}"}
+            f"/api/v1/agents/instances/{fake_id}",
+            headers={"Authorization": f"Bearer {token1}"},
         )
 
         # Should return generic 404

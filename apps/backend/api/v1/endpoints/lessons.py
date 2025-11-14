@@ -9,8 +9,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from apps.backend.services.database import db_service
 from apps.backend.api.auth.auth import get_current_user
+from apps.backend.services.database import db_service
 
 
 # User model for type hints

@@ -156,17 +156,29 @@ async def list_available_agents(current_user: User = Depends(get_current_user)):
             "database_sync": {
                 "name": "Database Sync Agent",
                 "description": "Synchronizes data between PostgreSQL and Redis",
-                "capabilities": ["data_sync", "cache_management", "conflict_resolution"],
+                "capabilities": [
+                    "data_sync",
+                    "cache_management",
+                    "conflict_resolution",
+                ],
             },
             "ui_sync": {
                 "name": "UI Sync Agent",
                 "description": "Manages real-time UI state synchronization",
-                "capabilities": ["state_sync", "component_updates", "optimistic_updates"],
+                "capabilities": [
+                    "state_sync",
+                    "component_updates",
+                    "optimistic_updates",
+                ],
             },
             "realtime_update": {
                 "name": "Realtime Update Agent",
                 "description": "Handles Pusher channels and WebSocket fallback",
-                "capabilities": ["event_broadcast", "channel_management", "message_queue"],
+                "capabilities": [
+                    "event_broadcast",
+                    "channel_management",
+                    "message_queue",
+                ],
             },
             "studio_bridge": {
                 "name": "Studio Bridge Agent",
@@ -176,7 +188,11 @@ async def list_available_agents(current_user: User = Depends(get_current_user)):
             "schema_validator": {
                 "name": "Schema Validator Agent",
                 "description": "Validates and transforms data across platforms",
-                "capabilities": ["schema_validation", "data_transformation", "version_migration"],
+                "capabilities": [
+                    "schema_validation",
+                    "data_transformation",
+                    "version_migration",
+                ],
             },
         }
 
@@ -190,7 +206,11 @@ async def list_available_agents(current_user: User = Depends(get_current_user)):
                 )
 
         return JSONResponse(
-            content={"status": "success", "agents": agent_info, "total_agents": len(agent_info)}
+            content={
+                "status": "success",
+                "agents": agent_info,
+                "total_agents": len(agent_info),
+            }
         )
 
     except Exception as e:
@@ -234,7 +254,11 @@ async def create_workflow(
     except Exception as e:
         logger.error(f"Error creating workflow: {e}")
         return WorkflowResponse(
-            workflow_id=None, success=False, output=None, error=str(e), execution_time=None
+            workflow_id=None,
+            success=False,
+            output=None,
+            error=str(e),
+            execution_time=None,
         )
 
 
@@ -258,7 +282,12 @@ async def list_workflow_templates(current_user: User = Depends(get_current_user)
         "user_sync": {
             "name": "User Synchronization Workflow",
             "description": "Sync user data between backend and frontend",
-            "tasks": ["fetch_user_data", "validate_data", "update_database", "broadcast_update"],
+            "tasks": [
+                "fetch_user_data",
+                "validate_data",
+                "update_database",
+                "broadcast_update",
+            ],
         },
         "roblox_deployment": {
             "name": "Roblox Deployment Workflow",
@@ -360,11 +389,17 @@ async def trigger_data_sync(
         if request.sync_mode == "batch":
             # For batch mode, queue the sync
             background_tasks.add_task(
-                manager.sync_data, request.source_platform, request.target_platform, request.data
+                manager.sync_data,
+                request.source_platform,
+                request.target_platform,
+                request.data,
             )
 
             return JSONResponse(
-                content={"status": "success", "message": "Sync queued for batch processing"}
+                content={
+                    "status": "success",
+                    "message": "Sync queued for batch processing",
+                }
             )
 
         return JSONResponse(
@@ -458,7 +493,7 @@ async def get_integration_metrics(
         # Platform-specific filtering
         if platform:
             try:
-                platform_enum = IntegrationPlatform[platform.upper()]
+                IntegrationPlatform[platform.upper()]
                 # Filter metrics for specific platform if needed
                 # This would require platform-specific metric tracking in agents
             except KeyError:
@@ -518,7 +553,10 @@ async def perform_health_check(
                 await db_manager.initialize()
                 health_report["components"]["database"] = {"status": "healthy"}
             except Exception as e:
-                health_report["components"]["database"] = {"status": "unhealthy", "error": str(e)}
+                health_report["components"]["database"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
                 health_report["status"] = "degraded"
 
             # Check Redis connectivity
@@ -534,7 +572,10 @@ async def perform_health_check(
                 else:
                     health_report["components"]["redis"] = {"status": "not_configured"}
             except Exception as e:
-                health_report["components"]["redis"] = {"status": "unhealthy", "error": str(e)}
+                health_report["components"]["redis"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
                 health_report["status"] = "degraded"
 
         return JSONResponse(content=health_report)

@@ -8,10 +8,10 @@ caching, and multi-tenant isolation.
 from datetime import datetime, timedelta
 
 import pytest
-from apps.backend.services.cache_service import cache_service
 from fastapi.testclient import TestClient
 
 from apps.backend.core.app_factory import create_test_app
+from apps.backend.services.cache_service import cache_service
 
 
 @pytest.fixture
@@ -234,7 +234,7 @@ class TestRateLimiting:
 
         # First 10 should succeed
         success_count = sum(1 for r in responses if r.status_code == 200)
-        rate_limited_count = sum(1 for r in responses if r.status_code == 429)
+        sum(1 for r in responses if r.status_code == 429)
 
         assert success_count > 0
         # If rate limiting is enabled, some requests should be blocked
@@ -242,10 +242,9 @@ class TestRateLimiting:
 
     def test_rate_limit_headers_present(self, client, auth_headers):
         """Test that rate limit headers are included in response"""
-        response = client.get("/api/v1/dashboard/metrics", headers=auth_headers)
+        client.get("/api/v1/dashboard/metrics", headers=auth_headers)
 
         # Check for rate limit headers
-        headers = response.headers
         # These headers should be added by the rate limiting middleware
         # assert "X-RateLimit-Limit-60s" in headers
         # assert "X-RateLimit-Remaining-60s" in headers
@@ -323,8 +322,14 @@ class TestMultiTenantIsolation:
     def test_metrics_filtered_by_organization(self, client):
         """Test that metrics are properly filtered by organization"""
         # Create auth headers for different organizations
-        org1_headers = {"Authorization": "Bearer org1_token", "Content-Type": "application/json"}
-        org2_headers = {"Authorization": "Bearer org2_token", "Content-Type": "application/json"}
+        org1_headers = {
+            "Authorization": "Bearer org1_token",
+            "Content-Type": "application/json",
+        }
+        org2_headers = {
+            "Authorization": "Bearer org2_token",
+            "Content-Type": "application/json",
+        }
 
         # Get metrics for org1
         response1 = client.get("/api/v1/dashboard/metrics", headers=org1_headers)

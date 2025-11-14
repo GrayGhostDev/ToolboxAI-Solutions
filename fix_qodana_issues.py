@@ -13,57 +13,56 @@ Handles:
 import json
 import subprocess
 import sys
-from pathlib import Path
 from collections import defaultdict
-from typing import Dict, List, Set
+from pathlib import Path
 
 # SARIF file path
 SARIF_FILE = "AmLZm_RvRvk_799331b8-be0c-4580-bcb4-6601912309d3_qodana.sarif.json"
 
 # Directories to exclude from fixing
 EXCLUDE_PATTERNS = [
-    'Archive',
-    'ghost-backend',
-    'ToolboxAI-Roblox-Environment',
-    'venv',
-    'node_modules',
-    '__pycache__',
-    '.git'
+    "Archive",
+    "ghost-backend",
+    "ToolboxAI-Roblox-Environment",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".git",
 ]
 
 
-def load_sarif_issues() -> Dict[str, List[dict]]:
+def load_sarif_issues() -> dict[str, list[dict]]:
     """Load and categorize issues from SARIF file."""
     print("📖 Loading Qodana SARIF report...")
 
-    with open(SARIF_FILE, 'r') as f:
+    with open(SARIF_FILE) as f:
         sarif = json.load(f)
 
-    results = sarif['runs'][0]['results']
+    results = sarif["runs"][0]["results"]
 
     # Filter for active codebase only
     active_issues = []
     for result in results:
-        location = result['locations'][0]['physicalLocation']['artifactLocation']['uri']
+        location = result["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
         if not any(pattern in location for pattern in EXCLUDE_PATTERNS):
             active_issues.append(result)
 
     # Categorize by file
     issues_by_file = defaultdict(list)
     for issue in active_issues:
-        location = issue['locations'][0]['physicalLocation']['artifactLocation']['uri']
+        location = issue["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
         issues_by_file[location].append(issue)
 
     print(f"✅ Found {len(active_issues)} issues in {len(issues_by_file)} files")
     return issues_by_file
 
 
-def get_python_files_with_issues(issues_by_file: Dict[str, List[dict]]) -> Set[Path]:
+def get_python_files_with_issues(issues_by_file: dict[str, list[dict]]) -> set[Path]:
     """Extract Python files that need fixing."""
     python_files = set()
 
     for file_path in issues_by_file.keys():
-        if file_path.endswith('.py'):
+        if file_path.endswith(".py"):
             full_path = Path(file_path)
             if full_path.exists():
                 python_files.add(full_path)
@@ -74,9 +73,9 @@ def get_python_files_with_issues(issues_by_file: Dict[str, List[dict]]) -> Set[P
 def check_dependencies():
     """Check if required tools are installed."""
     tools = {
-        'autoflake': 'autoflake --version',
-        'black': 'black --version',
-        'isort': 'isort --version'
+        "autoflake": "autoflake --version",
+        "black": "black --version",
+        "isort": "isort --version",
     }
 
     missing = []
@@ -94,64 +93,66 @@ def check_dependencies():
     return True
 
 
-def fix_unused_imports_and_variables(python_files: Set[Path]):
+def fix_unused_imports_and_variables(python_files: set[Path]):
     """Remove unused imports and variables using autoflake."""
     print(f"\n🔧 Fixing unused imports and variables in {len(python_files)} files...")
 
     for file_path in sorted(python_files):
         try:
             # autoflake: remove unused imports and variables
-            subprocess.run([
-                'autoflake',
-                '--in-place',
-                '--remove-unused-variables',
-                '--remove-all-unused-imports',
-                '--ignore-init-module-imports',
-                str(file_path)
-            ], check=True, capture_output=True)
+            subprocess.run(
+                [
+                    "autoflake",
+                    "--in-place",
+                    "--remove-unused-variables",
+                    "--remove-all-unused-imports",
+                    "--ignore-init-module-imports",
+                    str(file_path),
+                ],
+                check=True,
+                capture_output=True,
+            )
 
             print(f"  ✓ {file_path}")
         except subprocess.CalledProcessError as e:
             print(f"  ✗ {file_path}: {e.stderr.decode()[:100]}")
 
 
-def fix_import_sorting(python_files: Set[Path]):
+def fix_import_sorting(python_files: set[Path]):
     """Sort imports using isort."""
     print(f"\n📚 Sorting imports in {len(python_files)} files...")
 
     for file_path in sorted(python_files):
         try:
-            subprocess.run([
-                'isort',
-                '--profile', 'black',
-                '--line-length', '100',
-                str(file_path)
-            ], check=True, capture_output=True)
+            subprocess.run(
+                ["isort", "--profile", "black", "--line-length", "100", str(file_path)],
+                check=True,
+                capture_output=True,
+            )
 
             print(f"  ✓ {file_path}")
         except subprocess.CalledProcessError as e:
             print(f"  ✗ {file_path}: {e.stderr.decode()[:100]}")
 
 
-def fix_formatting(python_files: Set[Path]):
+def fix_formatting(python_files: set[Path]):
     """Format code using black."""
     print(f"\n🎨 Formatting code in {len(python_files)} files...")
 
     for file_path in sorted(python_files):
         try:
-            subprocess.run([
-                'black',
-                '--line-length', '100',
-                '--quiet',
-                str(file_path)
-            ], check=True, capture_output=True)
+            subprocess.run(
+                ["black", "--line-length", "100", "--quiet", str(file_path)],
+                check=True,
+                capture_output=True,
+            )
 
             print(f"  ✓ {file_path}")
         except subprocess.CalledProcessError as e:
             print(f"  ✗ {file_path}: {e.stderr.decode()[:100]}")
 
 
-def generate_report(issues_by_file: Dict[str, List[dict]]):
+def generate_report(issues_by_file: dict[str, list[dict]]):
     """Generate summary report of issues."""
     print("\n" + "=" * 80)
     print("ISSUE SUMMARY")
@@ -161,14 +162,16 @@ def generate_report(issues_by_file: Dict[str, List[dict]]):
     by_type = defaultdict(int)
     for issues in issues_by_file.values():
         for issue in issues:
-            by_type[issue['ruleId']] += 1
+            by_type[issue["ruleId"]] += 1
 
     print("\nTop Issues:")
     for rule_id, count in sorted(by_type.items(), key=lambda x: x[1], reverse=True)[:10]:
         print(f"  {rule_id:50} {count:4} issues")
 
     print("\nTop Files:")
-    for file_path, issues in sorted(issues_by_file.items(), key=lambda x: len(x[1]), reverse=True)[:10]:
+    for file_path, issues in sorted(issues_by_file.items(), key=lambda x: len(x[1]), reverse=True)[
+        :10
+    ]:
         print(f"  {len(issues):4} issues | {file_path}")
 
 
@@ -199,7 +202,7 @@ def main():
     print(f"\n📝 Ready to fix {len(python_files)} Python files")
     response = input("Continue? (y/N): ").strip().lower()
 
-    if response != 'y':
+    if response != "y":
         print("❌ Cancelled by user")
         return 0
 
@@ -224,5 +227,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
