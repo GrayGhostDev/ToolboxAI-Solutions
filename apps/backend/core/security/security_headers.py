@@ -16,6 +16,7 @@ import logging
 from datetime import datetime
 
 from fastapi import Request, Response
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
@@ -327,7 +328,10 @@ class DDoSProtectionMiddleware(BaseHTTPMiddleware):
             logger.warning(f"Blocked DDoS attempt from {client_ip}")
             return JSONResponse(
                 status_code=429,
-                content={"error": "Too many requests", "retry_after": self.block_duration},
+                content={
+                    "error": "Too many requests",
+                    "retry_after": self.block_duration,
+                },
                 headers={"Retry-After": str(self.block_duration)},
             )
 

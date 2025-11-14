@@ -117,6 +117,21 @@ logger = logging.getLogger(__name__)
 
 import os
 
+# Conditional imports for LangChain components
+END = None
+SystemMessage = None
+AIMessage = None
+HumanMessage = None
+SqliteSaver = None
+
+if LANGCHAIN_AVAILABLE:
+    try:
+        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+        from langgraph.checkpoint.sqlite import SqliteSaver
+        from langgraph.graph import END
+    except ImportError:
+        pass
+
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -840,7 +855,10 @@ You MUST present a complete design with:
 
                     # Generate response with async OpenAI for better scalability
                     stream = await self.async_openai_client.chat.completions.create(
-                        model=OPENAI_MODEL, messages=openai_messages, stream=True, temperature=0.7
+                        model=OPENAI_MODEL,
+                        messages=openai_messages,
+                        stream=True,
+                        temperature=0.7,
                     )
 
                     response_text = ""
@@ -890,7 +908,8 @@ You MUST present a complete design with:
                     formatted_messages = [
                         SystemMessage(
                             content=system_prompt.format(
-                                stage=memory["stage"], context=json.dumps(memory["context"])
+                                stage=memory["stage"],
+                                context=json.dumps(memory["context"]),
                             )
                         )
                     ]
@@ -1027,7 +1046,9 @@ router = APIRouter(prefix="/ai-chat", tags=["AI Chat"])
 
 
 @router.post(
-    "/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED
+    "/conversations",
+    response_model=ConversationResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_conversation(
     request: CreateConversationRequest, current_user: User = Depends(get_current_user)
@@ -1089,7 +1110,8 @@ async def send_message(
         current_user.id if hasattr(current_user, "id") else current_user.email
     ):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this conversation"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this conversation",
         )
 
     # Create user message
@@ -1200,9 +1222,16 @@ async def generate_ai_response_endpoint(
 
         try:
             # Send immediate acknowledgment
-            yield json.dumps(
-                {"type": "start", "id": ai_msg_id, "timestamp": datetime.utcnow().isoformat()}
-            ) + "\n"
+            yield (
+                json.dumps(
+                    {
+                        "type": "start",
+                        "id": ai_msg_id,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
+                + "\n"
+            )
 
             # If using assistant_graph, stream the response
             if assistant_graph:
@@ -1222,12 +1251,15 @@ async def generate_ai_response_endpoint(
 
                     # Timeout protection
                     if time.time() - start_time > 55:
-                        yield json.dumps(
-                            {
-                                "type": "token",
-                                "content": "\n\n[Response truncated due to time limit. Please continue the conversation.]",
-                            }
-                        ) + "\n"
+                        yield (
+                            json.dumps(
+                                {
+                                    "type": "token",
+                                    "content": "\n\n[Response truncated due to time limit. Please continue the conversation.]",
+                                }
+                            )
+                            + "\n"
+                        )
                         response_text += "\n\n[Response truncated due to time limit. Please continue the conversation.]"
                         break
             else:
@@ -1249,18 +1281,21 @@ async def generate_ai_response_endpoint(
             messages[conversation_id].append(ai_msg)
 
             # Send completion signal with full message
-            yield json.dumps(
-                {
-                    "type": "complete",
-                    "message": {
-                        "id": ai_msg["id"],
-                        "role": ai_msg["role"],
-                        "content": ai_msg["content"],
-                        "timestamp": ai_msg["timestamp"].isoformat(),
-                        "metadata": ai_msg["metadata"],
-                    },
-                }
-            ) + "\n"
+            yield (
+                json.dumps(
+                    {
+                        "type": "complete",
+                        "message": {
+                            "id": ai_msg["id"],
+                            "role": ai_msg["role"],
+                            "content": ai_msg["content"],
+                            "timestamp": ai_msg["timestamp"].isoformat(),
+                            "metadata": ai_msg["metadata"],
+                        },
+                    }
+                )
+                + "\n"
+            )
 
             # Also send via Pusher for other connected clients
             try:
@@ -1286,7 +1321,10 @@ async def generate_ai_response_endpoint(
     return StreamingResponse(
         stream_response(),
         media_type="application/x-ndjson",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},  # Disable nginx buffering
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },  # Disable nginx buffering
     )
 
 
@@ -1319,14 +1357,16 @@ async def get_conversation(
         current_user.id if hasattr(current_user, "id") else current_user.email
     ):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this conversation"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this conversation",
         )
 
     # Get messages
     conversation_messages = messages.get(conversation_id, [])
 
     return ConversationResponse(
-        **conversation, messages=[MessageResponse(**msg) for msg in conversation_messages]
+        **conversation,
+        messages=[MessageResponse(**msg) for msg in conversation_messages],
     )
 
 
@@ -1381,7 +1421,8 @@ async def delete_conversation(conversation_id: str, current_user: User = Depends
         current_user.id if hasattr(current_user, "id") else current_user.email
     ):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this conversation"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied to this conversation",
         )
 
     # Archive instead of delete
@@ -1501,7 +1542,11 @@ async def generate_ai_response(conversation_id: str, user_message: str, user: Us
         # Send via WebSocket if connected
         await chat_manager.send_message(
             conversation_id,
-            {"type": "ai_message", "message": ai_msg, "timestamp": datetime.utcnow().isoformat()},
+            {
+                "type": "ai_message",
+                "message": ai_msg,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
 
         logger.info(f"Generated AI response for conversation {conversation_id}")

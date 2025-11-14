@@ -19,7 +19,7 @@ Version: 1.0.0
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -170,7 +170,13 @@ class BulkShareRequest(BaseModel):
 
     @validator("share_type")
     def validate_share_type(cls, v):
-        valid_types = ["public_link", "organization", "specific_users", "class", "temporary"]
+        valid_types = [
+            "public_link",
+            "organization",
+            "specific_users",
+            "class",
+            "temporary",
+        ]
         if v not in valid_types:
             raise ValueError(f"Invalid share type. Must be one of: {valid_types}")
         return v
@@ -403,7 +409,8 @@ async def bulk_upload_files(
 
     except QuotaExceededError:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Storage quota exceeded"
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Storage quota exceeded",
         )
     except Exception as e:
         logger.error(f"Bulk upload failed: {e}")
@@ -415,7 +422,8 @@ async def bulk_upload_files(
 
 @router.get("/bulk-upload/{batch_id}/status")
 async def get_bulk_upload_status(
-    batch_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    batch_id: str,
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """Get status of a bulk upload operation"""
     user, tenant_context = user_tenant
@@ -514,7 +522,10 @@ async def bulk_delete_files(
                 logger.error(f"Failed to delete file {file_id}: {e}")
                 file_results.append(
                     BulkDeleteFileResult(
-                        file_id=file_id, filename="unknown", status="failed", error_message=str(e)
+                        file_id=file_id,
+                        filename="unknown",
+                        status="failed",
+                        error_message=str(e),
                     )
                 )
 
@@ -629,7 +640,10 @@ async def bulk_share_files(
                 logger.error(f"Failed to create share for file {file_id}: {e}")
                 file_results.append(
                     BulkShareFileResult(
-                        file_id=file_id, filename="unknown", status="failed", error_message=str(e)
+                        file_id=file_id,
+                        filename="unknown",
+                        status="failed",
+                        error_message=str(e),
                     )
                 )
 
@@ -715,7 +729,8 @@ async def export_file_metadata(
 
 @router.get("/export/{export_id}/status")
 async def get_export_status(
-    export_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    export_id: str,
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """Get status of an export operation"""
     user, tenant_context = user_tenant
@@ -737,7 +752,8 @@ async def get_export_status(
 
 @router.get("/export/{export_id}/download")
 async def download_export(
-    export_id: str, user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    export_id: str,
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """Download the exported file"""
     user, tenant_context = user_tenant

@@ -9,7 +9,7 @@ This module provides advanced analytics capabilities including:
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import numpy as np
@@ -36,6 +36,9 @@ except ImportError:
 
 import logging
 
+from sqlalchemy import and_, distinct, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from apps.backend.database.models.models import (
     Analytics,
     Content,
@@ -43,8 +46,6 @@ from apps.backend.database.models.models import (
     User,
     UserProgress,
 )
-from sqlalchemy import and_, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -688,7 +689,11 @@ class AdvancedAnalytics:
         # Challenges and opportunities
         challenges = await self._identify_challenges(start_date, end_date)
         sections.append(
-            {"title": "Challenges & Opportunities", "type": "analysis", "data": challenges}
+            {
+                "title": "Challenges & Opportunities",
+                "type": "analysis",
+                "data": challenges,
+            }
         )
 
         return sections
@@ -716,14 +721,20 @@ class AdvancedAnalytics:
         # Quiz completions
         quiz_completions = await self.session.scalar(
             select(func.count(QuizAttempt.id)).where(
-                and_(QuizAttempt.created_at >= start_date, QuizAttempt.created_at <= end_date)
+                and_(
+                    QuizAttempt.created_at >= start_date,
+                    QuizAttempt.created_at <= end_date,
+                )
             )
         )
 
         # Average scores
         avg_score = await self.session.scalar(
             select(func.avg(QuizAttempt.score / QuizAttempt.total_points)).where(
-                and_(QuizAttempt.created_at >= start_date, QuizAttempt.created_at <= end_date)
+                and_(
+                    QuizAttempt.created_at >= start_date,
+                    QuizAttempt.created_at <= end_date,
+                )
             )
         )
 

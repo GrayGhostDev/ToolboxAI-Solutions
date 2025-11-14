@@ -85,7 +85,7 @@ class RobloxAsset:
 class LuauScriptGenerator:
     """Generates Luau scripts from AI content"""
 
-    def __init__(self):
+    def __init__(self, module_name: str = "unknown"):
         self.templates = self._load_templates()
         self.validators = self._setup_validators()
 
@@ -225,10 +225,10 @@ return {module_name}
             description=description,
             module_name=module_name,
             imports=await self._generate_imports(content),
-            properties=await self._generate_properties(content),
+            properties=await self._generate_properties(content, module_name),
             parameters=await self._generate_parameters(content),
             initialization=await self._generate_initialization(content),
-            methods=await self._generate_methods(content),
+            methods=await self._generate_methods(content, module_name),
             main_logic=luau_code,
             ui_setup="",  # Will be filled for GUI scripts
             event_handlers="",  # Will be filled for interactive scripts
@@ -368,7 +368,9 @@ return {module_name}
             imports.append("local MessagingService = game:GetService('MessagingService')")
         return "\n".join(imports)
 
-    async def _generate_properties(self, content: dict[str, Any]) -> str:
+    async def _generate_properties(
+        self, content: dict[str, Any], module_name: str = "Module"
+    ) -> str:
         """Generate class properties"""
         properties = content.get("properties", {})
         if not properties:
@@ -397,7 +399,7 @@ return {module_name}
             return "-- No initialization required"
         return "\n    ".join(init_code)
 
-    async def _generate_methods(self, content: dict[str, Any]) -> str:
+    async def _generate_methods(self, content: dict[str, Any], module_name: str = "Module") -> str:
         """Generate class methods"""
         methods = content.get("methods", [])
         if not methods:
@@ -418,7 +420,7 @@ end"""
 class RobloxAssetConverter:
     """Converts various content types to Roblox assets"""
 
-    def __init__(self):
+    def __init__(self, module_name: str = "unknown"):
         self.script_generator = LuauScriptGenerator()
         self.asset_templates = self._load_asset_templates()
 
@@ -598,7 +600,7 @@ class RobloxAssetConverter:
 class RobloxContentBridge:
     """Main bridge between enhanced content pipeline and Roblox"""
 
-    def __init__(self):
+    def __init__(self, module_name: str = "unknown"):
         self.pipeline = EnhancedContentPipeline()
         self.validator = ContentQualityValidator()
         self.learning_engine = AdaptiveLearningEngine()
@@ -680,13 +682,20 @@ class RobloxContentBridge:
 
             # Save to database
             await self._save_generation(
-                pipeline_id=pipeline_id, user_id=user_id, content=package, session=session
+                pipeline_id=pipeline_id,
+                user_id=user_id,
+                content=package,
+                session=session,
             )
 
             # Complete pipeline
             await websocket_pipeline_manager.send_completion(
                 pipeline_id=pipeline_id,
-                result={"success": True, "assets": len(roblox_assets), "package_id": package["id"]},
+                result={
+                    "success": True,
+                    "assets": len(roblox_assets),
+                    "package_id": package["id"],
+                },
                 metrics={
                     "generation_time": package.get("generation_time", 0),
                     "quality_score": validation_report.overall_score,
@@ -923,7 +932,11 @@ class RobloxContentBridge:
         return package
 
     async def _save_generation(
-        self, pipeline_id: str, user_id: str, content: dict[str, Any], session: AsyncSession
+        self,
+        pipeline_id: str,
+        user_id: str,
+        content: dict[str, Any],
+        session: AsyncSession,
     ) -> None:
         """Save generation to database"""
 

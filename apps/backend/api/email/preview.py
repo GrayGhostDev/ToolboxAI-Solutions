@@ -5,7 +5,7 @@ Provides endpoints for previewing and testing email templates
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Union
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -60,9 +60,18 @@ SAMPLE_DATA = {
         "app_url": "https://app.toolboxai.com",
         "verification_url": "https://app.toolboxai.com/verify?token=sample-token",
         "features": [
-            {"title": "AI-Powered Learning", "description": "Personalized content recommendations"},
-            {"title": "Real-time Collaboration", "description": "Work together with classmates"},
-            {"title": "Progress Tracking", "description": "Monitor your learning journey"},
+            {
+                "title": "AI-Powered Learning",
+                "description": "Personalized content recommendations",
+            },
+            {
+                "title": "Real-time Collaboration",
+                "description": "Work together with classmates",
+            },
+            {
+                "title": "Progress Tracking",
+                "description": "Monitor your learning journey",
+            },
         ],
         "support_email": "support@toolboxai.com",
         "unsubscribe_url": "https://app.toolboxai.com/unsubscribe",
@@ -108,7 +117,11 @@ SAMPLE_DATA = {
                 "title": "Unlimited Access",
                 "description": "All premium features included",
             },
-            {"icon": "🛡️", "title": "Priority Support", "description": "24/7 dedicated assistance"},
+            {
+                "icon": "🛡️",
+                "title": "Priority Support",
+                "description": "24/7 dedicated assistance",
+            },
             {
                 "icon": "📊",
                 "title": "Advanced Analytics",
@@ -431,7 +444,7 @@ async def get_queue_metrics():
 
 @router.post("/queue/reprocess-dead-letter")
 async def reprocess_dead_letter_queue(
-    limit: int = Query(10, ge=1, le=100, description="Number of emails to reprocess")
+    limit: int = Query(10, ge=1, le=100, description="Number of emails to reprocess"),
 ):
     """
     Reprocess emails from dead letter queue

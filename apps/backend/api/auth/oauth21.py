@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import jwt
 import redis
@@ -102,7 +102,11 @@ class OAuth21Config:
 
     # Client authentication
     supported_client_auth_methods: List[str] = field(
-        default_factory=lambda: ["client_secret_basic", "client_secret_post", "private_key_jwt"]
+        default_factory=lambda: [
+            "client_secret_basic",
+            "client_secret_post",
+            "private_key_jwt",
+        ]
     )
 
     # PKCE settings
@@ -135,7 +139,9 @@ class OAuth21Server:
     """OAuth 2.1 compliant authorization server"""
 
     def __init__(
-        self, redis_client: redis.Redis | None = None, config: OAuth21Config | None = None
+        self,
+        redis_client: redis.Redis | None = None,
+        config: OAuth21Config | None = None,
     ):
         self.redis = redis_client or self._create_redis_client()
         self.config = config or OAuth21Config()
@@ -378,7 +384,9 @@ class OAuth21Server:
             raise ValueError("PKCE code_verifier required")
 
         if not self.verify_pkce(
-            request.code_verifier, auth_data["code_challenge"], auth_data["code_challenge_method"]
+            request.code_verifier,
+            auth_data["code_challenge"],
+            auth_data["code_challenge_method"],
         ):
             raise ValueError("Invalid PKCE verifier")
 
@@ -388,20 +396,24 @@ class OAuth21Server:
         # Generate tokens
         access_token = await self._generate_access_token(
             user_id=auth_data["user_id"],
-            client_id=client_id,
+            client_id=request.client_id,
             scope=auth_data["scope"],
             nonce=auth_data.get("nonce"),
         )
 
         refresh_token = await self._generate_refresh_token(
-            user_id=auth_data["user_id"], client_id=client_id, scope=auth_data["scope"]
+            user_id=auth_data["user_id"],
+            client_id=request.client_id,
+            scope=auth_data["scope"],
         )
 
         # ID token for OpenID Connect
         id_token = None
         if "openid" in auth_data["scope"]:
             id_token = await self._generate_id_token(
-                user_id=auth_data["user_id"], client_id=client_id, nonce=auth_data.get("nonce")
+                user_id=auth_data["user_id"],
+                client_id=request.client_id,
+                nonce=auth_data.get("nonce"),
             )
 
         return {
@@ -541,7 +553,9 @@ class OAuth21Server:
 
             # Generate new refresh token
             new_refresh_token = await self._generate_refresh_token(
-                user_id=token_data["user_id"], client_id=client_id, scope=requested_scope
+                user_id=token_data["user_id"],
+                client_id=client_id,
+                scope=requested_scope,
             )
         else:
             new_refresh_token = refresh_token
@@ -663,7 +677,16 @@ class OAuth21Server:
     async def get_jwks(self) -> Dict[str, Any]:
         """Get JSON Web Key Set (for token verification)"""
         # In production, use proper key management
-        return {"keys": [{"kty": "oct", "kid": "default", "use": "sig", "alg": self.jwt_algorithm}]}
+        return {
+            "keys": [
+                {
+                    "kty": "oct",
+                    "kid": "default",
+                    "use": "sig",
+                    "alg": self.jwt_algorithm,
+                }
+            ]
+        }
 
 
 # ===== Singleton =====

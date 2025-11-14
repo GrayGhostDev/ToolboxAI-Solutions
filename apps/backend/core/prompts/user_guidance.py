@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from apps.backend.models.schemas import ConversationStage
+
 from .models import (
     ContentRequirements,
     ContentType,
@@ -194,7 +196,11 @@ class UserGuidanceSystem:
                     "title": "Space Exploration Mission",
                     "description": "Students become astronauts exploring different planets and moons",
                     "grade_level": "middle_school",
-                    "unique_elements": ["Custom spacecraft", "Real NASA data", "Mission planning"],
+                    "unique_elements": [
+                        "Custom spacecraft",
+                        "Real NASA data",
+                        "Mission planning",
+                    ],
                     "engagement_features": [
                         "Role-playing",
                         "Problem-solving challenges",
@@ -535,7 +541,12 @@ class UserGuidanceSystem:
                 )
 
         # Calculate completeness score
-        required_fields = ["content_type", "subject_area", "grade_level", "learning_objectives"]
+        required_fields = [
+            "content_type",
+            "subject_area",
+            "grade_level",
+            "learning_objectives",
+        ]
         completed_fields = sum(1 for field in required_fields if getattr(requirements, field, None))
         validation_result["completeness_score"] = completed_fields / len(required_fields)
 

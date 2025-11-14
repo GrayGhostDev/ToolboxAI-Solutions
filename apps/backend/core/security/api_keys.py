@@ -3,19 +3,26 @@ API Key Authentication System for Roblox Plugins
 Provides secure, scoped API keys for automated plugin access
 """
 
+import asyncio
 import hashlib
 import logging
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import redis.asyncio as redis
 from pydantic import BaseModel, Field
-from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import (
+    JSON,
+    Column,
+    DateTime,
+    Integer,
+    String,
+    select,
+)
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Integer, String, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -250,7 +257,8 @@ class APIKeyManager:
             # Check status
             if cached_data.get("status") != APIKeyStatus.ACTIVE.value:
                 return APIKeyValidation(
-                    is_valid=False, error=f"API key is {cached_data.get('status', 'invalid')}"
+                    is_valid=False,
+                    error=f"API key is {cached_data.get('status', 'invalid')}",
                 )
 
             # Check scope
@@ -271,7 +279,8 @@ class APIKeyManager:
             )
             if place_ids and place_id and place_id not in place_ids:
                 return APIKeyValidation(
-                    is_valid=False, error=f"API key not authorized for place ID: {place_id}"
+                    is_valid=False,
+                    error=f"API key not authorized for place ID: {place_id}",
                 )
 
             # Check rate limit
@@ -287,7 +296,8 @@ class APIKeyManager:
 
             if current_count > rate_limit:
                 return APIKeyValidation(
-                    is_valid=False, error=f"Rate limit exceeded. Limit: {rate_limit}/hour"
+                    is_valid=False,
+                    error=f"Rate limit exceeded. Limit: {rate_limit}/hour",
                 )
 
             # Update last used timestamp (async, don't wait)
@@ -311,7 +321,9 @@ class APIKeyManager:
         try:
             # Update in cache
             await self.redis_client.hset(
-                f"{self.key_prefix}{key_hash}", "last_used", datetime.now(timezone.utc).isoformat()
+                f"{self.key_prefix}{key_hash}",
+                "last_used",
+                datetime.now(timezone.utc).isoformat(),
             )
 
             # Increment usage counter
@@ -392,7 +404,8 @@ class APIKeyManager:
             # Find expired keys
             result = await db.execute(
                 select(APIKeyModel).where(
-                    APIKeyModel.expires_at < now, APIKeyModel.status == APIKeyStatus.ACTIVE
+                    APIKeyModel.expires_at < now,
+                    APIKeyModel.status == APIKeyStatus.ACTIVE,
                 )
             )
             expired_keys = result.scalars().all()
