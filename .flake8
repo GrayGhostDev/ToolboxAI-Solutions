@@ -35,7 +35,9 @@ extend-ignore =
     # Redefinition (intentional shadowing in some cases)
     F811,F823,F824,
     # Shadow name from outer scope
-    F402
+    F402,
+    # Star imports (used for re-exporting modules)
+    F403,F405
 
 # Errors to always check
 select =

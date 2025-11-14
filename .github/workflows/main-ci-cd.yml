@@ -60,6 +60,8 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
@@ -116,6 +118,8 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
@@ -176,6 +180,8 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
@@ -296,6 +302,8 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
