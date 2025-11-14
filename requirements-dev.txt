@@ -12,6 +12,8 @@ basedpyright==1.33.0                 # Static type checking (project standard)
 # mypy==1.13.0                       # DEPRECATED: Use basedpyright instead
 # mypy_extensions==1.1.0             # DEPRECATED: Use basedpyright instead
 ruff==0.8.4                          # Fast Python linter
+flake8==7.1.1                        # Python linting (used in CI/CD)
+pylint==3.3.2                        # Python code analysis (used in CI/CD)
 EditorConfig==0.17.1                 # Editor configuration
 
 # ============================================================================
