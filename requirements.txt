@@ -155,7 +155,7 @@ protobuf>=4.25.5,<6.0.0              # Protocol buffers (fixed CVE-2024-7254)
 # ============================================================================
 pandas==2.2.3                        # Data analysis
 numpy==1.26.4                        # Numerical computing
-# scikit-learn==1.5.2                  # Machine learning (handled by render-build.sh)
+scikit-learn==1.5.2                  # Machine learning (required for agent_swarm endpoint)
 # scipy==1.13.1                        # Scientific computing (handled by render-build.sh)
 # pyarrow==14.0.2                      # Columnar data format (handled by render-build.sh)
 joblib==1.5.2                        # Parallel processing

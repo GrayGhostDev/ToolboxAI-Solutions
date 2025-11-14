@@ -17,7 +17,6 @@ from pydantic import BaseModel, EmailStr, Field
 
 from apps.backend.core.cache import CacheService
 from apps.backend.core.config import settings
-from apps.backend.services.email import email_service
 
 logger = logging.getLogger(__name__)
 
@@ -216,6 +215,11 @@ class EmailQueueService:
     async def _send_direct(self, job: EmailJob) -> str:
         """Send email directly without queue"""
         try:
+            # Lazy import to avoid circular dependency
+            from apps.backend.services.email import get_email_service_singleton
+            
+            email_service = get_email_service_singleton()
+            
             if isinstance(job.to_email, list):
                 to_emails = job.to_email
             else:
@@ -319,6 +323,11 @@ class EmailQueueService:
     async def _process_email_job(self, job: EmailJob):
         """Process individual email job"""
         try:
+            # Lazy import to avoid circular dependency
+            from apps.backend.services.email import get_email_service_singleton
+            
+            email_service = get_email_service_singleton()
+            
             job.status = EmailStatus.PROCESSING
             job.attempts += 1
             job.last_attempt_at = datetime.utcnow()

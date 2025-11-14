@@ -233,6 +233,8 @@ def _register_tier_routers(app: FastAPI, routers: list, tier_name: str) -> dict:
     Returns:
         Statistics dictionary with success/failure counts
     """
+    import traceback
+    
     stats = {"total": len(routers), "successful": 0, "failed": 0}
 
     for router_name, prefix, module_path, tags in routers:
@@ -248,13 +250,16 @@ def _register_tier_routers(app: FastAPI, routers: list, tier_name: str) -> dict:
             stats["successful"] += 1
 
         except ImportError as e:
-            logger.warning(f"⚠ {router_name:<30} → Import failed: {str(e)[:50]}")
+            logger.warning(f"⚠ {router_name:<30} → Import failed: {str(e)}")
+            logger.debug(f"Full traceback for {router_name}:\n{traceback.format_exc()}")
             stats["failed"] += 1
-        except AttributeError:
-            logger.warning(f"⚠ {router_name:<30} → No 'router' object found")
+        except AttributeError as e:
+            logger.warning(f"⚠ {router_name:<30} → No 'router' object found: {str(e)}")
+            logger.debug(f"Full traceback for {router_name}:\n{traceback.format_exc()}")
             stats["failed"] += 1
         except Exception as e:
-            logger.error(f"✗ {router_name:<30} → Error: {str(e)[:50]}")
+            logger.error(f"✗ {router_name:<30} → Error: {str(e)}")
+            logger.error(f"Full traceback for {router_name}:\n{traceback.format_exc()}")
             stats["failed"] += 1
 
     return stats

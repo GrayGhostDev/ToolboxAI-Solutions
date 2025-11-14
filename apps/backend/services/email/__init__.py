@@ -39,12 +39,36 @@ from .sendgrid import (
 # Template engine
 from .templates import EmailTemplateEngine
 
-# Backward compatibility - provide email_service with lazy initialization
-# Use __getattr__ to defer initialization until first access, avoiding circular imports
-_email_service_instance = None
+
+# Lazy initialization function to avoid circular imports
+def get_default_email_service():
+    """
+    Get the default email service instance lazily.
+    This function should be used instead of importing email_service directly.
+    """
+    return get_email_service_singleton()
 
 
-def __getattr__(name):
+# For backward compatibility, create a property-like accessor
+# Users should migrate to using get_email_service_singleton() or get_default_email_service()
+class _EmailServiceProxy:
+    """Proxy object that lazily initializes email service on first access"""
+    
+    _instance = None
+    
+    def __getattr__(self, name):
+        if self._instance is None:
+            self._instance = get_email_service_singleton()
+        return getattr(self._instance, name)
+    
+    def __call__(self, *args, **kwargs):
+        if self._instance is None:
+            self._instance = get_email_service_singleton()
+        return self._instance(*args, **kwargs)
+
+
+# Create proxy instance for backward compatibility
+email_service = _EmailServiceProxy()
     """
     Lazy initialization of email_service to avoid circular imports.
 
