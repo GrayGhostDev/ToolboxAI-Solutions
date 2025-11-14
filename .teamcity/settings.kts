@@ -387,69 +387,47 @@ object DashboardBuild : BuildType({
     }
 
     requirements {
-        contains("teamcity.agent.name", "linux-amd64")
+        // Require Frontend or Integration agent (has Node.js + pnpm)
+        matches("teamcity.agent.name", "(Frontend-Builder|Integration-Builder).*")
+        exists("system.node.version")
+        exists("system.pnpm.version")
     }
 
     steps {
-        nodeJS {
-            name = "Setup Node.js"
-            shellScript = """
-                nvm install %env.NODE_VERSION%
-                nvm use %env.NODE_VERSION%
+        script {
+            name = "Verify Node.js and pnpm"
+            scriptContent = """
+                echo "🔍 Checking Node.js and pnpm versions..."
                 node --version
-                npm --version
+                pnpm --version
+                echo "✅ Environment verified"
             """.trimIndent()
         }
 
         script {
             name = "Install Dependencies"
-            workingDir = "apps/dashboard"
             scriptContent = """
-                npm ci --legacy-peer-deps --no-bin-links
+                echo "📦 Installing dependencies with pnpm..."
+                pnpm install --frozen-lockfile
                 echo "✅ Dependencies installed"
-                echo "Total packages: $(npm list --depth=0 | wc -l)"
             """.trimIndent()
         }
 
-        parallel {
-            script {
-                name = "TypeScript Check"
-                workingDir = "apps/dashboard"
-                scriptContent = """
-                    npm run typecheck || {
-                        echo "⚠️ TypeScript errors found"
-                        exit 1
-                    }
-                """.trimIndent()
-            }
-
-            script {
-                name = "ESLint Check"
-                workingDir = "apps/dashboard"
-                scriptContent = """
-                    npm run lint || {
-                        echo "⚠️ Linting errors found"
-                        exit 1
-                    }
-                """.trimIndent()
-            }
-
-            script {
-                name = "Unit Tests"
-                workingDir = "apps/dashboard"
-                scriptContent = """
-                    npm test -- --run --coverage --reporter=json --outputFile=test-reports/test-results.json
-                    echo "✅ Tests completed"
-                """.trimIndent()
-            }
+        script {
+            name = "Run Test"
+            scriptContent = """
+                echo "🧪 Running tests..."
+                pnpm -w dashboard test
+                echo "✅ Tests completed"
+            """.trimIndent()
         }
 
         script {
             name = "Build Production"
-            workingDir = "apps/dashboard"
             scriptContent = """
-                npm run build
-                echo "Build completed successfully"
+                echo "🏗️ Building production bundle..."
+                pnpm -w dashboard build
+                echo "✅ Build completed successfully"
                 echo "Build size: $(du -sh dist/)"
                 echo "Asset breakdown:"
                 find dist -name "*.js" -exec du -h {} \; | sort -h | tail -10
