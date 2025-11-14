@@ -20,7 +20,7 @@ try:
 except ImportError:
     from langchain_community.chat_models import ChatOpenAI
 
-from apps.backend.agents.agent import agent_manager
+from apps.backend.agents.agent import get_agent_manager
 from apps.backend.core.config import settings
 from apps.backend.services.pusher import trigger_event as pusher_trigger_event
 
@@ -152,7 +152,8 @@ class RobloxAIAgent:
         except Exception as e:
             logger.error(f"Error handling user message: {e}")
             await self._send_error_message(
-                conversation_id, "I encountered an error processing your message. Please try again."
+                conversation_id,
+                "I encountered an error processing your message. Please try again.",
             )
 
     def _extract_information(self, message: str) -> dict[str, Any]:
@@ -283,7 +284,14 @@ Respond to the user's message in a helpful, conversational way."""
         # Check if it's about chemistry
         if any(
             word in message_lower
-            for word in ["chemistry", "chemical", "lab", "experiment", "molecule", "atom"]
+            for word in [
+                "chemistry",
+                "chemical",
+                "lab",
+                "experiment",
+                "molecule",
+                "atom",
+            ]
         ):
             if "environment_name" not in current_spec:
                 return "Great! A chemistry lab sounds exciting! 🧪 What would you like to name this environment? Something like 'Chemistry Lab' or 'Science Station'?"
@@ -299,7 +307,14 @@ Respond to the user's message in a helpful, conversational way."""
         # Check if it's about math
         elif any(
             word in message_lower
-            for word in ["math", "mathematics", "algebra", "geometry", "calculus", "fraction"]
+            for word in [
+                "math",
+                "mathematics",
+                "algebra",
+                "geometry",
+                "calculus",
+                "fraction",
+            ]
         ):
             if "environment_name" not in current_spec:
                 return "Math environments are great for learning! 📐 What should we call this math world? Something like 'Math Adventure' or 'Number Land'?"
@@ -437,7 +452,10 @@ Respond to the user's message in a helpful, conversational way."""
             logger.error(f"Error sending direct message: {e}")
 
     async def _send_followup_questions(
-        self, conversation_id: str, missing_fields: list[str], current_spec: dict[str, Any]
+        self,
+        conversation_id: str,
+        missing_fields: list[str],
+        current_spec: dict[str, Any],
     ) -> None:
         """Send follow-up questions for missing information"""
         try:
@@ -491,7 +509,10 @@ Respond to the user's message in a helpful, conversational way."""
             await pusher_trigger_event(
                 f"agent-chat-{conversation_id}",
                 "message",
-                {"type": "ai_message", "payload": {"message": {"content": f"❌ {error_message}"}}},
+                {
+                    "type": "ai_message",
+                    "payload": {"message": {"content": f"❌ {error_message}"}},
+                },
             )
 
         except Exception as e:
@@ -553,7 +574,7 @@ Respond to the user's message in a helpful, conversational way."""
             )
 
             # Generate content using agent manager
-            response = await agent_manager.generate_content(content_request)
+            response = await get_agent_manager().generate_content(content_request)
 
             if response.success:
                 # Send success message
@@ -593,7 +614,10 @@ Respond to the user's message in a helpful, conversational way."""
                 "message",
                 {
                     "type": "roblox_env_error",
-                    "payload": {"requestId": request_id, "error": f"Generation failed: {str(e)}"},
+                    "payload": {
+                        "requestId": request_id,
+                        "error": f"Generation failed: {str(e)}",
+                    },
                 },
             )
             raise

@@ -203,10 +203,14 @@ class User(Base):
         "PluginRequest", back_populates="user", cascade="all, delete-orphan"
     )
     teaching_sessions = relationship(
-        "RobloxSession", back_populates="teacher", foreign_keys="RobloxSession.teacher_id"
+        "RobloxSession",
+        back_populates="teacher",
+        foreign_keys="RobloxSession.teacher_id",
     )
     student_progress = relationship(
-        "StudentProgress", back_populates="student", foreign_keys="StudentProgress.student_id"
+        "StudentProgress",
+        back_populates="student",
+        foreign_keys="StudentProgress.student_id",
     )
     roblox_student_progress = relationship(
         "RobloxPlayerProgress",
@@ -358,7 +362,8 @@ class Content(Base):
 
     # Review and approval
     status = Column(
-        Enum(ContentStatus, name="contentstatus", create_type=False), default=ContentStatus.DRAFT
+        Enum(ContentStatus, name="contentstatus", create_type=False),
+        default=ContentStatus.DRAFT,
     )
     reviewed_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     review_notes = Column(Text)
@@ -865,7 +870,8 @@ class RobloxContent(Base):
     # Content identification
     title = Column(String(200), nullable=False)
     content_type = Column(
-        Enum(RobloxContentType, name="robloxcontenttype", create_type=False), nullable=False
+        Enum(RobloxContentType, name="robloxcontenttype", create_type=False),
+        nullable=False,
     )
     version = Column(String(20), default="1.0.0")
 
@@ -980,7 +986,9 @@ class RobloxPlayerProgress(Base):
     )
     lesson = relationship("Lesson", back_populates="roblox_player_progress")
     quiz_results = relationship(
-        "RobloxQuizResult", back_populates="player_progress", cascade="all, delete-orphan"
+        "RobloxQuizResult",
+        back_populates="player_progress",
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (
@@ -1159,7 +1167,8 @@ class RobloxTemplate(Base):
 
     # Template structure
     template_type = Column(
-        Enum(RobloxContentType, name="robloxcontenttype", create_type=False), nullable=False
+        Enum(RobloxContentType, name="robloxcontenttype", create_type=False),
+        nullable=False,
     )
     base_structure = Column(JSONB, nullable=False)  # Core template structure
     customization_points = Column(JSONB, default=[])  # Points where content can be customized
@@ -1549,6 +1558,38 @@ class EnhancedContentGeneration(Base):
     user = relationship("User", backref="enhanced_content_generations")
 
 
+class Notification(Base):
+    """User notifications for in-app and push notifications"""
+
+    __tablename__ = "notifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+
+    # Notification content
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    notification_type = Column(
+        String(50), nullable=False
+    )  # info, success, warning, error, achievement
+    data = Column(JSONB)  # Additional structured data
+
+    # Status
+    read = Column(Boolean, default=False)
+    read_at = Column(DateTime(timezone=True))
+
+    # Delivery channels
+    channels = Column(ARRAY(String))  # e.g., ['in_app', 'push', 'email']
+    delivered_at = Column(DateTime(timezone=True))
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True))  # Optional expiration
+
+    # Relationships
+    user = relationship("User", backref="notifications")
+
+
 class ContentGenerationBatch(Base):
     """Batch processing for multiple content generations"""
 
@@ -1604,6 +1645,7 @@ __all__.extend(
         "RobloxContent",
         "RobloxPlayerProgress",
         "EnhancedContentGeneration",
+        "Notification",  # Notification model for push/in-app notifications
         "ContentGenerationBatch",
     ]
 )

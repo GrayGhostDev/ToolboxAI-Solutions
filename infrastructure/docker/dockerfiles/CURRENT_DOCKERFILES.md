@@ -1,7 +1,7 @@
 # Current Dockerfiles Documentation
 
-**Last Updated:** November 9, 2025
-**Status:** Post-consolidation cleanup
+**Last Updated:** November 13, 2025
+**Status:** Post-consolidation cleanup + TeamCity CI/CD agents added
 
 ## Canonical Dockerfiles (Use These)
 
@@ -60,6 +60,32 @@
 - **`vault-rotator.Dockerfile`** - Hashicorp Vault secret rotation
   - Automated credential rotation
   - Security best practices
+
+### TeamCity CI/CD Agents (Added November 13, 2025)
+
+- **`teamcity-agent-frontend.Dockerfile`** - Frontend build agent
+  - Node.js 22.21.0 LTS
+  - pnpm 9.15.0
+  - Git and build tools
+  - **Use for:** React builds, frontend linting, TypeScript compilation
+  - Referenced in: `docker-compose.teamcity.yml`
+
+- **`teamcity-agent-backend.Dockerfile`** - Backend build agent
+  - Python 3.12
+  - pytest 8.3.4
+  - basedpyright 1.23.1 (NOT mypy)
+  - FastAPI, SQLAlchemy, asyncpg
+  - **Use for:** Backend builds, Python tests, type checking
+  - Referenced in: `docker-compose.teamcity.yml`
+
+- **`teamcity-agent-integration.Dockerfile`** - Integration test agent
+  - Node.js 22.21.0 + pnpm 9.15.0
+  - Python 3.12 + pytest
+  - Playwright 1.51.1 (E2E testing)
+  - **Use for:** Full-stack tests, integration tests, E2E tests
+  - Referenced in: `docker-compose.teamcity.yml`
+
+**Management:** See `infrastructure/docker/compose/TEAMCITY_README.md` and `scripts/teamcity/manage_teamcity.sh`
 
 ## Deleted Dockerfiles (Consolidated)
 

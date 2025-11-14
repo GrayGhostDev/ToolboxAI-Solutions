@@ -3,33 +3,29 @@ Backend Services Module
 Central location for all backend services
 """
 
-# Import the unified email service MODULE, not individual attributes
-# This prevents the module from being replaced with an instance
-from . import email_service
+# Import the email package (not email_service)
+from . import email as email_pkg
 
-# Import specific classes and enums for convenience
-# But avoid importing 'email_service' as an instance to prevent module replacement
-from .email_service import (  # Classes only - no instances with conflicting names; Factory functions; Enums and models; Utility
+# Import specific classes and enums for convenience from the email package
+from .email import (
     EmailAttachment,
     EmailPriority,
     EmailRecipient,
-    EmailService,  # Legacy alias for SendGridEmailService
     EmailType,
     MockEmailService,
     SendGridEmailService,
-    get_active_service_type,
+    email_service,  # Default instance
     get_email_service,
     get_email_service_singleton,
 )
 
 # For backwards compatibility, create service instances with different names
-# to avoid conflicting with the module name
-email_service_instance = email_service.email_service
-default_email_service = email_service.default_email_service
-sendgrid_email_service = email_service.sendgrid_email_service
-mock_email_service = email_service.mock_email_service
-SendGridServiceInstance = email_service.SendGridServiceInstance
-MockEmailServiceInstance = email_service.MockEmailServiceInstance
+# EmailService is an alias for SendGridEmailService
+EmailService = SendGridEmailService
+email_service_instance = email_service
+default_email_service = email_service
+sendgrid_email_service = email_service  # All point to the same default instance
+mock_email_service = MockEmailService()  # Create a mock instance
 
 # Import other services as they exist
 try:
@@ -50,8 +46,9 @@ except ImportError:  # pragma: no cover - optional dependency during bootstrap
 
 # Export all services - maintaining backwards compatibility
 __all__ = [
-    # Email service MODULE (not instance)
-    "email_service",  # This is the MODULE
+    # Email package and service
+    "email_pkg",  # The email package module
+    "email_service",  # Default email service instance
     # Email service instances (with clear names)
     "email_service_instance",
     "default_email_service",
@@ -61,9 +58,6 @@ __all__ = [
     "EmailService",
     "SendGridEmailService",
     "MockEmailService",
-    # Instance aliases
-    "SendGridServiceInstance",
-    "MockEmailServiceInstance",
     # Factory functions
     "get_email_service",
     "get_email_service_singleton",
@@ -72,8 +66,6 @@ __all__ = [
     "EmailType",
     "EmailRecipient",
     "EmailAttachment",
-    # Utility
-    "get_active_service_type",
     # Other services
     "stripe_service",
     "pusher_service",

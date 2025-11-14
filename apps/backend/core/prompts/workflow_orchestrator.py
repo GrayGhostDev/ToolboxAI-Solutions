@@ -5,7 +5,7 @@ Workflow Orchestrator for coordinating agents and MCP integration
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Callable
 
 from .content_validation import ContentValidationSystem
 from .conversation_flow import ConversationFlowManager
@@ -230,7 +230,11 @@ class WorkflowOrchestrator:
                     name="Analyze Requirements",
                     description="Analyze educational requirements and learning objectives",
                     agent_type=AgentType.SUPERVISOR.value,
-                    required_data=["learning_objectives", "grade_level", "subject_area"],
+                    required_data=[
+                        "learning_objectives",
+                        "grade_level",
+                        "subject_area",
+                    ],
                     output_data=["requirements_analysis"],
                     estimated_duration=5,
                 ),
@@ -438,7 +442,7 @@ class WorkflowOrchestrator:
         return plan
 
     async def execute_workflow(
-        self, plan_id: str, progress_callback: callable | None = None
+        self, plan_id: str, progress_callback: Callable | None = None
     ) -> dict[str, Any]:
         """Execute a workflow plan with progress tracking"""
 
@@ -509,7 +513,10 @@ class WorkflowOrchestrator:
         return results
 
     async def _execute_workflow_step(
-        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: dict[str, Any]
+        self,
+        step: WorkflowStep,
+        plan: ContentGenerationPlan,
+        current_results: dict[str, Any],
     ) -> dict[str, Any]:
         """Execute a single workflow step"""
 
@@ -546,7 +553,10 @@ class WorkflowOrchestrator:
             return {"success": False, "error": str(e), "critical": False}
 
     def _prepare_step_input(
-        self, step: WorkflowStep, plan: ContentGenerationPlan, current_results: dict[str, Any]
+        self,
+        step: WorkflowStep,
+        plan: ContentGenerationPlan,
+        current_results: dict[str, Any],
     ) -> dict[str, Any]:
         """Prepare input data for a workflow step"""
 
@@ -585,7 +595,11 @@ class WorkflowOrchestrator:
                 "generated_content": f"Mock content from {type(agent).__name__}",
                 "quality_score": 0.8,
             },
-            "quality_metrics": {"completeness": 0.8, "accuracy": 0.8, "creativity": 0.7},
+            "quality_metrics": {
+                "completeness": 0.8,
+                "accuracy": 0.8,
+                "creativity": 0.7,
+            },
         }
 
     async def _calculate_final_metrics(
@@ -643,7 +657,11 @@ class WorkflowOrchestrator:
         return list(self.agents.keys())
 
     async def create_agent_trigger(
-        self, agent_name: str, trigger_type: str, trigger_data: dict[str, Any], priority: int = 1
+        self,
+        agent_name: str,
+        trigger_type: str,
+        trigger_data: dict[str, Any],
+        priority: int = 1,
     ) -> AgentTrigger:
         """Create a trigger for agent activation"""
 

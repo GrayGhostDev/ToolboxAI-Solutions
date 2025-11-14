@@ -164,6 +164,30 @@ pnpm install
 pnpm run test:e2e:install
 ```
 
+### Step 4: Verify pnpm Configuration
+
+**CRITICAL:** This project uses **pnpm**, NOT npm!
+
+Run the verification script to ensure everything is configured correctly:
+
+```bash
+# Verify pnpm is properly configured
+cd /Users/grayghostdata/Development/Clients/ToolBoxAI-Solutions
+./.idea/runConfigurations/verify-pnpm-config.sh
+```
+
+The script checks:
+- ✅ pnpm is installed (v9.15.0+)
+- ✅ pnpm-lock.yaml exists
+- ✅ No package-lock.json (npm conflict)
+- ✅ All XML run configurations use pnpm
+- ✅ pnpm workspace configured
+
+**Common Issues:**
+- If you see "package-lock.json found", delete it: `rm package-lock.json`
+- If pnpm version is below 9.15.0, upgrade: `npm install -g pnpm@9.15.0`
+- If npm was used by mistake, clean and reinstall: `rm -rf node_modules && pnpm install`
+
 ---
 
 ## Environment Files Setup

@@ -13,7 +13,7 @@ from .content_modern import EducationalContent  # noqa: F401
 
 # Export session model (alias for backward compatibility)
 from .models import *  # noqa: F401,F403
-from .models import Session  # noqa: F401
+from .models import Notification, Session  # noqa: F401
 
 # Export tenant models for multi-tenant testing
 from .tenant import Organization  # noqa: F401

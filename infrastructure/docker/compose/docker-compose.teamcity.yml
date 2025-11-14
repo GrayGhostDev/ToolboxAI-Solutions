@@ -1,0 +1,307 @@
+# ============================================
+# TEAMCITY CI/CD - DOCKER COMPOSE
+# ============================================
+# TeamCity Server + Custom Build Agents
+# Docker Engine 25.x optimized configuration
+# Updated: 2025-11-13
+# ============================================
+
+# Docker Compose (v2 specification)
+
+# ============================================
+# SHARED CONFIGURATIONS (YAML Anchors)
+# ============================================
+x-common-variables: &common-variables
+  TZ: UTC
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+x-agent-common: &agent-common
+  restart: unless-stopped
+  networks:
+    - teamcity
+  depends_on:
+    - teamcity-server
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker socket for builds
+  environment:
+    <<: *common-variables
+    SERVER_URL: ${TEAMCITY_SERVER_URL:-http://teamcity-server:8111}
+    AGENT_NAME: ${AGENT_NAME:-BuildAgent}
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+      tag: "{{.Name}}/{{.ID}}"
+
+# ============================================
+# SERVICES
+# ============================================
+services:
+  # ----------------------------------------
+  # TeamCity Server
+  # ----------------------------------------
+  teamcity-server:
+    image: jetbrains/teamcity-server:2025.07.3
+    container_name: teamcity-server
+    restart: unless-stopped
+    ports:
+      - "${TEAMCITY_PORT:-8111}:8111"
+    environment:
+      <<: *common-variables
+      TEAMCITY_SERVER_MEM_OPTS: "-Xmx2g -XX:ReservedCodeCacheSize=640m"
+      TEAMCITY_SERVER_OPTS: "-Dteamcity.development.mode=false"
+    volumes:
+      # Persistent data directories
+      - teamcity_data:/data/teamcity_server/datadir
+      - teamcity_logs:/opt/teamcity/logs
+      - teamcity_temp:/opt/teamcity/temp
+    networks:
+      - teamcity
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8111/login.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+        tag: "{{.Name}}/{{.ID}}"
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    labels:
+      - "com.toolboxai.service=teamcity-server"
+      - "com.toolboxai.component=ci-cd"
+      - "com.toolboxai.managed=true"
+
+  # ----------------------------------------
+  # Frontend Build Agent (Node.js 22 + pnpm)
+  # ----------------------------------------
+  teamcity-agent-frontend:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/teamcity-agent-frontend.Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: toolboxai/teamcity-agent-frontend:${DOCKER_TAG:-latest}
+    container_name: teamcity-agent-frontend
+    <<: *agent-common
+    environment:
+      <<: *common-variables
+      SERVER_URL: ${TEAMCITY_SERVER_URL:-http://teamcity-server:8111}
+      AGENT_NAME: Frontend-Builder-01
+      # Node.js and pnpm configuration
+      NODE_ENV: ${NODE_ENV:-production}
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      PNPM_HOME: "/root/.local/share/pnpm"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - teamcity_agent_frontend_conf:/data/teamcity_agent/conf
+      - teamcity_agent_frontend_work:/opt/buildagent/work
+      - teamcity_agent_frontend_temp:/opt/buildagent/temp
+      - pnpm_store:/opt/pnpm-store
+      - pnpm_cache:/opt/pnpm-cache
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    labels:
+      - "com.toolboxai.service=teamcity-agent-frontend"
+      - "com.toolboxai.agent.type=frontend"
+      - "com.toolboxai.agent.capabilities=node,pnpm,react,vite"
+
+  # ----------------------------------------
+  # Backend Build Agent (Python 3.12)
+  # ----------------------------------------
+  teamcity-agent-backend:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/teamcity-agent-backend.Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: toolboxai/teamcity-agent-backend:${DOCKER_TAG:-latest}
+    container_name: teamcity-agent-backend
+    <<: *agent-common
+    environment:
+      <<: *common-variables
+      SERVER_URL: ${TEAMCITY_SERVER_URL:-http://teamcity-server:8111}
+      AGENT_NAME: Backend-Builder-01
+      # Python configuration
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      PIP_NO_CACHE_DIR: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - teamcity_agent_backend_conf:/data/teamcity_agent/conf
+      - teamcity_agent_backend_work:/opt/buildagent/work
+      - teamcity_agent_backend_temp:/opt/buildagent/temp
+      - pip_cache:/opt/pip-cache
+      - venv_cache:/opt/venvs
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    labels:
+      - "com.toolboxai.service=teamcity-agent-backend"
+      - "com.toolboxai.agent.type=backend"
+      - "com.toolboxai.agent.capabilities=python,pytest,fastapi"
+
+  # ----------------------------------------
+  # Integration Test Agent (Node.js + Python)
+  # ----------------------------------------
+  teamcity-agent-integration:
+    build:
+      context: ../../..
+      dockerfile: infrastructure/docker/dockerfiles/teamcity-agent-integration.Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    image: toolboxai/teamcity-agent-integration:${DOCKER_TAG:-latest}
+    container_name: teamcity-agent-integration
+    <<: *agent-common
+    environment:
+      <<: *common-variables
+      SERVER_URL: ${TEAMCITY_SERVER_URL:-http://teamcity-server:8111}
+      AGENT_NAME: Integration-Builder-01
+      # Combined Node.js + Python configuration
+      NODE_ENV: test
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      PIP_NO_CACHE_DIR: 1
+      PNPM_HOME: "/root/.local/share/pnpm"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - teamcity_agent_integration_conf:/data/teamcity_agent/conf
+      - teamcity_agent_integration_work:/opt/buildagent/work
+      - teamcity_agent_integration_temp:/opt/buildagent/temp
+      - pnpm_store:/opt/pnpm-store
+      - pnpm_cache:/opt/pnpm-cache
+      - pip_cache:/opt/pip-cache
+      - venv_cache:/opt/venvs
+      - test_results:/opt/test-results
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 6G
+        reservations:
+          cpus: '2.0'
+          memory: 3G
+    labels:
+      - "com.toolboxai.service=teamcity-agent-integration"
+      - "com.toolboxai.agent.type=integration"
+      - "com.toolboxai.agent.capabilities=node,python,playwright,integration-tests"
+
+  # ----------------------------------------
+  # Cloud/Deployment Agent (Optional)
+  # ----------------------------------------
+  teamcity-agent-cloud:
+    image: jetbrains/teamcity-agent:2025.07.3-linux-sudo
+    container_name: teamcity-agent-cloud
+    <<: *agent-common
+    environment:
+      <<: *common-variables
+      SERVER_URL: ${TEAMCITY_SERVER_URL:-http://teamcity-server:8111}
+      AGENT_NAME: Cloud-Deployer-01
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - teamcity_agent_cloud_conf:/data/teamcity_agent/conf
+      - teamcity_agent_cloud_work:/opt/buildagent/work
+      - teamcity_agent_cloud_temp:/opt/buildagent/temp
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    labels:
+      - "com.toolboxai.service=teamcity-agent-cloud"
+      - "com.toolboxai.agent.type=deployment"
+      - "com.toolboxai.agent.capabilities=docker,cloud-deploy"
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  teamcity:
+    driver: bridge
+    name: toolboxai_teamcity
+    labels:
+      - "com.toolboxai.network=teamcity"
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  # TeamCity Server volumes
+  teamcity_data:
+    driver: local
+    labels:
+      - "com.toolboxai.volume=teamcity-data"
+  teamcity_logs:
+    driver: local
+  teamcity_temp:
+    driver: local
+
+  # Frontend Agent volumes
+  teamcity_agent_frontend_conf:
+    driver: local
+  teamcity_agent_frontend_work:
+    driver: local
+  teamcity_agent_frontend_temp:
+    driver: local
+
+  # Backend Agent volumes
+  teamcity_agent_backend_conf:
+    driver: local
+  teamcity_agent_backend_work:
+    driver: local
+  teamcity_agent_backend_temp:
+    driver: local
+
+  # Integration Agent volumes
+  teamcity_agent_integration_conf:
+    driver: local
+  teamcity_agent_integration_work:
+    driver: local
+  teamcity_agent_integration_temp:
+    driver: local
+
+  # Cloud Agent volumes
+  teamcity_agent_cloud_conf:
+    driver: local
+  teamcity_agent_cloud_work:
+    driver: local
+  teamcity_agent_cloud_temp:
+    driver: local
+
+  # Shared cache volumes
+  pnpm_store:
+    driver: local
+  pnpm_cache:
+    driver: local
+  pip_cache:
+    driver: local
+  venv_cache:
+    driver: local
+  test_results:
+    driver: local

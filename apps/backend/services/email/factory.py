@@ -68,13 +68,13 @@ def get_email_service(force_mock: bool = False):
             if "401" in error_str or "Unauthorized" in error_str:
                 logger.warning("⚠️  SendGrid API key is invalid (401 Unauthorized)")
                 logger.info("   Using MockEmailService as fallback")
-                from apps.backend.services.email_service_mock import MockEmailService
+                from apps.backend.services.email.mock import MockEmailService
 
                 return MockEmailService()
             elif "Maximum credits exceeded" in error_str:
                 logger.warning("⚠️  SendGrid daily limit exceeded")
                 logger.info("   Using MockEmailService as fallback")
-                from apps.backend.services.email_service_mock import MockEmailService
+                from apps.backend.services.email.mock import MockEmailService
 
                 return MockEmailService()
             else:
@@ -87,14 +87,14 @@ def get_email_service(force_mock: bool = False):
         logger.error(f"❌ SendGrid not installed: {e}")
         logger.info("   Install with: pip install sendgrid")
         logger.info("   Using MockEmailService as fallback")
-        from apps.backend.services.email_service_mock import MockEmailService
+        from apps.backend.services.email.mock import MockEmailService
 
         return MockEmailService()
 
     except Exception as e:
         logger.error(f"❌ Error initializing SendGrid: {e}")
         logger.info("   Using MockEmailService as fallback")
-        from apps.backend.services.email_service_mock import MockEmailService
+        from apps.backend.services.email.mock import MockEmailService
 
         return MockEmailService()
 
