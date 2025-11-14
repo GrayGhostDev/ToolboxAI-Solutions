@@ -22,6 +22,8 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-added-large-files
+        args: ['--maxkb=1000', '--enforce-all']
+        exclude: '^pnpm-lock\.yaml$'
       - id: check-ast
       - id: check-json
       - id: check-yaml
