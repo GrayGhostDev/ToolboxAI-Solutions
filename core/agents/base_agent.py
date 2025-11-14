@@ -99,17 +99,17 @@ class AgentConfig:
     memory_enabled: bool = True
     max_context_length: int = 128000
     max_tokens: int = 4096  # Maximum tokens for response generation
-    tools: List[Any] = field(default_factory=list)
+    tools: list[Any] = field(default_factory=list)
     system_prompt: str = ""
 
 
 class AgentState(TypedDict):
     """State schema for agent execution"""
 
-    messages: List[BaseMessage]
+    messages: list[BaseMessage]
     task: str
-    context: Dict[str, Any]
-    metadata: Dict[str, Any]
+    context: dict[str, Any]
+    metadata: dict[str, Any]
     status: str
     result: Optional[Any]
     error: Optional[str]
@@ -123,7 +123,7 @@ class TaskResult(BaseModel):
 
     success: bool
     output: Any
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     error: Optional[str] = None
     execution_time: float = 0.0
     tokens_used: int = 0
@@ -134,7 +134,7 @@ class TaskResult(BaseModel):
         *,
         success: bool,
         output: Any,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[dict[str, Any]] = None,
         error: Optional[str] = None,
         execution_time: float = 0.0,
         tokens_used: int = 0,
@@ -241,7 +241,7 @@ Your responsibilities:
 Always structure your responses clearly and provide Lua code when applicable.
 """
 
-    async def execute(self, task: str, context: Optional[Dict[str, Any]] = None) -> TaskResult:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
         """
         Execute a task with the given context.
 
@@ -300,7 +300,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         finally:
             self.current_task = None
 
-    def _prepare_state(self, task: str, context: Optional[Dict[str, Any]]) -> AgentState:
+    def _prepare_state(self, task: str, context: Optional[dict[str, Any]]) -> AgentState:
         """Prepare the agent state for task execution"""
         return AgentState(
             messages=[HumanMessage(content=task)],
@@ -363,7 +363,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         self,
         other_agent: "BaseAgent",
         task: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
     ) -> TaskResult:
         """
         Collaborate with another agent on a task.
@@ -403,7 +403,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         return collaboration_result
 
     async def _trigger_post_collaboration_testing(
-        self, result: TaskResult, context: Dict[str, Any]
+        self, result: TaskResult, context: dict[str, Any]
     ):
         """Trigger testing validation after successful collaboration"""
         try:
@@ -433,7 +433,7 @@ Always structure your responses clearly and provide Lua code when applicable.
             # Don't fail the collaboration due to testing issues
 
     async def trigger_testing_validation(
-        self, task_result: TaskResult, test_context: Optional[Dict[str, Any]] = None
+        self, task_result: TaskResult, test_context: Optional[dict[str, Any]] = None
     ):
         """
         Trigger testing validation after completing a significant task.
@@ -485,7 +485,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         self.tools.append(tool)
         logger.info(f"Added tool to {self.name}: {tool}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current agent status"""
         return {
             "name": self.name,
@@ -503,11 +503,11 @@ Always structure your responses clearly and provide Lua code when applicable.
         self.memory.clear()
         logger.info(f"{self.name} agent reset")
 
-    def get_memory_context(self, limit: int = 5) -> List[Dict[str, Any]]:
+    def get_memory_context(self, limit: int = 5) -> list[dict[str, Any]]:
         """Get recent memory entries for context"""
         return self.memory[-limit:] if self.memory else []
 
-    async def reflect(self) -> Dict[str, Any]:
+    async def reflect(self) -> dict[str, Any]:
         """
         Agent self-reflection on performance and improvements.
 
@@ -549,7 +549,7 @@ Always structure your responses clearly and provide Lua code when applicable.
             except Exception as e:
                 logger.warning(f"Failed to validate LangChain environment for {self.name}: {e}")
 
-    def get_environment_status(self) -> Dict[str, Any]:
+    def get_environment_status(self) -> dict[str, Any]:
         """Get detailed environment status for this agent"""
         status = {
             "agent_name": self.name,
