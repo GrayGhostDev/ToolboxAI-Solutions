@@ -444,7 +444,7 @@ class WebSocketManager:
             for websocket in self.connections[room_id]:
                 try:
                     await websocket.send_json(message)
-                except:
+                except Exception:
                     disconnected.append(websocket)
 
             # Clean up disconnected websockets
@@ -457,7 +457,7 @@ class WebSocketManager:
             if metadata.get("user_id") == user_id:
                 try:
                     await websocket.send_json(message)
-                except:
+                except Exception:
                     self.disconnect(websocket)
 
     def get_room_connections(self, room_id: str) -> int:

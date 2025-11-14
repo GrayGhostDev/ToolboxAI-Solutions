@@ -63,7 +63,17 @@
     "prismjs": "^1.30.0",
     "esbuild": "^0.25.10",
     "undici": "^6.20.0",
-    "path-to-regexp": "^8.2.0"
+    "path-to-regexp": "^8.2.0",
+    "@types/node": "^20.14.9",
+    "@tiptap/core": "^3.10.5",
+    "@tiptap/pm": "^3.10.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/node": "^20.14.9",
+      "@tiptap/core": "^3.10.5",
+      "@tiptap/pm": "^3.10.5"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",

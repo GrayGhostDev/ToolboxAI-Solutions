@@ -182,7 +182,7 @@ async def pusher_auth(request: Request) -> Dict[str, Any]:
             # Try to parse as JSON anyway (fallback)
             try:
                 body = await request.json()
-            except:
+            except Exception:
                 raise HTTPException(status_code=400, detail="Invalid request format")
 
         # Validate required fields

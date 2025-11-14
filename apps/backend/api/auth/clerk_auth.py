@@ -246,7 +246,7 @@ async def get_current_user_compatible(
             "is_active": True,
             "email_verified": clerk_user.metadata.get("email_verified", False),
         }
-    except:
+    except Exception:
         # Fall back to old auth
         from apps.backend.api.auth.auth import get_current_user as get_jwt_user
 

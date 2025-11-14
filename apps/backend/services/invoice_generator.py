@@ -490,7 +490,7 @@ class InvoiceGenerator:
             last_num = last_invoice.number.replace(self.invoice_prefix, "")
             try:
                 next_num = int(last_num) + 1
-            except:
+            except Exception:
                 next_num = 1
         else:
             next_num = 1

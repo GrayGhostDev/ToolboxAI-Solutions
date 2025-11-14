@@ -111,16 +111,16 @@ class DatabaseAuth:
             # Check if input is email or username
             if "@" in username_or_email:
                 query = """
-                    SELECT id, username, email, password_hash, first_name, last_name, 
+                    SELECT id, username, email, password_hash, first_name, last_name,
                            first_name as display_name, role, is_active, is_verified, profile_picture_url as avatar_url
-                    FROM dashboard_users 
+                    FROM dashboard_users
                     WHERE email = %s AND is_active = true
                 """
             else:
                 query = """
                     SELECT id, username, email, password_hash, first_name, last_name,
                            first_name as display_name, role, is_active, is_verified, profile_picture_url as avatar_url
-                    FROM dashboard_users 
+                    FROM dashboard_users
                     WHERE username = %s AND is_active = true
                 """
 
@@ -231,7 +231,7 @@ class DatabaseAuth:
                 """
                 SELECT id, username, email, first_name, last_name, first_name as display_name,
                        role, is_active, is_verified, profile_picture_url as avatar_url, address as bio
-                FROM dashboard_users 
+                FROM dashboard_users
                 WHERE id = %s AND is_active = true
             """,
                 (user_id,),
@@ -259,8 +259,8 @@ class DatabaseAuth:
             # Get user's basic info
             cursor.execute(
                 """
-                SELECT role, created_at, last_login 
-                FROM dashboard_users 
+                SELECT role, created_at, last_login
+                FROM dashboard_users
                 WHERE id = %s
             """,
                 (user_id,),
@@ -342,7 +342,7 @@ class DatabaseAuth:
             # Insert new user
             cursor.execute(
                 """
-                INSERT INTO dashboard_users (username, email, password_hash, first_name, last_name, 
+                INSERT INTO dashboard_users (username, email, password_hash, first_name, last_name,
                                  role, is_active, is_verified)
                 VALUES (%s, %s, %s, %s, %s, %s, true, false)
                 RETURNING id, username, email, first_name, last_name, first_name as display_name, role

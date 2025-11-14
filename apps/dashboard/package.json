@@ -31,7 +31,7 @@
     "path-to-regexp": "^8.2.0"
   },
   "scripts": {
-    "postinstall": "node -e \"try { require('@rollup/rollup-linux-x64-gnu'); require('@rollup/rollup-darwin-arm64'); } catch (e) { console.log('Rollup binaries check:', e.message); }\"",
+    "postinstall": "node -e \"try { require('@rollup/rollup-darwin-arm64'); } catch (e) { if (e.code !== 'MODULE_NOT_FOUND') throw e; console.warn('Warning: Optional Rollup binary not found'); }\"",
     "install:external": "pnpm install --no-bin-links",
     "install:clean": "rm -rf node_modules pnpm-lock.yaml && pnpm install --no-bin-links",
     "dev": "vite",
@@ -89,9 +89,9 @@
     "@sentry/react": "^10.22.0",
     "@supabase/supabase-js": "^2.81.0",
     "@tabler/icons-react": "^3.35.0",
-    "@tiptap/extension-link": "^3.5.1",
+    "@tiptap/extension-link": "^3.10.5",
     "@tiptap/react": "^3.10.5",
-    "@tiptap/starter-kit": "^3.5.1",
+    "@tiptap/starter-kit": "^3.10.5",
     "@types/react-window": "^2.0.0",
     "axios": "^1.7.9",
     "chart.js": "^4.5.0",
@@ -150,6 +150,7 @@
     "@typescript-eslint/parser": "^8.46.4",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^3.2.4",
+    "@rollup/rollup-darwin-arm64": "^4.27.0",
     "chalk": "^5.6.2",
     "eslint": "^9.35.0",
     "eslint-plugin-react": "^7.37.2",

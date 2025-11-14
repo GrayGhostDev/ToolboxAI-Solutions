@@ -50,7 +50,7 @@ jobs:
 
       - name: Run Flake8
         if: matrix.component == 'backend'
-        run: flake8 apps/backend/ --max-line-length=120 --extend-ignore=E203,W503
+        run: flake8 apps/backend/
 
       - name: Run Pylint
         if: matrix.component == 'backend'

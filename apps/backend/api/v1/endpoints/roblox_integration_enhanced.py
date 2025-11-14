@@ -450,7 +450,7 @@ local Players = game:GetService("Players")
 local function educationalFunction()
     -- Implementation based on requirements:
     -- {request.functionality_description}
-    
+
     print("Educational feature initialized for grade {request.grade_level}")
 end
 

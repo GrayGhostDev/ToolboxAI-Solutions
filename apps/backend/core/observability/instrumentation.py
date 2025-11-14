@@ -110,7 +110,7 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
                     # Only log small bodies
                     if len(body) < 1024:
                         span.set_attribute("http.request.body", body.decode()[:500])
-                except:
+                except Exception:
                     pass
 
             try:

@@ -345,7 +345,7 @@ class QueryOptimizer:
         """
         query = text(
             """
-            SELECT 
+            SELECT
                 query,
                 calls,
                 total_exec_time,

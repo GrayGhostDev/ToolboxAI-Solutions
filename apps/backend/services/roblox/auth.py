@@ -397,7 +397,7 @@ class RobloxOAuth2Service:
             # Try to get user info as validation
             await self.get_user_info(access_token)
             return True
-        except:
+        except Exception:
             return False
 
 

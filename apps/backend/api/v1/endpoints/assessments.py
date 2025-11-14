@@ -521,14 +521,14 @@ async def submit_assessment(
 
             # Insert or update assessment result
             query = """
-                INSERT INTO assessment_results (assessment_id, student_id, answers, score, 
+                INSERT INTO assessment_results (assessment_id, student_id, answers, score,
                                               completed_at, time_spent, attempts_used, status)
                 VALUES ($1, $2, $3, $4, NOW(), $5, COALESCE((
-                    SELECT attempts_used FROM assessment_results 
+                    SELECT attempts_used FROM assessment_results
                     WHERE assessment_id = $1 AND student_id = $2
                 ), 0) + 1, 'completed')
                 ON CONFLICT (assessment_id, student_id)
-                DO UPDATE SET 
+                DO UPDATE SET
                     answers = $3,
                     score = $4,
                     completed_at = NOW(),

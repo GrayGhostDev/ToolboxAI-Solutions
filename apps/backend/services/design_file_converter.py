@@ -257,7 +257,7 @@ class DesignFileConverter:
                     if header.startswith(b"BLENDER"):
                         version = header[7:12].decode("ascii", errors="ignore")
                         content += f"Blender Version: {version}\n"
-            except:
+            except Exception:
                 pass
 
             return content

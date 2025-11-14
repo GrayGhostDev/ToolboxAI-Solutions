@@ -402,7 +402,7 @@ class SendGridEmailService:
             if hasattr(e, "to_dict"):
                 try:
                     error_detail = str(e.to_dict)
-                except:
+                except Exception:
                     pass
             elif hasattr(e, "body"):
                 error_detail = str(e.body)

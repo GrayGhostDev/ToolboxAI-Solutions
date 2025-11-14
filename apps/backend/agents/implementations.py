@@ -67,14 +67,14 @@ class QuizGenerationAgent:
         Learning Objectives: {', '.join(objectives)}
         Number of Questions: {num_questions}
         Question Types: {', '.join(question_types)}
-        
+
         For each question provide:
         1. The question text
         2. Correct answer
         3. Wrong options (for multiple choice)
         4. Explanation of the correct answer
         5. A hint (if difficulty allows)
-        
+
         Format as JSON for easy parsing.
         """
 
@@ -118,7 +118,7 @@ class QuizGenerationAgent:
             import json
 
             return json.loads(response)
-        except:
+        except Exception:
             # Fallback to text parsing - create dummy questions
             questions = []
             for i in range(5):
@@ -418,14 +418,14 @@ class ScriptGenerationAgent:
         prompt = f"""
         Generate a Roblox Lua script for {script_type} - {functionality}:
         Parameters: {params}
-        
+
         Requirements:
         1. Follow Roblox best practices
         2. Include error handling
         3. Add input validation
         4. Implement these security rules: {', '.join(self.security_rules)}
         5. Add helpful comments
-        
+
         Base template to enhance:
         {template}
         """
@@ -458,7 +458,7 @@ local Players = game:GetService("Players")
 local function onItemCollected(player, item)
     -- Validate item
     if not item or not item.Parent then return end
-    
+
     -- Award points
     local leaderstats = player:FindFirstChild("leaderstats")
     if leaderstats then
@@ -467,7 +467,7 @@ local function onItemCollected(player, item)
             points.Value = points.Value + 10
         end
     end
-    
+
     -- Remove item
     item:Destroy()
 end
@@ -499,7 +499,7 @@ local QuizManager = {}
 function QuizManager:StartQuiz(player, questions)
     -- Validate input
     if not player or not questions then return end
-    
+
     -- Initialize quiz state
     local quizData = {
         player = player,
@@ -508,7 +508,7 @@ function QuizManager:StartQuiz(player, questions)
         score = 0,
         startTime = tick()
     }
-    
+
     return quizData
 end
 """
@@ -521,9 +521,9 @@ local debounce = false
 button.MouseButton1Click:Connect(function()
     if debounce then return end
     debounce = true
-    
+
     -- Button action here
-    
+
     wait(0.5) -- Cooldown
     debounce = false
 end)
@@ -537,7 +537,7 @@ local function ShowDialog(player, title, message, options)
     -- Create dialog UI
     local screenGui = Instance.new("ScreenGui")
     screenGui.Parent = player.PlayerGui
-    
+
     -- Dialog implementation
 end
 """
@@ -550,7 +550,7 @@ function MenuController:CreateMenu(player)
     local menu = Instance.new("ScreenGui")
     menu.Name = "MainMenu"
     menu.Parent = player.PlayerGui
-    
+
     -- Menu implementation
     return menu
 end
@@ -565,7 +565,7 @@ local remoteEvent = ReplicatedStorage:WaitForChild("RemoteEvent")
 remoteEvent.OnServerEvent:Connect(function(player, data)
     -- Validate player and data
     if not player or typeof(data) ~= "table" then return end
-    
+
     -- Process event
 end)
 """
@@ -579,7 +579,7 @@ local remoteFunction = ReplicatedStorage:WaitForChild("RemoteFunction")
 remoteFunction.OnServerInvoke = function(player, request)
     -- Validate input
     if not player or not request then return nil end
-    
+
     -- Process and return data
     return {success = true, data = {}}
 end
@@ -804,14 +804,14 @@ class CodeReviewAgent:
 
         prompt = f"""
         Review this Roblox Lua code and suggest optimizations:
-        
+
         Code:
         {code[:1000]}  # Limit for context
-        
+
         Current issues found:
         - Security: {len(current_review['security_issues'])} issues
         - Performance: {len(current_review['performance_issues'])} issues
-        
+
         Provide 3 specific optimization suggestions.
         """
 

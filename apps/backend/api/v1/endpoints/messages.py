@@ -291,13 +291,13 @@ async def get_unread_message_count(
     try:
         # Get counts from database
         query = """
-            SELECT 
+            SELECT
                 COUNT(*) FILTER (WHERE is_read = false AND message_type != 'notification') as unread_messages,
                 COUNT(*) FILTER (WHERE is_read = false AND message_type = 'notification') as unread_notifications,
                 COUNT(*) FILTER (WHERE is_read = false AND is_urgent = true) as urgent_messages,
                 COUNT(*) FILTER (WHERE is_read = false AND created_at >= NOW() - INTERVAL '24 hours') as recent_unread
             FROM messages
-            WHERE recipient_id = $1 
+            WHERE recipient_id = $1
               AND deleted_by_recipient = false
         """
         async with db_service.pool.acquire() as conn:
@@ -367,7 +367,7 @@ async def get_message_details(
     try:
         # Get message details and mark as read
         query = """
-            SELECT m.*, 
+            SELECT m.*,
                    s.first_name || ' ' || s.last_name as sender_name,
                    s.username as sender_username, s.role as sender_role,
                    r.first_name || ' ' || r.last_name as recipient_name,
@@ -448,7 +448,7 @@ async def send_message(
 
     try:
         query = """
-            INSERT INTO messages (sender_id, recipient_id, subject, content, 
+            INSERT INTO messages (sender_id, recipient_id, subject, content,
                                 message_type, is_urgent, attachments, related_class_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
@@ -480,7 +480,7 @@ async def mark_message_as_read(
 
     try:
         query = """
-            UPDATE messages 
+            UPDATE messages
             SET is_read = true, read_at = NOW()
             WHERE id = $1 AND recipient_id = $2
             RETURNING id
@@ -507,7 +507,7 @@ async def archive_message(
 
     try:
         query = """
-            UPDATE messages 
+            UPDATE messages
             SET archived = true, archived_at = NOW()
             WHERE id = $1 AND recipient_id = $2
             RETURNING id
@@ -545,13 +545,13 @@ async def delete_message(
             # Update appropriate delete flag
             if message["sender_id"] == current_user.id:
                 update_query = """
-                    UPDATE messages 
+                    UPDATE messages
                     SET deleted_by_sender = true, deleted_at = NOW()
                     WHERE id = $1
                 """
             elif message["recipient_id"] == current_user.id:
                 update_query = """
-                    UPDATE messages 
+                    UPDATE messages
                     SET deleted_by_recipient = true, deleted_at = NOW()
                     WHERE id = $1
                 """
@@ -578,7 +578,7 @@ async def get_recent_notifications(
         query = """
             SELECT id, subject, message_type, is_read, is_urgent, created_at, preview
             FROM messages
-            WHERE recipient_id = $1 
+            WHERE recipient_id = $1
               AND message_type IN ('notification', 'alert', 'reminder')
               AND deleted_by_recipient = false
             ORDER BY created_at DESC

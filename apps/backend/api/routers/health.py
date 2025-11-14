@@ -66,7 +66,7 @@ async def health_check(request: Request) -> HealthCheck:
             current_time = time.time()
             start_time = getattr(app.state, "start_time", current_time)
             uptime_seconds = current_time - start_time
-        except:
+        except Exception:
             uptime_seconds = 0.0
 
         return HealthCheck(

@@ -7,47 +7,49 @@ Provides core functionality for LangChain-based agents with SPARC integration.
 import asyncio
 import logging
 import os
-from typing import Dict, Any, Optional, List, TypedDict
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Any, TypedDict
 
 # Import enhanced LangChain compatibility layer
 try:
     from core.langchain_enhanced_compat import (
-        get_chat_model, 
-        ChatPromptTemplate, 
+        BaseMessage,
+        ChatPromptTemplate,
+        HumanMessage,
         MessagesPlaceholder,
-        BaseMessage, 
-        HumanMessage, 
-        AIMessage, 
         SystemMessage,
-        StrOutputParser,
-        LangChainConfig,
-        LangChainMode,
-        validate_langchain_environment
+        get_chat_model,
+        validate_langchain_environment,
     )
+
     ENHANCED_COMPAT_AVAILABLE = True
 except ImportError:
     # Fallback to original imports
-    from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+    from langchain_core.messages import (
+        BaseMessage,
+        HumanMessage,
+        SystemMessage,
+    )
     from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
     ENHANCED_COMPAT_AVAILABLE = False
-    
+
     # Check if we should use mock LLM
     USE_MOCK_LLM = not os.getenv("OPENAI_API_KEY") or os.getenv("USE_MOCK_LLM") == "true"
-    
+
     if USE_MOCK_LLM:
         # Use mock LLM for testing
         from tests.fixtures.agents.mock_llm import MockChatModel as ChatOpenAI
+
         logger = logging.getLogger(__name__)
         logger.info("Using Mock LLM for testing (no OpenAI API key required)")
     else:
         # Use real OpenAI
         from langchain_openai import ChatOpenAI
 
-from langchain_core.agents import AgentAction, AgentFinish
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -146,6 +148,7 @@ class TaskResult(BaseModel):
             "tokens_used": tokens_used,
         }
         from typing import Any, cast
+
         return cast(Any, cls)(**data)  # type: ignore[reportCallIssue]
 
 
@@ -167,7 +170,12 @@ class BaseAgent(ABC):
         self.status = AgentStatus.IDLE
         self.llm = self._initialize_llm()
         self.memory = []
-        self.metrics = {"tasks_processed": 0, "total_tokens": 0, "errors": 0, "average_execution_time": 0.0}
+        self.metrics = {
+            "tasks_processed": 0,
+            "total_tokens": 0,
+            "errors": 0,
+            "average_execution_time": 0.0,
+        }
         self.current_task = None
         self.tools = config.tools
 
@@ -177,8 +185,10 @@ class BaseAgent(ABC):
         # Validate LangChain environment if enhanced compatibility is available
         if ENHANCED_COMPAT_AVAILABLE:
             self._validate_environment()
-        
-        logger.info(f"Initialized {self.name} agent with {'enhanced' if ENHANCED_COMPAT_AVAILABLE else 'legacy'} LangChain support")
+
+        logger.info(
+            f"Initialized {self.name} agent with {'enhanced' if ENHANCED_COMPAT_AVAILABLE else 'legacy'} LangChain support"
+        )
 
     def _initialize_llm(self):
         """Initialize the language model using enhanced compatibility layer"""
@@ -192,12 +202,16 @@ class BaseAgent(ABC):
             )
         else:
             # Fallback to direct initialization
+            # Fix for LangChain httpx client incompatibility with OpenAI SDK
+            # Explicitly set http_client=None to prevent LangChain from creating wrapped clients
             return ChatOpenAI(
                 model=self.config.model,
                 temperature=self.config.temperature,
                 max_tokens=None,
                 timeout=self.config.timeout,
                 max_retries=self.config.max_retries,
+                http_client=None,  # Prevent httpx client wrapper incompatibility
+                http_async_client=None,  # Prevent async httpx client wrapper incompatibility
             )
 
     def _create_prompt_template(self) -> ChatPromptTemplate:
@@ -216,7 +230,7 @@ class BaseAgent(ABC):
     def _get_default_system_prompt(self) -> str:
         """Get default system prompt for the agent"""
         return f"""You are {self.name}, an intelligent agent specialized in Roblox educational content generation.
-        
+
 Your responsibilities:
 - Process tasks efficiently and accurately
 - Provide detailed, actionable outputs
@@ -257,7 +271,11 @@ Always structure your responses clearly and provide Lua code when applicable.
             task_result = TaskResult.create(
                 success=True,
                 output=result,
-                metadata={"agent": self.name, "task": task, "timestamp": datetime.now().isoformat()},
+                metadata={
+                    "agent": self.name,
+                    "task": task,
+                    "timestamp": datetime.now().isoformat(),
+                },
                 execution_time=execution_time,
             )
 
@@ -276,7 +294,9 @@ Always structure your responses clearly and provide Lua code when applicable.
 
             self.status = AgentStatus.ERROR
 
-            return TaskResult.create(success=False, output=None, error=str(e), execution_time=execution_time)
+            return TaskResult.create(
+                success=False, output=None, error=str(e), execution_time=execution_time
+            )
         finally:
             self.current_task = None
 
@@ -318,7 +338,9 @@ Always structure your responses clearly and provide Lua code when applicable.
         # Update average execution time
         current_avg = self.metrics["average_execution_time"]
         total_tasks = self.metrics["tasks_processed"]
-        self.metrics["average_execution_time"] = (current_avg * (total_tasks - 1) + execution_time) / total_tasks
+        self.metrics["average_execution_time"] = (
+            current_avg * (total_tasks - 1) + execution_time
+        ) / total_tasks
 
     def _store_memory(self, task: str, result: TaskResult):
         """Store task and result in memory"""
@@ -338,7 +360,10 @@ Always structure your responses clearly and provide Lua code when applicable.
             self.memory = self.memory[-max_memory_size:]
 
     async def collaborate(
-        self, other_agent: "BaseAgent", task: str, context: Optional[Dict[str, Any]] = None
+        self,
+        other_agent: "BaseAgent",
+        task: str,
+        context: Optional[Dict[str, Any]] = None,
     ) -> TaskResult:
         """
         Collaborate with another agent on a task.
@@ -355,56 +380,64 @@ Always structure your responses clearly and provide Lua code when applicable.
 
         # Execute tasks in parallel
         results = await asyncio.gather(
-            self.execute(f"Your part: {task}", context), other_agent.execute(f"Your part: {task}", context)
+            self.execute(f"Your part: {task}", context),
+            other_agent.execute(f"Your part: {task}", context),
         )
 
         # Combine results
-        combined_output = {self.name: results[0].output, other_agent.name: results[1].output}
-        
+        combined_output = {
+            self.name: results[0].output,
+            other_agent.name: results[1].output,
+        }
+
         collaboration_result = TaskResult.create(
             success=all(r.success for r in results),
             output=combined_output,
             metadata={"collaboration": True, "agents": [self.name, other_agent.name]},
         )
-        
+
         # Trigger testing validation if collaboration was successful and involves code generation
         if collaboration_result.success and context and context.get("trigger_testing", True):
             await self._trigger_post_collaboration_testing(collaboration_result, context)
 
         return collaboration_result
 
-    async def _trigger_post_collaboration_testing(self, result: TaskResult, context: Dict[str, Any]):
+    async def _trigger_post_collaboration_testing(
+        self, result: TaskResult, context: Dict[str, Any]
+    ):
         """Trigger testing validation after successful collaboration"""
         try:
             # Import here to avoid circular imports
             from .testing_agent import TestingAgent
-            
+
             # Check if we need testing validation
             code_related_agents = ["ScriptAgent", "TerrainAgent", "ContentAgent"]
             agents_involved = result.metadata.get("agents", [])
-            
+
             if any(agent in str(agents_involved) for agent in code_related_agents):
                 logger.info("Triggering post-collaboration testing validation")
-                
+
                 # Create testing agent for validation
                 testing_agent = TestingAgent()
-                
+
                 # Determine primary agent for test type selection
                 primary_agent = agents_involved[0] if agents_involved else self.name
-                
+
                 # Trigger validation testing
                 await testing_agent.trigger_post_completion_tests(primary_agent, result.output)
-                
+
                 logger.info("Post-collaboration testing validation completed")
-                
+
         except Exception as e:
             logger.warning(f"Post-collaboration testing failed: {e}")
             # Don't fail the collaboration due to testing issues
 
-    async def trigger_testing_validation(self, task_result: TaskResult, test_context: Optional[Dict[str, Any]] = None):
+    async def trigger_testing_validation(
+        self, task_result: TaskResult, test_context: Optional[Dict[str, Any]] = None
+    ):
         """
         Trigger testing validation after completing a significant task.
-        
+
         Args:
             task_result: Result from the completed task
             test_context: Optional testing context
@@ -412,31 +445,37 @@ Always structure your responses clearly and provide Lua code when applicable.
         try:
             # Import here to avoid circular imports
             from .testing_agent import TestingAgent
-            
+
             logger.info(f"{self.name} triggering testing validation")
-            
+
             # Create testing agent
             testing_agent = TestingAgent()
-            
+
             # Prepare testing context
             context = test_context or {}
-            context.update({
-                "triggered_by": self.name,
-                "task_completed": True,
-                "original_task_success": task_result.success
-            })
-            
+            context.update(
+                {
+                    "triggered_by": self.name,
+                    "task_completed": True,
+                    "original_task_success": task_result.success,
+                }
+            )
+
             # Trigger appropriate tests based on agent type and task result
             if task_result.success:
-                validation_result = await testing_agent.validate_agent_output(self.name, task_result.output)
-                
-                logger.info(f"Testing validation result: {validation_result.get('validation_result', 'unknown')}")
-                
+                validation_result = await testing_agent.validate_agent_output(
+                    self.name, task_result.output
+                )
+
+                logger.info(
+                    f"Testing validation result: {validation_result.get('validation_result', 'unknown')}"
+                )
+
                 return validation_result
             else:
                 logger.info("Skipping testing validation due to failed task")
                 return None
-                
+
         except Exception as e:
             logger.warning(f"Testing validation failed: {e}")
             return None
@@ -479,9 +518,9 @@ Always structure your responses clearly and provide Lua code when applicable.
         Tasks processed: {self.metrics['tasks_processed']}
         Error rate: {self.metrics['errors'] / max(1, self.metrics['tasks_processed']) * 100:.1f}%
         Average execution time: {self.metrics['average_execution_time']:.2f}s
-        
+
         Recent tasks: {self.get_memory_context(3)}
-        
+
         Provide insights on:
         1. Performance trends
         2. Common error patterns
@@ -490,7 +529,11 @@ Always structure your responses clearly and provide Lua code when applicable.
 
         response = await self.llm.ainvoke(reflection_prompt)
 
-        return {"reflection": response.content, "metrics": self.metrics, "timestamp": datetime.now().isoformat()}
+        return {
+            "reflection": response.content,
+            "metrics": self.metrics,
+            "timestamp": datetime.now().isoformat(),
+        }
 
     def _validate_environment(self):
         """Validate LangChain environment and log any issues"""
@@ -498,12 +541,14 @@ Always structure your responses clearly and provide Lua code when applicable.
             try:
                 validation_results = validate_langchain_environment()
                 if validation_results["issues"]:
-                    logger.warning(f"LangChain environment issues detected for {self.name}: {validation_results['issues']}")
+                    logger.warning(
+                        f"LangChain environment issues detected for {self.name}: {validation_results['issues']}"
+                    )
                 else:
                     logger.debug(f"LangChain environment validated successfully for {self.name}")
             except Exception as e:
                 logger.warning(f"Failed to validate LangChain environment for {self.name}: {e}")
-    
+
     def get_environment_status(self) -> Dict[str, Any]:
         """Get detailed environment status for this agent"""
         status = {
@@ -512,17 +557,17 @@ Always structure your responses clearly and provide Lua code when applicable.
             "model_config": {
                 "model": self.config.model,
                 "temperature": self.config.temperature,
-                "max_tokens": self.config.max_tokens
-            }
+                "max_tokens": self.config.max_tokens,
+            },
         }
-        
+
         if ENHANCED_COMPAT_AVAILABLE:
             try:
                 status["langchain_validation"] = validate_langchain_environment()
             except Exception as e:
                 status["langchain_validation"] = {"error": str(e)}
-        
+
         return status
-    
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}(name='{self.name}', status={self.status.value}, enhanced_compat={ENHANCED_COMPAT_AVAILABLE})>"

@@ -685,7 +685,7 @@ with open('{json_path}', 'w') as f:
                     color_data = json.loads(zip_ref.read(file_name).decode("utf-8"))
                     # Process color data based on structure
                     colors.extend(self._process_sketch_color_data(color_data))
-                except:
+                except Exception:
                     continue
         return colors
 
@@ -700,7 +700,7 @@ with open('{json_path}', 'w') as f:
                 try:
                     style_data = json.loads(zip_ref.read(file_name).decode("utf-8"))
                     styles.extend(self._process_sketch_style_data(style_data))
-                except:
+                except Exception:
                     continue
         return styles
 
@@ -768,7 +768,7 @@ with open('{json_path}', 'w') as f:
                 try:
                     interaction_data = json.loads(zip_ref.read(file_name).decode("utf-8"))
                     interactions.append(interaction_data)
-                except:
+                except Exception:
                     continue
         return interactions
 
@@ -783,7 +783,7 @@ with open('{json_path}', 'w') as f:
                 try:
                     prototype_data = json.loads(zip_ref.read(file_name).decode("utf-8"))
                     prototypes.append(prototype_data)
-                except:
+                except Exception:
                     continue
         return prototypes
 

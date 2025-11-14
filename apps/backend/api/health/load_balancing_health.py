@@ -402,7 +402,7 @@ class LoadBalancingHealthChecker:
                         if response.status_code < 500:
                             healthy_regions.append(region)
                         regions_checked.append(region)
-                    except:
+                    except Exception:
                         regions_checked.append(region)
 
             # Determine health

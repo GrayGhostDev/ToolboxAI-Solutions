@@ -847,7 +847,7 @@ for i = 1, 3 do
         10,
         math.random(-100, 100)
     )
-    
+
     -- Information station creation code would go here
     -- This would include interactive GUI elements, information displays, etc.
 end
@@ -1138,17 +1138,17 @@ function QuizManager:ShowQuestion(player, questionIndex)
         self:EndQuiz(player)
         return
     end
-    
+
     local question = quizData.questions[questionIndex]
     print("Showing question " .. questionIndex .. " to " .. player.Name)
-    
+
     -- Create question UI
     self:CreateQuestionUI(player, question, questionIndex)
 end
 
 function QuizManager:CreateQuestionUI(player, question, questionIndex)
     local playerGui = player:WaitForChild("PlayerGui")
-    
+
     -- Create main quiz frame
     local quizFrame = Instance.new("Frame")
     quizFrame.Name = "QuizFrame"
@@ -1157,7 +1157,7 @@ function QuizManager:CreateQuestionUI(player, question, questionIndex)
     quizFrame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
     quizFrame.BorderSizePixel = 0
     quizFrame.Parent = playerGui
-    
+
     -- Question text
     local questionLabel = Instance.new("TextLabel")
     questionLabel.Name = "QuestionLabel"
@@ -1169,7 +1169,7 @@ function QuizManager:CreateQuestionUI(player, question, questionIndex)
     questionLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
     questionLabel.Font = Enum.Font.Gotham
     questionLabel.Parent = quizFrame
-    
+
     -- Create answer options based on question type
     if question.questionType == "multiple_choice" then
         self:CreateMultipleChoiceOptions(quizFrame, question, questionIndex)
@@ -1178,7 +1178,7 @@ function QuizManager:CreateQuestionUI(player, question, questionIndex)
     else
         self:CreateTextInput(quizFrame, question, questionIndex)
     end
-    
+
     -- Timer (if applicable)
     if question.timeLimit and question.timeLimit > 0 then
         self:StartTimer(quizFrame, question.timeLimit, questionIndex)
@@ -1192,7 +1192,7 @@ function QuizManager:CreateMultipleChoiceOptions(frame, question, questionIndex)
     optionsFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
     optionsFrame.BackgroundTransparency = 1
     optionsFrame.Parent = frame
-    
+
     for i, option in ipairs(question.options) do
         local optionButton = Instance.new("TextButton")
         optionButton.Name = "Option" .. option.id:upper()
@@ -1204,7 +1204,7 @@ function QuizManager:CreateMultipleChoiceOptions(frame, question, questionIndex)
         optionButton.TextScaled = true
         optionButton.Font = Enum.Font.Gotham
         optionButton.Parent = optionsFrame
-        
+
         optionButton.MouseButton1Click:Connect(function()
             self:SubmitAnswer(questionIndex, option.id, option.isCorrect)
         end)
@@ -1213,7 +1213,7 @@ end
 
 function QuizManager:SubmitAnswer(questionIndex, answer, isCorrect)
     print("Answer submitted for question " .. questionIndex .. ": " .. tostring(answer))
-    
+
     -- Process answer
     local player = Players.LocalPlayer
     if isCorrect then
@@ -1221,7 +1221,7 @@ function QuizManager:SubmitAnswer(questionIndex, answer, isCorrect)
     else
         print("Incorrect answer!")
     end
-    
+
     -- Move to next question after delay
     wait(2)
     self:ShowQuestion(player, questionIndex + 1)
@@ -1404,7 +1404,7 @@ function UIManager:CreateMainInterface()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "EducationalInterface"
     screenGui.Parent = playerGui
-    
+
     -- Main frame
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
@@ -1413,12 +1413,12 @@ function UIManager:CreateMainInterface()
     mainFrame.BackgroundColor3 = UI_CONFIG.backgroundColor
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = screenGui
-    
+
     -- Add corner rounding
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 10)
     corner.Parent = mainFrame
-    
+
     -- Title bar
     local titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
@@ -1427,7 +1427,7 @@ function UIManager:CreateMainInterface()
     titleBar.BackgroundColor3 = UI_CONFIG.primaryColor
     titleBar.BorderSizePixel = 0
     titleBar.Parent = mainFrame
-    
+
     -- Title text
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Name = "TitleLabel"
@@ -1439,7 +1439,7 @@ function UIManager:CreateMainInterface()
     titleLabel.TextScaled = true
     titleLabel.Font = Enum.Font.GothamBold
     titleLabel.Parent = titleBar
-    
+
     return mainFrame
 end
 
@@ -1452,10 +1452,10 @@ function UIManager:CreateInteractiveElements(parent)
     contentFrame.BackgroundTransparency = 1
     contentFrame.ScrollBarThickness = 10
     contentFrame.Parent = parent
-    
+
     -- Add interactive elements here based on functionality
     self:AddCustomElements(contentFrame)
-    
+
     return contentFrame
 end
 
@@ -1472,7 +1472,7 @@ function UIManager:ShowNotification(message, duration)
     notification.BackgroundColor3 = UI_CONFIG.secondaryColor
     notification.BorderSizePixel = 0
     notification.Parent = playerGui
-    
+
     local notifText = Instance.new("TextLabel")
     notifText.Size = UDim2.new(0.9, 0, 0.8, 0)
     notifText.Position = UDim2.new(0.05, 0, 0.1, 0)
@@ -1482,7 +1482,7 @@ function UIManager:ShowNotification(message, duration)
     notifText.TextScaled = true
     notifText.Font = Enum.Font.Gotham
     notifText.Parent = notification
-    
+
     -- Auto-hide notification
     wait(duration or 3)
     notification:Destroy()
@@ -1532,7 +1532,7 @@ function GameLogic:StartGame()
     gameState.score = 0
     gameState.level = 1
     gameState.timeRemaining = GAME_CONFIG.timeLimit
-    
+
     -- Start game loop
     self:GameLoop()
 end
@@ -1544,17 +1544,17 @@ function GameLogic:GameLoop()
             connection:Disconnect()
             return
         end
-        
+
         -- Update game state
         gameState.timeRemaining = gameState.timeRemaining - deltaTime
-        
+
         -- Check for game end conditions
         if gameState.timeRemaining <= 0 then
             self:EndGame("Time's up!")
         elseif gameState.score >= GAME_CONFIG.maxScore then
             self:EndGame("Congratulations! You reached the target score!")
         end
-        
+
         -- Update UI or game elements
         self:UpdateGameDisplay()
     end)
@@ -1563,7 +1563,7 @@ end
 function GameLogic:UpdateScore(points)
     gameState.score = gameState.score + points
     print("Score updated: " .. gameState.score)
-    
+
     -- Check for level progression
     local newLevel = math.floor(gameState.score / (GAME_CONFIG.maxScore / 5)) + 1
     if newLevel > gameState.level then
@@ -1591,7 +1591,7 @@ end
 function GameLogic:EndGame(reason)
     print("Game ended: " .. reason)
     gameState.isActive = false
-    
+
     -- Calculate final results
     local results = {{
         finalScore = gameState.score,
@@ -1599,7 +1599,7 @@ function GameLogic:EndGame(reason)
         timeUsed = GAME_CONFIG.timeLimit - gameState.timeRemaining,
         reason = reason
     }}
-    
+
     self:ShowResults(results)
 end
 
@@ -1622,7 +1622,7 @@ end
 function GameLogic:ProcessEducationalAction(action, data)
     -- Handle educational interactions
     print("Processing educational action: " .. action)
-    
+
     -- Award points based on educational value
     local points = self:CalculateEducationalPoints(action, data)
     self:UpdateScore(points)
@@ -1631,14 +1631,14 @@ end
 function GameLogic:CalculateEducationalPoints(action, data)
     -- Calculate points based on educational value
     local basePoints = 10
-    
+
     -- Adjust based on difficulty
     if complexity_level == "hard" then
         basePoints = basePoints * 1.5
     elseif complexity_level == "expert" then
         basePoints = basePoints * 2
     end
-    
+
     return basePoints
 end
 
@@ -1673,13 +1673,13 @@ local EDUCATION_CONFIG = {{
 function EducationManager:InitializeLesson(lessonData)
     print("Initializing lesson: " .. lessonData.title)
     currentLesson = lessonData
-    
+
     -- Set up lesson environment
     self:SetupLessonEnvironment()
-    
+
     -- Initialize student tracking
     self:InitializeStudentTracking()
-    
+
     -- Begin lesson sequence
     self:StartLessonSequence()
 end
@@ -1687,7 +1687,7 @@ end
 function EducationManager:SetupLessonEnvironment()
     -- Create educational environment based on lesson content
     print("Setting up educational environment")
-    
+
     -- This would create 3D models, interactive elements, etc.
     -- based on the lesson requirements
 end
@@ -1708,23 +1708,23 @@ end
 
 function EducationManager:StartLessonSequence()
     print("Starting lesson sequence")
-    
+
     -- Present lesson content in structured way
     for i, segment in ipairs(currentLesson.segments) do
         self:PresentSegment(segment, i)
         wait(2) -- Brief pause between segments
     end
-    
+
     -- Conclude with assessment
     self:ConductAssessment()
 end
 
 function EducationManager:PresentSegment(segment, index)
     print("Presenting segment " .. index .. ": " .. segment.title)
-    
+
     -- Create interactive elements for this segment
     self:CreateSegmentInteractives(segment)
-    
+
     -- Track student engagement
     self:TrackEngagement(segment)
 end
@@ -1743,25 +1743,25 @@ end
 function EducationManager:TrackStudentInteraction(player, interactionType, data)
     local userId = player.UserId
     if not studentProgress[userId] then return end
-    
+
     -- Update interaction count
     studentProgress[userId].interactions = studentProgress[userId].interactions + 1
-    
+
     -- Track interaction type
     if interactionType == "correct_answer" then
         studentProgress[userId].correctAnswers = studentProgress[userId].correctAnswers + 1
     elseif interactionType == "incorrect_answer" then
         studentProgress[userId].incorrectAnswers = studentProgress[userId].incorrectAnswers + 1
     end
-    
+
     -- Update engagement level
     self:UpdateEngagementLevel(userId)
-    
+
     -- Adapt difficulty if needed
     if EDUCATION_CONFIG.adaptiveDifficulty then
         self:AdaptDifficulty(userId)
     end
-    
+
     print("Tracked interaction for " .. player.Name .. ": " .. interactionType)
 end
 
@@ -1769,7 +1769,7 @@ function EducationManager:UpdateEngagementLevel(userId)
     local progress = studentProgress[userId]
     local accuracy = progress.correctAnswers / math.max(progress.correctAnswers + progress.incorrectAnswers, 1)
     local interactionRate = progress.interactions / (tick() - progress.startTime)
-    
+
     if accuracy > 0.8 and interactionRate > 0.1 then
         progress.engagementLevel = "high"
     elseif accuracy < 0.5 or interactionRate < 0.05 then
@@ -1781,23 +1781,23 @@ end
 
 function EducationManager:AdaptDifficulty(userId)
     local progress = studentProgress[userId]
-    
+
     -- Adjust difficulty based on performance
     if progress.engagementLevel == "high" then
         currentLesson.difficulty = math.min(currentLesson.difficulty + 0.1, 1.0)
     elseif progress.engagementLevel == "low" then
         currentLesson.difficulty = math.max(currentLesson.difficulty - 0.1, 0.1)
     end
-    
+
     print("Adapted difficulty for student " .. userId .. " to " .. currentLesson.difficulty)
 end
 
 function EducationManager:ConductAssessment()
     print("Conducting lesson assessment")
-    
+
     -- Create assessment based on lesson content
     local assessment = self:GenerateAssessment()
-    
+
     -- Present assessment to students
     self:PresentAssessment(assessment)
 end
@@ -1805,10 +1805,10 @@ end
 function EducationManager:GenerateProgressReport(userId)
     local progress = studentProgress[userId]
     if not progress then return nil end
-    
+
     local totalTime = tick() - progress.startTime
     local accuracy = progress.correctAnswers / math.max(progress.correctAnswers + progress.incorrectAnswers, 1)
-    
+
     return {{
         userId = userId,
         lessonTitle = currentLesson.title,
@@ -1822,7 +1822,7 @@ end
 
 function EducationManager:GetRecommendations(progress)
     local recommendations = {{}}
-    
+
     if progress.engagementLevel == "low" then
         table.insert(recommendations, "Consider reviewing prerequisite concepts")
         table.insert(recommendations, "Try interactive activities to boost engagement")
@@ -1830,7 +1830,7 @@ function EducationManager:GetRecommendations(progress)
         table.insert(recommendations, "Ready for advanced topics")
         table.insert(recommendations, "Consider peer tutoring opportunities")
     end
-    
+
     return recommendations
 end
 
@@ -1838,7 +1838,7 @@ function EducationManager:SaveProgress()
     -- Save progress to external system
     for userId, progress in pairs(studentProgress) do
         local report = self:GenerateProgressReport(userId)
-        
+
         -- Send to backend API
         self:SendProgressToAPI(report)
     end
@@ -1873,7 +1873,7 @@ local CONFIG = {{
 
 function {script_type.title()}Manager:Initialize()
     print("Initializing {script_type} for {functionality}")
-    
+
     -- Setup based on functionality
     self:Setup()
 end

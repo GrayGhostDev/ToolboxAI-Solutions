@@ -394,8 +394,8 @@ async def update_lesson_progress(
         query = """
             INSERT INTO lesson_progress (lesson_id, student_id, progress, completed, last_accessed)
             VALUES ($1, $2, $3, $4, NOW())
-            ON CONFLICT (lesson_id, student_id) 
-            DO UPDATE SET 
+            ON CONFLICT (lesson_id, student_id)
+            DO UPDATE SET
                 progress = $3,
                 completed = $4,
                 last_accessed = NOW()

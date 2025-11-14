@@ -319,7 +319,7 @@ async def get_overview_statistics(
         if role == "teacher":
             # Get teacher's class statistics
             query = """
-                SELECT 
+                SELECT
                     COUNT(DISTINCT c.id) as total_classes,
                     COUNT(DISTINCT ce.student_id) as total_students,
                     COUNT(DISTINCT a.id) as total_assessments,
@@ -341,7 +341,7 @@ async def get_overview_statistics(
         elif role == "student":
             # Get student's performance statistics
             query = """
-                SELECT 
+                SELECT
                     COUNT(DISTINCT c.id) as enrolled_classes,
                     COUNT(DISTINCT a.id) as available_assessments,
                     COUNT(DISTINCT ar.id) as completed_assessments,
@@ -363,7 +363,7 @@ async def get_overview_statistics(
         elif role == "admin":
             # Get system-wide statistics
             query = """
-                SELECT 
+                SELECT
                     COUNT(DISTINCT u.id) as total_users,
                     COUNT(DISTINCT c.id) as total_classes,
                     COUNT(DISTINCT a.id) as total_assessments,
@@ -386,7 +386,7 @@ async def get_overview_statistics(
         elif role == "parent":
             # Get statistics for parent's children
             query = """
-                SELECT 
+                SELECT
                     COUNT(DISTINCT s.id) as children_count,
                     COUNT(DISTINCT c.id) as total_classes,
                     COUNT(DISTINCT ar.id) as total_assessments,
@@ -560,7 +560,7 @@ async def create_report(
 
     try:
         query = """
-            INSERT INTO reports (title, description, report_type, class_id, 
+            INSERT INTO reports (title, description, report_type, class_id,
                                parameters, visibility, status, created_by)
             VALUES ($1, $2, $3, $4, $5, $6, 'generating', $7)
             RETURNING *

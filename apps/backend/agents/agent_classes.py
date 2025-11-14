@@ -343,7 +343,7 @@ class QuizGenerationAgent:
             import json
 
             return json.loads(response)
-        except:
+        except Exception:
             # Fallback to text parsing - create dummy questions
             questions = []
             for i in range(5):

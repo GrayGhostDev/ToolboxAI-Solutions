@@ -105,7 +105,7 @@ class DatabaseService:
                        COUNT(CASE WHEN s.status = 'graded' THEN 1 END) as graded
                 FROM assignments a
                 LEFT JOIN submissions s ON a.id = s.assignment_id
-                WHERE a.teacher_id = $1 
+                WHERE a.teacher_id = $1
                     AND a.due_date >= CURRENT_DATE - INTERVAL '7 days'
                 GROUP BY a.id
                 ORDER BY a.due_date
@@ -132,7 +132,7 @@ class DatabaseService:
             # Get class performance metrics
             performance = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     AVG(s.grade) as average_grade,
                     COUNT(DISTINCT s.student_id) as active_students,
                     COUNT(s.id) as total_submissions,
@@ -390,7 +390,7 @@ class DatabaseService:
             # Get system statistics
             stats = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     (SELECT COUNT(*) FROM dashboard_users WHERE is_active = true) as total_users,
                     (SELECT COUNT(*) FROM dashboard_users WHERE last_login >= CURRENT_TIMESTAMP - INTERVAL '24 hours') as active_users,
                     (SELECT COUNT(DISTINCT school_id) FROM dashboard_users WHERE school_id IS NOT NULL) as total_schools,
@@ -426,7 +426,7 @@ class DatabaseService:
             # Get compliance status
             compliance = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     COUNT(CASE WHEN type = 'COPPA' AND status = 'compliant' THEN 1 END) as coppa_compliant,
                     COUNT(CASE WHEN type = 'FERPA' AND status = 'compliant' THEN 1 END) as ferpa_compliant,
                     COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_reviews
@@ -438,7 +438,7 @@ class DatabaseService:
             # Get API metrics
             api_metrics = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     COUNT(*) as total_calls,
                     AVG(response_time) as avg_response_time,
                     COUNT(CASE WHEN status_code >= 500 THEN 1 END) as errors
@@ -587,7 +587,7 @@ class DatabaseService:
                 # Get attendance
                 attendance = await conn.fetchrow(
                     """
-                    SELECT 
+                    SELECT
                         COUNT(CASE WHEN status = 'present' THEN 1 END) as present,
                         COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent,
                         COUNT(CASE WHEN status = 'tardy' THEN 1 END) as tardy,

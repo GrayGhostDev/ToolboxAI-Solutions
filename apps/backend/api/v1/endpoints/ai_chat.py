@@ -999,7 +999,7 @@ class ChatConnectionManager:
         for conv_id, websocket in self.active_connections.items():
             try:
                 await websocket.send_json(message)
-            except:
+            except Exception:
                 disconnected.append(conv_id)
 
         # Clean up disconnected

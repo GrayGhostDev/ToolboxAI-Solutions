@@ -637,7 +637,7 @@ Respond to the user's message in a helpful, conversational way."""
                 else:
                     return 12
             return 5  # Default to grade 5
-        except:
+        except Exception:
             return 5
 
     def get_conversation_spec(self, conversation_id: str) -> dict[str, Any]:
