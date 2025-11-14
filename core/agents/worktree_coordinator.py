@@ -124,7 +124,8 @@ class WorktreeAgentCoordinator:
     intelligent parallel development with multiple Claude Code sessions.
     """
 
-    def __init__(self, master_orchestrator: Optional[Any] = None):
+        # WorktreeOrchestratorAgent has been archived - functionality temporarily disabled
+        self.worktree_orchestrator = None  # Previously: WorktreeOrchestratorAgent()
         """Initialize the worktree coordinator.
 
         Args:
@@ -310,6 +311,14 @@ class WorktreeAgentCoordinator:
 
         Args:
             task: Task requiring a worktree
+        # Worktree orchestrator has been archived - functionality temporarily disabled
+        if self.worktree_orchestrator is None:
+            logger.warning(
+                f"Worktree creation disabled: WorktreeOrchestratorAgent archived. "
+                f"Task {task.task_id} cannot be assigned to a worktree."
+            )
+            return None
+            
 
         Returns:
             Worktree ID or None
@@ -478,6 +487,11 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
                 agent_type=agent_type,
                 task_data={
                     "worktree_task_id": task.task_id,
+        # Worktree orchestrator has been archived - functionality temporarily disabled
+        if self.worktree_orchestrator is None:
+            logger.debug("Worktree capability updates disabled: WorktreeOrchestratorAgent archived.")
+            return
+            
                     "worktree_id": task.assigned_worktree,
                     "sub_task": sub_task,
                     "context": task.context,
@@ -683,6 +697,11 @@ Use the agent system by calling the appropriate endpoints or using the Task tool
             # Calculate affinity based on completion rate and time
             if efficiency["tasks_completed"] > 0:
                 performance_score = (
+        # Worktree orchestrator has been archived - functionality temporarily disabled
+        if self.worktree_orchestrator is None:
+            logger.debug("Worktree cleanup disabled: WorktreeOrchestratorAgent archived.")
+            return
+            
                     1.0 / efficiency["average_time"] if efficiency["average_time"] > 0 else 1.0
                 )
 
