@@ -74,11 +74,11 @@ jobs:
 
       - name: Run ESLint
         if: matrix.component == 'frontend'
-        run: pnpm -w apps/dashboard lint
+        run: pnpm --filter @toolboxai/dashboard lint
 
       - name: Run Prettier check
         if: matrix.component == 'frontend'
-        run: pnpm -w apps/dashboard format:check
+        run: pnpm --filter @toolboxai/dashboard format:check
 
   # ====================
   # TYPE CHECK STAGE
@@ -130,7 +130,7 @@ jobs:
 
       - name: Run TypeScript type check
         if: matrix.component == 'frontend'
-        run: pnpm -w apps/dashboard typecheck
+        run: pnpm --filter @toolboxai/dashboard typecheck
 
   # ====================
   # UNIT TESTS STAGE
@@ -190,7 +190,7 @@ jobs:
 
       - name: Run Vitest
         if: matrix.component == 'frontend'
-        run: pnpm -w apps/dashboard test:coverage
+        run: pnpm --filter @toolboxai/dashboard test:coverage
 
       - name: Upload frontend coverage
         if: matrix.component == 'frontend'
@@ -310,7 +310,7 @@ jobs:
 
       - name: Build dashboard
         if: matrix.component == 'frontend'
-        run: pnpm -w apps/dashboard build
+        run: pnpm --filter @toolboxai/dashboard build
 
       - name: Upload frontend build artifacts
         if: matrix.component == 'frontend'
