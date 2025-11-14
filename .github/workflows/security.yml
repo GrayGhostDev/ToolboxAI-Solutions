@@ -14,7 +14,6 @@ on:
 env:
   NODE_VERSION: '22'
   PYTHON_VERSION: '3.12'
-  PNPM_VERSION: '9'
 
 jobs:
   dependency-audit:
@@ -36,8 +35,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

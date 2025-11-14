@@ -15,7 +15,6 @@ on:
 env:
   NODE_VERSION: '22'
   PYTHON_VERSION: '3.12'
-  PNPM_VERSION: '9'
 
 jobs:
   # ====================
@@ -61,8 +60,6 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
@@ -119,8 +116,6 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
@@ -181,8 +176,6 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'
@@ -303,8 +296,6 @@ jobs:
       - name: Setup pnpm
         if: matrix.component == 'frontend'
         uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         if: matrix.component == 'frontend'

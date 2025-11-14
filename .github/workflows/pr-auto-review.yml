@@ -24,47 +24,47 @@ jobs:
       agents: ${{ steps.changes.outputs.agents }}
       infrastructure: ${{ steps.changes.outputs.infrastructure }}
       docs: ${{ steps.changes.outputs.docs }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Check for file changes
         id: changes
         run: |
           # Get changed files
           git diff --name-only origin/${{ github.base_ref }}...HEAD > changed-files.txt
-          
+
           # Check for backend changes
           if grep -E "^apps/backend/.*\.py$" changed-files.txt; then
             echo "backend=true" >> $GITHUB_OUTPUT
           else
             echo "backend=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for frontend changes
           if grep -E "^apps/dashboard/.*\.(tsx?|jsx?|css)$" changed-files.txt; then
             echo "frontend=true" >> $GITHUB_OUTPUT
           else
             echo "frontend=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for AI agent changes
           if grep -E "^apps/backend/agents/.*\.py$" changed-files.txt; then
             echo "agents=true" >> $GITHUB_OUTPUT
           else
             echo "agents=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for infrastructure changes
           if grep -E "^infrastructure/|^\.github/workflows/|Dockerfile" changed-files.txt; then
             echo "infrastructure=true" >> $GITHUB_OUTPUT
           else
             echo "infrastructure=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Check for documentation changes
           if grep -E "^docs/.*\.md$|^README\.md$|^CLAUDE\.md$" changed-files.txt; then
             echo "docs=true" >> $GITHUB_OUTPUT
@@ -77,49 +77,49 @@ jobs:
     needs: detect-changes
     runs-on: ubuntu-latest
     if: needs.detect-changes.outputs.backend == 'true'
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-      
+
       - name: Run BasedPyright
         id: typecheck
         run: |
           basedpyright apps/backend > typecheck.txt 2>&1 || true
           echo "has_errors=$(grep -c 'error' typecheck.txt || echo 0)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Run Black check
         id: black
         run: |
           black --check apps/backend > black.txt 2>&1 || true
           echo "has_errors=$([ $? -eq 0 ] && echo 0 || echo 1)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Run Flake8
         id: flake8
         run: |
           flake8 apps/backend > flake8.txt 2>&1 || true
           echo "has_errors=$(wc -l < flake8.txt)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Run tests
         id: tests
         run: |
           pytest apps/backend tests/backend -v > pytest.txt 2>&1 || true
           echo "has_failures=$(grep -c 'FAILED' pytest.txt || echo 0)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Post review comment
         uses: actions/github-script@v7
         with:
@@ -129,10 +129,10 @@ jobs:
             const blackErrors = '${{ steps.black.outputs.has_errors }}';
             const flake8Errors = '${{ steps.flake8.outputs.has_errors }}';
             const testFailures = '${{ steps.tests.outputs.has_failures }}';
-            
+
             let status = '✅ All checks passed!';
             let issues = [];
-            
+
             if (typecheckErrors > 0) {
               issues.push(\`- ⚠️  \${typecheckErrors} type checking errors (BasedPyright)\`);
             }
@@ -145,27 +145,27 @@ jobs:
             if (testFailures > 0) {
               issues.push(\`- ❌ \${testFailures} test failures\`);
             }
-            
+
             if (issues.length > 0) {
               status = '⚠️  Issues found:';
             }
-            
+
             const comment_body = \`## 🤖 Backend Specialist - Automated Review
-            
+
             I've reviewed the backend changes in this PR.
-            
+
             ### Review Status
             ${status}
             ${issues.length > 0 ? issues.join('\n') : ''}
-            
+
             ### Code Quality Checks
             - **Type Checking (BasedPyright):** ${typecheckErrors > 0 ? '❌ Failed' : '✅ Passed'}
             - **Formatting (Black):** ${blackErrors > 0 ? '❌ Failed' : '✅ Passed'}
             - **Linting (Flake8):** ${flake8Errors > 0 ? '❌ Failed' : '✅ Passed'}
             - **Tests (pytest):** ${testFailures > 0 ? '❌ Failed' : '✅ Passed'}
-            
+
             ### Backend Best Practices Checklist
-            
+
             - [ ] All endpoints use \`async/await\` pattern
             - [ ] Pydantic v2 models for request/response validation
             - [ ] Clerk JWT authentication on protected endpoints
@@ -176,34 +176,34 @@ jobs:
             - [ ] Tests added/updated for new functionality
             - [ ] BasedPyright type hints on all functions
             - [ ] No secrets in code (use environment variables)
-            
+
             ### Critical Reminders
             - ✅ Use \`BasedPyright\` for type checking (NOT mypy)
             - ✅ Use \`async/await\` for all I/O operations
             - ✅ Database is Supabase (PostgreSQL 16)
             - ✅ Backend port is 8009 (NOT 8000)
             - ✅ Virtual environment is \`venv/\` (NOT \`.venv\`)
-            
+
             ${issues.length > 0 ? \`
             ### Fix Commands
             \`\`\`bash
             # Fix formatting
             black apps/backend
-            
+
             # Run type checking
             basedpyright apps/backend
-            
+
             # Run linting
             flake8 apps/backend
-            
+
             # Run tests
             pytest apps/backend tests/backend -v
             \`\`\`
             \` : ''}
-            
+
             **Need help?** Use: \`@copilot using backend-specialist <your question>\`
             \`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -216,68 +216,66 @@ jobs:
     needs: detect-changes
     runs-on: ubuntu-latest
     if: needs.detect-changes.outputs.frontend == 'true'
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.0
-      
+
       - name: Install dependencies
         run: pnpm install
-      
+
       - name: Run TypeScript check
         id: typecheck
         run: |
           pnpm --filter @toolboxai/dashboard run typecheck > typecheck.txt 2>&1 || true
           echo "has_errors=$(grep -c 'error' typecheck.txt || echo 0)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Run ESLint
         id: eslint
         run: |
           pnpm --filter @toolboxai/dashboard lint > eslint.txt 2>&1 || true
           echo "has_errors=$(grep -c 'error' eslint.txt || echo 0)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Run tests
         id: tests
         run: |
           pnpm --filter @toolboxai/dashboard test > tests.txt 2>&1 || true
           echo "has_failures=$(grep -c 'FAIL' tests.txt || echo 0)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Check for forbidden patterns
         id: patterns
         run: |
           ISSUES=""
-          
+
           # Check for Material-UI (should use Mantine)
           if git diff origin/${{ github.base_ref }}...HEAD | grep -E "@mui/|@material-ui/"; then
             ISSUES="${ISSUES}\n- ❌ Found Material-UI imports (use Mantine UI v8 instead)"
           fi
-          
+
           # Check for Socket.IO (should use Pusher)
           if git diff origin/${{ github.base_ref }}...HEAD | grep -E "socket\.io"; then
             ISSUES="${ISSUES}\n- ❌ Found Socket.IO usage (use Pusher Channels instead)"
           fi
-          
+
           # Check for wrong ports
           if git diff origin/${{ github.base_ref }}...HEAD | grep -E "localhost:3000|localhost:8000"; then
             ISSUES="${ISSUES}\n- ⚠️  Found incorrect ports (use 5179 for dashboard, 8009 for backend)"
           fi
-          
+
           echo "issues=${ISSUES}" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Post review comment
         uses: actions/github-script@v7
         with:
@@ -287,10 +285,10 @@ jobs:
             const eslintErrors = '${{ steps.eslint.outputs.has_errors }}';
             const testFailures = '${{ steps.tests.outputs.has_failures }}';
             const patternIssues = \`${{ steps.patterns.outputs.issues }}\`;
-            
+
             let status = '✅ All checks passed!';
             let issues = [];
-            
+
             if (typecheckErrors > 0) {
               issues.push(\`- ⚠️  \${typecheckErrors} TypeScript errors\`);
             }
@@ -303,26 +301,26 @@ jobs:
             if (patternIssues) {
               issues.push(patternIssues);
             }
-            
+
             if (issues.length > 0) {
               status = '⚠️  Issues found:';
             }
-            
+
             const comment_body = \`## 🎨 Frontend Specialist - Automated Review
-            
+
             I've reviewed the frontend changes in this PR.
-            
+
             ### Review Status
             ${status}
             ${issues.length > 0 ? issues.join('\n') : ''}
-            
+
             ### Code Quality Checks
             - **Type Checking (TypeScript):** ${typecheckErrors > 0 ? '❌ Failed' : '✅ Passed'}
             - **Linting (ESLint):** ${eslintErrors > 0 ? '❌ Failed' : '✅ Passed'}
             - **Tests (Vitest):** ${testFailures > 0 ? '❌ Failed' : '✅ Passed'}
-            
+
             ### Frontend Best Practices Checklist
-            
+
             - [ ] Using Mantine UI v8 components (NOT Material-UI)
             - [ ] Using Pusher Channels (NOT Socket.IO)
             - [ ] Functional components with TypeScript
@@ -334,34 +332,34 @@ jobs:
             - [ ] Error handling included
             - [ ] Loading states handled
             - [ ] Tests added/updated
-            
+
             ### Critical Reminders
             - ✅ Use \`Mantine UI v8\` (NOT Material-UI)
             - ✅ Use \`Pusher Channels\` (NOT Socket.IO)
             - ✅ Dashboard port is 5179 (NOT 3000 or 5173)
             - ✅ Use \`pnpm\` for package management
             - ✅ Environment variables use \`VITE_\` prefix
-            
+
             ${issues.length > 0 ? \`
             ### Fix Commands
             \`\`\`bash
             # Fix linting issues
             pnpm --filter @toolboxai/dashboard run lint:fix
-            
+
             # Fix formatting
             pnpm --filter @toolboxai/dashboard run format:write
-            
+
             # Run type checking
             pnpm --filter @toolboxai/dashboard run typecheck
-            
+
             # Run tests
             pnpm --filter @toolboxai/dashboard test
             \`\`\`
             \` : ''}
-            
+
             **Need help?** Use: \`@copilot using frontend-specialist <your question>\`
             \`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -374,48 +372,48 @@ jobs:
     needs: detect-changes
     runs-on: ubuntu-latest
     if: needs.detect-changes.outputs.infrastructure == 'true'
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Check Docker files
         id: docker_check
         run: |
           ISSUES=""
-          
+
           # Check for multi-stage builds
           for dockerfile in $(find . -name "Dockerfile" -o -name "*.Dockerfile"); do
             if ! grep -q "FROM.*AS" "$dockerfile"; then
               ISSUES="${ISSUES}\n- ⚠️  $dockerfile: Consider using multi-stage build"
             fi
           done
-          
+
           # Check for security best practices
           for dockerfile in $(find . -name "Dockerfile" -o -name "*.Dockerfile"); do
             if grep -q "FROM.*:latest" "$dockerfile"; then
               ISSUES="${ISSUES}\n- ⚠️  $dockerfile: Avoid using :latest tag, pin specific versions"
             fi
           done
-          
+
           echo "issues=${ISSUES}" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Post review comment
         uses: actions/github-script@v7
         with:
           script: |
             const pr_number = context.issue.number;
             const dockerIssues = \`${{ steps.docker_check.outputs.issues }}\`;
-            
+
             const comment_body = \`## 🚀 DevOps Specialist - Automated Review
-            
+
             I've reviewed the infrastructure changes in this PR.
-            
+
             ${dockerIssues ? \`### Issues Found\n\${dockerIssues}\` : '### ✅ All checks passed!'}
-            
+
             ### Infrastructure Best Practices Checklist
-            
+
             **Docker:**
             - [ ] Multi-stage builds for optimization
             - [ ] Specific version tags (no :latest)
@@ -423,36 +421,36 @@ jobs:
             - [ ] Health checks configured
             - [ ] Minimal base images (Alpine when possible)
             - [ ] .dockerignore file present
-            
+
             **Docker Compose:**
             - [ ] Using canonical compose files (docker-compose.yml, .dev.yml, .prod.yml, .monitoring.yml)
             - [ ] Environment variables properly configured
             - [ ] Networks defined for service isolation
             - [ ] Volumes for data persistence
             - [ ] Restart policies configured
-            
+
             **CI/CD:**
             - [ ] TeamCity configuration updated (if applicable)
             - [ ] GitHub Actions workflows tested
             - [ ] Secrets properly managed
             - [ ] Build artifacts handled correctly
-            
+
             **Deployment:**
             - [ ] Render configuration updated (backend)
             - [ ] Vercel configuration updated (frontend)
             - [ ] Database migrations tested
             - [ ] Monitoring configured
-            
+
             ### Critical Reminders
             - ✅ TeamCity Cloud is primary CI/CD
             - ✅ Render hosts backend (3 services)
             - ✅ Vercel hosts frontend
             - ✅ Supabase provides database
             - ✅ Monitoring runs on Docker Compose
-            
+
             **Need help?** Use: \`@copilot using devops-specialist <your question>\`
             \`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -463,38 +461,38 @@ jobs:
   security-check:
     name: Security Review
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Check for secrets
         id: secrets
         run: |
           # Check for potential secrets in diff
           SECRETS_FOUND=0
-          
+
           if git diff origin/${{ github.base_ref }}...HEAD | grep -iE "(password|secret|api[_-]?key|token|credential).*=.*['\"]"; then
             SECRETS_FOUND=1
           fi
-          
+
           echo "found=${SECRETS_FOUND}" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Check for .env files
         id: env_check
         run: |
           ENV_FILES=0
-          
+
           if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E "^\.env$|^\.env\.local$|^\.env\.production$"; then
             ENV_FILES=1
           fi
-          
+
           echo "found=${ENV_FILES}" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Post security review
         if: steps.secrets.outputs.found == '1' || steps.env_check.outputs.found == '1'
         uses: actions/github-script@v7
@@ -503,64 +501,64 @@ jobs:
             const pr_number = context.issue.number;
             const secretsFound = '${{ steps.secrets.outputs.found }}' === '1';
             const envFilesFound = '${{ steps.env_check.outputs.found }}' === '1';
-            
+
             let warnings = [];
-            
+
             if (secretsFound) {
               warnings.push('🚨 **Potential secrets detected in code!**');
             }
             if (envFilesFound) {
               warnings.push('🚨 **.env files should not be committed!**');
             }
-            
+
             const comment_body = \`## 🔒 Security Review - WARNINGS FOUND
-            
+
             ${warnings.join('\n')}
-            
+
             ### Security Issues
-            
+
             ${secretsFound ? \`
             **Potential Secrets in Code:**
             - Found strings that look like passwords, API keys, or tokens
             - All secrets must be in environment variables
             - Never commit secrets to the repository
             \` : ''}
-            
+
             ${envFilesFound ? \`
             **.env Files Committed:**
             - \`.env\` files should NEVER be committed
             - Only \`.env.example\` should be in the repository
             - Remove \`.env\` files and use environment variables
             \` : ''}
-            
+
             ### Required Actions
-            
+
             1. ❌ Remove all hardcoded secrets from code
             2. ❌ Move secrets to \`.env\` (not tracked)
             3. ✅ Use \`os.getenv()\` or \`import.meta.env.VITE_\`
             4. ✅ Update \`.env.example\` as template
             5. ✅ Rotate any exposed secrets immediately
-            
+
             ### Security Best Practices
-            
+
             - Never commit \`.env\`, \`.env.local\`, or \`.env.production\`
             - Always use environment variables for secrets
             - Use Vault for production secrets
             - Rotate credentials if accidentally exposed
             - Review security documentation
-            
+
             **Security Docs:** [ENV_FILES_DOCUMENTATION.md](docs/10-security/ENV_FILES_DOCUMENTATION.md)
-            
+
             ⚠️  **This PR is blocked until security issues are resolved!**
             \`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr_number,
               body: comment_body
             });
-            
+
             // Add security label
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
