@@ -20,7 +20,7 @@ class QuizGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize quiz generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5, http_client=None, http_async_client=None)
 
         # Question templates by type
         self.question_templates = {
@@ -163,7 +163,7 @@ class TerrainGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize terrain generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6, http_client=None, http_async_client=None)
 
         # Terrain templates by biome
         self.terrain_templates = {
@@ -377,7 +377,7 @@ class ScriptGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize script generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3, http_client=None, http_async_client=None)
 
         # Lua code templates
         self.script_templates = {
@@ -650,7 +650,7 @@ class CodeReviewAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize code review agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
+        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, http_client=None, http_async_client=None)
 
         # Security checkers
         self.security_checks = [
@@ -1282,6 +1282,8 @@ def get_llm():
         model="gpt-4-turbo-preview",
         temperature=0.7,
         api_key=os.getenv("OPENAI_API_KEY", "dummy-key-for-testing"),
+        http_client=None,  # Prevent httpx client wrapper incompatibility
+        http_async_client=None,  # Prevent async httpx client wrapper incompatibility
     )
 
 

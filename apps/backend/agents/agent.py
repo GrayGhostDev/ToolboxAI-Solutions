@@ -66,7 +66,7 @@ except ImportError as e:
 
         def __init__(self, llm=None, *args, **kwargs):
             "Initialize supervisor agent with LangGraph state management"
-            self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+            self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7, http_client=None, http_async_client=None)
             self.chat_history = InMemoryChatMessageHistory()
 
             # Initialize sub-agent references (lazy initialization)
@@ -913,6 +913,8 @@ class AgentPool:
         llm = ChatOpenAI(
             model=settings.OPENAI_MODEL,
             temperature=settings.OPENAI_TEMPERATURE,
+            http_client=None,  # Prevent httpx client wrapper incompatibility
+            http_async_client=None,  # Prevent async httpx client wrapper incompatibility
         )
 
         if agent_type == "content":

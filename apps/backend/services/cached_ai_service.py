@@ -199,6 +199,8 @@ class CachedAIService:
                 temperature=temperature,
                 max_tokens=max_tokens,
                 api_key=settings.OPENAI_API_KEY,
+                http_client=None,  # Prevent httpx client wrapper incompatibility
+                http_async_client=None,  # Prevent async httpx client wrapper incompatibility
             )
 
             # Generate response

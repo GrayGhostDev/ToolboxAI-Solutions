@@ -18,7 +18,7 @@ except ImportError:
 
         def __init__(self, llm=None, *args, **kwargs):
             """Initialize supervisor agent"""
-            self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+            self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7, http_client=None, http_async_client=None)
             self.chat_history = InMemoryChatMessageHistory()
             self.agents = {}
             self._agents_initialized = False

@@ -30,7 +30,7 @@ class ContentGenerationAgent:
             if LCEL_AVAILABLE:
                 self.llm = get_compatible_llm(model_name="gpt-3.5-turbo", temperature=0.7)
             else:
-                self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+                self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7, http_client=None, http_async_client=None)
         else:
             self.llm = llm
         self.content_templates = {
@@ -207,7 +207,7 @@ class QuizGenerationAgent:
         elif LCEL_AVAILABLE:
             self.llm = get_compatible_llm(model_name="gpt-3.5-turbo", temperature=0.5)
         else:
-            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5)
+            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5, http_client=None, http_async_client=None)
 
         # Question templates by type
         self.question_templates = {
@@ -427,7 +427,7 @@ class TerrainGenerationAgent:
         elif LCEL_AVAILABLE:
             self.llm = get_compatible_llm(model_name="gpt-3.5-turbo", temperature=0.6)
         else:
-            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6)
+            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6, http_client=None, http_async_client=None)
 
         # Terrain templates by biome
         self.terrain_templates = {
@@ -728,7 +728,7 @@ class ScriptGenerationAgent:
         elif LCEL_AVAILABLE:
             self.llm = get_compatible_llm(model_name="gpt-3.5-turbo", temperature=0.3)
         else:
-            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3)
+            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3, http_client=None, http_async_client=None)
 
         # Security constraints
         self.security_rules = [
@@ -881,7 +881,7 @@ class CodeReviewAgent:
         elif LCEL_AVAILABLE:
             self.llm = get_compatible_llm(model_name="gpt-3.5-turbo", temperature=0.2)
         else:
-            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2)
+            self.llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, http_client=None, http_async_client=None)
 
         # Security checkers
         self.security_checks = [

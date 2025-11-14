@@ -33,7 +33,7 @@ class RobloxAIAgent:
     def __init__(self):
         # Try to initialize LLM, fall back to mock mode if it fails
         try:
-            self.llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=0.7, max_tokens=1000)
+            self.llm = ChatOpenAI(model=settings.OPENAI_MODEL, temperature=0.7, max_tokens=1000, http_client=None, http_async_client=None)
             self.mock_mode = False
             logger.info("RobloxAIAgent initialized with OpenAI")
         except Exception as e:
