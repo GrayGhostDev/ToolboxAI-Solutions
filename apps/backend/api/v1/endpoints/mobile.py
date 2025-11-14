@@ -397,7 +397,7 @@ async def mobile_login(
 async def get_mobile_content_list(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, le=50),
-    quality: str = Query(default="medium", regex="^(low|medium|high)$"),
+    quality: str = Query(default="medium", pattern="^(low|medium|high)$"),
     offline_only: bool = False,
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
@@ -564,7 +564,7 @@ async def send_push_notification(
 @router.get("/content/{content_id}/download")
 async def download_content_for_offline(
     content_id: str,
-    quality: str = Query(default="high", regex="^(low|medium|high)$"),
+    quality: str = Query(default="high", pattern="^(low|medium|high)$"),
     db: AsyncSession = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
