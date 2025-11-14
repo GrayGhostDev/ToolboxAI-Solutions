@@ -36,16 +36,16 @@ class ClerkUser(BaseModel):
     """Clerk user model from JWT claims"""
 
     user_id: str
-    email: Optional[str] = None
-    username: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    image_url: Optional[str] = None
+    email: str | None = None
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    image_url: str | None = None
     role: str = "student"
     metadata: Dict[str, Any] = {}
-    session_id: Optional[str] = None
-    organization_id: Optional[str] = None
-    organization_role: Optional[str] = None
+    session_id: str | None = None
+    organization_id: str | None = None
+    organization_role: str | None = None
 
 
 class ClerkAuthError(HTTPException):
@@ -169,7 +169,7 @@ async def verify_clerk_token(token: str) -> ClerkUser:
 
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> ClerkUser:
     """
     Dependency to get the current authenticated user from Clerk token
@@ -219,7 +219,7 @@ RequireStudent = Depends(require_role("student"))
 
 # Optional: Backward compatibility with existing auth
 async def get_current_user_compatible(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> Dict[str, Any]:
     """
     Backward compatible version that returns user dict like the old system

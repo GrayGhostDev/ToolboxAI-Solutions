@@ -105,8 +105,8 @@ class FastAPIWebSocketAuthenticator:
         self.active_sessions: Dict[str, WebSocketAuthSession] = {}
 
     async def authenticate_connection(
-        self, websocket: WebSocket, token: Optional[str] = None
-    ) -> Optional[WebSocketAuthSession]:
+        self, websocket: WebSocket, token: str | None = None
+    ) -> WebSocketAuthSession | None:
         """
         Authenticate WebSocket connection using JWT token
 
@@ -177,7 +177,7 @@ class FastAPIWebSocketAuthenticator:
             await self._send_auth_error(websocket, "Authentication failed", 4001)
             return None
 
-    async def _extract_token_from_websocket(self, websocket: WebSocket) -> Optional[str]:
+    async def _extract_token_from_websocket(self, websocket: WebSocket) -> str | None:
         """
         Extract JWT token from WebSocket connection
 
@@ -284,7 +284,7 @@ class FastAPIWebSocketAuthenticator:
             logger.error(f"Token refresh error: {e}")
             return False
 
-    def get_session(self, session_id: str) -> Optional[WebSocketAuthSession]:
+    def get_session(self, session_id: str) -> WebSocketAuthSession | None:
         """Get session by ID"""
         return self.active_sessions.get(session_id)
 
@@ -345,8 +345,8 @@ websocket_authenticator = FastAPIWebSocketAuthenticator()
 
 # Dependency functions for FastAPI WebSocket endpoints
 async def verify_websocket_token(
-    websocket: WebSocket, token: Optional[str] = Query(None, description="JWT authentication token")
-) -> Optional[User]:
+    websocket: WebSocket, token: str | None = Query(None, description="JWT authentication token")
+) -> User | None:
     """
     FastAPI dependency for WebSocket authentication
 
@@ -372,8 +372,8 @@ async def verify_websocket_token(
 
 
 async def get_websocket_session(
-    websocket: WebSocket, token: Optional[str] = Query(None)
-) -> Optional[WebSocketAuthSession]:
+    websocket: WebSocket, token: str | None = Query(None)
+) -> WebSocketAuthSession | None:
     """
     FastAPI dependency that returns the full WebSocket session
 

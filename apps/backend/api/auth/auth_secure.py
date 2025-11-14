@@ -100,7 +100,7 @@ class SecureAuth:
             return False
 
     @staticmethod
-    def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(data: Dict[str, Any], expires_delta: timedelta | None = None) -> str:
         """Create JWT access token with security features"""
         to_encode = data.copy()
 

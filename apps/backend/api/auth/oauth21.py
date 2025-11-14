@@ -34,8 +34,8 @@ class AuthorizationRequest:
     code_challenge: str
     code_challenge_method: str = "S256"
     response_type: str = "code"
-    user_id: Optional[str] = None
-    nonce: Optional[str] = None
+    user_id: str | None = None
+    nonce: str | None = None
 
 
 @dataclass
@@ -43,13 +43,13 @@ class TokenRequest:
     """OAuth 2.1 Token Request"""
 
     grant_type: str
-    code: Optional[str] = None
-    redirect_uri: Optional[str] = None
-    client_id: Optional[str] = None
-    client_secret: Optional[str] = None
-    code_verifier: Optional[str] = None
-    refresh_token: Optional[str] = None
-    scope: Optional[str] = None
+    code: str | None = None
+    redirect_uri: str | None = None
+    client_id: str | None = None
+    client_secret: str | None = None
+    code_verifier: str | None = None
+    refresh_token: str | None = None
+    scope: str | None = None
 
 
 class ResponseType(Enum):
@@ -115,7 +115,7 @@ class Client:
     """OAuth client representation"""
 
     client_id: str
-    client_secret: Optional[str]
+    client_secret: str | None
     client_name: str
     client_type: str  # "confidential" or "public"
     redirect_uris: List[str]
@@ -123,10 +123,10 @@ class Client:
     response_types: List[str]
     scope: str
     contacts: List[str] = field(default_factory=list)
-    logo_uri: Optional[str] = None
-    client_uri: Optional[str] = None
-    policy_uri: Optional[str] = None
-    tos_uri: Optional[str] = None
+    logo_uri: str | None = None
+    client_uri: str | None = None
+    policy_uri: str | None = None
+    tos_uri: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
@@ -135,7 +135,7 @@ class OAuth21Server:
     """OAuth 2.1 compliant authorization server"""
 
     def __init__(
-        self, redis_client: Optional[redis.Redis] = None, config: Optional[OAuth21Config] = None
+        self, redis_client: redis.Redis | None = None, config: OAuth21Config | None = None
     ):
         self.redis = redis_client or self._create_redis_client()
         self.config = config or OAuth21Config()
@@ -237,7 +237,7 @@ class OAuth21Server:
         logger.info(f"Client registered: {client_id}")
         return client
 
-    async def get_client(self, client_id: str) -> Optional[Dict[str, Any]]:
+    async def get_client(self, client_id: str) -> dict[str, Any] | None:
         """Retrieve client by ID - returns dict for compatibility"""
         key = f"oauth:client:{client_id}"
         client_json = self.redis.get(key)
@@ -247,7 +247,7 @@ class OAuth21Server:
 
         return json.loads(client_json)
 
-    async def verify_client(self, client_id: str, client_secret: Optional[str] = None) -> bool:
+    async def verify_client(self, client_id: str, client_secret: str | None = None) -> bool:
         """Verify client credentials"""
         client = await self.get_client(client_id)
 
@@ -416,7 +416,7 @@ class OAuth21Server:
     # ===== Token Management =====
 
     async def _generate_access_token(
-        self, user_id: str, client_id: str, scope: str, nonce: Optional[str] = None
+        self, user_id: str, client_id: str, scope: str, nonce: str | None = None
     ) -> str:
         """Generate JWT access token"""
 
@@ -480,7 +480,7 @@ class OAuth21Server:
         return token
 
     async def _generate_id_token(
-        self, user_id: str, client_id: str, nonce: Optional[str] = None
+        self, user_id: str, client_id: str, nonce: str | None = None
     ) -> str:
         """Generate OpenID Connect ID token"""
 
@@ -507,8 +507,8 @@ class OAuth21Server:
         self,
         refresh_token: str,
         client_id: str,
-        client_secret: Optional[str] = None,
-        scope: Optional[str] = None,
+        client_secret: str | None = None,
+        scope: str | None = None,
     ) -> Dict[str, Any]:
         """Refresh access token using refresh token"""
 
@@ -562,7 +562,7 @@ class OAuth21Server:
     # ===== Token Introspection & Revocation =====
 
     async def introspect_token(
-        self, token: str, token_type_hint: Optional[str] = None
+        self, token: str, token_type_hint: str | None = None
     ) -> Dict[str, Any]:
         """Token introspection (RFC 7662)"""
 
@@ -614,9 +614,9 @@ class OAuth21Server:
     async def revoke_token(
         self,
         token: str,
-        token_type_hint: Optional[str] = None,
-        client_id: Optional[str] = None,
-        client_secret: Optional[str] = None,
+        token_type_hint: str | None = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
     ) -> bool:
         """Token revocation (RFC 7009)"""
 
@@ -668,7 +668,7 @@ class OAuth21Server:
 
 # ===== Singleton =====
 
-_oauth_server: Optional[OAuth21Server] = None
+_oauth_server: OAuth21Server | None = None
 
 
 def get_oauth_server() -> OAuth21Server:

@@ -32,8 +32,8 @@ auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Pydantic models
 class UserLogin(BaseModel):
-    username: Optional[str] = None
-    email: Optional[str] = None
+    username: str | None = None
+    email: str | None = None
     password: str
 
 
@@ -79,7 +79,7 @@ def verify_password(plain_password, hashed_password):
     return bcrypt_handler.verify_password(plain_password, hashed_password)
 
 
-def authenticate_user(username: Optional[str], email: Optional[str], password: str):
+def authenticate_user(username: str | None, email: str | None, password: str):
     """
     Authenticate a user by username or email.
 

@@ -21,7 +21,7 @@ from apps.backend.api.auth.auth import get_current_user
 # Mock implementations for organization functions (to be replaced with real implementation)
 def get_current_organization():
     """Returns optional organization ID from token"""
-    # This is a dependency that should return Optional[str]
+    # This is a dependency that should return str | None
     return Depends(lambda: None)
 
 

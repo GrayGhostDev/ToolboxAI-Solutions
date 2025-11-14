@@ -139,7 +139,7 @@ class JWTManager:
     """JWT token management"""
 
     @staticmethod
-    def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(data: Dict[str, Any], expires_delta: timedelta | None = None) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
 
@@ -165,7 +165,7 @@ class JWTManager:
 
     @staticmethod
     def create_refresh_token(
-        user_id: str, token_family: Optional[str] = None, expires_delta: Optional[timedelta] = None
+        user_id: str, token_family: str | None = None, expires_delta: timedelta | None = None
     ) -> tuple[str, str]:
         """Create JWT refresh token with family tracking for rotation
 
@@ -219,7 +219,7 @@ class JWTManager:
         return encoded_jwt, token_family
 
     @staticmethod
-    def verify_token(token: str, raise_on_error: bool = True) -> Optional[Dict[str, Any]]:
+    def verify_token(token: str, raise_on_error: bool = True) -> dict[str, Any] | None:
         """Verify and decode JWT token
 
         Args:
@@ -244,7 +244,7 @@ class JWTManager:
             return None
 
     @staticmethod
-    def verify_refresh_token(token: str) -> tuple[Optional[Dict[str, Any]], bool]:
+    def verify_refresh_token(token: str) -> tuple[dict[str, Any] | None, bool]:
         """Verify refresh token and check for reuse attacks
 
         Returns:
@@ -293,8 +293,8 @@ class SessionManager:
     @staticmethod
     def create_session(
         user_id: str,
-        roblox_user_id: Optional[str] = None,
-        studio_id: Optional[str] = None,
+        roblox_user_id: str | None = None,
+        studio_id: str | None = None,
     ) -> Session:
         """Create a new user session"""
         session = Session(
@@ -341,7 +341,7 @@ class SessionManager:
         return session
 
     @staticmethod
-    def get_session(session_id: str) -> Optional[Session]:
+    def get_session(session_id: str) -> Session | None:
         """Get session by ID"""
         session_key = f"session:{session_id}"
 
@@ -510,7 +510,7 @@ class APIKeyManager:
         return hashlib.sha256(data.encode()).hexdigest()
 
     @staticmethod
-    def validate_api_key(api_key: str) -> Optional[Dict[str, str]]:
+    def validate_api_key(api_key: str) -> dict[str, str] | None:
         """Validate API key and return associated data"""
         # In production, this would query a database
         # For now, we'll use a simple validation
@@ -521,7 +521,7 @@ class APIKeyManager:
 
 # Dependency functions for FastAPI
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
 ) -> User:
     """Get current authenticated user"""
     # SECURE: Development mode bypass ONLY if explicitly enabled via feature flag
@@ -593,7 +593,7 @@ async def get_current_user(
         raise AuthenticationError("Authentication failed")
 
 
-def get_current_session(request: Request) -> Optional[Session]:
+def get_current_session(request: Request) -> Session | None:
     """Get current session from request"""
     session_id = request.headers.get("X-Session-ID")
     if not session_id:
@@ -625,7 +625,7 @@ def require_any_role(allowed_roles: List[str]):
 
 
 # Authentication utilities
-async def authenticate_user(username: str, password: str) -> Optional[User]:
+async def authenticate_user(username: str, password: str) -> User | None:
     """Authenticate user with username and password using real database"""
 
     # Try real database authentication first
@@ -907,7 +907,7 @@ def initialize_auth():
 
 # Export public functions and classes
 # Module-level function for verify_token
-def verify_token(token: str, raise_on_error: bool = True) -> Optional[Dict[str, Any]]:
+def verify_token(token: str, raise_on_error: bool = True) -> dict[str, Any] | None:
     """Verify and decode JWT token (delegates to JWTManager)"""
     return JWTManager.verify_token(token, raise_on_error)
 

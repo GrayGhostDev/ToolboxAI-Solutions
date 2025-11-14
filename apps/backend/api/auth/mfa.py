@@ -63,7 +63,7 @@ class MFAService:
     """Complete Multi-Factor Authentication Service"""
 
     def __init__(
-        self, redis_client: Optional[redis.Redis] = None, config: Optional[MFAConfig] = None
+        self, redis_client: redis.Redis | None = None, config: MFAConfig | None = None
     ):
         self.redis = redis_client or self._create_redis_client()
         self.config = config or MFAConfig()
@@ -367,7 +367,7 @@ class MFAService:
     # ===== User Management =====
 
     def enable_mfa(
-        self, user_id: str, method: MFAMethod, data: Optional[Dict[str, Any]] = None
+        self, user_id: str, method: MFAMethod, data: dict[str, Any] | None = None
     ) -> bool:
         """Enable MFA method for user"""
         key = f"mfa:enabled:{user_id}"
@@ -389,7 +389,7 @@ class MFAService:
         logger.info(f"MFA method {method.value} enabled for user {user_id}")
         return True
 
-    def disable_mfa(self, user_id: str, method: Optional[MFAMethod] = None) -> bool:
+    def disable_mfa(self, user_id: str, method: MFAMethod | None = None) -> bool:
         """Disable MFA method(s) for user"""
         if method:
             # Disable specific method
@@ -443,7 +443,7 @@ class MFAService:
 class MFAFeatureFlags:
     """Feature flags for gradual MFA rollout"""
 
-    def __init__(self, redis_client: Optional[redis.Redis] = None):
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.redis = redis_client or redis.Redis(
             host=os.getenv("REDIS_HOST", "localhost"),
             port=int(os.getenv("REDIS_PORT", "6379")),
@@ -501,8 +501,8 @@ class MFAFeatureFlags:
 
 # ===== Singleton Instances =====
 
-_mfa_service: Optional[MFAService] = None
-_feature_flags: Optional[MFAFeatureFlags] = None
+_mfa_service: MFAService | None = None
+_feature_flags: MFAFeatureFlags | None = None
 
 
 def get_mfa_service() -> MFAService:

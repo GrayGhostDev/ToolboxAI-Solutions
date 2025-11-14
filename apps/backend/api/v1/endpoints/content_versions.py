@@ -57,7 +57,7 @@ class ContentVersion(BaseModel):
     created_by: UUID
     created_by_name: str
     created_at: datetime
-    change_summary: Optional[str] = None
+    change_summary: str | None = None
     tags: list[str] = Field(default_factory=list)
     is_published: bool = False
     word_count: int = 0
@@ -82,8 +82,8 @@ class VersionDetailResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     version: ContentVersion
-    previous_version: Optional[ContentVersion] = None
-    next_version: Optional[ContentVersion] = None
+    previous_version: ContentVersion | None = None
+    next_version: ContentVersion | None = None
 
 
 class VersionDiffResponse(BaseModel):
@@ -109,7 +109,7 @@ class VersionRevertRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     target_version: int = Field(..., ge=1)
-    change_summary: Optional[str] = Field(None, description="Summary of why reverting")
+    change_summary: str | None = Field(None, description="Summary of why reverting")
     create_new_version: bool = Field(
         default=True, description="Create new version or overwrite current"
     )

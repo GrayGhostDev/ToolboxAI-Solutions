@@ -117,9 +117,9 @@ class AuthRateLimiter:
         self,
         limit_type: RateLimitType,
         identifier: str,
-        ip_address: Optional[str] = None,
-        user_id: Optional[str] = None,
-    ) -> Tuple[bool, Optional[int]]:
+        ip_address: str | None = None,
+        user_id: str | None = None,
+    ) -> Tuple[bool, int | None]:
         """
         Check if request is within rate limits
 
@@ -208,7 +208,7 @@ class AuthRateLimiter:
 
     async def _check_window(
         self, key: str, window_seconds: int, max_requests: int
-    ) -> Tuple[bool, Optional[int]]:
+    ) -> Tuple[bool, int | None]:
         """Check rate limit for a specific time window"""
 
         pipeline = self.redis.pipeline()
@@ -372,8 +372,8 @@ class AuthRateLimiter:
         self,
         limit_type: RateLimitType,
         identifier: str,
-        ip_address: Optional[str] = None,
-        user_id: Optional[str] = None,
+        ip_address: str | None = None,
+        user_id: str | None = None,
     ):
         """Record successful authentication to adjust thresholds"""
 
@@ -464,7 +464,7 @@ class AuthRateLimiter:
 
 
 # Dependency injection helper
-_rate_limiter: Optional[AuthRateLimiter] = None
+_rate_limiter: AuthRateLimiter | None = None
 
 
 def get_rate_limiter(redis_client: redis.Redis = None) -> AuthRateLimiter:

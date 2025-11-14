@@ -41,8 +41,8 @@ class PusherAuthRequest(BaseModel):
 
 class PusherAuthResponse(BaseModel):
     auth: str
-    channel_data: Optional[str] = None
-    shared_secret: Optional[str] = None
+    channel_data: str | None = None
+    shared_secret: str | None = None
 
 
 class TriggerEventRequest(BaseModel):
@@ -53,7 +53,7 @@ class TriggerEventRequest(BaseModel):
     data: Dict[str, Any]
 
 
-async def _get_user_from_auth_header(request: Request) -> Optional[User]:
+async def _get_user_from_auth_header(request: Request) -> User | None:
     """
     Extract and validate user from Authorization header.
     Returns None if no valid token is found.
@@ -95,7 +95,7 @@ async def _get_user_from_auth_header(request: Request) -> Optional[User]:
         return None
 
 
-def _can_access_channel(user: Optional[User], channel_name: str) -> bool:
+def _can_access_channel(user: User | None, channel_name: str) -> bool:
     """
     Check if user can access a specific Pusher channel.
 

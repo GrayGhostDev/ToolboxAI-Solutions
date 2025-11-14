@@ -42,9 +42,9 @@ async def get_current_user(
 
 
 async def verify_api_key(
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
-    required_scope: Optional[APIKeyScope] = None,
-    x_place_id: Optional[str] = Header(None, alias="X-Place-ID"),
+    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    required_scope: APIKeyScope | None = None,
+    x_place_id: str | None = Header(None, alias="X-Place-ID"),
 ) -> APIKeyValidation:
     """Verify API key from header"""
     if not x_api_key:
@@ -149,8 +149,8 @@ async def revoke_api_key(
 @router.post("/validate")
 async def validate_api_key_endpoint(
     x_api_key: str = Header(..., alias="X-API-Key"),
-    required_scope: Optional[str] = Query(None, description="Required permission scope"),
-    x_place_id: Optional[str] = Header(None, alias="X-Place-ID"),
+    required_scope: str | None = Query(None, description="Required permission scope"),
+    x_place_id: str | None = Header(None, alias="X-Place-ID"),
 ):
     """
     Validate an API key and check its permissions.

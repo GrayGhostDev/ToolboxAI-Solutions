@@ -46,31 +46,31 @@ class TokenRequestForm(BaseModel):
     """OAuth 2.1 Token Request"""
 
     grant_type: str = Field(..., description="Grant type")
-    code: Optional[str] = Field(None, description="Authorization code")
-    redirect_uri: Optional[HttpUrl] = Field(None, description="Redirect URI")
+    code: str | None = Field(None, description="Authorization code")
+    redirect_uri: HttpUrl | None = Field(None, description="Redirect URI")
     client_id: str = Field(..., description="Client ID")
-    client_secret: Optional[str] = Field(None, description="Client secret")
-    code_verifier: Optional[str] = Field(None, description="PKCE verifier")
-    refresh_token: Optional[str] = Field(None, description="Refresh token for renewal")
-    scope: Optional[str] = Field(None, description="Requested scopes")
+    client_secret: str | None = Field(None, description="Client secret")
+    code_verifier: str | None = Field(None, description="PKCE verifier")
+    refresh_token: str | None = Field(None, description="Refresh token for renewal")
+    scope: str | None = Field(None, description="Requested scopes")
 
 
 class IntrospectRequest(BaseModel):
     """Token Introspection Request"""
 
     token: str = Field(..., description="Token to introspect")
-    token_type_hint: Optional[str] = Field(None, description="Token type hint")
+    token_type_hint: str | None = Field(None, description="Token type hint")
     client_id: str = Field(..., description="Client ID")
-    client_secret: Optional[str] = Field(None, description="Client secret")
+    client_secret: str | None = Field(None, description="Client secret")
 
 
 class RevokeRequest(BaseModel):
     """Token Revocation Request"""
 
     token: str = Field(..., description="Token to revoke")
-    token_type_hint: Optional[str] = Field(None, description="Token type hint")
+    token_type_hint: str | None = Field(None, description="Token type hint")
     client_id: str = Field(..., description="Client ID")
-    client_secret: Optional[str] = Field(None, description="Client secret")
+    client_secret: str | None = Field(None, description="Client secret")
 
 
 class ClientRegistrationRequest(BaseModel):
@@ -83,11 +83,11 @@ class ClientRegistrationRequest(BaseModel):
     scope: str = Field("", description="Default requested scopes")
     token_endpoint_auth_method: str = Field("none", description="Auth method")
     application_type: str = Field("web", description="Application type")
-    contacts: Optional[List[str]] = Field(None, description="Contact emails")
-    logo_uri: Optional[HttpUrl] = Field(None, description="Logo URL")
-    client_uri: Optional[HttpUrl] = Field(None, description="Client homepage")
-    policy_uri: Optional[HttpUrl] = Field(None, description="Privacy policy")
-    tos_uri: Optional[HttpUrl] = Field(None, description="Terms of service")
+    contacts: list[str] | None = Field(None, description="Contact emails")
+    logo_uri: HttpUrl | None = Field(None, description="Logo URL")
+    client_uri: HttpUrl | None = Field(None, description="Client homepage")
+    policy_uri: HttpUrl | None = Field(None, description="Privacy policy")
+    tos_uri: HttpUrl | None = Field(None, description="Terms of service")
 
 
 # ===== Authorization Endpoints =====
@@ -302,13 +302,13 @@ async def process_consent(
 @router.post("/token", status_code=status.HTTP_200_OK)
 async def token_endpoint(
     grant_type: str = Form(...),
-    code: Optional[str] = Form(None),
-    redirect_uri: Optional[str] = Form(None),
+    code: str | None = Form(None),
+    redirect_uri: str | None = Form(None),
     client_id: str = Form(...),
-    client_secret: Optional[str] = Form(None),
-    code_verifier: Optional[str] = Form(None),
-    refresh_token: Optional[str] = Form(None),
-    scope: Optional[str] = Form(None),
+    client_secret: str | None = Form(None),
+    code_verifier: str | None = Form(None),
+    refresh_token: str | None = Form(None),
+    scope: str | None = Form(None),
     oauth_server: OAuth21Server = Depends(get_oauth_server),
 ):
     """

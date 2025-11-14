@@ -74,15 +74,15 @@ router = APIRouter()
 class FileUploadRequest(BaseModel):
     """Request model for file upload"""
 
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
     category: str = "media_resource"
     tags: List[str] = Field(default_factory=list)
     virus_scan: bool = True
     generate_thumbnails: bool = True
     optimize_images: bool = True
     download_permission: DownloadPermission = DownloadPermission.ORGANIZATION
-    retention_days: Optional[int] = None
+    retention_days: int | None = None
 
     @validator("category")
     def validate_category(cls, v):
@@ -111,8 +111,8 @@ class FileUploadResponse(BaseModel):
     mime_type: str
     status: UploadStatus
     storage_path: str
-    cdn_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    cdn_url: str | None = None
+    thumbnail_url: str | None = None
     progress_percentage: float = 0.0
     warnings: List[str] = Field(default_factory=list)
 
@@ -127,21 +127,21 @@ class FileDetailsResponse(BaseModel):
     mime_type: str
     status: str
     category: str
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
     tags: List[str] = Field(default_factory=list)
-    cdn_url: Optional[str] = None
-    thumbnail_url: Optional[str] = None
+    cdn_url: str | None = None
+    thumbnail_url: str | None = None
     created_at: datetime
     updated_at: datetime
     download_count: int = 0
-    last_accessed_at: Optional[datetime] = None
+    last_accessed_at: datetime | None = None
     virus_scanned: bool = False
-    virus_scan_result: Optional[dict] = None
+    virus_scan_result: dict | None = None
     contains_pii: bool = False
     requires_consent: bool = False
-    retention_days: Optional[int] = None
-    deletion_date: Optional[datetime] = None
+    retention_days: int | None = None
+    deletion_date: datetime | None = None
 
 
 class FileListResponse(BaseModel):
@@ -158,12 +158,12 @@ class ShareLinkRequest(BaseModel):
 
     share_type: str = "public_link"
     expires_in_hours: int = Field(default=24, ge=1, le=8760)  # Max 1 year
-    password: Optional[str] = None
+    password: str | None = None
     can_download: bool = True
     can_view_only: bool = False
-    max_downloads: Optional[int] = None
+    max_downloads: int | None = None
     shared_with_users: List[UUID] = Field(default_factory=list)
-    shared_with_class: Optional[UUID] = None
+    shared_with_class: UUID | None = None
 
     @validator("share_type")
     def validate_share_type(cls, v):
@@ -186,7 +186,7 @@ class ShareLinkResponse(BaseModel):
     share_token: str
     share_url: str
     expires_at: datetime
-    max_downloads: Optional[int] = None
+    max_downloads: int | None = None
     download_count: int = 0
     can_download: bool = True
     can_view_only: bool = False
@@ -279,15 +279,15 @@ async def validate_file_size(
 async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    title: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
+    title: str | None = Form(None),
+    description: str | None = Form(None),
     category: str = Form("media_resource"),
     tags: str = Form("[]"),  # JSON string
     virus_scan: bool = Form(True),
     generate_thumbnails: bool = Form(True),
     optimize_images: bool = Form(True),
     download_permission: str = Form("organization"),
-    retention_days: Optional[int] = Form(None),
+    retention_days: int | None = Form(None),
     validated_file: UploadFile = Depends(validate_file_size),
     storage_service: StorageService = Depends(get_storage_service),
     user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
@@ -413,9 +413,9 @@ async def get_upload_progress(
 
 @router.get("/files", response_model=FileListResponse)
 async def list_files(
-    prefix: Optional[str] = Query(None, description="Filter by filename prefix"),
-    category: Optional[str] = Query(None, description="Filter by file category"),
-    file_types: Optional[str] = Query(None, description="Comma-separated MIME types"),
+    prefix: str | None = Query(None, description="Filter by filename prefix"),
+    category: str | None = Query(None, description="Filter by file category"),
+    file_types: str | None = Query(None, description="Comma-separated MIME types"),
     limit: int = Query(100, ge=1, le=1000, description="Number of files to return"),
     offset: int = Query(0, ge=0, description="Number of files to skip"),
     sort_by: str = Query("created_at", description="Sort field"),
@@ -711,7 +711,7 @@ async def create_share_link(
 async def access_shared_file(
     share_token: str,
     request: Request,
-    password: Optional[str] = Query(None, description="Password for protected shares"),
+    password: str | None = Query(None, description="Password for protected shares"),
     action: str = Query("download", regex="^(download|view|info)$"),
 ):
     """

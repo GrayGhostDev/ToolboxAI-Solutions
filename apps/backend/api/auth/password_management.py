@@ -120,10 +120,10 @@ class PasswordResetRequest(BaseModel):
 class PasswordValidator:
     """Validates password strength and complexity"""
 
-    def __init__(self, requirements: Optional[PasswordStrengthRequirements] = None):
+    def __init__(self, requirements: PasswordStrengthRequirements | None = None):
         self.requirements = requirements or PasswordStrengthRequirements()
 
-    def validate(self, password: str, username: Optional[str] = None) -> PasswordValidationResult:
+    def validate(self, password: str, username: str | None = None) -> PasswordValidationResult:
         """
         Validate password strength and complexity.
 
@@ -211,7 +211,7 @@ class PasswordHistoryManager:
     HISTORY_PREFIX = "password_history:"
     MAX_HISTORY = 5  # Number of previous passwords to remember
 
-    def __init__(self, redis_client: Optional[redis.Redis] = None):
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.redis_client = redis_client
         self._memory_history: Dict[str, List[str]] = {}  # Fallback for development
 
@@ -250,7 +250,7 @@ class PasswordHistoryManager:
 class PasswordChangeService:
     """Service for handling password changes with security features"""
 
-    def __init__(self, session_manager: SessionManager, redis_client: Optional[redis.Redis] = None):
+    def __init__(self, session_manager: SessionManager, redis_client: redis.Redis | None = None):
         self.session_manager = session_manager
         self.redis_client = redis_client
         self.validator = PasswordValidator()
@@ -288,8 +288,8 @@ class PasswordChangeService:
         username: str,
         current_password: str,
         new_password: str,
-        request_ip: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        request_ip: str | None = None,
+        user_agent: str | None = None,
     ) -> Dict[str, any]:
         """
         Change user password with comprehensive security checks.
@@ -439,11 +439,11 @@ class PasswordChangeService:
 
 
 # Global password change service instance
-_password_service: Optional[PasswordChangeService] = None
+_password_service: PasswordChangeService | None = None
 
 
 def get_password_service(
-    session_manager: Optional[SessionManager] = None, redis_client: Optional[redis.Redis] = None
+    session_manager: SessionManager | None = None, redis_client: redis.Redis | None = None
 ) -> PasswordChangeService:
     """Get or create the global password change service"""
     global _password_service

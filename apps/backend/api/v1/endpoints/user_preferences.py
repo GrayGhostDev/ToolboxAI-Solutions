@@ -86,7 +86,7 @@ class PreferenceValue(BaseModel):
     key: str = Field(..., min_length=1, max_length=100)
     value: Any
     category: PreferenceCategory
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class UserPreferences(BaseModel):
@@ -168,8 +168,8 @@ class NotificationPreferences(BaseModel):
     notify_assignments: bool = True
     notify_deadlines: bool = True
     quiet_hours_enabled: bool = False
-    quiet_hours_start: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
-    quiet_hours_end: Optional[str] = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    quiet_hours_start: str | None = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
+    quiet_hours_end: str | None = Field(None, pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$")
 
 
 class PrivacyPreferences(BaseModel):
@@ -416,7 +416,7 @@ async def bulk_update_preferences(
 async def reset_preferences(
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-    category: Optional[PreferenceCategory] = None,
+    category: PreferenceCategory | None = None,
 ) -> UserPreferences:
     """
     Reset user preferences to defaults.

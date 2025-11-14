@@ -99,7 +99,7 @@ class DatabaseAuth:
             # If bcrypt fails, try SHA256 as fallback for legacy passwords
             return hashlib.sha256(password.encode()).hexdigest() == password_hash
 
-    def authenticate_user(self, username_or_email: str, password: str) -> Optional[Dict[str, Any]]:
+    def authenticate_user(self, username_or_email: str, password: str) -> dict[str, Any] | None:
         """
         Authenticate a user with username/email and password.
         Returns user data if successful, None otherwise.
@@ -184,7 +184,7 @@ class DatabaseAuth:
             "expires_in": JWT_EXPIRATION_HOURS * 3600,  # seconds
         }
 
-    def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
+    def verify_token(self, token: str) -> dict[str, Any] | None:
         """Verify and decode a JWT token with enhanced security."""
         try:
             # Decode with all security checks enabled
@@ -221,7 +221,7 @@ class DatabaseAuth:
             logger.error(f"JWT verification error: {e}")
             return None
 
-    def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+    def get_user_by_id(self, user_id: str) -> dict[str, Any] | None:
         """Get user by ID."""
         try:
             conn = self.get_connection()
@@ -330,7 +330,7 @@ class DatabaseAuth:
             print(f"Error getting user stats: {e}")
             return {}
 
-    def create_user(self, user_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def create_user(self, user_data: Dict[str, Any]) -> dict[str, Any] | None:
         """Create a new user in the database."""
         try:
             conn = self.get_connection()
