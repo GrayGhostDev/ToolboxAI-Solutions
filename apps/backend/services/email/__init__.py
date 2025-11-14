@@ -39,23 +39,27 @@ from .sendgrid import (
 # Template engine
 from .templates import EmailTemplateEngine
 
-# Backward compatibility - provide email_service as a lazy-loaded singleton
-# Don't import from .base to avoid circular imports during module initialization
-# Instead, create a module-level singleton that's initialized on first access
+# Backward compatibility - provide email_service with lazy initialization
+# Use __getattr__ to defer initialization until first access, avoiding circular imports
 _email_service_instance = None
 
 
-def _get_email_service_lazy():
-    """Lazy initialization of email service to avoid circular imports"""
+def __getattr__(name):
+    """
+    Lazy initialization of email_service to avoid circular imports.
+
+    This function is called when an attribute is not found in the module.
+    We use it to defer the initialization of email_service until it's actually needed.
+    """
     global _email_service_instance
-    if _email_service_instance is None:
-        _email_service_instance = get_email_service_singleton()
-    return _email_service_instance
 
+    if name == "email_service":
+        if _email_service_instance is None:
+            _email_service_instance = get_email_service_singleton()
+        return _email_service_instance
 
-# For backwards compatibility, provide email_service as the singleton
-# This will be initialized on first import, after the module is fully loaded
-email_service = get_email_service_singleton()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 __all__ = [
     # Service implementations
