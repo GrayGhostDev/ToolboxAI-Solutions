@@ -10,14 +10,16 @@ Use this for legacy code that imports from database.core.connection
 #  Re-export all public APIs from connection_manager
 from database.core.connection_manager import (
     ConnectionConfig,
-    ConnectionManager,
+    OptimizedConnectionManager,
     PerformanceMonitor,
-    get_connection_manager,
 )
+
+# Backward compatibility alias
+ConnectionManager = OptimizedConnectionManager
 
 __all__ = [
     "ConnectionConfig",
     "ConnectionManager",
+    "OptimizedConnectionManager",
     "PerformanceMonitor",
-    "get_connection_manager",
 ]

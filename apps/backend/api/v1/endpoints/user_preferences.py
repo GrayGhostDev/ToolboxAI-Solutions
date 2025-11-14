@@ -30,7 +30,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.api.auth.auth import get_current_user
 from apps.backend.core.deps import get_async_db
-from apps.backend.middleware.tenant import TenantContext, get_tenant_context
 from apps.backend.models.schemas import User
 
 logger = logging.getLogger(__name__)
@@ -44,8 +43,10 @@ router = APIRouter(
 
 # === Enums ===
 
+
 class PreferenceCategory(str, Enum):
     """Preference category enumeration"""
+
     UI = "ui"
     NOTIFICATIONS = "notifications"
     PRIVACY = "privacy"
@@ -56,6 +57,7 @@ class PreferenceCategory(str, Enum):
 
 class Theme(str, Enum):
     """Theme options"""
+
     LIGHT = "light"
     DARK = "dark"
     AUTO = "auto"
@@ -63,6 +65,7 @@ class Theme(str, Enum):
 
 class Language(str, Enum):
     """Supported languages"""
+
     EN = "en"
     ES = "es"
     FR = "fr"
@@ -73,6 +76,7 @@ class Language(str, Enum):
 
 
 # === Pydantic v2 Models ===
+
 
 class PreferenceValue(BaseModel):
     """Individual preference value with Pydantic v2"""
@@ -109,7 +113,7 @@ class UpdatePreferenceRequest(BaseModel):
     key: str = Field(..., min_length=1, max_length=100)
     value: Any
 
-    @field_validator('value')
+    @field_validator("value")
     @classmethod
     def validate_value(cls, v: Any) -> Any:
         """Validate preference value types"""
@@ -125,7 +129,7 @@ class BulkPreferenceUpdate(BaseModel):
 
     preferences: list[PreferenceValue]
 
-    @field_validator('preferences')
+    @field_validator("preferences")
     @classmethod
     def validate_preferences(cls, v: list[PreferenceValue]) -> list[PreferenceValue]:
         """Validate preferences list"""
@@ -173,7 +177,9 @@ class PrivacyPreferences(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    profile_visibility: str = Field(default="organization", pattern="^(public|organization|private)$")
+    profile_visibility: str = Field(
+        default="organization", pattern="^(public|organization|private)$"
+    )
     show_online_status: bool = True
     show_activity: bool = True
     allow_analytics: bool = True
@@ -207,6 +213,7 @@ class PreferenceExport(BaseModel):
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "",
@@ -249,7 +256,7 @@ async def get_user_preferences(
         logger.error(f"Failed to get user preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get user preferences"
+            detail="Failed to get user preferences",
         )
 
 
@@ -281,7 +288,10 @@ async def get_category_preferences(
         # TODO: Implement actual category preference retrieval
         defaults = {
             PreferenceCategory.UI: {"theme": "auto", "language": "en", "font_size": 14},
-            PreferenceCategory.NOTIFICATIONS: {"email_notifications": True, "push_notifications": True},
+            PreferenceCategory.NOTIFICATIONS: {
+                "email_notifications": True,
+                "push_notifications": True,
+            },
             PreferenceCategory.PRIVACY: {"profile_visibility": "organization"},
             PreferenceCategory.ACCESSIBILITY: {"high_contrast": False},
             PreferenceCategory.CONTENT: {"default_view": "grid"},
@@ -294,7 +304,7 @@ async def get_category_preferences(
         logger.error(f"Failed to get category preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get category preferences"
+            detail="Failed to get category preferences",
         )
 
 
@@ -321,9 +331,7 @@ async def update_preference(
         PreferenceValue: Updated preference
     """
     try:
-        logger.info(
-            f"User {current_user.id} updating preference: {request.category}.{request.key}"
-        )
+        logger.info(f"User {current_user.id} updating preference: {request.category}.{request.key}")
 
         # TODO: Implement actual preference update
         # - Validate preference value against schema
@@ -342,7 +350,7 @@ async def update_preference(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update preference"
+            detail="Failed to update preference",
         )
 
 
@@ -395,7 +403,7 @@ async def bulk_update_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to bulk update preferences"
+            detail="Failed to bulk update preferences",
         )
 
 
@@ -406,9 +414,9 @@ async def bulk_update_preferences(
     description="Reset user preferences to defaults",
 )
 async def reset_preferences(
-    category: Optional[PreferenceCategory] = None,
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    category: Optional[PreferenceCategory] = None,
 ) -> UserPreferences:
     """
     Reset user preferences to defaults.
@@ -451,7 +459,7 @@ async def reset_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to reset preferences"
+            detail="Failed to reset preferences",
         )
 
 
@@ -503,7 +511,7 @@ async def export_preferences(
         logger.error(f"Failed to export preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to export preferences"
+            detail="Failed to export preferences",
         )
 
 
@@ -515,9 +523,9 @@ async def export_preferences(
 )
 async def import_preferences(
     preferences_data: PreferenceExport,
-    merge: bool = False,
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    merge: bool = False,
 ) -> UserPreferences:
     """
     Import user preferences.
@@ -534,9 +542,7 @@ async def import_preferences(
         UserPreferences: Imported preferences
     """
     try:
-        logger.info(
-            f"Importing preferences for user {current_user.id} (merge={merge})"
-        )
+        logger.info(f"Importing preferences for user {current_user.id} (merge={merge})")
 
         # TODO: Implement preference import
         # - Validate export format
@@ -560,11 +566,12 @@ async def import_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to import preferences"
+            detail="Failed to import preferences",
         )
 
 
 # === Specialized Preference Endpoints ===
+
 
 @router.get(
     "/ui",
@@ -584,7 +591,7 @@ async def get_ui_preferences(
         logger.error(f"Failed to get UI preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get UI preferences"
+            detail="Failed to get UI preferences",
         )
 
 
@@ -609,7 +616,7 @@ async def update_ui_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update UI preferences"
+            detail="Failed to update UI preferences",
         )
 
 
@@ -631,7 +638,7 @@ async def get_notification_preferences(
         logger.error(f"Failed to get notification preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get notification preferences"
+            detail="Failed to get notification preferences",
         )
 
 
@@ -656,7 +663,7 @@ async def update_notification_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update notification preferences"
+            detail="Failed to update notification preferences",
         )
 
 
@@ -678,7 +685,7 @@ async def get_privacy_preferences(
         logger.error(f"Failed to get privacy preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get privacy preferences"
+            detail="Failed to get privacy preferences",
         )
 
 
@@ -703,7 +710,7 @@ async def update_privacy_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update privacy preferences"
+            detail="Failed to update privacy preferences",
         )
 
 
@@ -725,7 +732,7 @@ async def get_accessibility_preferences(
         logger.error(f"Failed to get accessibility preferences: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get accessibility preferences"
+            detail="Failed to get accessibility preferences",
         )
 
 
@@ -750,5 +757,5 @@ async def update_accessibility_preferences(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update accessibility preferences"
+            detail="Failed to update accessibility preferences",
         )

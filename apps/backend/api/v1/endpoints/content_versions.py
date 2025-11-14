@@ -43,6 +43,7 @@ router = APIRouter(
 
 # === Pydantic v2 Models ===
 
+
 class ContentVersion(BaseModel):
     """Content version model with Pydantic v2"""
 
@@ -94,12 +95,11 @@ class VersionDiffResponse(BaseModel):
     from_version: int
     to_version: int
     differences: list[dict[str, str | int | bool]] = Field(
-        default_factory=list,
-        description="List of changes between versions"
+        default_factory=list, description="List of changes between versions"
     )
     summary: dict[str, int] = Field(
         default_factory=dict,
-        description="Summary of changes (additions, deletions, modifications)"
+        description="Summary of changes (additions, deletions, modifications)",
     )
 
 
@@ -109,13 +109,9 @@ class VersionRevertRequest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     target_version: int = Field(..., ge=1)
-    change_summary: Optional[str] = Field(
-        None,
-        description="Summary of why reverting"
-    )
+    change_summary: Optional[str] = Field(None, description="Summary of why reverting")
     create_new_version: bool = Field(
-        default=True,
-        description="Create new version or overwrite current"
+        default=True, description="Create new version or overwrite current"
     )
 
 
@@ -154,13 +150,11 @@ class VersionCompareRequest(BaseModel):
 
     from_version: int = Field(..., ge=1)
     to_version: int = Field(..., ge=1)
-    compare_mode: str = Field(
-        default="side-by-side",
-        pattern="^(side-by-side|unified|inline)$"
-    )
+    compare_mode: str = Field(default="side-by-side", pattern="^(side-by-side|unified|inline)$")
 
 
 # === API Endpoints ===
+
 
 @router.get(
     "/{content_id}/versions",
@@ -229,7 +223,7 @@ async def list_content_versions(
         logger.error(f"Failed to list versions: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list content versions"
+            detail="Failed to list content versions",
         )
 
 
@@ -291,7 +285,7 @@ async def get_version_detail(
         logger.error(f"Failed to get version detail: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get version details"
+            detail="Failed to get version details",
         )
 
 
@@ -303,10 +297,10 @@ async def get_version_detail(
 )
 async def compare_versions(
     content_id: UUID,
-    from_version: int = Query(..., ge=1),
-    to_version: int = Query(..., ge=1),
     session: Annotated[AsyncSession, Depends(get_async_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    from_version: int = Query(..., ge=1),
+    to_version: int = Query(..., ge=1),
 ) -> VersionDiffResponse:
     """
     Compare two versions and show differences.
@@ -328,8 +322,7 @@ async def compare_versions(
     """
     try:
         logger.info(
-            f"Comparing versions {from_version} to {to_version} "
-            f"for content: {content_id}"
+            f"Comparing versions {from_version} to {to_version} " f"for content: {content_id}"
         )
 
         # TODO: Implement actual diff calculation
@@ -367,7 +360,7 @@ async def compare_versions(
         logger.error(f"Failed to compare versions: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to compare versions"
+            detail="Failed to compare versions",
         )
 
 
@@ -402,12 +395,12 @@ async def revert_to_version(
         HTTPException: If revert fails
     """
     try:
-        logger.info(
-            f"Reverting content {content_id} to version {request.target_version}"
-        )
+        logger.info(f"Reverting content {content_id} to version {request.target_version}")
 
         # TODO: Implement actual version revert
-        new_version_number = request.target_version + 1 if request.create_new_version else request.target_version
+        new_version_number = (
+            request.target_version + 1 if request.create_new_version else request.target_version
+        )
 
         return VersionRevertResponse(
             content_id=content_id,
@@ -422,7 +415,7 @@ async def revert_to_version(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to revert to version"
+            detail="Failed to revert to version",
         )
 
 
@@ -459,8 +452,7 @@ async def tag_version(
     """
     try:
         logger.info(
-            f"Adding tag '{request.tag}' to version {version_number} "
-            f"of content: {content_id}"
+            f"Adding tag '{request.tag}' to version {version_number} " f"of content: {content_id}"
         )
 
         # TODO: Implement actual tag addition
@@ -474,7 +466,7 @@ async def tag_version(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to tag version"
+            detail="Failed to tag version",
         )
 
 
@@ -522,5 +514,5 @@ async def delete_version(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete version"
+            detail="Failed to delete version",
         )

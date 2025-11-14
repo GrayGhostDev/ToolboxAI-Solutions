@@ -20,7 +20,7 @@ Version: 1.0.0
 
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import (
@@ -38,7 +38,6 @@ from fastapi import (
 from fastapi.responses import RedirectResponse, StreamingResponse
 from pydantic import BaseModel, Field, validator
 
-from apps.backend.api.auth.auth import get_current_user
 from apps.backend.dependencies.tenant import (
     TenantContext,
     get_current_tenant,
@@ -49,25 +48,20 @@ from apps.backend.services.storage.storage_service import (
     AccessDeniedError,
     DownloadOptions,
     DownloadPermission,
-    DownloadResult,
-    FileInfo,
     FileNotFoundError,
     ListOptions,
     QuotaExceededError,
     StorageError,
     StorageService,
     UploadOptions,
-    UploadProgress,
-    UploadResult,
     UploadStatus,
 )
 from apps.backend.workers.tasks.storage_tasks import (
     calculate_storage_usage,
     process_image,
-    send_quota_alerts,
     virus_scan_file,
 )
-from database.models.storage import File, FileAccessLog, FileShare, StorageQuota
+from database.models.storage import File
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +70,10 @@ router = APIRouter()
 
 # === REQUEST/RESPONSE MODELS ===
 
+
 class FileUploadRequest(BaseModel):
     """Request model for file upload"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     category: str = "media_resource"
@@ -88,11 +84,17 @@ class FileUploadRequest(BaseModel):
     download_permission: DownloadPermission = DownloadPermission.ORGANIZATION
     retention_days: Optional[int] = None
 
-    @validator('category')
+    @validator("category")
     def validate_category(cls, v):
         valid_categories = [
-            'educational_content', 'student_submission', 'assessment',
-            'administrative', 'media_resource', 'temporary', 'avatar', 'report'
+            "educational_content",
+            "student_submission",
+            "assessment",
+            "administrative",
+            "media_resource",
+            "temporary",
+            "avatar",
+            "report",
         ]
         if v not in valid_categories:
             raise ValueError(f"Invalid category. Must be one of: {valid_categories}")
@@ -101,6 +103,7 @@ class FileUploadRequest(BaseModel):
 
 class FileUploadResponse(BaseModel):
     """Response model for file upload"""
+
     file_id: UUID
     upload_id: str
     filename: str
@@ -116,6 +119,7 @@ class FileUploadResponse(BaseModel):
 
 class FileDetailsResponse(BaseModel):
     """Response model for file details"""
+
     file_id: UUID
     filename: str
     original_filename: str
@@ -142,6 +146,7 @@ class FileDetailsResponse(BaseModel):
 
 class FileListResponse(BaseModel):
     """Response model for file listing"""
+
     files: List[FileDetailsResponse]
     total_count: int
     total_size: int
@@ -150,6 +155,7 @@ class FileListResponse(BaseModel):
 
 class ShareLinkRequest(BaseModel):
     """Request model for creating share links"""
+
     share_type: str = "public_link"
     expires_in_hours: int = Field(default=24, ge=1, le=8760)  # Max 1 year
     password: Optional[str] = None
@@ -159,9 +165,15 @@ class ShareLinkRequest(BaseModel):
     shared_with_users: List[UUID] = Field(default_factory=list)
     shared_with_class: Optional[UUID] = None
 
-    @validator('share_type')
+    @validator("share_type")
     def validate_share_type(cls, v):
-        valid_types = ['public_link', 'organization', 'specific_users', 'class', 'temporary']
+        valid_types = [
+            "public_link",
+            "organization",
+            "specific_users",
+            "class",
+            "temporary",
+        ]
         if v not in valid_types:
             raise ValueError(f"Invalid share type. Must be one of: {valid_types}")
         return v
@@ -169,6 +181,7 @@ class ShareLinkRequest(BaseModel):
 
 class ShareLinkResponse(BaseModel):
     """Response model for share link"""
+
     share_id: UUID
     share_token: str
     share_url: str
@@ -181,6 +194,7 @@ class ShareLinkResponse(BaseModel):
 
 class StorageQuotaResponse(BaseModel):
     """Response model for storage quota information"""
+
     organization_id: UUID
     total_quota_bytes: int
     used_storage_bytes: int
@@ -201,8 +215,9 @@ class StorageQuotaResponse(BaseModel):
 
 # === DEPENDENCIES ===
 
+
 async def get_storage_service(
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ) -> StorageService:
     """Get storage service with tenant context"""
     user, tenant_context = user_tenant
@@ -211,8 +226,7 @@ async def get_storage_service(
     from apps.backend.services.storage.supabase_provider import SupabaseStorageProvider
 
     service = SupabaseStorageProvider(
-        organization_id=tenant_context.effective_tenant_id,
-        user_id=str(user.id)
+        organization_id=tenant_context.effective_tenant_id, user_id=str(user.id)
     )
 
     return service
@@ -221,13 +235,13 @@ async def get_storage_service(
 async def validate_file_size(
     file: UploadFile,
     storage_service: StorageService = Depends(get_storage_service),
-    tenant_context: TenantContext = Depends(get_current_tenant)
+    tenant_context: TenantContext = Depends(get_current_tenant),
 ) -> UploadFile:
     """Validate file size against quota and limits"""
     if not file.size:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File size could not be determined"
+            detail="File size could not be determined",
         )
 
     # Check quota (this would query the database in production)
@@ -241,24 +255,25 @@ async def validate_file_size(
     # Check file size limits based on type
     max_size_mb = 100  # Default
     if file.content_type:
-        if file.content_type.startswith('video/'):
+        if file.content_type.startswith("video/"):
             max_size_mb = 500
-        elif file.content_type.startswith('image/'):
+        elif file.content_type.startswith("image/"):
             max_size_mb = 50
-        elif file.content_type in ['application/pdf', 'application/msword']:
+        elif file.content_type in ["application/pdf", "application/msword"]:
             max_size_mb = 100
 
     max_size_bytes = max_size_mb * 1024 * 1024
     if file.size > max_size_bytes:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File size exceeds limit of {max_size_mb}MB for this file type"
+            detail=f"File size exceeds limit of {max_size_mb}MB for this file type",
         )
 
     return file
 
 
 # === FILE UPLOAD ENDPOINTS ===
+
 
 @router.post("/upload", response_model=FileUploadResponse)
 async def upload_file(
@@ -275,7 +290,7 @@ async def upload_file(
     retention_days: Optional[int] = Form(None),
     validated_file: UploadFile = Depends(validate_file_size),
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """
     Upload a file to storage with progress tracking.
@@ -293,6 +308,7 @@ async def upload_file(
     try:
         # Parse tags
         import json
+
         parsed_tags = json.loads(tags) if tags else []
 
         # Create upload options
@@ -305,7 +321,7 @@ async def upload_file(
             generate_thumbnails=generate_thumbnails,
             optimize_images=optimize_images,
             download_permission=DownloadPermission(download_permission),
-            retention_days=retention_days
+            retention_days=retention_days,
         )
 
         # Read file content
@@ -315,7 +331,7 @@ async def upload_file(
         result = await storage_service.upload_file(
             file_data=file_content,
             filename=file.filename or "unnamed_file",
-            options=upload_options
+            options=upload_options,
         )
 
         # Schedule background tasks
@@ -323,21 +339,18 @@ async def upload_file(
             background_tasks.add_task(
                 virus_scan_file.delay,
                 str(result.file_id),
-                tenant_context.effective_tenant_id
+                tenant_context.effective_tenant_id,
             )
 
-        if generate_thumbnails and file.content_type and file.content_type.startswith('image/'):
+        if generate_thumbnails and file.content_type and file.content_type.startswith("image/"):
             background_tasks.add_task(
                 process_image.delay,
                 str(result.file_id),
-                tenant_context.effective_tenant_id
+                tenant_context.effective_tenant_id,
             )
 
         # Update storage usage
-        background_tasks.add_task(
-            calculate_storage_usage.delay,
-            tenant_context.effective_tenant_id
-        )
+        background_tasks.add_task(calculate_storage_usage.delay, tenant_context.effective_tenant_id)
 
         return FileUploadResponse(
             file_id=result.file_id,
@@ -349,25 +362,25 @@ async def upload_file(
             storage_path=result.storage_path,
             cdn_url=result.cdn_url,
             thumbnail_url=result.thumbnail_url,
-            warnings=result.warnings
+            warnings=result.warnings,
         )
 
     except QuotaExceededError:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Storage quota exceeded"
+            detail="Storage quota exceeded",
         )
     except StorageError as e:
         logger.error(f"Storage error during upload: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Upload failed: {e.message}"
+            detail=f"Upload failed: {e.message}",
         )
     except Exception as e:
         logger.error(f"Unexpected error during upload: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred during upload"
+            detail="An unexpected error occurred during upload",
         )
 
 
@@ -375,16 +388,13 @@ async def upload_file(
 async def get_upload_progress(
     upload_id: str,
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """Get upload progress for a specific upload"""
     progress = storage_service.get_upload_progress(upload_id)
 
     if not progress:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Upload not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
 
     return {
         "upload_id": progress.upload_id,
@@ -394,11 +404,12 @@ async def get_upload_progress(
         "total_bytes": progress.total_bytes,
         "error_message": progress.error_message,
         "created_at": progress.created_at,
-        "updated_at": progress.updated_at
+        "updated_at": progress.updated_at,
     }
 
 
 # === FILE LISTING AND DETAILS ===
+
 
 @router.get("/files", response_model=FileListResponse)
 async def list_files(
@@ -411,7 +422,7 @@ async def list_files(
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     include_metadata: bool = Query(False, description="Include detailed metadata"),
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """
     List files in organization storage with filtering and pagination.
@@ -439,7 +450,7 @@ async def list_files(
             categories=[category] if category else [],
             include_metadata=include_metadata,
             sort_by=sort_by,
-            sort_order=sort_order
+            sort_order=sort_order,
         )
 
         # Get files from storage
@@ -452,47 +463,49 @@ async def list_files(
         for file_info in files:
             total_size += file_info.file_size
 
-            file_responses.append(FileDetailsResponse(
-                file_id=file_info.file_id,
-                filename=file_info.filename,
-                original_filename=file_info.original_filename,
-                file_size=file_info.file_size,
-                mime_type=file_info.mime_type,
-                status="available",  # From file_info status
-                category="media_resource",  # From file_info category
-                title=file_info.metadata.get("title"),
-                description=file_info.metadata.get("description"),
-                tags=file_info.tags,
-                cdn_url=file_info.cdn_url,
-                thumbnail_url=file_info.thumbnail_url,
-                created_at=file_info.created_at,
-                updated_at=file_info.updated_at,
-                download_count=0,  # Would come from database
-                virus_scanned=True,  # Would come from database
-                contains_pii=False,  # Would come from database
-                requires_consent=False  # Would come from database
-            ))
+            file_responses.append(
+                FileDetailsResponse(
+                    file_id=file_info.file_id,
+                    filename=file_info.filename,
+                    original_filename=file_info.original_filename,
+                    file_size=file_info.file_size,
+                    mime_type=file_info.mime_type,
+                    status="available",  # From file_info status
+                    category="media_resource",  # From file_info category
+                    title=file_info.metadata.get("title"),
+                    description=file_info.metadata.get("description"),
+                    tags=file_info.tags,
+                    cdn_url=file_info.cdn_url,
+                    thumbnail_url=file_info.thumbnail_url,
+                    created_at=file_info.created_at,
+                    updated_at=file_info.updated_at,
+                    download_count=0,  # Would come from database
+                    virus_scanned=True,  # Would come from database
+                    contains_pii=False,  # Would come from database
+                    requires_consent=False,  # Would come from database
+                )
+            )
 
         # Get quota information (mock for now)
         quota_info = {
             "total_quota": 1073741824,  # 1GB
             "used_storage": total_size,
             "available_storage": 1073741824 - total_size,
-            "used_percentage": (total_size / 1073741824) * 100
+            "used_percentage": (total_size / 1073741824) * 100,
         }
 
         return FileListResponse(
             files=file_responses,
             total_count=len(files),
             total_size=total_size,
-            quota_info=quota_info
+            quota_info=quota_info,
         )
 
     except StorageError as e:
         logger.error(f"Storage error listing files: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list files: {e.message}"
+            detail=f"Failed to list files: {e.message}",
         )
 
 
@@ -500,7 +513,7 @@ async def list_files(
 async def get_file_details(
     file_id: UUID,
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """Get detailed information about a specific file"""
     user, tenant_context = user_tenant
@@ -509,10 +522,7 @@ async def get_file_details(
         file_info = await storage_service.get_file_info(file_id)
 
         if not file_info:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
         return FileDetailsResponse(
             file_id=file_info.file_id,
@@ -532,28 +542,23 @@ async def get_file_details(
             download_count=0,  # Would come from database
             virus_scanned=True,  # Would come from database
             contains_pii=False,  # Would come from database
-            requires_consent=False  # Would come from database
+            requires_consent=False,  # Would come from database
         )
 
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     except AccessDeniedError:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to file"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to file")
     except StorageError as e:
         logger.error(f"Storage error getting file details: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get file details: {e.message}"
+            detail=f"Failed to get file details: {e.message}",
         )
 
 
 # === FILE DOWNLOAD ===
+
 
 @router.get("/download/{file_id}")
 async def download_file(
@@ -562,7 +567,7 @@ async def download_file(
     download_type: str = Query("direct", regex="^(direct|signed_url|stream)$"),
     expires_in: int = Query(3600, ge=60, le=86400, description="URL expiration in seconds"),
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """
     Download a file or get download URL.
@@ -575,10 +580,7 @@ async def download_file(
     user, tenant_context = user_tenant
 
     try:
-        download_options = DownloadOptions(
-            track_access=True,
-            signed_url_expires_in=expires_in
-        )
+        download_options = DownloadOptions(track_access=True, signed_url_expires_in=expires_in)
 
         if download_type == "stream":
             # Stream file content directly
@@ -586,32 +588,27 @@ async def download_file(
             file_info = await storage_service.get_file_info(file_id)
 
             if not file_info:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="File not found"
-                )
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
             return StreamingResponse(
                 file_stream,
                 media_type=file_info.mime_type,
                 headers={
                     "Content-Disposition": f"attachment; filename={file_info.filename}",
-                    "Content-Length": str(file_info.file_size)
-                }
+                    "Content-Length": str(file_info.file_size),
+                },
             )
 
         elif download_type == "signed_url":
             # Generate signed URL
             signed_url = await storage_service.generate_signed_url(
-                file_id=file_id,
-                expires_in=expires_in,
-                permission="read"
+                file_id=file_id, expires_in=expires_in, permission="read"
             )
 
             return {
                 "download_url": signed_url,
                 "expires_in": expires_in,
-                "expires_at": datetime.utcnow() + timedelta(seconds=expires_in)
+                "expires_at": datetime.utcnow() + timedelta(seconds=expires_in),
             }
 
         else:  # direct
@@ -629,24 +626,19 @@ async def download_file(
             return RedirectResponse(url=download_result.file_url)
 
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     except AccessDeniedError:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to file"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to file")
     except StorageError as e:
         logger.error(f"Storage error downloading file: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Download failed: {e.message}"
+            detail=f"Download failed: {e.message}",
         )
 
 
 # === FILE SHARING ===
+
 
 @router.post("/files/{file_id}/share", response_model=ShareLinkResponse)
 async def create_share_link(
@@ -654,7 +646,7 @@ async def create_share_link(
     share_request: ShareLinkRequest,
     background_tasks: BackgroundTasks,
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """
     Create a share link for a file.
@@ -672,10 +664,7 @@ async def create_share_link(
         # Verify file exists and user has access
         file_info = await storage_service.get_file_info(file_id)
         if not file_info:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
         # Create share link (this would create a database record in production)
         import secrets
@@ -703,33 +692,27 @@ async def create_share_link(
             max_downloads=share_request.max_downloads,
             download_count=0,
             can_download=share_request.can_download,
-            can_view_only=share_request.can_view_only
+            can_view_only=share_request.can_view_only,
         )
 
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     except AccessDeniedError:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to file"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to file")
     except StorageError as e:
         logger.error(f"Storage error creating share link: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create share link: {e.message}"
+            detail=f"Failed to create share link: {e.message}",
         )
 
 
 @router.get("/share/{share_token}")
 async def access_shared_file(
     share_token: str,
+    request: Request,
     password: Optional[str] = Query(None, description="Password for protected shares"),
     action: str = Query("download", regex="^(download|view|info)$"),
-    request: Request
 ):
     """
     Access a shared file via share token.
@@ -755,7 +738,7 @@ async def access_shared_file(
                 "mime_type": "application/pdf",
                 "expires_at": datetime.utcnow() + timedelta(hours=24),
                 "can_download": True,
-                "requires_password": password is not None
+                "requires_password": password is not None,
             }
 
         elif action == "view":
@@ -764,7 +747,7 @@ async def access_shared_file(
                 "file_name": "example_file.pdf",
                 "file_size": 1024000,
                 "mime_type": "application/pdf",
-                "cdn_url": "https://example.com/file.pdf"
+                "cdn_url": "https://example.com/file.pdf",
             }
 
         else:  # download
@@ -775,19 +758,20 @@ async def access_shared_file(
         logger.error(f"Error accessing shared file: {e}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Share link not found or expired"
+            detail="Share link not found or expired",
         )
 
 
 # === FILE DELETION ===
 
+
 @router.delete("/files/{file_id}")
 async def delete_file(
     file_id: UUID,
-    permanent: bool = Query(False, description="Permanently delete (vs soft delete)"),
     background_tasks: BackgroundTasks,
     storage_service: StorageService = Depends(get_storage_service),
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
+    permanent: bool = Query(False, description="Permanently delete (vs soft delete)"),
 ):
     """
     Delete a file (soft delete by default).
@@ -803,10 +787,7 @@ async def delete_file(
         # Check if file exists
         file_info = await storage_service.get_file_info(file_id)
         if not file_info:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
         # Delete file
         success = await storage_service.delete_file(file_id, permanent=permanent)
@@ -814,14 +795,11 @@ async def delete_file(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete file"
+                detail="Failed to delete file",
             )
 
         # Update storage usage
-        background_tasks.add_task(
-            calculate_storage_usage.delay,
-            tenant_context.effective_tenant_id
-        )
+        background_tasks.add_task(calculate_storage_usage.delay, tenant_context.effective_tenant_id)
 
         # Log deletion
         logger.info(
@@ -833,32 +811,27 @@ async def delete_file(
             "message": "File deleted successfully",
             "file_id": str(file_id),
             "permanent": permanent,
-            "deleted_at": datetime.utcnow()
+            "deleted_at": datetime.utcnow(),
         }
 
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
     except AccessDeniedError:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied to file"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to file")
     except StorageError as e:
         logger.error(f"Storage error deleting file: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Deletion failed: {e.message}"
+            detail=f"Deletion failed: {e.message}",
         )
 
 
 # === STORAGE QUOTA ===
 
+
 @router.get("/quota", response_model=StorageQuotaResponse)
 async def get_storage_quota(
-    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member)
+    user_tenant: tuple[User, TenantContext] = Depends(require_tenant_member),
 ):
     """Get storage quota information for the organization"""
     user, tenant_context = user_tenant
@@ -882,7 +855,7 @@ async def get_storage_quota(
             "critical_threshold_percent": 95,
             "is_warning_threshold_reached": False,
             "is_critical_threshold_reached": False,
-            "last_calculated_at": datetime.utcnow()
+            "last_calculated_at": datetime.utcnow(),
         }
 
         return StorageQuotaResponse(**quota_data)
@@ -891,5 +864,5 @@ async def get_storage_quota(
         logger.error(f"Error getting storage quota: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get storage quota information"
+            detail="Failed to get storage quota information",
         )
