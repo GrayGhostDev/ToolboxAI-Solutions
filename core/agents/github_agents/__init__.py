@@ -27,7 +27,7 @@ from .large_file_detection_agent import LargeFileDetectionAgent
 from .monitoring import GitHubAgentMonitoring
 from .orchestrator import GitHubAgentOrchestrator
 from .pipeline_monitoring_agent import PipelineMonitoringAgent
-from .repo_health_monitor_agent import RepoHealthMonitorAgent
+# from .orchestrator import GitHubAgentOrchestrator  # Archived - now in core.orchestration.github module
 from .resource_monitor_agent import ResourceMonitorAgent
 from .rollback_management_agent import RollbackManagementAgent
 
@@ -47,7 +47,7 @@ __all__ = [
     "BuildOptimizationAgent",
     "EnvironmentValidationAgent",
     "RollbackManagementAgent",
-    "PipelineMonitoringAgent",
+    # "GitHubAgentOrchestrator",  # Archived - now in core.orchestration.github module
     "GitHubAgentOrchestrator",
     "ErrorRecoveryAgent",
     "GitHubAgentMonitoring",
