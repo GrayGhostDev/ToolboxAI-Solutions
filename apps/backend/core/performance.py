@@ -49,7 +49,13 @@ class CacheManager:
         self.max_memory_items = max_memory_items
         self.redis_client: redis.Redis | None = None
         self.memory_cache: dict[str, tuple[Any, float]] = {}
-        self.cache_stats = {"hits": 0, "misses": 0, "sets": 0, "deletes": 0, "errors": 0}
+        self.cache_stats = {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "deletes": 0,
+            "errors": 0,
+        }
 
     async def initialize(self):
         """Initialize Redis connection"""

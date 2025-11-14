@@ -50,7 +50,14 @@ async def get_reports(
             """
             async with db_service.pool.acquire() as conn:
                 rows = await conn.fetch(
-                    query, current_user.id, report_type, class_id, date_from, date_to, limit, offset
+                    query,
+                    current_user.id,
+                    report_type,
+                    class_id,
+                    date_from,
+                    date_to,
+                    limit,
+                    offset,
                 )
                 return [dict(row) for row in rows]
 
@@ -485,11 +492,17 @@ async def get_report_details(
                 report = dict(row)
 
                 # Check access permissions
-                if role == "student" and report.get("visibility") not in ["public", "students"]:
+                if role == "student" and report.get("visibility") not in [
+                    "public",
+                    "students",
+                ]:
                     raise HTTPException(
                         status_code=403, detail="Not authorized to view this report"
                     )
-                elif role == "parent" and report.get("visibility") not in ["public", "parents"]:
+                elif role == "parent" and report.get("visibility") not in [
+                    "public",
+                    "parents",
+                ]:
                     raise HTTPException(
                         status_code=403, detail="Not authorized to view this report"
                     )
@@ -652,7 +665,8 @@ async def generate_report(
 
     if not report_type or report_type not in valid_report_types:
         raise HTTPException(
-            status_code=422, detail=f"Invalid report type. Must be one of: {valid_report_types}"
+            status_code=422,
+            detail=f"Invalid report type. Must be one of: {valid_report_types}",
         )
 
     # Generate a report ID

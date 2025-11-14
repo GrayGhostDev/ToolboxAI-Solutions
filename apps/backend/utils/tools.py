@@ -97,7 +97,10 @@ class SchoologyCourseLookup(BaseTool):
     )
 
     def _run(
-        self, course_id: str, platform: str = "schoology", include_assignments: bool = False
+        self,
+        course_id: str,
+        platform: str = "schoology",
+        include_assignments: bool = False,
     ) -> str:
         """Execute Schoology course lookup"""
         try:
@@ -160,7 +163,10 @@ class CanvasCourseLookup(BaseTool):
     )
 
     def _run(
-        self, course_id: str, platform: str = "canvas", include_assignments: bool = False
+        self,
+        course_id: str,
+        platform: str = "canvas",
+        include_assignments: bool = False,
     ) -> str:
         """Execute Canvas course lookup"""
         try:
@@ -171,7 +177,8 @@ class CanvasCourseLookup(BaseTool):
 
             # Fetch course details
             course_response = requests.get(
-                f"{settings.CANVAS_BASE_URL}/api/v1/courses/{course_id}", headers=headers
+                f"{settings.CANVAS_BASE_URL}/api/v1/courses/{course_id}",
+                headers=headers,
             )
 
             if course_response.status_code != 200:
@@ -865,7 +872,7 @@ print("Educational elements added for: {educational_context}")
         self, theme: str, educational_context: str | None
     ) -> list[str]:
         """Suggest educational activities based on theme and context"""
-        activities = []
+        # activities = []  # Prepared for future use
 
         theme_activities = {
             "ocean": [
@@ -1021,9 +1028,21 @@ class RobloxQuizGenerator(BaseTool):
             "multiple_choice": {
                 "question": f"Which of the following best describes {topic}?",
                 "options": [
-                    {"id": "a", "text": "Correct answer about the topic", "is_correct": True},
-                    {"id": "b", "text": "Plausible but incorrect option", "is_correct": False},
-                    {"id": "c", "text": "Another incorrect option", "is_correct": False},
+                    {
+                        "id": "a",
+                        "text": "Correct answer about the topic",
+                        "is_correct": True,
+                    },
+                    {
+                        "id": "b",
+                        "text": "Plausible but incorrect option",
+                        "is_correct": False,
+                    },
+                    {
+                        "id": "c",
+                        "text": "Another incorrect option",
+                        "is_correct": False,
+                    },
                     {"id": "d", "text": "Obviously wrong option", "is_correct": False},
                 ],
                 "explanation": f"The correct answer relates to the fundamental concept of {topic}.",
@@ -1354,7 +1373,11 @@ class RobloxScriptGenerator(BaseTool):
             return f"Error: Script generation failed - {str(e)}"
 
     def _generate_script_content(
-        self, script_type: str, functionality: str, target_audience: str, complexity_level: str
+        self,
+        script_type: str,
+        functionality: str,
+        target_audience: str,
+        complexity_level: str,
     ) -> str:
         """Generate the actual Lua script content"""
 
@@ -1854,7 +1877,11 @@ return EducationManager
 """
 
     def _generate_generic_script(
-        self, script_type: str, functionality: str, target_audience: str, complexity_level: str
+        self,
+        script_type: str,
+        functionality: str,
+        target_audience: str,
+        complexity_level: str,
     ) -> str:
         """Generate generic script template"""
         return f"""-- Generic {script_type} Script

@@ -808,10 +808,8 @@ class DatabaseService:
 # Create a singleton instance
 db_service = DatabaseService()
 
-
 # Standalone database utility functions
 from contextlib import asynccontextmanager
-from uuid import UUID
 
 
 @asynccontextmanager

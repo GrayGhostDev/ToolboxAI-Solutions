@@ -43,7 +43,6 @@ router = APIRouter(
     responses={404: {"description": "Tenant not found"}},
 )
 
-
 # === Pydantic v2 Models ===
 
 

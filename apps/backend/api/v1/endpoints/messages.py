@@ -344,7 +344,12 @@ async def get_unread_message_count(
             "unread_notifications": 1,
             "urgent_messages": 0,
             "recent_unread": 1,
-            "breakdown": {"updates": 1, "conferences": 1, "announcements": 1, "system": 1},
+            "breakdown": {
+                "updates": 1,
+                "conferences": 1,
+                "announcements": 1,
+                "system": 1,
+            },
         }
     else:  # admin
         return {
@@ -352,7 +357,13 @@ async def get_unread_message_count(
             "unread_notifications": 5,
             "urgent_messages": 2,
             "recent_unread": 3,
-            "breakdown": {"reports": 2, "issues": 3, "system": 5, "announcements": 1, "alerts": 2},
+            "breakdown": {
+                "reports": 2,
+                "issues": 3,
+                "system": 5,
+                "announcements": 1,
+                "alerts": 2,
+            },
         }
 
 
@@ -570,7 +581,8 @@ async def delete_message(
 
 @messages_router.get("/notifications/recent")
 async def get_recent_notifications(
-    current_user: User = Depends(get_current_user), limit: int = Query(default=10, le=50)
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(default=10, le=50),
 ) -> list[dict[str, Any]]:
     """Get recent notifications for the current user."""
 

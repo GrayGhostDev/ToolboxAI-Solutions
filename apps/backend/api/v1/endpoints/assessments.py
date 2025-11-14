@@ -72,7 +72,13 @@ async def get_assessments(
             """
             async with db_service.pool.acquire() as conn:
                 rows = await conn.fetch(
-                    query, current_user.id, class_id, assessment_type, status, limit, offset
+                    query,
+                    current_user.id,
+                    class_id,
+                    assessment_type,
+                    status,
+                    limit,
+                    offset,
                 )
                 return [dict(row) for row in rows]
 
@@ -220,8 +226,8 @@ async def get_assessments(
                 "total_points": 50,
                 "duration": 30,
                 "due_date": "2025-01-12T14:00:00",
-                "score": null,
-                "completed_at": null,
+                "score": None,
+                "completed_at": None,
                 "submission_status": "pending",
                 "attempts_used": 0,
                 "max_attempts": 2,
@@ -298,8 +304,8 @@ async def get_assessments(
                 "assessment_type": "quiz",
                 "total_points": 50,
                 "due_date": "2025-01-12T14:00:00",
-                "score": null,
-                "completed_at": null,
+                "score": None,
+                "completed_at": None,
                 "submission_status": "pending",
             },
         ]
@@ -381,7 +387,12 @@ async def get_assessment_details(
                 "options": ["2", "4", "6", "8"],
                 "points": 10,
             },
-            {"id": 2, "type": "short_answer", "question": "Solve for y: 3y - 7 = 14", "points": 15},
+            {
+                "id": 2,
+                "type": "short_answer",
+                "question": "Solve for y: 3y - 7 = 14",
+                "points": 15,
+            },
         ],
         "resources": [{"name": "Formula Sheet", "url": "/resources/algebra_formulas.pdf"}],
         "status": "published",

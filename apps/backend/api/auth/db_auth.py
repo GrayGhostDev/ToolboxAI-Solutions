@@ -10,7 +10,7 @@ import hashlib
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any
 
 import jwt
 import psycopg2
@@ -32,7 +32,11 @@ DB_CONFIG = {
 
 # JWT configuration - Import secure settings
 try:
-    from toolboxai_settings.settings import JWT_ALGORITHM, JWT_EXPIRATION_HOURS, JWT_SECRET_KEY
+    from toolboxai_settings.settings import (
+        JWT_ALGORITHM,
+        JWT_EXPIRATION_HOURS,
+        JWT_SECRET_KEY,
+    )
 
     JWT_SECRET = JWT_SECRET_KEY
     # Use the centralized algorithm and expiration settings
@@ -151,7 +155,7 @@ class DatabaseAuth:
             print(f"Authentication error: {e}")
             return None
 
-    def create_tokens(self, user: Dict[str, Any]) -> Dict[str, str]:
+    def create_tokens(self, user: dict[str, Any]) -> dict[str, str]:
         """Create JWT access and refresh tokens with enhanced security."""
         # Access token payload with secure claims
         access_payload = {
@@ -248,7 +252,7 @@ class DatabaseAuth:
             print(f"Error getting user: {e}")
             return None
 
-    def get_user_stats(self, user_id: str) -> Dict[str, Any]:
+    def get_user_stats(self, user_id: str) -> dict[str, Any]:
         """Get user statistics from the database."""
         try:
             conn = self.get_connection()
@@ -330,7 +334,7 @@ class DatabaseAuth:
             print(f"Error getting user stats: {e}")
             return {}
 
-    def create_user(self, user_data: Dict[str, Any]) -> dict[str, Any] | None:
+    def create_user(self, user_data: dict[str, Any]) -> dict[str, Any] | None:
         """Create a new user in the database."""
         try:
             conn = self.get_connection()
@@ -369,7 +373,7 @@ class DatabaseAuth:
             print(f"Error creating user: {e}")
             return None
 
-    def get_jwt_security_status(self) -> Dict[str, Any]:
+    def get_jwt_security_status(self) -> dict[str, Any]:
         """Get JWT security status for monitoring"""
         return {
             "secret_configured": bool(JWT_SECRET),

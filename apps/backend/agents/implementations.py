@@ -20,7 +20,12 @@ class QuizGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize quiz generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.5, http_client=None, http_async_client=None)
+        self.llm = llm or ChatOpenAI(
+            model="gpt-3.5-turbo",
+            temperature=0.5,
+            http_client=None,
+            http_async_client=None,
+        )
 
         # Question templates by type
         self.question_templates = {
@@ -29,7 +34,10 @@ class QuizGenerationAgent:
                 "min_options": 3,
                 "max_options": 5,
             },
-            "true_false": {"format": "statement\nTrue or False?", "options": ["True", "False"]},
+            "true_false": {
+                "format": "statement\nTrue or False?",
+                "options": ["True", "False"],
+            },
             "fill_blank": {
                 "format": "sentence with _____ for the blank",
                 "validation": "exact_match or keyword",
@@ -144,7 +152,12 @@ class QuizGenerationAgent:
 
     def _calculate_points(self, question_type: str, difficulty: str) -> int:
         "Calculate points based on question type and difficulty"
-        base_points = {"multiple_choice": 10, "true_false": 5, "fill_blank": 15, "short_answer": 20}
+        base_points = {
+            "multiple_choice": 10,
+            "true_false": 5,
+            "fill_blank": 15,
+            "short_answer": 20,
+        }
         difficulty_multiplier = {"easy": 1, "medium": 1.5, "hard": 2}
         return int(base_points.get(question_type, 10) * difficulty_multiplier.get(difficulty, 1))
 
@@ -163,7 +176,12 @@ class TerrainGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize terrain generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.6, http_client=None, http_async_client=None)
+        self.llm = llm or ChatOpenAI(
+            model="gpt-3.5-turbo",
+            temperature=0.6,
+            http_client=None,
+            http_async_client=None,
+        )
 
         # Terrain templates by biome
         self.terrain_templates = {
@@ -242,7 +260,9 @@ class TerrainGenerationAgent:
         }
 
         logger.info(
-            "Generated %s terrain with %d features", environment_type, len(terrain_data["features"])
+            "Generated %s terrain with %d features",
+            environment_type,
+            len(terrain_data["features"]),
         )
         return terrain_data
 
@@ -377,7 +397,12 @@ class ScriptGenerationAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize script generation agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.3, http_client=None, http_async_client=None)
+        self.llm = llm or ChatOpenAI(
+            model="gpt-3.5-turbo",
+            temperature=0.3,
+            http_client=None,
+            http_async_client=None,
+        )
 
         # Lua code templates
         self.script_templates = {
@@ -650,7 +675,12 @@ class CodeReviewAgent:
 
     def __init__(self, llm=None, *args, **kwargs):
         "Initialize code review agent"
-        self.llm = llm or ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, http_client=None, http_async_client=None)
+        self.llm = llm or ChatOpenAI(
+            model="gpt-3.5-turbo",
+            temperature=0.2,
+            http_client=None,
+            http_async_client=None,
+        )
 
         # Security checkers
         self.security_checks = [
@@ -659,8 +689,16 @@ class CodeReviewAgent:
                 "severity": "critical",
                 "message": "loadstring is a security risk",
             },
-            {"pattern": "getfenv", "severity": "high", "message": "getfenv can expose environment"},
-            {"pattern": "setfenv", "severity": "high", "message": "setfenv can modify environment"},
+            {
+                "pattern": "getfenv",
+                "severity": "high",
+                "message": "getfenv can expose environment",
+            },
+            {
+                "pattern": "setfenv",
+                "severity": "high",
+                "message": "setfenv can modify environment",
+            },
             {
                 "pattern": "while true do",
                 "severity": "medium",
@@ -675,10 +713,19 @@ class CodeReviewAgent:
 
         # Performance analyzers
         self.performance_checks = [
-            {"pattern": "FindFirstChild.*loop", "issue": "Repeated FindFirstChild in loop"},
-            {"pattern": "Instance.new.*loop", "issue": "Creating instances in tight loop"},
+            {
+                "pattern": "FindFirstChild.*loop",
+                "issue": "Repeated FindFirstChild in loop",
+            },
+            {
+                "pattern": "Instance.new.*loop",
+                "issue": "Creating instances in tight loop",
+            },
             {"pattern": "wait\\(\\)", "issue": "Use task.wait() instead of wait()"},
-            {"pattern": "GetChildren.*GetChildren", "issue": "Nested GetChildren calls"},
+            {
+                "pattern": "GetChildren.*GetChildren",
+                "issue": "Nested GetChildren calls",
+            },
         ]
 
         # Best practice validators
@@ -827,7 +874,7 @@ class CodeReviewAgent:
 
     def _generate_summary(self, review_results: dict) -> str:
         "Generate review summary"
-        severity_map = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+        # severity_map = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}  # Reserved for future use
 
         summary = f"Code Review Score: {review_results['score']}/100\n"
 

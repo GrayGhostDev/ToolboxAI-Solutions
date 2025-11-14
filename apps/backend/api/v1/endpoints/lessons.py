@@ -9,6 +9,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from apps.backend.services.database import db_service
 from apps.backend.api.auth.auth import get_current_user
 
 
@@ -383,7 +384,9 @@ async def create_lesson(
 
 @lessons_router.put("/{lesson_id}/progress")
 async def update_lesson_progress(
-    lesson_id: int, progress_data: dict[str, Any], current_user: User = Depends(get_current_user)
+    lesson_id: int,
+    progress_data: dict[str, Any],
+    current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Update student's progress on a lesson."""
 
