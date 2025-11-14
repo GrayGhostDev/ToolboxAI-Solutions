@@ -320,7 +320,12 @@ class RobloxAssistantGraph:
             if openai_key and ChatOpenAI and not self.llm:
                 try:
                     self.llm = ChatOpenAI(
-                        api_key=openai_key, model=OPENAI_MODEL, streaming=True, temperature=0.7
+                        api_key=openai_key,
+                        model=OPENAI_MODEL,
+                        streaming=True,
+                        temperature=0.7,
+                        http_client=None,  # Prevent httpx client wrapper incompatibility
+                        http_async_client=None,  # Prevent async httpx client wrapper incompatibility
                     )
                     self._build_graph()
                     clients_initialized.append("LangChain + OpenAI")
