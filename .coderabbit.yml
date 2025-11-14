@@ -11,9 +11,8 @@ ai:
 # Review Settings
 reviews:
   enabled: true
-  auto_review:
-    enabled: true
-    drafts: false
+  auto_review: true
+  drafts: false
   review_status: true
   collapse_walkthrough: false
   comment_on_changes: true
@@ -81,9 +80,8 @@ claude:
 github:
   reviews:
     enabled: true
-    auto_review:
-      enabled: true
-      drafts: false
+    auto_review: true
+    drafts: false
     comment_on_changes: true
   webhooks:
     enabled: true
