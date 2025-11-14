@@ -88,7 +88,8 @@ async def require_tenant_member(
     # Check if user belongs to the organization
     if not tenant_context.effective_tenant_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No tenant context available"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No tenant context available",
         )
 
     # In production, check database for organization membership
@@ -139,7 +140,8 @@ async def require_tenant_admin(
 
     if user_role not in admin_roles and org_role not in admin_roles:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required for this operation"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required for this operation",
         )
 
     return user, context
@@ -435,7 +437,7 @@ async def get_organization_info(
     # In production, query the database
     # organization = db_session.query(Organization).filter(
     #     Organization.id == tenant_context.effective_tenant_id,
-    #     Organization.is_active == True
+    #     Organization.is_active
     # ).first()
 
     # Mock implementation

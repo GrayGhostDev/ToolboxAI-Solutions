@@ -257,7 +257,8 @@ class OfflineSyncManager:
         # Check for conflicts
         entity_type = change.get("type")
         entity_id = change.get("id")
-        local_timestamp = datetime.fromisoformat(change.get("timestamp"))
+        # Parse timestamp for server-side validation
+        _ = datetime.fromisoformat(change.get("timestamp"))
 
         # Get server version
         server_version = await self._get_server_version(entity_type, entity_id)
@@ -282,7 +283,7 @@ class OfflineSyncManager:
 
         # Get updated content
         content_query = select(Content).where(
-            and_(Content.updated_at > since, Content.is_published == True)
+            and_(Content.updated_at > since, Content.is_published)
         )
         content_result = await self.session.execute(content_query)
         for content in content_result.scalars():
@@ -411,10 +412,10 @@ async def get_mobile_content_list(
     """
     offset = (page - 1) * page_size
 
-    query = select(Content).where(Content.is_published == True)
+    query = select(Content).where(Content.is_published)
 
     if offline_only:
-        query = query.where(Content.offline_available == True)
+        query = query.where(Content.offline_available)
 
     query = query.offset(offset).limit(page_size)
 
@@ -533,7 +534,10 @@ async def send_push_notification(
     if notification.schedule_time:
         # Schedule for later
         background_tasks.add_task(
-            send_scheduled_notification, device_tokens, notification, notification.schedule_time
+            send_scheduled_notification,
+            device_tokens,
+            notification,
+            notification.schedule_time,
         )
         return {"status": "scheduled", "delivery_time": notification.schedule_time}
     else:
@@ -550,7 +554,11 @@ async def send_push_notification(
             if success:
                 sent_count += 1
 
-        return {"status": "sent", "sent_count": sent_count, "total_devices": len(device_tokens)}
+        return {
+            "status": "sent",
+            "sent_count": sent_count,
+            "total_devices": len(device_tokens),
+        }
 
 
 @router.get("/content/{content_id}/download")
@@ -588,7 +596,11 @@ async def download_content_for_offline(
     # Get associated quizzes
     if content.quizzes:
         for quiz in content.quizzes:
-            quiz_data = {"id": str(quiz.id), "title": quiz.title, "questions": quiz.questions}
+            quiz_data = {
+                "id": str(quiz.id),
+                "title": quiz.title,
+                "questions": quiz.questions,
+            }
             if quality == "low":
                 # Remove explanations for low quality
                 for q in quiz_data["questions"]:
@@ -678,7 +690,9 @@ async def get_data_usage_stats(
 
 
 async def send_scheduled_notification(
-    device_tokens: list[str], notification: PushNotificationRequest, scheduled_time: datetime
+    device_tokens: list[str],
+    notification: PushNotificationRequest,
+    scheduled_time: datetime,
 ):
     """Background task to send scheduled notifications"""
     # Wait until scheduled time

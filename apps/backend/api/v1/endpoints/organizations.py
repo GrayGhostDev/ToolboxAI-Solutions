@@ -283,16 +283,17 @@ async def get_current_organization_info(
     """
     if not organization_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No organization context found in token"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No organization context found in token",
         )
 
     # Mock implementation - replace with real database query
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # In production:
     # organization = db.query(Organization).filter(
     #     Organization.id == organization_id,
-    #     Organization.is_active == True
+    #     Organization.is_active
     # ).first()
 
     organization = None  # Mock result
@@ -321,7 +322,11 @@ async def get_current_organization_info(
                 "api_calls": 30.0,
                 "roblox_sessions": 20.0,
             },
-            settings={"auto_backup": True, "email_notifications": True, "api_rate_limit": 1000},
+            settings={
+                "auto_backup": True,
+                "email_notifications": True,
+                "api_rate_limit": 1000,
+            },
             features=[
                 "content_generation",
                 "advanced_analytics",
@@ -348,7 +353,7 @@ async def create_organization(
     Creates a new organization with the requesting user as the admin.
     The user will receive a new JWT token with the organization context.
     """
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # Check if slug is already taken (in production)
     # existing_org = db.query(Organization).filter(Organization.slug == request.slug).first()
@@ -385,12 +390,12 @@ async def get_organization(
     Requires the user to be a member of the specified organization
     or be a super admin.
     """
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # In production:
     # organization = db.query(Organization).filter(
     #     Organization.id == organization_id,
-    #     Organization.is_active == True
+    #     Organization.is_active
     # ).first()
 
     organization = None  # Mock result
@@ -439,12 +444,12 @@ async def update_organization(
 
     Requires admin role in the organization.
     """
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # In production:
     # organization = db.query(Organization).filter(
     #     Organization.id == organization_id,
-    #     Organization.is_active == True
+    #     Organization.is_active
     # ).first()
 
     organization = None  # Mock result
@@ -504,12 +509,12 @@ async def get_organization_members(
 
     Requires member role or higher in the organization.
     """
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # In production:
     # members = db.query(User).join(OrganizationMember).filter(
     #     OrganizationMember.organization_id == organization_id,
-    #     User.is_active == True
+    #     User.is_active
     # ).offset(offset).limit(limit).all()
 
     # Return mock members
@@ -562,7 +567,7 @@ async def create_invitation(
     Requires admin role in the organization.
     Creates an invitation token that can be used to join the organization.
     """
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # Check if user is already a member (in production)
     # existing_member = db.query(OrganizationMember).filter(
@@ -618,12 +623,12 @@ async def update_subscription(
     Requires admin role in the organization.
     Updates subscription tier and associated limits.
     """
-    db = get_mock_db_session()
+    _ = get_mock_db_session()  # Reserved for production DB queries
 
     # In production:
     # organization = db.query(Organization).filter(
     #     Organization.id == organization_id,
-    #     Organization.is_active == True
+    #     Organization.is_active
     # ).first()
 
     organization = None  # Mock result
@@ -729,7 +734,11 @@ async def get_organization_usage(
             "api_calls": {"current": 7500, "limit": 10000, "percentage": 75.0},
             "roblox_sessions": {"current": 3, "limit": 15, "percentage": 20.0},
         },
-        "trends": {"users_growth": "+20%", "api_calls_growth": "+15%", "storage_growth": "+5%"},
+        "trends": {
+            "users_growth": "+20%",
+            "api_calls_growth": "+15%",
+            "storage_growth": "+5%",
+        },
         "generated_at": datetime.now(timezone.utc),
     }
 

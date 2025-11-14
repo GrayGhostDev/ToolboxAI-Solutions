@@ -111,8 +111,8 @@ class AgentState(TypedDict):
     context: dict[str, Any]
     metadata: dict[str, Any]
     status: str
-    result: Optional[Any]
-    error: Optional[str]
+    result: Any | None
+    error: str | None
     timestamp: str
     iterations: int
     max_iterations: int
@@ -124,7 +124,7 @@ class TaskResult(BaseModel):
     success: bool
     output: Any
     metadata: dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
+    error: str | None = None
     execution_time: float = 0.0
     tokens_used: int = 0
 
@@ -134,8 +134,8 @@ class TaskResult(BaseModel):
         *,
         success: bool,
         output: Any,
-        metadata: Optional[dict[str, Any]] = None,
-        error: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        error: str | None = None,
         execution_time: float = 0.0,
         tokens_used: int = 0,
     ) -> "TaskResult":
@@ -241,7 +241,7 @@ Your responsibilities:
 Always structure your responses clearly and provide Lua code when applicable.
 """
 
-    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> TaskResult:
+    async def execute(self, task: str, context: dict[str, Any] | None = None) -> TaskResult:
         """
         Execute a task with the given context.
 
@@ -300,7 +300,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         finally:
             self.current_task = None
 
-    def _prepare_state(self, task: str, context: Optional[dict[str, Any]]) -> AgentState:
+    def _prepare_state(self, task: str, context: dict[str, Any] | None) -> AgentState:
         """Prepare the agent state for task execution"""
         return AgentState(
             messages=[HumanMessage(content=task)],
@@ -363,7 +363,7 @@ Always structure your responses clearly and provide Lua code when applicable.
         self,
         other_agent: "BaseAgent",
         task: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> TaskResult:
         """
         Collaborate with another agent on a task.
@@ -433,7 +433,7 @@ Always structure your responses clearly and provide Lua code when applicable.
             # Don't fail the collaboration due to testing issues
 
     async def trigger_testing_validation(
-        self, task_result: TaskResult, test_context: Optional[dict[str, Any]] = None
+        self, task_result: TaskResult, test_context: dict[str, Any] | None = None
     ):
         """
         Trigger testing validation after completing a significant task.

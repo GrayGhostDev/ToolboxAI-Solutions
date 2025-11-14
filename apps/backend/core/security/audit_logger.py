@@ -382,7 +382,7 @@ class SecurityAuditLogger:
         """Export event to SIEM system"""
         # Implement SIEM integration (e.g., Splunk, ELK, Datadog)
         # This is a placeholder for actual SIEM integration
-        siem_format = {
+        _ = {  # SIEM format placeholder
             "time": event.timestamp,
             "source": self.service_name,
             "sourcetype": "security_audit",
@@ -592,7 +592,7 @@ class SecurityAuditLogger:
         try:
             # Mark old events as archived
             self.db.query(AuditLogEntry).filter(
-                AuditLogEntry.timestamp < cutoff_date, AuditLogEntry.archived == False
+                AuditLogEntry.timestamp < cutoff_date, AuditLogEntry.archived is False
             ).update({"archived": True})
 
             self.db.commit()

@@ -272,7 +272,8 @@ async def create_tenant(
         logger.error(f"Failed to create tenant: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create tenant",
         )
 
 
@@ -309,7 +310,7 @@ async def list_tenants(
         query = select(Organization)
 
         if active_only:
-            query = query.where(Organization.is_active == True)
+            query = query.where(Organization.is_active)
         if status_filter:
             query = query.where(Organization.status == status_filter)
         if tier_filter:
@@ -359,7 +360,8 @@ async def list_tenants(
     except Exception as e:
         logger.error(f"Failed to list tenants: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to list tenants"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list tenants",
         )
 
 
@@ -417,7 +419,8 @@ async def get_tenant(
     except Exception as e:
         logger.error(f"Failed to get tenant: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get tenant details"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get tenant details",
         )
 
 
@@ -490,7 +493,8 @@ async def update_tenant(
         logger.error(f"Failed to update tenant: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update tenant",
         )
 
 
@@ -545,7 +549,8 @@ async def delete_tenant(
         logger.error(f"Failed to delete tenant: {str(e)}", exc_info=True)
         await session.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete tenant",
         )
 
 
@@ -644,7 +649,8 @@ async def provision_tenant(
     except Exception as e:
         logger.error(f"Failed to provision tenant: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to provision tenant"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to provision tenant",
         )
 
 
