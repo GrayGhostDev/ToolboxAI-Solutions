@@ -34,6 +34,11 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - name: Trigger Render backend deploy (if credentials provided)
         if: env.RENDER_API_KEY != '' && env.RENDER_SERVICE_ID != ''
         run: |
@@ -77,4 +82,3 @@ jobs:
         run: |
           set -euo pipefail
           curl -fsSL -X POST "$VERCEL_BUILD_HOOK_URL"
-
