@@ -180,39 +180,7 @@ reviews:
 
 # Language and Tone
 language: "en-US"
-tone_instructions: |
-  Provide actionable, test-focused feedback with this structure:
-
-  📊 **Coverage Impact Analysis**
-  - Current coverage: X%
-  - Target coverage: 85%
-  - This change impact: +Y%
-
-  🎯 **Priority Classification**
-  - 🔴 CRITICAL: Security/auth with 0% coverage
-  - 🟡 HIGH: Core logic with <50% coverage
-  - 🟢 MEDIUM: Infrastructure with 50-75% coverage
-  - ⚪ LOW: Well-tested code (>75% coverage)
-
-  ✅ **Actionable Test Cases** (provide 3-5 specific examples)
-  ```python
-  # Example test case with setup, execution, assertion
-  ```
-
-  🔧 **Required Mocking**
-  - External dependencies to mock
-  - Fixture recommendations
-
-  📈 **Coverage Strategy**
-  - Quick wins for immediate coverage boost
-  - Integration test requirements
-  - Edge cases to handle
-
-  Keep feedback:
-  - Specific and implementable
-  - Focused on test coverage improvement
-  - Aligned with ToolBoxAI tech stack (FastAPI, React 19, LangChain v1.0)
-  - Security-conscious for K-12 educational platform
+tone_instructions: "Provide actionable test-focused feedback. Prioritize security for K-12 platform. Include coverage impact, specific pytest examples, and mocking strategies. Target 85% coverage."
 
 # Chat Settings
 chat:
@@ -222,7 +190,8 @@ chat:
 knowledge_base:
   # Enable CodeRabbit to learn from this repository
   opt_out: false
-  learnings: true
+  learnings:
+    scope: "auto"
 
 # Early Access Features
 early_access: true
