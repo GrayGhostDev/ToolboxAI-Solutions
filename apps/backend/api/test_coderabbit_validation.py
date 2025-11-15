@@ -1,6 +1,10 @@
 """
 Test module to validate CodeRabbit AI integration.
 
+⚠️ WARNING: FOR TESTING PURPOSES ONLY ⚠️
+This file contains INTENTIONAL SECURITY VULNERABILITIES and should NEVER be used in production.
+DO NOT import or execute this code outside of CodeRabbit validation testing.
+
 This file intentionally has several issues that CodeRabbit should detect:
 1. No test coverage (new file)
 2. Potential security issues
@@ -16,7 +20,23 @@ Expected CodeRabbit feedback:
 - Estimate coverage impact
 """
 
+import os
+import sys
 from typing import Any
+
+# Safety guard: Prevent accidental execution
+if os.getenv("CODERABBIT_VALIDATION_MODE") != "true":
+    raise RuntimeError(
+        "⚠️ SECURITY: This file contains intentional vulnerabilities for testing only. "
+        "Set CODERABBIT_VALIDATION_MODE=true to bypass this check."
+    )
+
+
+# Additional guard: Prevent imports in production
+if "pytest" not in sys.modules and os.getenv("CODERABBIT_VALIDATION_MODE") != "true":
+    raise ImportError(
+        "This module can only be imported during testing with CODERABBIT_VALIDATION_MODE=true"
+    )
 
 
 def authenticate_user(username: str, password: str) -> dict[str, Any]:
@@ -35,8 +55,11 @@ def authenticate_user(username: str, password: str) -> dict[str, Any]:
     if username == "admin" and password == "password123":
         return {"authenticated": True, "user_id": 1, "role": "admin"}
 
-    # SECURITY ISSUE: SQL injection vulnerable (intentionally unused to show bad practice)
-    _vulnerable_query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"  # noqa: F841
+    # SECURITY ISSUE: SQL injection vulnerable - demonstrating bad practice
+    # This query is intentionally vulnerable and serves as an example for CodeRabbit
+    vulnerable_query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
+    # In real code, this would be executed against a database (NEVER DO THIS!)
+    _ = vulnerable_query  # Acknowledge the variable is used for demonstration
 
     # Missing: Actual database call, error handling, password hashing
     return {"authenticated": False}
