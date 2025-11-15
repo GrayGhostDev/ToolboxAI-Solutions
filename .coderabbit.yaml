@@ -1,0 +1,205 @@
+# CodeRabbit AI Configuration for ToolBoxAI Solutions
+# Optimized for comprehensive code review with test coverage focus
+# Documentation: https://docs.coderabbit.ai
+
+# Review Settings
+reviews:
+  # Use assertive profile for thorough analysis
+  profile: "assertive"
+
+  # Enable automatic reviews on PRs
+  auto_review:
+    enabled: true
+    drafts: false  # Skip draft PRs
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT REVIEW"
+      - "DRAFT"
+
+  # Request changes automatically when issues found
+  request_changes_workflow: true
+
+  # Enable high-level summary at PR level
+  high_level_summary: true
+
+  # Disable poem generation (focus on actionable feedback)
+  poem: false
+
+  # Show review status check
+  review_status: true
+
+  # Don't collapse walkthrough (keep visible)
+  collapse_walkthrough: false
+
+  # Path Filters - Files to include in review
+  path_filters:
+    # Include all source code
+    - "**/*.py"
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.json"
+    - "**/*.yaml"
+    - "**/*.yml"
+
+    # Exclude generated/dependency files
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!.next/**"
+    - "!__pycache__/**"
+    - "!*.egg-info/**"
+    - "!.pytest_cache/**"
+    - "!venv/**"
+    - "!.venv/**"
+    - "!coverage/**"
+    - "!.coverage"
+    - "!*.pyc"
+    - "!Archive/**"
+
+  # Path-specific review instructions
+  path_instructions:
+    # CRITICAL: Zero-coverage authentication files
+    - path: "apps/backend/api/auth/**"
+      instructions: |
+        🔴 CRITICAL PRIORITY - Zero Test Coverage on Authentication
+
+        Security Analysis Required:
+        1. Identify all authentication flows and edge cases
+        2. Flag security vulnerabilities (injection, bypass, etc.)
+        3. Suggest specific unit test cases for each function
+        4. Recommend integration tests for auth endpoints
+        5. Highlight error handling that needs testing
+
+        Test Generation Focus:
+        - Provide concrete pytest test examples
+        - Include fixtures and mocking strategies
+        - Cover success, failure, and edge cases
+        - Target minimum 85% coverage for security code
+
+    # CRITICAL: Zero-coverage security infrastructure
+    - path: "apps/backend/core/security/**"
+      instructions: |
+        🔴 SECURITY CRITICAL - Zero Test Coverage
+
+        Required Analysis:
+        1. Audit logging completeness and test requirements
+        2. Session management security test scenarios
+        3. User management boundary and permission testing
+        4. Secrets management encryption and access tests
+        5. Rate limiting effectiveness and bypass testing
+
+        Output Format:
+        - Security risk level (CRITICAL/HIGH/MEDIUM/LOW)
+        - Specific test cases with expected behaviors
+        - Mock requirements for external dependencies
+        - Coverage impact estimate
+
+    # HIGH PRIORITY: Core business logic agents
+    - path: "core/agents/**"
+      instructions: |
+        🟡 HIGH PRIORITY - Low Coverage (14-56%)
+
+        Agent System Testing Strategy:
+        1. Agent lifecycle state transition testing
+        2. Multi-agent orchestration scenarios
+        3. LLM response mocking patterns
+        4. Error handling and retry logic
+        5. Integration tests for agent workflows
+
+        Focus Areas:
+        - Increase from current 14-56% to 85%+ target
+        - Provide specific LangChain/LangGraph test patterns
+        - Include async testing best practices
+
+    # MEDIUM PRIORITY: Core infrastructure
+    - path: "apps/backend/core/**"
+      instructions: |
+        🟡 MEDIUM PRIORITY - Core Infrastructure
+
+        Testing Requirements:
+        1. Cache layer functionality and invalidation
+        2. Performance monitoring accuracy
+        3. Application factory initialization
+        4. Database connection pooling
+        5. Configuration management
+
+        Coverage Target: Move from current to 85%+
+
+    # API Endpoints
+    - path: "apps/backend/api/v1/endpoints/**"
+      instructions: |
+        Review Focus:
+        1. Input validation completeness
+        2. Error response consistency
+        3. Authentication/authorization checks
+        4. OpenAPI documentation accuracy
+        5. Integration test coverage
+
+        Suggest:
+        - API client test examples
+        - Mock authentication patterns
+        - Edge case scenarios
+
+    # Test Files Review
+    - path: "tests/**"
+      instructions: |
+        Test Quality Analysis:
+        1. Test completeness vs requirements
+        2. Proper use of fixtures and mocking
+        3. Async test patterns (pytest-asyncio)
+        4. Test organization and clarity
+        5. Performance and reliability
+
+        Improvements:
+        - Identify redundant or ineffective tests
+        - Suggest missing test scenarios
+        - Recommend refactoring for maintainability
+
+    # Frontend Components
+    - path: "apps/dashboard/src/components/**"
+      instructions: |
+        Frontend Testing Focus:
+        1. Component rendering tests
+        2. User interaction scenarios
+        3. State management testing
+        4. Accessibility (a11y) compliance
+        5. Error boundary coverage
+
+        Use Vitest + React Testing Library patterns
+
+    # Configuration Files
+    - path: "**/*.{yaml,yml,json,toml}"
+      instructions: |
+        Configuration Review:
+        1. Schema validation
+        2. Security (no hardcoded secrets)
+        3. Environment-specific handling
+        4. Documentation completeness
+
+# Language and Tone
+language: "en-US"
+tone_instructions: "Provide actionable test-focused feedback. Prioritize security for K-12 platform. Include coverage impact, specific pytest examples, and mocking strategies. Target 85% coverage."
+
+# Chat Settings
+chat:
+  auto_reply: true
+
+# Knowledge Base
+knowledge_base:
+  # Enable CodeRabbit to learn from this repository
+  opt_out: false
+  learnings:
+    scope: "auto"
+
+# Early Access Features
+early_access: true
+
+# Project Context (for CodeRabbit's understanding)
+# Note: These are comments for documentation, not configuration keys
+# Project: ToolBoxAI Solutions
+# Type: Educational Platform (K-12) with AI Integration
+# Stack: FastAPI (Python 3.12), React 19, LangChain v1.0, PostgreSQL, Redis
+# Current Coverage: 21% → Target: 85%
+# Critical Focus: Authentication (0%), Security (0%), Agents (14-56%)
